@@ -563,14 +563,18 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
     List<String> aggColumnAlias = new ArrayList<>();
     HashMap<String, String> maxminAlias = new HashMap<>();
     List<SelectItem> newSelectlist = new ArrayList<>();
-    meta.setOriginalSelectList(selectList);
+    List<SelectItem> originalSelectlist = new ArrayList<>();
+    for (SelectItem sel:selectList) {
+      originalSelectlist.add(sel.deepcopy());
+    }
+    meta.setOriginalSelectList(originalSelectlist);
     
     for (SelectItem selectItem : selectList) {
       if (selectItem instanceof AliasedColumn) {
         List<ColumnOp> columnOps = getAggregateColumn(((AliasedColumn) selectItem).getColumn());
         // If it contains agg columns
         if (!columnOps.isEmpty()) {
-          meta.getAggColumn().put(selectItem, columnOps);
+          meta.getAggColumn().put(selectItem.deepcopy(), columnOps);
           for (ColumnOp col : columnOps) {
             if (col.getOpType().equals("avg")) {
               if (!meta.getAggColumnAggAliasPair()
@@ -748,7 +752,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
     if (node.getSources().size() == 0) {
       List<BaseTable> multiTierScrambleTables = identifyScrambledTables(node, scrambleMeta);
       // rewrite itself
-      if (!multiTierScrambleTables.isEmpty()) {
+      if (!multiTierScrambleTables.isEmpty() && node.getSelectQuery().getGroupby().isEmpty()) {
         rewriteProjectionNodeForMultiTier(node, multiTierScrambleTables, scrambleMeta);
       }
       return;
@@ -761,37 +765,39 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
         projectionNodesSources.add((ProjectionNode) source);
       }
     }
-    
-    // Add tier column if its placeholder table has scramble table
-    List<SelectItem> selectItemList = node.getSelectQuery().getSelectList();
-    for (ProjectionNode source : projectionNodesSources) {
-      for (Map.Entry<ScrambleMeta, String> entry :
-          source.getAggMeta().getTierColumnForScramble().entrySet()) {
-        
-        String oldtierAlias = entry.getValue();
-        String tierColumnAlias = generateTierColumnAliasName();
+
+    if (node.getSelectQuery().getGroupby().isEmpty()) {
+      // Add tier column if its placeholder table has scramble table
+      List<SelectItem> selectItemList = node.getSelectQuery().getSelectList();
+      for (ProjectionNode source : projectionNodesSources) {
+        for (Map.Entry<ScrambleMeta, String> entry :
+            source.getAggMeta().getTierColumnForScramble().entrySet()) {
+
+          String oldtierAlias = entry.getValue();
+          String tierColumnAlias = generateTierColumnAliasName();
 //        VERDICTDB_TIER_COLUMN_NAME + verdictdbTierIndentiferNum++;
-        
-        // Add tier column to select list
-        SelectItem selectItem;
-        if (source.getSelectQuery().getAliasName().isPresent()) {
-          String sourceAlias = source.getSelectQuery().getAliasName().get();
-          selectItem =
-              new AliasedColumn(new BaseColumn(sourceAlias, oldtierAlias), tierColumnAlias);
-        } else {
-          selectItem = new AliasedColumn(new BaseColumn(oldtierAlias), tierColumnAlias);
+
+          // Add tier column to select list
+          SelectItem selectItem;
+          if (source.getSelectQuery().getAliasName().isPresent()) {
+            String sourceAlias = source.getSelectQuery().getAliasName().get();
+            selectItem =
+                new AliasedColumn(new BaseColumn(sourceAlias, oldtierAlias), tierColumnAlias);
+          } else {
+            selectItem = new AliasedColumn(new BaseColumn(oldtierAlias), tierColumnAlias);
+          }
+          selectItemList.add(selectItem);
+
+          // Construct tier column Map
+          node.getAggMeta().getTierColumnForScramble().put(entry.getKey(), tierColumnAlias);
         }
-        selectItemList.add(selectItem);
-        
-        // Construct tier column Map
-        node.getAggMeta().getTierColumnForScramble().put(entry.getKey(), tierColumnAlias);
       }
-    }
-    List<BaseTable> multiTierScrambleTables = identifyScrambledTables(node, scrambleMeta);
-    
-    // Add tier column if itself contain scramble table
-    if (!multiTierScrambleTables.isEmpty()) {
-      rewriteProjectionNodeForMultiTier(node, multiTierScrambleTables, scrambleMeta);
+      List<BaseTable> multiTierScrambleTables = identifyScrambledTables(node, scrambleMeta);
+
+      // Add tier column if itself contain scramble table
+      if (!multiTierScrambleTables.isEmpty()) {
+        rewriteProjectionNodeForMultiTier(node, multiTierScrambleTables, scrambleMeta);
+      }
     }
 //    verdictdbTierIndentiferNum = 0;
   }
