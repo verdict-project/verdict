@@ -4,10 +4,13 @@ import re
 import subprocess
 
 def read_version(pom):
+    """ read version info from pom.xml file
+    require the version of verdictdb to be at the top of pom.xml
+    """
     with open(pom) as f:
         context = f.read()
-        version = re.search('<version>(.*?)</version>', context).group()
-        return version[9:-10]
+        version = re.search('<version>(.*?)</version>', context).group(1)
+        return version
 
 root_dir = os.path.dirname(os.path.abspath(__file__))
 lib_dir = os.path.join(root_dir, 'pyverdict', 'lib')
@@ -17,7 +20,7 @@ jar_name = 'verdictdb-core-' + version + '-jar-with-dependencies.jar'
 
 os.chdir('..')
 subprocess.check_call(['mvn','-DskipTests','-DtestPhase=false','-DpackagePhase=true','clean','package'])
-subprocess.check_call(['rm', '-rf', os.path.join(lib_dir, '*')])
+subprocess.check_call(['rm', '-rf', os.path.join(lib_dir, '*verdictdb*.jar')])
 subprocess.check_call(['cp', os.path.join('target', jar_name), lib_dir])
 os.chdir(root_dir)
 
