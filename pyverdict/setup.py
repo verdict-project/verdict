@@ -37,6 +37,6 @@ setuptools.setup(name='pyverdict',
     install_requires=[
         'py4j >= 0.10.7',
         'PyMySQL >= 0.9.2',
-        'pytest >= 3.7'
+        'pytest >= 3.5'
     ]
  )
