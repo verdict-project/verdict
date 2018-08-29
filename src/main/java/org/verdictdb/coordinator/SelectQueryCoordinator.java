@@ -152,8 +152,7 @@ public class SelectQueryCoordinator implements Coordinator {
 
     QueryExecutionPlanSimplifier.simplify2(asyncPlan);
     log.debug("Plan simplification done.");
-
-    //    log.debug(asyncPlan.getRoot().getStructure());
+    log.debug(asyncPlan.getRoot().getStructure());
 
     // execute the plan
     planRunner = new ExecutablePlanRunner(conn, asyncPlan);

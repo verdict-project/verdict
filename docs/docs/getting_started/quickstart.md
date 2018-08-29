@@ -6,12 +6,12 @@ We will install VerdictDB, create a connection, and issue a simple query to Verd
 ## Install
 
 Create a [Maven](https://maven.apache.org/) project and
-place the following dependency in your pom.xml.
+place the following dependency in the `<dependencies>` of your pom.xml.
 ```pom
 <dependency>
     <groupId>org.verdictdb</groupId>
     <artifactId>verdictdb-core</artifactId>
-    <version>0.5.0-alpha</version>
+    <version>0.5.4</version>
 </dependency>
 ```
 
@@ -41,7 +41,7 @@ stmt.execute("create table myschema.sales (" +
 // insert 1000 rows
 List<String> productList = Arrays.asList("milk", "egg", "juice");
 for (int i = 0; i < 1000; i++) {
-  int randInt = ThreadLocalRandom.current().nextInt(0, 3)
+  int randInt = ThreadLocalRandom.current().nextInt(0, 3);
   String product = productList.get(randInt);
   double price = (randInt+2) * 10 + ThreadLocalRandom.current().nextInt(0, 10);
   stmt.execute(String.format(
@@ -70,7 +70,7 @@ vstmt.execute("create scramble myschema.sales_scrambled from myschema.sales");
 Run just a regular query to the original table.
 
 ```java
-ResultSet rs = verdictStmt.executeQuery(
+ResultSet rs = vstmt.executeQuery(
     "select product, avg(price) "+
     "from myschema.sales_scrambled " +
     "group by product " +
@@ -89,6 +89,7 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class FirstVerdictDBExample {
 
@@ -119,7 +120,7 @@ public class FirstVerdictDBExample {
     // Use CREATE SCRAMBLE syntax to create scrambled tables.
     vstmt.execute("create scramble myschema.sales_scrambled from myschema.sales");
 
-    ResultSet rs = verdictStmt.executeQuery(
+    ResultSet rs = vstmt.executeQuery(
         "select product, avg(price) "+
         "from myschema.sales_scrambled " +
         "group by product " +

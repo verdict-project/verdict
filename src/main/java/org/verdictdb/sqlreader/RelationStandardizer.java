@@ -498,6 +498,13 @@ public class RelationStandardizer {
       //          }
       //        }
       //      }
+
+      // if having clause contains subquery, throw an exception since it is unsupported at
+      // the moment
+      if (containsSubquery(having)) {
+        throw new VerdictDBDbmsException("Currently, subquery is not supported in HAVING clause.");
+      }
+
       AliasedRelation.addHavingByAnd(having);
     }
 
@@ -512,6 +519,21 @@ public class RelationStandardizer {
       AliasedRelation.addLimit(relationToAlias.getLimit().get());
     }
     return AliasedRelation;
+  }
+
+  private boolean containsSubquery(UnnamedColumn having) {
+    boolean hasSubquery = false;
+    if (having instanceof ColumnOp) {
+      ColumnOp op = (ColumnOp) having;
+      for (UnnamedColumn operand : op.getOperands()) {
+        if (operand instanceof SubqueryColumn) {
+          hasSubquery = true;
+        } else if (operand instanceof ColumnOp) {
+          hasSubquery = hasSubquery | containsSubquery(operand);
+        }
+      }
+    }
+    return hasSubquery;
   }
 
   public HashMap<String, String> getColNameAndColAlias() {

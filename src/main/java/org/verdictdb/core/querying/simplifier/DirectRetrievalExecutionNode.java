@@ -10,6 +10,20 @@ import org.verdictdb.exception.VerdictDBException;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Used for simplifying two nodes into one. This class may be used in a recursively way to simplify
+ * an arbitrary deep nodes into a single node (as long as the condition is satisfied).
+ *
+ * <p>This class relines on an important assumption: 1. The token of a child node must not rely on
+ * its query results.
+ *
+ * <p>The logic based on the above assumption can be found in the createQuery() method.
+ * Traditionally, createToken() must use the result of createQuery(); however, based on the
+ * assumption, the token of the child is created without actually running its query. Note that the
+ * child's select query is consolidated into the parent query as a subquery.
+ *
+ * @author Yongjoo Park
+ */
 public class DirectRetrievalExecutionNode extends QueryNodeWithPlaceHolders {
 
   private static final long serialVersionUID = -561220173745897906L;
@@ -172,13 +186,14 @@ public class DirectRetrievalExecutionNode extends QueryNodeWithPlaceHolders {
   @Override
   public SqlConvertible createQuery(List<ExecutionInfoToken> tokens) throws VerdictDBException {
     // this will replace the placeholders contained the subquery.
+    childNode.createQuery(tokens);
+    ExecutionInfoToken childToken = childNode.createToken(null);
 
-    // dyoon: after simplified, tokens can be empty, yet childNode may require non-empty tokens
-    // This added check prevents such case.
-    if (!tokens.isEmpty()) {
-      childNode.createQuery(tokens);
-    }
-    parentNode.createQuery(tokens);
+    // also pass the tokens possibly created by child.
+    List<ExecutionInfoToken> newTokens = new ArrayList<>();
+    newTokens.addAll(tokens);
+    newTokens.add(childToken);
+    parentNode.createQuery(newTokens);
     return selectQuery;
   }
 

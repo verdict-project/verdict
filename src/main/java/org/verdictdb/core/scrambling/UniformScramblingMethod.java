@@ -25,14 +25,7 @@ import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.core.execplan.ExecutionInfoToken;
 import org.verdictdb.core.querying.ExecutableNodeBase;
 import org.verdictdb.core.querying.QueryNodeBase;
-import org.verdictdb.core.sqlobject.AbstractRelation;
-import org.verdictdb.core.sqlobject.AliasedColumn;
-import org.verdictdb.core.sqlobject.BaseTable;
-import org.verdictdb.core.sqlobject.ColumnOp;
-import org.verdictdb.core.sqlobject.SelectItem;
-import org.verdictdb.core.sqlobject.SelectQuery;
-import org.verdictdb.core.sqlobject.SqlConvertible;
-import org.verdictdb.core.sqlobject.UnnamedColumn;
+import org.verdictdb.core.sqlobject.*;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBValueException;
 
@@ -91,6 +84,26 @@ public class UniformScramblingMethod extends ScramblingMethodBase {
   @Override
   public String getMainTableAlias() {
     return MAIN_TABLE_SOURCE_ALIAS;
+  }
+
+  @Override
+  public UnnamedColumn getBlockExprForTier(int tier, Map<String, Object> metaData) {
+    DbmsQueryResult tableSizeResult =
+        (DbmsQueryResult) metaData.get(TableSizeCountNode.class.getSimpleName());
+    tableSizeResult.next();
+    long tableSize = tableSizeResult.getLong(TableSizeCountNode.TOTAL_COUNT_ALIAS_NAME);
+    totalNumberOfblocks = (int) Math.ceil(tableSize / (float) blockSize);
+    UnnamedColumn blockForTierExpr = ColumnOp.cast(
+        ColumnOp.floor(ColumnOp.multiply(ColumnOp.rand(), ConstantColumn.valueOf(totalNumberOfblocks))), ConstantColumn.valueOf("int"));
+
+    // store the cumulative probability
+    List<Double> prob = new ArrayList<>();
+    for (int i = 0; i < totalNumberOfblocks; i++) {
+      prob.add((i + 1) / (double) totalNumberOfblocks);
+    }
+    storeCumulativeProbabilityDistribution(tier, prob);
+
+    return blockForTierExpr;
   }
 
   @Override

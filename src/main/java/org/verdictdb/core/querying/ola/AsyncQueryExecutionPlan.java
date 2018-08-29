@@ -120,6 +120,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
 
     List<ExecutableNodeBase> individualAggNodes = new ArrayList<>();
     List<ExecutableNodeBase> combiners = new ArrayList<>();
+    List<AggExecutionNodeBlock> aggblocks = new ArrayList<>();
     //    ScrambleMeta scrambleMeta = idCreator.getScrambleMeta();
 
     // First, plan how to perform block aggregation
@@ -193,6 +194,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
       }
 
       individualAggNodes.add(aggroot);
+      aggblocks.add(copy);
     }
 
     // Third, stack combiners
@@ -216,8 +218,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
 
     // Fourth, re-link the subscription relationship for the new AsyncAggNode
     ExecutableNodeBase newRoot =
-        AsyncAggExecutionNode.create(
-            idCreator, individualAggNodes, combiners, scrambleMeta, aggNodeBlock);
+        AsyncAggExecutionNode.create(idCreator, aggblocks, combiners, scrambleMeta, aggNodeBlock);
 
     // Finally remove the old subscription information: old copied node -> still used old node
     for (Pair<ExecutableNodeBase, ExecutableNodeBase> parentToSource : oldSubscriptionInformation) {
@@ -618,7 +619,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
               }
             } else if (col.getOpType().equals("max") || col.getOpType().equals("min")) {
               ColumnOp col1 = new ColumnOp(col.getOpType(), col.getOperand(0));
-              newSelectlist.add(new AliasedColumn(col1, "agg" + aggColumnIdentiferNum));
+              newSelectlist.add(new AliasedColumn(col1, aliasPrefix + aggColumnIdentiferNum));
               meta.getAggColumnAggAliasPairOfMaxMin()
                   .put(
                       new ImmutablePair<>(col.getOpType(), col1.getOperand(0)),
@@ -627,10 +628,10 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
             }
           }
         } else {
-          newSelectlist.add(selectItem);
+          newSelectlist.add(selectItem.deepcopy());
         }
       } else {
-        newSelectlist.add(selectItem);
+        newSelectlist.add(selectItem.deepcopy());
       }
     }
     meta.setAggAlias(aggColumnAlias);

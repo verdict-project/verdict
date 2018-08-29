@@ -16,16 +16,15 @@
 
 package org.verdictdb.core.sqlobject;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
+import com.google.common.base.Optional;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
-import com.google.common.base.Optional;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class SelectQuery extends AbstractRelation implements SqlConvertible {
 
@@ -145,6 +144,14 @@ public class SelectQuery extends AbstractRelation implements SqlConvertible {
     } else {
       having = Optional.<UnnamedColumn>of(ColumnOp.and(having.get(), predicate));
     }
+  }
+
+  public void replaceHaving(UnnamedColumn predicate) {
+    having = Optional.of(predicate);
+  }
+
+  public void clearHaving() {
+    having = Optional.absent();
   }
 
   public void addLimit(UnnamedColumn limit) {
