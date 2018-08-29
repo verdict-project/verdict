@@ -1,5 +1,8 @@
 # Connecting to Data Sources
 
+VerdictDB can process the data stored in a SQL-supported database; therefore, no data migration is required outside your database. VerdictDB works with them by performing its operations in SQL.
+
+
 ## Supported Databases
 
 - MySQL 5.5 or later
@@ -20,9 +23,10 @@ The following databases will be supported soon:
 ## Connection Options
 
 1. **Standard JDBC Interface**: One can issue queries to and retrieve the results from VerdictDB using the standard JDBC interface. This approach is applicable for all databases that support the JDBC interface. For VerdictDB to retrieve data from the backend database, VerdictDB requires the connection information to the backend database. This connection information can be specified by either of the two ways, as follows.
-    - **JDBC string**: Passing a modified JDBC string to the standard Java DriverManager. See database-specific examples below.
+    - **JDBC string (recommended)**: Passing a modified JDBC string to the standard Java DriverManager. See database-specific examples below. This approach is recommended since VerdictDB then maintains a pool of multiple JDBC connections internally for possible parallel processing.
     - **JDBC connection**: Passing an already established JDBC connection (to the backend DB) to VerdictDB. See database-specific examples below.
-1. **VerdictContext**: One can also connect to VerdictDB directly using its own interface called VerdictContext. An instance of VerdictContext can be created either using the JDBC connection information or using an instance of SparkSession. The query results returned from VerdictContext use ?? for convenient operations.
+1. **VerdictContext**: One can also connect to VerdictDB directly using its own interface called VerdictContext. An instance of VerdictContext can be created either using the JDBC connection information or using an instance of SparkSession.
+<!-- The query results returned from VerdictContext use ?? for convenient operations. -->
 
 
 

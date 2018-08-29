@@ -27,4 +27,4 @@ VerdictDB is a thin, platform-independent, interactive analytics library that wo
 
 ## License
 
-VerdictDB is under [the Apache License](https://www.apache.org/licenses/LICENSE-2.0), thus is completely free for both commercial and non-commercial purposes.
+VerdictDB is under [the Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0); thus, it is completely free for both commercial and non-commercial purposes. VerdictDB is developed by the database group at the University of Michigan, Ann Arbor.
