@@ -10,16 +10,17 @@ Gateway = None
 
 class VerdictContext:
     """main interface to interact with the java objects
+    require specifying the jdbc driver jar path
     """
 
-    def __init__(self, url, usr, pwd):
-        init()
+    def __init__(self, url, usr, pwd, jdbc_driver):
+        init(jdbc_driver)
         self._context = connect(url, usr, pwd)
 
     def sql(self, query):
         return ResultSet(self._context.sql(query))
 
-def init():
+def init(jdbc_driver):
     """initialize a py4j gateway
     starting up a JVM only once
     """
@@ -32,16 +33,14 @@ def init():
         lib_dir = os.path.join(root_dir, 'lib')
         jar_name = 'verdictdb-core-' + version + '-jar-with-dependencies.jar'
         jar_path = os.path.join(lib_dir, jar_name)
-        port = launch_gateway(classpath='~/.m2/repository/mysql/mysql-connector-java/5.1.46/mysql-connector-java-5.1.46.jar:' + jar_path + ':org.verdictdb.VerdictGateway')
+        port = launch_gateway(classpath=jdbc_driver + ':' + jar_path + ':org.verdictdb.VerdictGateway')
         gp = GatewayParameters(port=port)
         Gateway = JavaGateway(gateway_parameters=gp)
-        # subprocess.Popen(['java', '-cp', jar_path, 'org.verdictdb.VerdictGateway'])
-        # time.sleep(1) # TODO: check whether the jvm started before connecting to it
-        # Gateway = JavaGateway()
         atexit.register(close)
     return Gateway
 
 def connect(url, usr, pwd):
+    Gateway.jvm.Class.forName("com.mysql.jdbc.Driver") # TODO: determine the right driver class from connection string
     return Gateway.jvm.org.verdictdb.VerdictContext.fromConnectionString(url, usr, pwd)
 
 def close():
