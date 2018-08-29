@@ -211,7 +211,7 @@
             <artifactId>opencsv</artifactId>
             <version>4.0</version>
         </dependency>
-        
+
         <!--  Test Support -->
         <dependency>
             <groupId>com.h2database</groupId>
@@ -265,7 +265,7 @@
                 </exclusion>
             </exclusions>
         </dependency>
-        <!-- This has been installed in lib/ by 
+        <!-- This has been installed in lib/ by
             mvn install:install-file -Dfile=src/test/resources/jars/ImpalaJDBC41-2.6.3.jar \
             -DgroupId=com.cloudera -DartifactId=impala-jdbc41 -Dversion=2.6.3 \
             -Dpackaging=jar -DlocalRepositoryPath=lib -->
@@ -284,6 +284,11 @@
                     <artifactId>slf4j-simple</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>net.sf.py4j</groupId>
+            <artifactId>py4j</artifactId>
+            <version>0.10.7</version>
         </dependency>
     </dependencies>
 
