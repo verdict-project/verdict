@@ -4,11 +4,12 @@ import pymysql
 def test_count():
     conn_mysql = mysql_connect('localhost', 3306, 'root', '')
     cur = conn_mysql.cursor()
-    conn_verdict = verdict_connect('localhost', 3306, 'root', '', '/home/xyshen/.m2/repository/mysql/mysql-connector-java/5.1.46/mysql-connector-java-5.1.46.jar')
     cur.execute('DROP SCHEMA IF EXISTS pyverdict_simple_test')
     cur.execute('CREATE SCHEMA IF NOT EXISTS pyverdict_simple_test')
     cur.execute('CREATE TABLE IF NOT EXISTS pyverdict_simple_test.test (id INT)')
     cur.execute('INSERT INTO pyverdict_simple_test.test SELECT 1')
+
+    conn_verdict = verdict_connect('localhost', 3306, 'root', '', 'tests/lib/mysql-connector-java-5.1.46.jar')
     result = conn_verdict.sql('SELECT COUNT(1) from pyverdict_simple_test.test')
     assert result.fetch_one() == 1
     cur.execute('DROP SCHEMA IF EXISTS pyverdict_simple_test')
