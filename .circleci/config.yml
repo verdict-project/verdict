@@ -341,7 +341,7 @@ jobs:
 
   build-pyverdict:
     docker:
-    - image: continuumio/anaconda3
+    - image: continuumio/miniconda3
     - image: mysql:5.5
       environment:
         MYSQL_DATABASE: test
@@ -362,7 +362,7 @@ jobs:
       - restore_cache:
           keys:
           - verdict-dependencies-{{ checksum "pom.xml" }}
-      - run: cd pyverdict; python setup.py develop; cd ..
+      - run: cd pyverdict; python setup.py develop;
       - run: pytest
       - save_cache:
           paths:

@@ -31,7 +31,8 @@ class VerdictContext:
             lib_dir = os.path.join(root_dir, 'lib')
             jar_name = 'verdictdb-core-' + version + '-jar-with-dependencies.jar'
             jar_path = os.path.join(lib_dir, jar_name)
-            port = launch_gateway(classpath=jdbc_driver + ':' + jar_path + ':org.verdictdb.VerdictGateway')
+            port = launch_gateway(
+                classpath=jdbc_driver + ':' + jar_path + ':org.verdictdb.VerdictGateway')
             gp = GatewayParameters(port=port)
             cls.Gateway = JavaGateway(gateway_parameters=gp)
             atexit.register(cls.close)
