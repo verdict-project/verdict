@@ -21,3 +21,11 @@
 .codehilite {
   font-size: 1.2em;
 }
+
+.md-nav__title--site {
+  background-color: #3D3F57 !important;
+}
+
+.md-nav__source {
+  background-color: #3D3F57 !important;
+}

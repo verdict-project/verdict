@@ -1,11 +1,11 @@
 # Quickstart Guide
 
-We will install VerdictDB, create a connection, and issue a simple query to VerdictDB. In this Quickstart Guide, we will use an MySQL database for VerdictDB's backend database. See [How to Connect](/getting_started/connection/) for the examples of connecting to other databases.
+We will install VerdictDB, create a connection, and issue a simple query to VerdictDB. In this Quickstart Guide, we will use MySQL for VerdictDB's backend database. See [How to Connect](/getting_started/connection/) for the examples of connecting to other databases.
 
 
 ## Install
 
-Create a [Maven](https://maven.apache.org/) project and
+Create an [empty Maven project](https://maven.apache.org/guides/getting-started/maven-in-five-minutes.html) project and
 place the following dependency in the `<dependencies>` of your pom.xml.
 ```pom
 <dependency>

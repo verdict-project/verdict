@@ -21,6 +21,7 @@ pages:
     - Setup MySQL (Optional): tutorial/mysql.md
     - Load TPC-H Data: tutorial/tpch.md
     - Example VerdictDB Application: tutorial/example.md
+    - ML-based Analytics: tutorial/advanced.md
   - Reference:
     - Javadoc: reference/javadoc.md
   #   - VerdictDB Queries: reference/supported_queries.md
