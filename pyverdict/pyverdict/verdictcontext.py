@@ -4,7 +4,7 @@ import os
 import subprocess
 import atexit
 import pkg_resources
-from py4j.java_gateway import JavaGateway, launch_gateway
+from py4j.java_gateway import JavaGateway, launch_gateway, GatewayParameters, java_import
 
 Gateway = None
 
@@ -25,13 +25,16 @@ def init():
     """
 
     global Gateway
+
     version = pkg_resources.require("pyverdict")[0].version
     if Gateway is None:
         root_dir = os.path.dirname(os.path.abspath(__file__))
         lib_dir = os.path.join(root_dir, 'lib')
         jar_name = 'verdictdb-core-' + version + '-jar-with-dependencies.jar'
         jar_path = os.path.join(lib_dir, jar_name)
-        Gateway = launch_gateway(classpath=jar_path)
+        port = launch_gateway(classpath='~/.m2/repository/mysql/mysql-connector-java/5.1.46/mysql-connector-java-5.1.46.jar:' + jar_path + ':org.verdictdb.VerdictGateway')
+        gp = GatewayParameters(port=port)
+        Gateway = JavaGateway(gateway_parameters=gp)
         # subprocess.Popen(['java', '-cp', jar_path, 'org.verdictdb.VerdictGateway'])
         # time.sleep(1) # TODO: check whether the jvm started before connecting to it
         # Gateway = JavaGateway()
