@@ -81,10 +81,6 @@ public class ExecutionInfoToken implements Serializable {
     data.put(key, value);
   }
 
-  //  public Map<String, Object> getData() {
-  //    return data;
-  //  }
-
   @Override
   public String toString() {
     return new ToStringBuilder(this)
@@ -101,75 +97,6 @@ public class ExecutionInfoToken implements Serializable {
   }
 
   public ExecutionInfoToken deepcopy() {
-//<<<<<<< HEAD
-//    try {
-//      ByteArrayOutputStream bos = new ByteArrayOutputStream();
-//      ObjectOutputStream out = new ObjectOutputStream(bos);
-//      out.writeObject(this);
-//      out.flush();
-//      out.close();
-//
-//      ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(bos.toByteArray()));
-//      ExecutionInfoToken copiedToken = (ExecutionInfoToken) in.readObject();
-//      return copiedToken;
-//
-//    } catch (ClassNotFoundException e) {
-//      e.printStackTrace();
-//    } catch (NotSerializableException e) {
-//      e.printStackTrace();
-//    } catch (IOException e) {
-//      e.printStackTrace();
-//    }
-//    return null;
-//=======
     return new Cloner().deepClone(this);
-    //    try {
-    //      ByteArrayOutputStream bos = new ByteArrayOutputStream();
-    //      ObjectOutputStream out = new ObjectOutputStream(bos);
-    //      out.writeObject(this);
-    //      out.flush();
-    //      out.close();
-    //
-    //      ObjectInputStream in = new ObjectInputStream(new
-    // ByteArrayInputStream(bos.toByteArray()));
-    //      ExecutionInfoToken copiedToken = (ExecutionInfoToken) in.readObject();
-    //      return copiedToken;
-    //
-    //    } catch (ClassNotFoundException e) {
-    //      // TODO Auto-generated catch block
-    //      e.printStackTrace();
-    //    } catch (NotSerializableException e) {
-    //      // TODO: handle this case
-    //      e.printStackTrace();
-    //    } catch (IOException e) {
-    //      e.printStackTrace();
-    //    }
-    //    return null;
-//>>>>>>> origin/master
-
-    //    ExecutionInfoToken newToken = new ExecutionInfoToken();
-    //
-    //    for (Entry<String, Object> entry : data.entrySet()) {
-    //      String key = entry.getKey();
-    //      Object value = entry.getValue();
-    //
-    //      try {
-    //        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-    //        ObjectOutputStream out = new ObjectOutputStream(bos);
-    //        out.writeObject(value);
-    //        out.flush();
-    //        out.close();
-    //
-    //        ObjectInputStream in = new ObjectInputStream(
-    //            new ByteArrayInputStream(bos.toByteArray()));
-    //        Object copedValue = in.readObject();
-    //        newToken.setKeyValue(key, copedValue);
-    //
-    //      } catch (ClassNotFoundException | IOException e) {
-    //        e.printStackTrace();
-    //      }
-    //    }
-    //
-    //    return newToken;
   }
 }

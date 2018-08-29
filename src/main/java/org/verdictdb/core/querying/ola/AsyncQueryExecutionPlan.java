@@ -141,6 +141,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
 
     List<ExecutableNodeBase> individualAggNodes = new ArrayList<>();
     List<ExecutableNodeBase> combiners = new ArrayList<>();
+    List<AggExecutionNodeBlock> aggblocks = new ArrayList<>(); 
     //    ScrambleMeta scrambleMeta = idCreator.getScrambleMeta();
 
     // First, plan how to perform block aggregation
@@ -214,6 +215,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
       }
 
       individualAggNodes.add(aggroot);
+      aggblocks.add(copy);
     }
 
     // Third, stack combiners
@@ -237,7 +239,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
 
     // Fourth, re-link the subscription relationship for the new AsyncAggNode
     ExecutableNodeBase newRoot =
-        AsyncAggExecutionNode.create(idCreator, individualAggNodes, combiners, scrambleMeta, aggNodeBlock);
+        AsyncAggExecutionNode.create(idCreator, aggblocks, combiners, scrambleMeta, aggNodeBlock);
 
     // Finally remove the old subscription information: old copied node -> still used old node
     for (Pair<ExecutableNodeBase, ExecutableNodeBase> parentToSource : oldSubscriptionInformation) {

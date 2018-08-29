@@ -116,7 +116,7 @@ public class AsyncAggExecutionNode extends ProjectionNode {
    */
   public static AsyncAggExecutionNode create(
       IdCreator idCreator,
-      List<ExecutableNodeBase> individualAggs,
+      List<AggExecutionNodeBlock> aggblocks,
       List<ExecutableNodeBase> combiners,
       ScrambleMetaSet meta, 
       AggExecutionNodeBlock aggNodeBlock) {
@@ -130,7 +130,7 @@ public class AsyncAggExecutionNode extends ProjectionNode {
     SubscriptionTicket ticket = tableAndTicket.getRight();
 
     // first agg -> root
-    AggExecutionNode firstSource = (AggExecutionNode) individualAggs.get(0);
+    AggExecutionNode firstSource = (AggExecutionNode) aggblocks.get(0).getBlockRootNode();
     firstSource.registerSubscriber(ticket);
     //    node.subscribeTo(individualAggs.get(0), 0);
 
@@ -140,13 +140,28 @@ public class AsyncAggExecutionNode extends ProjectionNode {
       //      node.subscribeTo(c, 0);
     }
     
-    // agg -> next agg (to enfore the execution order)
-    for (int i = 0; i < individualAggs.size()-1; i++) {
-      AggExecutionNode thisNode = (AggExecutionNode) individualAggs.get(i);
-      AggExecutionNode nextNode = (AggExecutionNode) individualAggs.get(i+1);
-      int channel = thisNode.getId();
-      nextNode.subscribeTo(thisNode, channel);
+    
+    // make the leaf nodes dependent on the aggroot of the previous iteration
+    // this will make all the operations on the (i+1)-th block performed after the operations
+    // on the i-th block.
+    for (int i = 0; i < aggblocks.size(); i++) {
+      if (i > 0) {
+        AggExecutionNodeBlock aggblock = aggblocks.get(i);
+        List<ExecutableNodeBase> leafNodes = aggblock.getLeafNodes();
+        ExecutableNodeBase prevAggRoot = aggblocks.get(i-1).getBlockRootNode();
+        for (ExecutableNodeBase leaf : leafNodes) {
+          leaf.subscribeTo(prevAggRoot, prevAggRoot.getId());
+        }
+      }
     }
+    
+//    // agg -> next agg (to enfore the execution order)
+//    for (int i = 0; i < individualAggs.size()-1; i++) {
+//      AggExecutionNode thisNode = (AggExecutionNode) individualAggs.get(i);
+//      AggExecutionNode nextNode = (AggExecutionNode) individualAggs.get(i+1);
+//      int channel = thisNode.getId();
+//      nextNode.subscribeTo(thisNode, channel);
+//    }
 
     node.setScrambleMetaSet(meta);   // the scramble meta must be not be shared; thus, thread-safe
     node.setNamer(idCreator);        // the name can be shared

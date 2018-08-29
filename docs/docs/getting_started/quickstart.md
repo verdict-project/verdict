@@ -11,7 +11,7 @@ place the following dependency in the `<dependencies>` of your pom.xml.
 <dependency>
     <groupId>org.verdictdb</groupId>
     <artifactId>verdictdb-core</artifactId>
-    <version>0.5.0-alpha</version>
+    <version>0.5.4</version>
 </dependency>
 ```
 

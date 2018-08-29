@@ -2,6 +2,7 @@ package org.verdictdb.core.querying.simplifier;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map.Entry;
 
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.core.execplan.ExecutionInfoToken;
@@ -22,6 +23,21 @@ import org.verdictdb.exception.VerdictDBException;
 
 import com.google.common.base.Optional;
 
+/**
+ * Used for simplifying two nodes into one. This class may be used in a recursively way to simplify
+ * an arbitrary deep nodes into a single node (as long as the condition is satisfied).
+ * 
+ * This class relines on an important assumption:
+ * 1. The token of a child node must not rely on its query results.
+ * 
+ * The logic based on the above assumption can be found in the createQuery() method. Traditionally,
+ * createToken() must use the result of createQuery(); however, based on the assumption, the token
+ * of the child is created without actually running its query. Note that the child's select query
+ * is consolidated into the parent query as a subquery.
+ * 
+ * @author Yongjoo Park
+ *
+ */
 public class DirectRetrievalExecutionNode extends QueryNodeWithPlaceHolders {
 
   private static final long serialVersionUID = -561220173745897906L;
@@ -187,7 +203,13 @@ public class DirectRetrievalExecutionNode extends QueryNodeWithPlaceHolders {
   public SqlConvertible createQuery(List<ExecutionInfoToken> tokens) throws VerdictDBException {
     // this will replace the placeholders contained the subquery.
     childNode.createQuery(tokens);
-    parentNode.createQuery(tokens);
+    ExecutionInfoToken childToken = childNode.createToken(null);
+    
+    // also pass the tokens possibly created by child.
+    List<ExecutionInfoToken> newTokens = new ArrayList<>();
+    newTokens.addAll(tokens);
+    newTokens.add(childToken);
+    parentNode.createQuery(newTokens);
     return selectQuery;
   }
   

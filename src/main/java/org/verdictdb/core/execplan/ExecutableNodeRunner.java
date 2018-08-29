@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 
+import org.slf4j.Logger;
 import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.DbmsQueryResult;
@@ -120,9 +121,7 @@ public class ExecutableNodeRunner implements Runnable {
     
     // no dependency exists
     if (node.getSourceQueues().size() == 0) {
-      synchronized (VerdictDBLogger.class) {
-        log.debug(String.format("No dependency exists. Simply run %s", node.toString()));
-      }
+      log.debug(String.format("No dependency exists. Simply run %s", node.toString()));
       try {
         executeAndBroadcast(Arrays.<ExecutionInfoToken>asList());
         broadcast(ExecutionInfoToken.successToken());
@@ -150,24 +149,31 @@ public class ExecutableNodeRunner implements Runnable {
           return;
         }
   
-        synchronized (VerdictDBLogger.class) {
-          log.debug(String.format("Actual processing starts for %s", node.toString()));
-        }
+        log.trace(String.format("Attempts to process %s", node.toString()));
   
         ExecutionInfoToken failureToken = getFailureTokenIfExists(tokens);
         if (failureToken != null) {
+          log.trace(String.format("One or more dependent nodes failed for %s", node.toString()));
           broadcast(failureToken);
           clearRunningTask();
           return;
         }
         if (areAllSuccess(tokens)) {
+          log.trace(String.format("All dependent nodes are finished for %s", node.toString()));
           broadcast(ExecutionInfoToken.successToken());
           clearRunningTask();
           return;
         }
+        
+        // This happens because some of the children finished their processing (with parts of blocks).
+        // We can simply ignore these cases though.
+        if (areAllStatusTokens(tokens)) {
+          continue;
+        }
   
         // actual processing
         try {
+          log.debug(String.format("Main processing starts for %s with token: %s", node.toString(), tokens));
           executeAndBroadcast(tokens);
         } catch (Exception e) {
           if (isAborted) {
@@ -207,6 +213,7 @@ public class ExecutableNodeRunner implements Runnable {
 
   void broadcast(ExecutionInfoToken token) {
     if (isAborted) {
+      log.trace(String.format("This node (%s) has been aborted. Do not broadcast: %s", this.toString(), token));
       return;
     }
   
@@ -230,6 +237,7 @@ public class ExecutableNodeRunner implements Runnable {
       ExecutableNodeRunner runner = dest.getRegisteredRunner();
       if (runner != null) {
         runner.runOnThread();
+//        runner.run();
       }
     }
   }
@@ -306,9 +314,18 @@ public class ExecutableNodeRunner implements Runnable {
     }
     return null;
   }
+  
+  boolean areAllStatusTokens(List<ExecutionInfoToken> tokens) {
+    for (ExecutionInfoToken t : tokens) {
+      if (!t.isStatusToken()) {
+        return false;
+      }
+    }
+    return true;
+  }
 
-  boolean areAllSuccess(List<ExecutionInfoToken> latestResults) {
-    for (ExecutionInfoToken t : latestResults) {
+  boolean areAllSuccess(List<ExecutionInfoToken> tokens) {
+    for (ExecutionInfoToken t : tokens) {
       if (t.isSuccessToken()) {
         successSourceCount++;
       } else {
