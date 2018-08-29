@@ -356,7 +356,7 @@ jobs:
       # Customize the JVM maximum heap limit
       MAVEN_OPTS: -Xmx3200m
     steps:
-      - run: apt-get update; apt-get install -y git maven
+      - run: apt-get update; apt-get install -y git default-jdk maven
       - checkout
       # Set up maven dependencies
       - restore_cache:
