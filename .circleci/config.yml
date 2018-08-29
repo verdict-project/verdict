@@ -362,7 +362,7 @@ jobs:
       - restore_cache:
           keys:
           - verdict-dependencies-{{ checksum "pom.xml" }}
-      - run: cd pyverdict; python setup.py develop
+      - run: cd pyverdict; python setup.py develop; cd ..
       - run: pytest
       - save_cache:
           paths:
