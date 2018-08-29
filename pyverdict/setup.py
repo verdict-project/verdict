@@ -25,13 +25,21 @@ subprocess.check_call(['cp', os.path.join('target', jar_name), lib_dir])
 os.chdir(root_dir)
 
 setuptools.setup(name='pyverdict',
-      version=version,
-      description='Python connector for VerdictDB',
-      url='http://verdictdb.org',
-      author='Barzan Mozafari, Yongjoo Park',
-      author_email='mozafari@umich.edu, pyongjoo@umich.edu',
-      license='Apache License, Version 2.0',
-      packages=setuptools.find_packages(),
-      package_data={'pyverdict': ['lib/*.jar']},
-      include_package_data=True
+    version=version,
+    description='Python connector for VerdictDB',
+    url='http://verdictdb.org',
+    author='Barzan Mozafari, Yongjoo Park',
+    author_email='mozafari@umich.edu, pyongjoo@umich.edu',
+    license='Apache License, Version 2.0',
+    packages=setuptools.find_packages(),
+    package_data={'pyverdict': ['lib/*.jar']},
+    include_package_data=True
+    python_requires='>3',
+    install_requires=[
+        'setuptools>=24.2.0',
+        'pip>=9.0.0',
+        'py4j>=0.10.7',
+        'PyMySQL>=0.9.2',
+        'pytest>=3.7.3'
+    ]
  )
