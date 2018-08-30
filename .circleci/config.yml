@@ -376,12 +376,10 @@ jobs:
     - run: apt-get update; apt-get install -y git
     - checkout
     - run: pip install mkdocs mkdocs-material
-    - run: cd docs; mkdocs build; cd ..;
-    - run: git checkout -b gh-pages   # temp branch
-    - run: rm .gitignore
-    - run: git config user.email "pyongjoo@umich.edu"; git config user.name "Yongjoo Park"
-    - run: git add docs/site/*; git commit -m 'init docs';
+    - run: cd docs; mkdocs build; cd ..; rm .gitignore;
+    - run: git subtree split --prefix docs/site -b gh-pages
     - run: git remote add doc-origin git@github.com:verdictdb/verdictdb-doc.git
+    - run: git config user.email "pyongjoo@umich.edu"; git config user.name "Yongjoo Park"
     - run: git push -f doc-origin gh-pages:gh-pages
 
 workflows:
