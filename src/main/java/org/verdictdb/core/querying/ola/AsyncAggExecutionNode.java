@@ -23,15 +23,36 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.core.execplan.ExecutionInfoToken;
-import org.verdictdb.core.querying.*;
+import org.verdictdb.core.querying.AggExecutionNode;
+import org.verdictdb.core.querying.ExecutableNodeBase;
+import org.verdictdb.core.querying.IdCreator;
+import org.verdictdb.core.querying.ProjectionNode;
+import org.verdictdb.core.querying.QueryNodeBase;
+import org.verdictdb.core.querying.SubscriptionTicket;
 import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
-import org.verdictdb.core.sqlobject.*;
+import org.verdictdb.core.sqlobject.AliasedColumn;
+import org.verdictdb.core.sqlobject.AsteriskColumn;
+import org.verdictdb.core.sqlobject.BaseColumn;
+import org.verdictdb.core.sqlobject.BaseTable;
+import org.verdictdb.core.sqlobject.ColumnOp;
+import org.verdictdb.core.sqlobject.ConstantColumn;
+import org.verdictdb.core.sqlobject.GroupingAttribute;
+import org.verdictdb.core.sqlobject.OrderbyAttribute;
+import org.verdictdb.core.sqlobject.SelectItem;
+import org.verdictdb.core.sqlobject.SelectQuery;
+import org.verdictdb.core.sqlobject.SqlConvertible;
+import org.verdictdb.core.sqlobject.UnnamedColumn;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBValueException;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 /**
  * Represents an "progressive" execution of a single aggregate query (without nested components).
@@ -165,23 +186,39 @@ public class AsyncAggExecutionNode extends ProjectionNode {
     // add (1) order-by, (2) limit, (3) having clauses to the select query
     QueryNodeBase aggRoot = (QueryNodeBase) aggNodeBlock.getBlockRootNode();
     SelectQuery originalAggQuery = aggRoot.getSelectQuery();
-    int orderByCount = 0;
-    for (OrderbyAttribute orderBy : originalAggQuery.getOrderby()) {
-      String aliasName = ORDER_BY_ALIAS + (orderByCount++);
-      //      if (orderBy.getAttribute() instanceof AliasedColumn) {
-      //        aliasName = ((AliasedColumn) orderBy.getAttribute()).getAliasName();
-      //      } else if (orderBy.getAttribute() instanceof AliasReference) {
-      //        aliasName = ((AliasReference) orderBy.getAttribute()).getAliasName();
-      //      } else {
-      //        // TODO
-      //        return null;
-      //      }
-      BaseColumn col = new BaseColumn(TIER_CONSOLIDATED_TABLE_ALIAS, aliasName);
-      node.selectQuery.addOrderby(
-          new OrderbyAttribute(col, orderBy.getOrder(), orderBy.getNullsOrder()));
-    }
 
-    //    node.selectQuery.addOrderby(originalAggQuery.getOrderby());
+    //    int orderByCount = 0;
+    //    for (OrderbyAttribute orderBy : originalAggQuery.getOrderby()) {
+    //      String aliasName = ORDER_BY_ALIAS + (orderByCount++);
+    //      //      if (orderBy.getAttribute() instanceof AliasedColumn) {
+    //      //        aliasName = ((AliasedColumn) orderBy.getAttribute()).getAliasName();
+    //      //      } else if (orderBy.getAttribute() instanceof AliasReference) {
+    //      //        aliasName = ((AliasReference) orderBy.getAttribute()).getAliasName();
+    //      //      } else {
+    //      //        // TODO
+    //      //        return null;
+    //      //      }
+    //      BaseColumn col = new BaseColumn(TIER_CONSOLIDATED_TABLE_ALIAS, aliasName);
+    //      node.selectQuery.addOrderby(
+    //          new OrderbyAttribute(col, orderBy.getOrder(), orderBy.getNullsOrder()));
+    //    }
+
+    node.selectQuery.addOrderby(originalAggQuery.getOrderby());
+
+    //    int orderByCount = 0;
+    //    for (SelectItem item : node.selectQuery.getSelectList()) {
+    //      if (item instanceof AliasedColumn) {
+    //        AliasedColumn ac = (AliasedColumn) item;
+    //        if (ac.getAliasName().startsWith(AsyncAggExecutionNode.getOrderByAlias())) {
+    //          OrderbyAttribute attr = originalAggQuery.getOrderby().get(orderByCount);
+    //          BaseColumn col = new BaseColumn(TIER_CONSOLIDATED_TABLE_ALIAS, ac.getAliasName());
+    //          node.selectQuery.addOrderby(
+    //              new OrderbyAttribute(col, attr.getOrder(), attr.getNullsOrder()));
+    //          ++orderByCount;
+    //        }
+    //      }
+    //    }
+
     if (originalAggQuery.getLimit().isPresent()) {
       node.selectQuery.addLimit(originalAggQuery.getLimit().get());
     }
@@ -588,18 +625,17 @@ public class AsyncAggExecutionNode extends ProjectionNode {
     // Case 2: non-aggregate column
     // this non-aggregate column must exist in the column list of the scaled table
     else if (sel instanceof AliasedColumn) {
-      AliasedColumn ac = (AliasedColumn) sel;
-      if (ac.getAliasName().startsWith(AsyncAggExecutionNode.getHavingConditionAlias())
-          || ac.getAliasName().startsWith(AsyncAggExecutionNode.getGroupByAlias())
-          || ac.getAliasName().startsWith(AsyncAggExecutionNode.getOrderByAlias())) {
-        return null;
-      } else {
-        ((AliasedColumn) sel)
-            .setColumn(
-                new BaseColumn(
-                    TIER_CONSOLIDATED_TABLE_ALIAS, ((AliasedColumn) sel).getAliasName()));
-        ((AliasedColumn) sel).setAliasName(((AliasedColumn) sel).getAliasName());
-      }
+      //      AliasedColumn ac = (AliasedColumn) sel;
+      //      if (ac.getAliasName().startsWith(AsyncAggExecutionNode.getHavingConditionAlias())
+      //          || ac.getAliasName().startsWith(AsyncAggExecutionNode.getGroupByAlias())
+      //          || ac.getAliasName().startsWith(AsyncAggExecutionNode.getOrderByAlias())) {
+      //        return null;
+      //      } else {
+      ((AliasedColumn) sel)
+          .setColumn(
+              new BaseColumn(TIER_CONSOLIDATED_TABLE_ALIAS, ((AliasedColumn) sel).getAliasName()));
+      ((AliasedColumn) sel).setAliasName(((AliasedColumn) sel).getAliasName());
+      //      }
     }
     return sel;
   }
@@ -630,24 +666,26 @@ public class AsyncAggExecutionNode extends ProjectionNode {
     int orderByIndex = 0;
     for (SelectItem sel : originalSelectList) {
       SelectItem replacedSel = this.replaceColumnWithAggMeta(sel, aggMeta);
-      if (replacedSel != null) {
-        if (replacedSel instanceof AliasedColumn) {
-          AliasedColumn ac = (AliasedColumn) replacedSel;
-          if (ac.getAliasName().startsWith(HAVING_CONDITION_ALIAS)) {
-            if (firstHaving) {
-              queryToReplace.clearHaving();
-              firstHaving = false;
-            }
-            queryToReplace.addHavingByAnd(ac.getColumn());
-            continue;
-          } else if (ac.getAliasName().startsWith(ORDER_BY_ALIAS)) {
-            OrderbyAttribute attribute = queryToReplace.getOrderby().get(orderByIndex++);
-            attribute.setAttribute(ac.getColumn());
-            continue;
+      SelectItem item = (replacedSel != null) ? replacedSel : sel;
+      if (item instanceof AliasedColumn) {
+        AliasedColumn ac = (AliasedColumn) item;
+        if (ac.getAliasName().startsWith(HAVING_CONDITION_ALIAS)) {
+          if (firstHaving) {
+            queryToReplace.clearHaving();
+            firstHaving = false;
           }
+          queryToReplace.addHavingByAnd(ac.getColumn());
+        } else if (ac.getAliasName().startsWith(ORDER_BY_ALIAS)) {
+          OrderbyAttribute attribute = queryToReplace.getOrderby().get(orderByIndex++);
+          attribute.setAttribute(ac.getColumn());
         }
-        newSelectList.add(replacedSel);
+        if (ac.getAliasName().startsWith(HAVING_CONDITION_ALIAS)
+            || ac.getAliasName().startsWith(ORDER_BY_ALIAS)
+            || ac.getAliasName().startsWith(GROUP_BY_ALIAS)) {
+          continue;
+        }
       }
+      newSelectList.add(item);
     }
     queryToReplace.clearSelectList();
     //    queryToReplace.getSelectList().addAll(originalSelectList);

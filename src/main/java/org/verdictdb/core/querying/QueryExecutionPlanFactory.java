@@ -20,7 +20,20 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.coordinator.QueryContext;
 import org.verdictdb.core.querying.ola.AsyncAggExecutionNode;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
-import org.verdictdb.core.sqlobject.*;
+import org.verdictdb.core.sqlobject.AbstractRelation;
+import org.verdictdb.core.sqlobject.AliasReference;
+import org.verdictdb.core.sqlobject.AliasedColumn;
+import org.verdictdb.core.sqlobject.AsteriskColumn;
+import org.verdictdb.core.sqlobject.BaseColumn;
+import org.verdictdb.core.sqlobject.BaseTable;
+import org.verdictdb.core.sqlobject.ColumnOp;
+import org.verdictdb.core.sqlobject.GroupingAttribute;
+import org.verdictdb.core.sqlobject.JoinTable;
+import org.verdictdb.core.sqlobject.OrderbyAttribute;
+import org.verdictdb.core.sqlobject.SelectItem;
+import org.verdictdb.core.sqlobject.SelectQuery;
+import org.verdictdb.core.sqlobject.SubqueryColumn;
+import org.verdictdb.core.sqlobject.UnnamedColumn;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -120,6 +133,49 @@ public class QueryExecutionPlanFactory {
     //    query.addOrderby(query.getOrderby());
     //  if (query.getLimit().isPresent()) selectQuery.addLimit(query.getLimit().get());
 
+    /*
+     * Here we add expressions in HAVING, GROUP-BY and ORDER-BY into the select list of
+     * the original query to calculate their approximate values later.
+     *
+     * We have two assumptions:
+     * 1. If the having clause includes a base column outside an aggregate function,
+     *    the column must have appeared in the groupby clause. Otherwise, the query itself is
+     *    ill-formed.
+     * 2. If the having clause includes an aggregate function, the function can safely appear
+     *    in the select list because the select list must already include other aggregate functions.
+     *    Otherwise, it is not an aggregate query;thus, the having clause should not have been
+     *    used in the first place.
+     *
+     * For example, the following original query:
+     * SELECT a
+     * FROM t
+     * GROUP BY g
+     * HAVING h
+     * ORDER BY o
+     *
+     * becomes:
+     * SELECT a, g, h, o
+     * FROM t
+     * GROUP BY g
+     * HAVING h
+     * ORDER BY o
+     *
+     * so that with AsyncAggExecutionNode, we can do something like below:
+     * (note that this is a lot more simpler than the actual re-written query)
+     *
+     * SELECT a
+     * FROM (SELECT approx(a) as a, approx(g) as g, approx(h) as h, approx(o) as o
+     *       FROM scrambled(t))
+     * GROUP BY g
+     * HAVING h
+     * ORDER BY o
+     *
+     * The logic in AsyncQueryExecutionPlan and AsyncAggExecutionNode will generate
+     * {approx(g), approx(h), ...} for us and we simply need to substitute these expressions
+     * accordingly later.
+     *
+     */
+
     int groupbyCount = 0;
     for (GroupingAttribute attr : query.getGroupby()) {
       UnnamedColumn groupByCol = findActualGroupByExpression(attr, query);
@@ -128,8 +184,6 @@ public class QueryExecutionPlanFactory {
               groupByCol, AsyncAggExecutionNode.getGroupByAlias() + (groupbyCount++)));
     }
 
-    // dyoon: when 'HAVING' clause is present, its condition is added as a select item in the inner
-    // query so that outer query can use that column to test the same HAVING condition
     if (query.getHaving().isPresent()) {
       UnnamedColumn havingCopy = query.getHaving().get().deepcopy();
       AliasedColumn havingColumn =

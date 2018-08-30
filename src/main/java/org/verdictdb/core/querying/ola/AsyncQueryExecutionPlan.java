@@ -20,15 +20,36 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.verdictdb.core.execplan.ExecutableNode;
-import org.verdictdb.core.querying.*;
+import org.verdictdb.core.querying.AggExecutionNode;
+import org.verdictdb.core.querying.ExecutableNodeBase;
+import org.verdictdb.core.querying.IdCreator;
+import org.verdictdb.core.querying.ProjectionNode;
+import org.verdictdb.core.querying.QueryExecutionPlan;
+import org.verdictdb.core.querying.QueryNodeBase;
 import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
-import org.verdictdb.core.sqlobject.*;
+import org.verdictdb.core.sqlobject.AbstractRelation;
+import org.verdictdb.core.sqlobject.AliasedColumn;
+import org.verdictdb.core.sqlobject.AsteriskColumn;
+import org.verdictdb.core.sqlobject.BaseColumn;
+import org.verdictdb.core.sqlobject.BaseTable;
+import org.verdictdb.core.sqlobject.ColumnOp;
+import org.verdictdb.core.sqlobject.ConstantColumn;
+import org.verdictdb.core.sqlobject.JoinTable;
+import org.verdictdb.core.sqlobject.SelectItem;
+import org.verdictdb.core.sqlobject.SelectQuery;
+import org.verdictdb.core.sqlobject.UnnamedColumn;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBTypeException;
 import org.verdictdb.exception.VerdictDBValueException;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * An online aggregation (or approximate aggregation) version of the given QueryExecutionPlan.
@@ -535,9 +556,11 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
     }
   }
 
-  /**
-   * For example, convert 1. avg(price) -> sum(price) as 'agg0', count(price) as 'agg1' 2.
-   * sum(price) / count(*) -> sum(price) as 'agg0', count(*) as 'agg1'
+  /*-
+   * For example, convert
+   *
+   * 1. avg(price) ---------------------> sum(price) as 'agg0', count(price) as 'agg1'
+   * 2. sum(price) / count(*) ----------> sum(price) as 'agg0', count(*) as 'agg1'
    *
    * @param query
    * @param meta
@@ -572,8 +595,9 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
           meta.getAggColumn().put(selectItem, columnOps);
           int cnt = 0;
           for (ColumnOp col : columnOps) {
-            if (ac.getAliasName().startsWith(AsyncAggExecutionNode.getHavingConditionAlias())) {
-              newAlias = prefix + cnt;
+            if (ac.getAliasName().startsWith(AsyncAggExecutionNode.getHavingConditionAlias())
+                || ac.getAliasName().startsWith(AsyncAggExecutionNode.getOrderByAlias())) {
+              newAlias = prefix + "_" + cnt;
               ++cnt;
             }
             if (col.getOpType().equals("avg")) {

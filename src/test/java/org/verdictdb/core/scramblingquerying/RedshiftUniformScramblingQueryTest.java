@@ -140,7 +140,7 @@ public class RedshiftUniformScramblingQueryTest {
                 + "FROM \"%s\".\"orders\" \"orders\"\n"
                 + "GROUP BY o_orderstatus\n"
                 + "HAVING avg(\"orders\".\"o_orderkey\") > 10\n"
-                + "ORDER BY avg(o_orderkey)\n",
+                + "ORDER BY avg(o_orderkey) + min(o_orderkey) + max(o_orderkey)\n",
             SCHEMA_NAME, SCHEMA_NAME);
     ResultSet rs1 = vc.createStatement().executeQuery(sql);
     ResultSet rs2 = conn.createStatement().executeQuery(sql);
