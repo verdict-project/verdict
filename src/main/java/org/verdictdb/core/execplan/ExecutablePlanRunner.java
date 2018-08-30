@@ -83,12 +83,16 @@ public class ExecutablePlanRunner {
     }
     
     // Run nodes
+    // The nodes whose dependencies have not been finished will terminate immediately.
+    // The leaf nodes will signal its parents (also called subscribers) to make them run.
+    // The signal will be propagated throughout the tree as the nodes are completed.
     Set<Integer> groupIds = plan.getNodeGroupIDs();
     for (int gid : groupIds) {
       List<ExecutableNode> nodes = plan.getNodesInGroup(gid);
       for (ExecutableNode n : nodes) {
         ExecutableNodeRunner nodeRunner = new ExecutableNodeRunner(conn, n);
         nodeRunner.runOnThread();
+//        nodeRunner.run();
         nodeRunners.add(nodeRunner);
       }
     }

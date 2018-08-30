@@ -1,20 +1,7 @@
 package org.verdictdb.jdbc41;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-
-import java.io.File;
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-
+import com.google.common.base.Charsets;
+import com.google.common.io.Files;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -26,8 +13,16 @@ import org.verdictdb.commons.VerdictOption;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
+import java.io.File;
+import java.io.IOException;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 /** Created by Dong Young Yoon on 7/18/18. */
 @RunWith(Parameterized.class)
@@ -177,11 +172,12 @@ public class JdbcTpchQueryForAllDatabasesTest {
         params.add(new Object[] {database, "e5"});
         params.add(new Object[] {database, "e6"});
         params.add(new Object[] {database, "e7"});
+        params.add(new Object[] {database, "e8"});
       }
 
       // Uncomment below lines to test a specific query
       //      params.clear();
-      //      params.add(new Object[] {database, "1"});
+      //      params.add(new Object[] {database, "e8"});
     }
     return params;
   }
@@ -191,7 +187,8 @@ public class JdbcTpchQueryForAllDatabasesTest {
         String.format("jdbc:mysql://%s?autoReconnect=true&useSSL=false", MYSQL_HOST);
     String vcMysqlConnectionString =
         String.format(
-            "jdbc:verdict:mysql://%s?autoReconnect=true&useSSL=false&verdictdbmetaschema=%s&verdictdbtempschema=%s",
+            "jdbc:verdict:mysql://%s?autoReconnect=true&useSSL=false&"
+                + "verdictdbmetaschema=%s&verdictdbtempschema=%s",
             MYSQL_HOST, VERDICT_META_SCHEMA, VERDICT_TEMP_SCHEMA);
     Connection conn =
         DatabaseConnectionHelpers.setupMySql(
@@ -252,8 +249,7 @@ public class JdbcTpchQueryForAllDatabasesTest {
     return conn;
   }
 
-  public static Connection setupPostgresql()
-      throws SQLException, IOException, VerdictDBException {
+  public static Connection setupPostgresql() throws SQLException, IOException, VerdictDBException {
     String connectionString =
         String.format("jdbc:postgresql://%s/%s", POSTGRES_HOST, POSTGRES_DATABASE);
     Connection conn =

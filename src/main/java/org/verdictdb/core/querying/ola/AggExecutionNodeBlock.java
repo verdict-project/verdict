@@ -292,8 +292,8 @@ public class AggExecutionNodeBlock {
     List<ExecutableNodeBase> newNodes = new ArrayList<>();
     for (ExecutableNodeBase node : blockNodes) {
       ExecutableNodeBase copied = node.deepcopy();
-      copied.cancelSubscriptionsFromAllSubscribers(); // this subscription information will be
-      // properly reconstructed below.
+      // this subscription information will be properly reconstructed below.
+      copied.cancelSubscriptionsFromAllSubscribers(); 
       newNodes.add(copied);
     }
 
@@ -327,137 +327,22 @@ public class AggExecutionNodeBlock {
     return new AggExecutionNodeBlock(newNodes.get(rootIdx));
   }
 
-  // judge the aggregate column
-  //  public static List<ColumnOp> getAggregateColumn(UnnamedColumn sel) {
-  //    List<SelectItem> itemToCheck = new ArrayList<>();
-  //    itemToCheck.add(sel);
-  //    List<ColumnOp> columnOps = new ArrayList<>();
-  //    while (!itemToCheck.isEmpty()) {
-  //      SelectItem s = itemToCheck.get(0);
-  //      itemToCheck.remove(0);
-  //      if (s instanceof ColumnOp) {
-  //        if (((ColumnOp) s).getOpType().equals("count") || ((ColumnOp)
-  // s).getOpType().equals("sum") || ((ColumnOp) s).getOpType().equals("avg")
-  //            ||((ColumnOp) s).getOpType().equals("max")||((ColumnOp)
-  // s).getOpType().equals("min")) {
-  //          columnOps.add((ColumnOp) s);
-  //        }
-  //        else itemToCheck.addAll(((ColumnOp) s).getOperands());
-  //      }
-  //    }
-  //    return columnOps;
-  //  }
-
-  //  List<SelectItem> rewriteSelectlistWithBasicAgg(SelectQuery query, AggMeta meta) {
-  //    List<SelectItem> selectList = query.getSelectList();
-  //    List<String> aggColumnAlias = new ArrayList<>();
-  //    HashMap<String, String> maxminAlias = new HashMap<>();
-  //    List<SelectItem> newSelectlist = new ArrayList<>();
-  //    meta.setOriginalSelectList(selectList);
-  //    for (SelectItem selectItem : selectList) {
-  //      if (selectItem instanceof AliasedColumn) {
-  //        List<ColumnOp> columnOps = getAggregateColumn(((AliasedColumn) selectItem).getColumn());
-  //        // If it contains agg columns
-  //        if (!columnOps.isEmpty()) {
-  //          meta.getAggColumn().put(selectItem, columnOps);
-  //          for (ColumnOp col:columnOps) {
-  //            if (col.getOpType().equals("avg")) {
-  //              if (!meta.getAggColumnAggAliasPair().containsKey(
-  //                  new ImmutablePair<>("sum", col.getOperand(0)))) {
-  //                ColumnOp col1 = new ColumnOp("sum", col.getOperand(0));
-  //                newSelectlist.add(new AliasedColumn(col1, "agg"+aggColumnIdentiferNum));
-  //                meta.getAggColumnAggAliasPair().put(
-  //                    new ImmutablePair<>("sum", col1.getOperand(0)),
-  // "agg"+aggColumnIdentiferNum);
-  //                aggColumnAlias.add("agg"+aggColumnIdentiferNum++);
-  //              }
-  //              if (!meta.getAggColumnAggAliasPair().containsKey(
-  //                  new ImmutablePair<>("count", (UnnamedColumn) new AsteriskColumn()))) {
-  //                ColumnOp col2 = new ColumnOp("count", new AsteriskColumn());
-  //                newSelectlist.add(new AliasedColumn(col2, "agg"+aggColumnIdentiferNum));
-  //                meta.getAggColumnAggAliasPair().put(
-  //                    new ImmutablePair<>("count", (UnnamedColumn) new AsteriskColumn()),
-  // "agg"+aggColumnIdentiferNum);
-  //                aggColumnAlias.add("agg"+aggColumnIdentiferNum++);
-  //              }
-  //            } else if (col.getOpType().equals("count") || col.getOpType().equals("sum")){
-  //              if (col.getOpType().equals("count") &&
-  // !meta.getAggColumnAggAliasPair().containsKey(
-  //                  new ImmutablePair<>("count", (UnnamedColumn)(new AsteriskColumn())))) {
-  //                ColumnOp col1 = new ColumnOp(col.getOpType());
-  //                newSelectlist.add(new AliasedColumn(col1, "agg"+aggColumnIdentiferNum));
-  //                meta.getAggColumnAggAliasPair().put(
-  //                    new ImmutablePair<>(col.getOpType(), (UnnamedColumn)new AsteriskColumn()),
-  // "agg"+aggColumnIdentiferNum);
-  //                aggColumnAlias.add("agg"+aggColumnIdentiferNum++);
-  //              }
-  //              else if (col.getOpType().equals("sum") &&
-  // !meta.getAggColumnAggAliasPair().containsKey(
-  //                  new ImmutablePair<>(col.getOpType(), col.getOperand(0)))) {
-  //                ColumnOp col1 = new ColumnOp(col.getOpType(), col.getOperand(0));
-  //                newSelectlist.add(new AliasedColumn(col1, "agg"+aggColumnIdentiferNum));
-  //                meta.getAggColumnAggAliasPair().put(
-  //                    new ImmutablePair<>(col.getOpType(), col1.getOperand(0)),
-  // "agg"+aggColumnIdentiferNum);
-  //                aggColumnAlias.add("agg"+aggColumnIdentiferNum++);
-  //              }
-  //            } else if (col.getOpType().equals("max") || col.getOpType().equals("min")) {
-  //              ColumnOp col1 = new ColumnOp(col.getOpType(), col.getOperand(0));
-  //              newSelectlist.add(new AliasedColumn(col1, "agg"+aggColumnIdentiferNum));
-  //              meta.getAggColumnAggAliasPairOfMaxMin().put(
-  //                  new ImmutablePair<>(col.getOpType(), col1.getOperand(0)),
-  // "agg"+aggColumnIdentiferNum);
-  //              maxminAlias.put("agg"+aggColumnIdentiferNum++, col.getOpType());
-  //            }
-  //          }
-  //        }
-  //        else {
-  //          newSelectlist.add(selectItem);
-  //        }
-  //      } else {
-  //        newSelectlist.add(selectItem);
-  //      }
-  //    }
-  //    meta.setAggAlias(aggColumnAlias);
-  //    meta.setMaxminAggAlias(maxminAlias);
-  //    return newSelectlist;
-  //  }
-
-  //  void addTierColumn(SelectQuery query, List<SelectItem> newSelectList, ScrambleMetaSet
-  // scrambleMeta) {
-  //    for (AbstractRelation table : query.getFromList()) {
-  //      if (table instanceof BaseTable) {
-  //        String schemaName = ((BaseTable) table).getSchemaName();
-  //        String tableName = ((BaseTable) table).getTableName();
-  //        if (scrambleMeta.isScrambled(schemaName, tableName) &&
-  //            scrambleMeta.getSingleMeta(schemaName, tableName).getNumberOfTiers()>1) {
-  //          newSelectList.add(new AliasedColumn(
-  //              new BaseColumn(schemaName, tableName, table.getAliasName().get(),
-  // scrambleMeta.getTierColumn(schemaName, tableName)),
-  //              VERDICTDB_TIER_COLUMN_NAME + verdictdbTierIndentiferNum));
-  //          query.addGroupby(new AliasReference(VERDICTDB_TIER_COLUMN_NAME +
-  // verdictdbTierIndentiferNum++));
-  //        }
-  //      }
-  //      else if (table instanceof JoinTable) {
-  //        for (AbstractRelation jointable:((JoinTable) table).getJoinList()) {
-  //          if (jointable instanceof BaseTable) {
-  //            String schemaName = ((BaseTable) jointable).getSchemaName();
-  //            String tableName = ((BaseTable) jointable).getTableName();
-  //            if (scrambleMeta.isScrambled(schemaName, tableName) &&
-  // scrambleMeta.getSingleMeta(schemaName, tableName).getNumberOfTiers()>1) {
-  //              newSelectList.add(new AliasedColumn(
-  //                  new BaseColumn(schemaName, tableName, jointable.getAliasName().get(),
-  // scrambleMeta.getTierColumn(schemaName, tableName)),
-  //                  VERDICTDB_TIER_COLUMN_NAME + verdictdbTierIndentiferNum));
-  //              query.addGroupby(new AliasReference(VERDICTDB_TIER_COLUMN_NAME +
-  // verdictdbTierIndentiferNum++));
-  //            }
-  //          }
-  //        }
-  //      }
-  //    }
-  //    verdictdbTierIndentiferNum = 0;
-  //  }
-
+  public List<ExecutableNodeBase> getLeafNodes() {
+    List<ExecutableNodeBase> leafNodes = new ArrayList<>();
+    for (ExecutableNodeBase node : blockNodes) {
+      List<ExecutableNodeBase> sources = node.getSources();
+      boolean allSourcesExternal = true;
+      for (ExecutableNodeBase source : sources) {
+        if (blockNodes.contains(source)) {
+          allSourcesExternal = false;
+        }
+      }
+      
+      if (allSourcesExternal) {
+        leafNodes.add(node);
+      }
+    }
+    
+    return leafNodes;
+  }
 }

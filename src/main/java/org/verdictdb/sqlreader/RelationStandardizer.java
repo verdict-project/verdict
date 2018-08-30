@@ -16,34 +16,15 @@
 
 package org.verdictdb.sqlreader;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Vector;
-
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.connection.MetaDataProvider;
-import org.verdictdb.core.sqlobject.AbstractRelation;
-import org.verdictdb.core.sqlobject.AliasReference;
-import org.verdictdb.core.sqlobject.AliasedColumn;
-import org.verdictdb.core.sqlobject.AsteriskColumn;
-import org.verdictdb.core.sqlobject.BaseColumn;
-import org.verdictdb.core.sqlobject.BaseTable;
-import org.verdictdb.core.sqlobject.ColumnOp;
-import org.verdictdb.core.sqlobject.ConstantColumn;
-import org.verdictdb.core.sqlobject.GroupingAttribute;
-import org.verdictdb.core.sqlobject.JoinTable;
-import org.verdictdb.core.sqlobject.OrderbyAttribute;
-import org.verdictdb.core.sqlobject.SelectItem;
-import org.verdictdb.core.sqlobject.SelectQuery;
-import org.verdictdb.core.sqlobject.SubqueryColumn;
-import org.verdictdb.core.sqlobject.UnnamedColumn;
+import org.verdictdb.core.sqlobject.*;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.sqlsyntax.H2Syntax;
 import org.verdictdb.sqlsyntax.SqlSyntax;
+
+import java.util.*;
 
 public class RelationStandardizer {
 
@@ -494,27 +475,36 @@ public class RelationStandardizer {
     UnnamedColumn having;
     if (relationToAlias.getHaving().isPresent()) {
       having = replaceFilter(relationToAlias.getHaving().get());
+
       // replace columnOp with alias if possible
-      if (having instanceof ColumnOp) {
-        List<ColumnOp> checklist = new ArrayList<>();
-        checklist.add((ColumnOp) having);
-        while (!checklist.isEmpty()) {
-          ColumnOp columnOp = checklist.get(0);
-          checklist.remove(0);
-          for (UnnamedColumn operand : columnOp.getOperands()) {
-            if (operand instanceof ColumnOp) {
-              if (columnOpAliasMap.containsKey(operand)) {
-                columnOp.setOperand(
-                    columnOp.getOperands().indexOf(operand),
-                    new AliasReference(columnOpAliasMap.get(operand)));
-              } else checklist.add((ColumnOp) operand);
-            }
-            // if (operand instanceof SubqueryColumn) {
-            //  throw new VerdictDBDbmsException("Do not support subquery in Having clause.");
-            // }
-          }
-        }
+      //      if (having instanceof ColumnOp) {
+      //        List<ColumnOp> checklist = new ArrayList<>();
+      //        checklist.add((ColumnOp) having);
+      //        while (!checklist.isEmpty()) {
+      //          ColumnOp columnOp = checklist.get(0);
+      //          checklist.remove(0);
+      //          for (UnnamedColumn operand : columnOp.getOperands()) {
+      //            if (operand instanceof ColumnOp) {
+      //              if (columnOpAliasMap.containsKey(operand)) {
+      //                columnOp.setOperand(
+      //                    columnOp.getOperands().indexOf(operand),
+      //                    new AliasReference(columnOpAliasMap.get(operand)));
+      //              } else checklist.add((ColumnOp) operand);
+      //            }
+      //            // if (operand instanceof SubqueryColumn) {
+      //            //  throw new VerdictDBDbmsException("Do not support subquery in Having
+      // clause.");
+      //            // }
+      //          }
+      //        }
+      //      }
+
+      // if having clause contains subquery, throw an exception since it is unsupported at
+      // the moment
+      if (containsSubquery(having)) {
+        throw new VerdictDBDbmsException("Currently, subquery is not supported in HAVING clause.");
       }
+
       AliasedRelation.addHavingByAnd(having);
     }
 
@@ -529,6 +519,21 @@ public class RelationStandardizer {
       AliasedRelation.addLimit(relationToAlias.getLimit().get());
     }
     return AliasedRelation;
+  }
+
+  private boolean containsSubquery(UnnamedColumn having) {
+    boolean hasSubquery = false;
+    if (having instanceof ColumnOp) {
+      ColumnOp op = (ColumnOp) having;
+      for (UnnamedColumn operand : op.getOperands()) {
+        if (operand instanceof SubqueryColumn) {
+          hasSubquery = true;
+        } else if (operand instanceof ColumnOp) {
+          hasSubquery = hasSubquery | containsSubquery(operand);
+        }
+      }
+    }
+    return hasSubquery;
   }
 
   public HashMap<String, String> getColNameAndColAlias() {

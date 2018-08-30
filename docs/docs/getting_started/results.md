@@ -1,0 +1,2 @@
+# VerdictDB's Result Structure
+

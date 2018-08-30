@@ -119,13 +119,13 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
    * aggregation.
    *
    * <p>Basically aggregate subqueries are blocking operations while others operations are divided
-   * into smaller- scale operations (which involve different portions of data).</p>
+   * into smaller- scale operations (which involve different portions of data).
    *
    * @param scrambleMeta The metadata about the scrambled tables.
    * @param aggNodeBlock A set of the links to the nodes that will be processed in the asynchronous
-   *                     manner.
-   * @return Returns     The root of the multiple aggregation nodes (each of which involves
-   * different combinations of partitions)
+   *     manner.
+   * @return Returns The root of the multiple aggregation nodes (each of which involves different
+   *     combinations of partitions)
    * @throws VerdictDBValueException
    */
   public ExecutableNodeBase convertToProgressiveAgg(
@@ -136,6 +136,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
 
     List<ExecutableNodeBase> individualAggNodes = new ArrayList<>();
     List<ExecutableNodeBase> combiners = new ArrayList<>();
+    List<AggExecutionNodeBlock> aggblocks = new ArrayList<>();
     //    ScrambleMeta scrambleMeta = idCreator.getScrambleMeta();
 
     // First, plan how to perform block aggregation
@@ -209,6 +210,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
       }
 
       individualAggNodes.add(aggroot);
+      aggblocks.add(copy);
     }
 
     // Third, stack combiners
@@ -232,7 +234,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
 
     // Fourth, re-link the subscription relationship for the new AsyncAggNode
     ExecutableNodeBase newRoot =
-        AsyncAggExecutionNode.create(idCreator, individualAggNodes, combiners, scrambleMeta, aggNodeBlock);
+        AsyncAggExecutionNode.create(idCreator, aggblocks, combiners, scrambleMeta, aggNodeBlock);
 
     // Finally remove the old subscription information: old copied node -> still used old node
     for (Pair<ExecutableNodeBase, ExecutableNodeBase> parentToSource : oldSubscriptionInformation) {
@@ -492,8 +494,8 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
         BaseTable base = (BaseTable) rel;
         String schemaName = base.getSchemaName();
         String tableName = base.getTableName();
-//        if (scrambleMeta.isScrambled(schemaName, tableName)
-//            && scrambleMeta.getSingleMeta(schemaName, tableName).getNumberOfTiers() > 1) {
+        //        if (scrambleMeta.isScrambled(schemaName, tableName)
+        //            && scrambleMeta.getSingleMeta(schemaName, tableName).getNumberOfTiers() > 1) {
         if (scrambleMeta.isScrambled(schemaName, tableName)) {
           multiTierScrambleTables.add(base);
         }
@@ -503,8 +505,9 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
             BaseTable base = (BaseTable) r;
             String schemaName = base.getSchemaName();
             String tableName = base.getTableName();
-//            if (scrambleMeta.isScrambled(schemaName, tableName)
-//                && scrambleMeta.getSingleMeta(schemaName, tableName).getNumberOfTiers() > 1) {
+            //            if (scrambleMeta.isScrambled(schemaName, tableName)
+            //                && scrambleMeta.getSingleMeta(schemaName,
+            // tableName).getNumberOfTiers() > 1) {
             if (scrambleMeta.isScrambled(schemaName, tableName)) {
               multiTierScrambleTables.add(base);
             }
@@ -559,7 +562,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
       String tierColumnName = scrambleMeta.getTierColumn(t.getSchemaName(), t.getTableName());
       SelectItem tierColumn;
       String tierColumnAlias = generateTierColumnAliasName();
-//        VERDICTDB_TIER_COLUMN_NAME + verdictdbTierIndentiferNum++;
+      //        VERDICTDB_TIER_COLUMN_NAME + verdictdbTierIndentiferNum++;
       if (t.getAliasName().isPresent()) {
         tierColumn =
             new AliasedColumn(
@@ -568,16 +571,16 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
         tierColumn =
             new AliasedColumn(new BaseColumn(t.getTableName(), tierColumnName), tierColumnAlias);
       }
-//      selectItemList.add(tierColumn);
+      //      selectItemList.add(tierColumn);
       node.getSelectQuery().addSelectItem(tierColumn);
 
       // Record the tier column alias with its corresponding scramble table
       ScrambleMeta meta = scrambleMeta.getSingleMeta(t.getSchemaName(), t.getTableName());
       node.getAggMeta().getTierColumnForScramble().put(meta, tierColumnAlias);
     }
-
+    
 //    node.getSelectQuery().addSelectItem();
-
+    
 //    List<SelectItem> selectItemList = node.getSelectQuery().getSelectList();
 //    if (selectItemList.get(0) instanceof AsteriskColumn) {
 //      for (BaseTable t : MultiTiertables) {
@@ -636,11 +639,12 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
           projectionNodeList.add((ProjectionNode) source);
         }
       }
-      Map<ScrambleMeta, String> scrambleMetaAndTierColumnAlias = addTierColumnToSelectListAndGroupBy(
-          ((AggExecutionNode) node).getSelectQuery(),
-          newSelectlist,
-          scrambleMeta,
-          projectionNodeList);
+      Map<ScrambleMeta, String> scrambleMetaAndTierColumnAlias =
+          addTierColumnToSelectListAndGroupBy(
+              ((AggExecutionNode) node).getSelectQuery(),
+              newSelectlist,
+              scrambleMeta,
+              projectionNodeList);
       ((AggExecutionNode) node).getSelectQuery().clearSelectList();
       ((AggExecutionNode) node).getSelectQuery().getSelectList().addAll(newSelectlist);
       aggColumnIdentiferNum = 0;
@@ -652,10 +656,11 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
     }
   }
 
-  /**
+  /*-
    * For example, convert
-   * 1. avg(price)            -> sum(price) as 'agg0', count(price) as 'agg1'
-   * 2. sum(price) / count(*) -> sum(price) as 'agg0', count(*) as 'agg1'
+   *
+   * 1. avg(price) ---------------------> sum(price) as 'agg0', count(price) as 'agg1'
+   * 2. sum(price) / count(*) ----------> sum(price) as 'agg0', count(*) as 'agg1'
    *
    * @param query
    * @param meta
@@ -671,71 +676,112 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
 
     for (SelectItem selectItem : selectList) {
       if (selectItem instanceof AliasedColumn) {
+        AliasedColumn ac = (AliasedColumn) selectItem;
+        String newAlias = "";
+        String prefix = "";
+        // Set alias of the new select items accordingly
+        if (ac.getAliasName().startsWith(AsyncAggExecutionNode.getHavingConditionAlias())
+            || ac.getAliasName().startsWith(AsyncAggExecutionNode.getGroupByAlias())
+            || ac.getAliasName().startsWith(AsyncAggExecutionNode.getOrderByAlias())) {
+          prefix = ac.getAliasName();
+          newAlias = ac.getAliasName();
+        } else {
+          prefix = "agg";
+          newAlias = prefix + aggColumnIdentiferNum;
+        }
         List<ColumnOp> columnOps = getAggregateColumn(((AliasedColumn) selectItem).getColumn());
         // If it contains agg columns
         if (!columnOps.isEmpty()) {
-          meta.getAggColumn().put(selectItem.deepcopy(), columnOps);
+          meta.getAggColumn().put(selectItem, columnOps);
+          int cnt = 0;
           for (ColumnOp col : columnOps) {
+            if (ac.getAliasName().startsWith(AsyncAggExecutionNode.getHavingConditionAlias())
+                || ac.getAliasName().startsWith(AsyncAggExecutionNode.getOrderByAlias())) {
+              newAlias = prefix + "_" + cnt;
+              ++cnt;
+            }
             if (col.getOpType().equals("avg")) {
               if (!meta.getAggColumnAggAliasPair()
                   .containsKey(new ImmutablePair<>("sum", col.getOperand(0)))) {
                 ColumnOp col1 = new ColumnOp("sum", col.getOperand(0));
-                newSelectlist.add(new AliasedColumn(col1, "agg" + aggColumnIdentiferNum));
+                newSelectlist.add(new AliasedColumn(col1, newAlias));
                 meta.getAggColumnAggAliasPair()
-                    .put(
-                        new ImmutablePair<>("sum", col1.getOperand(0)),
-                        "agg" + aggColumnIdentiferNum);
-                aggColumnAlias.add("agg" + aggColumnIdentiferNum++);
+                    .put(new ImmutablePair<>("sum", col1.getOperand(0)), newAlias);
+                aggColumnAlias.add(newAlias);
+                ++aggColumnIdentiferNum;
+              } else if (!newAlias.startsWith("agg")) {
+                ColumnOp col1 = new ColumnOp("sum", col.getOperand(0));
+                newSelectlist.add(new AliasedColumn(col1, newAlias));
+                aggColumnAlias.add(newAlias);
               }
               if (!meta.getAggColumnAggAliasPair()
                   .containsKey(
                       new ImmutablePair<>("count", (UnnamedColumn) new AsteriskColumn()))) {
+                if (prefix.equals("agg")) {
+                  newAlias = prefix + aggColumnIdentiferNum;
+                } else {
+                  newAlias += "_cnt";
+                }
+                ++aggColumnIdentiferNum;
                 ColumnOp col2 = new ColumnOp("count", new AsteriskColumn());
-                newSelectlist.add(new AliasedColumn(col2, "agg" + aggColumnIdentiferNum));
+                newSelectlist.add(new AliasedColumn(col2, newAlias));
                 meta.getAggColumnAggAliasPair()
                     .put(
                         new ImmutablePair<>("count", (UnnamedColumn) new AsteriskColumn()),
-                        "agg" + aggColumnIdentiferNum);
-                aggColumnAlias.add("agg" + aggColumnIdentiferNum++);
+                        newAlias);
+                aggColumnAlias.add(newAlias);
               }
             } else if (col.getOpType().equals("count") || col.getOpType().equals("sum")) {
-              if (col.getOpType().equals("count")
-                  && !meta.getAggColumnAggAliasPair()
-                  .containsKey(
-                      new ImmutablePair<>("count", (UnnamedColumn) (new AsteriskColumn())))) {
-                ColumnOp col1 = new ColumnOp(col.getOpType());
-                newSelectlist.add(new AliasedColumn(col1, "agg" + aggColumnIdentiferNum));
-                meta.getAggColumnAggAliasPair()
-                    .put(
-                        new ImmutablePair<>(col.getOpType(), (UnnamedColumn) new AsteriskColumn()),
-                        "agg" + aggColumnIdentiferNum);
-                aggColumnAlias.add("agg" + aggColumnIdentiferNum++);
-              } else if (col.getOpType().equals("sum")
-                  && !meta.getAggColumnAggAliasPair()
-                  .containsKey(new ImmutablePair<>(col.getOpType(), col.getOperand(0)))) {
-                ColumnOp col1 = new ColumnOp(col.getOpType(), col.getOperand(0));
-                newSelectlist.add(new AliasedColumn(col1, "agg" + aggColumnIdentiferNum));
-                meta.getAggColumnAggAliasPair()
-                    .put(
-                        new ImmutablePair<>(col.getOpType(), col1.getOperand(0)),
-                        "agg" + aggColumnIdentiferNum);
-                aggColumnAlias.add("agg" + aggColumnIdentiferNum++);
+              if (col.getOpType().equals("count")) {
+                if (!meta.getAggColumnAggAliasPair()
+                    .containsKey(
+                        new ImmutablePair<>("count", (UnnamedColumn) (new AsteriskColumn())))) {
+                  ColumnOp col1 = new ColumnOp(col.getOpType());
+                  newSelectlist.add(new AliasedColumn(col1, newAlias));
+                  meta.getAggColumnAggAliasPair()
+                      .put(
+                          new ImmutablePair<>(
+                              col.getOpType(), (UnnamedColumn) new AsteriskColumn()),
+                          newAlias);
+                  aggColumnAlias.add(newAlias);
+                  ++aggColumnIdentiferNum;
+                } else if (!newAlias.startsWith("agg")) {
+                  ColumnOp col1 = new ColumnOp("count", col.getOperand(0));
+                  newSelectlist.add(new AliasedColumn(col1, newAlias));
+                  aggColumnAlias.add(newAlias);
+                }
+              } else if (col.getOpType().equals("sum")) {
+                if (!meta.getAggColumnAggAliasPair()
+                    .containsKey(new ImmutablePair<>(col.getOpType(), col.getOperand(0)))) {
+                  ColumnOp col1 = new ColumnOp(col.getOpType(), col.getOperand(0));
+                  newSelectlist.add(new AliasedColumn(col1, newAlias));
+                  meta.getAggColumnAggAliasPair()
+                      .put(new ImmutablePair<>(col.getOpType(), col1.getOperand(0)), newAlias);
+                  aggColumnAlias.add(newAlias);
+                  ++aggColumnIdentiferNum;
+                } else if (!newAlias.startsWith("agg")) {
+                  ColumnOp col1 = new ColumnOp("sum", col.getOperand(0));
+                  newSelectlist.add(new AliasedColumn(col1, newAlias));
+                  aggColumnAlias.add(newAlias);
+                }
               }
             } else if (col.getOpType().equals("max") || col.getOpType().equals("min")) {
               ColumnOp col1 = new ColumnOp(col.getOpType(), col.getOperand(0));
-              newSelectlist.add(new AliasedColumn(col1, "agg" + aggColumnIdentiferNum));
+              newSelectlist.add(new AliasedColumn(col1, newAlias));
               meta.getAggColumnAggAliasPairOfMaxMin()
-                  .put(
-                      new ImmutablePair<>(col.getOpType(), col1.getOperand(0)),
-                      "agg" + aggColumnIdentiferNum);
-              maxminAlias.put("agg" + aggColumnIdentiferNum++, col.getOpType());
+                  .put(new ImmutablePair<>(col.getOpType(), col1.getOperand(0)), newAlias);
+              maxminAlias.put(newAlias, col.getOpType());
+              ++aggColumnIdentiferNum;
+            }
+            if (prefix.equals("agg")) {
+              newAlias = prefix + aggColumnIdentiferNum;
             }
           }
         } else {
-          newSelectlist.add(selectItem);
+          newSelectlist.add(selectItem.deepcopy());
         }
       } else {
-        newSelectlist.add(selectItem);
+        newSelectlist.add(selectItem.deepcopy());
       }
     }
     meta.setAggAlias(aggColumnAlias);
@@ -767,16 +813,10 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
           ScrambleMeta singleMeta = scrambleMetaSet.getSingleMeta(schemaName, tableName);
           String tierColumnName = scrambleMetaSet.getTierColumn(schemaName, tableName);
           String newTierColumnAlias = generateTierColumnAliasName();
-//          VERDICTDB_TIER_COLUMN_NAME + verdictdbTierIndentiferNum++;
-          BaseColumn tierColumn = new BaseColumn(
-              schemaName,
-              tableName,
-              table.getAliasName().get(),
-              tierColumnName);
-          newSelectList.add(
-              new AliasedColumn(
-                  tierColumn,
-                  newTierColumnAlias));
+          //          VERDICTDB_TIER_COLUMN_NAME + verdictdbTierIndentiferNum++;
+          BaseColumn tierColumn =
+              new BaseColumn(schemaName, tableName, table.getAliasName().get(), tierColumnName);
+          newSelectList.add(new AliasedColumn(tierColumn, newTierColumnAlias));
           query.addGroupby(tierColumn);
 
           // Add to the tier column Map
@@ -792,16 +832,11 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
               ScrambleMeta singleMeta = scrambleMetaSet.getSingleMeta(schemaName, tableName);
               String tierColumnName = scrambleMetaSet.getTierColumn(schemaName, tableName);
               String newTierColumnAlias = generateTierColumnAliasName();
-//              VERDICTDB_TIER_COLUMN_NAME + verdictdbTierIndentiferNum++;
-              BaseColumn tierColumn = new BaseColumn(
-                  schemaName,
-                  tableName,
-                  jointable.getAliasName().get(),
-                  tierColumnName);
-              newSelectList.add(
-                  new AliasedColumn(
-                      tierColumn,
-                      newTierColumnAlias));
+              //              VERDICTDB_TIER_COLUMN_NAME + verdictdbTierIndentiferNum++;
+              BaseColumn tierColumn =
+                  new BaseColumn(
+                      schemaName, tableName, jointable.getAliasName().get(), tierColumnName);
+              newSelectList.add(new AliasedColumn(tierColumn, newTierColumnAlias));
               query.addGroupby(tierColumn);
 
               // Add to the tier column Map
@@ -824,12 +859,11 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
         SelectItem selectItem;
         String newTierColumnAlias = generateTierColumnAliasName();
         UnnamedColumn column;
-//        VERDICTDB_TIER_COLUMN_NAME + verdictdbTierIndentiferNum++;
+        //        VERDICTDB_TIER_COLUMN_NAME + verdictdbTierIndentiferNum++;
         if (source.getSelectQuery().getAliasName().isPresent()) {
           String sourceAlias = source.getSelectQuery().getAliasName().get();
           column = new BaseColumn(sourceAlias, oldtierAlias);
-          selectItem =
-              new AliasedColumn(column, newTierColumnAlias);
+          selectItem = new AliasedColumn(column, newTierColumnAlias);
         } else {
           column = new BaseColumn(oldtierAlias);
           selectItem = new AliasedColumn(column, newTierColumnAlias);
@@ -843,11 +877,12 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
       }
     }
 //    verdictdbTierIndentiferNum = 0;
-
+    
     return scrambleMetaAnditsAlias;
   }
 
-  private void rewriteProjectionNodeToAddTierColumn(AggExecutionNodeBlock block, ProjectionNode node) {
+  private void rewriteProjectionNodeToAddTierColumn(
+      AggExecutionNodeBlock block, ProjectionNode node) {
     // If it is a leaf node, check whether it contains scramble table
     if (node.getSources().size() == 0) {
       List<BaseTable> multiTierScrambleTables = identifyScrambledTables(node, scrambleMeta);
@@ -899,7 +934,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
         rewriteProjectionNodeForMultiTier(node, multiTierScrambleTables, scrambleMeta);
       }
     }
-//    verdictdbTierIndentiferNum = 0;
+    //    verdictdbTierIndentiferNum = 0;
   }
 
   private String generateTierColumnAliasName() {
@@ -909,6 +944,4 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
   private void resetTierColumnAliasGeneration() {
     resetAliasNameGeneration(TIER_COLUMN_ALIAS_KEYWORD);
   }
-
 }
-

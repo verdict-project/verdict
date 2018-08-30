@@ -21,7 +21,7 @@ If you use [Apache Maven](https://maven.apache.org/) for your project's dependen
 <dependency>
     <groupId>org.verdictdb</groupId>
     <artifactId>verdictdb-core</artifactId>
-    <version>0.5.0-alpha</version>
+    <version>0.5.4</version>
 </dependency>
 
 ```
@@ -30,7 +30,7 @@ If you use [Apache Maven](https://maven.apache.org/) for your project's dependen
 
 You only need a single jar file. This jar file is compiled with JDK8.
 
-**Download**: [verdictdb-core-0.5.0-alpha-jar-with-dependencies.jar](https://github.com/mozafari/verdictdb/releases/download/v0.5.0-alpha/verdictdb-core-0.5.0-alpha-jar-with-dependencies.jar)
+**Download**: [verdictdb-core-0.5.4-jar-with-dependencies.jar](https://github.com/mozafari/verdictdb/releases/download/v0.5.4/verdictdb-core-0.5.4-jar-with-dependencies.jar)
 
 
 ### Build Yourself
