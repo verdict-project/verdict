@@ -586,8 +586,8 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
 
   Pair<ExecutionResultReader, ResultSet> getRedshiftQueryAnswerPair(int queryNum)
       throws VerdictDBException, SQLException, IOException {
-    //String filename = "query" + queryNum + "_redshift.sql";
-    String filename = "companya/templated/redshift_queries/" + queryNum + ".sql";
+    String filename = "query" + queryNum + "_redshift.sql";
+    //String filename = "companya/templated/redshift_queries/" + queryNum + ".sql";
     File file = new File("src/test/resources/tpch_test_query/" + filename);
     String sql = Files.toString(file, Charsets.UTF_8);
 
@@ -1130,8 +1130,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
     }
   }
 
-  //Error: group by problem & asyncAgg node problem
-  //@Test
+  @Test
   public void tableauTpchQuery22Test() {
     try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(22);
@@ -1141,7 +1140,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       while (reader.hasNext()) {
         DbmsQueryResult dbmsQueryResult = reader.next();
         cnt++;
-        if (cnt == 12) {
+        if (cnt == 1) {
           while (rs.next()) {
             dbmsQueryResult.next();
             assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
@@ -1149,13 +1148,12 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
           }
         }
       }
-      assertEquals(12, cnt);
+      assertEquals(1, cnt);
       System.out.println("test 22 passed");
     } catch (Exception e) {
       tableauTpchQuery22Test();
     }
   }
-
 
 
   @AfterClass
