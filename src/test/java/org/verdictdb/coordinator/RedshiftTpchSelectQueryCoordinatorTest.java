@@ -1077,8 +1077,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
     }
   }
 
-  // Error: Dong Young is fixing having bug
-  //@Test
+  @Test
   public void tableauTpchQuery20Test() {
     try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(20);
@@ -1103,7 +1102,6 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
     }
   }
 
-  // Error: Dong Young is fixing having bug
   // Count distinct
   //@Test
   public void tableauTpchQuery21Test() {
