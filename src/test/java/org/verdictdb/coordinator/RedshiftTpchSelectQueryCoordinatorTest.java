@@ -115,7 +115,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
     meta.addScrambleMeta(meta2);
   }
 
-  //@Test
+  @Test
   public void query1Test() {
     try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(1);
@@ -148,7 +148,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
     }
   }
 
-  //@Test
+  @Test
   public void query3Test() {
     try {
 
@@ -176,7 +176,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
     }
   }
 
-  //@Test
+  @Test
   public void query4Test() {
     try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(4);
@@ -201,7 +201,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
     }
   }
 
-  //@Test
+  @Test
   public void query5Test() {
     try {
 
@@ -227,7 +227,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
     }
   }
 
-  //@Test
+  @Test
   public void query6Test() {
     try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(6);
@@ -251,7 +251,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
     }
   }
 
-  //@Test
+  @Test
   public void query7Test() {
     try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(7);
@@ -278,7 +278,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
     }
   }
 
-  //@Test
+  @Test
   public void query8Test() {
     try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(8);
@@ -304,7 +304,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
     }
   }
 
-  //@Test
+  @Test
   public void query9Test() {
     try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(9);
@@ -330,7 +330,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
     }
   }
 
-  //@Test
+  @Test
   public void query10Test() {
     try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(10);
@@ -356,7 +356,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
     }
   }
 
-  //@Test
+  @Test
   public void query12Test() {
     try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(12);
@@ -382,7 +382,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
     }
   }
 
-  //@Test
+  @Test
   public void query13Test() {
     try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(13);
@@ -407,7 +407,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
     }
   }
 
-  //@Test
+  @Test
   public void query14Test() {
     try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(14);
@@ -432,7 +432,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
     }
   }
 
-  //@Test
+  @Test
   public void query15Test() {
     try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(15);
@@ -457,7 +457,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
     }
   }
 
-  //@Test
+  @Test
   public void query17Test() {
     try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(17);
@@ -481,7 +481,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
     }
   }
 
-  //@Test
+  @Test
   public void query18Test() {
     try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(18);
@@ -510,7 +510,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
     }
   }
 
-  //@Test
+  @Test
   public void query19Test() {
     try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(19);
@@ -534,7 +534,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
     }
   }
 
-  //@Test
+  @Test
   public void query20Test() {
     try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(20);
@@ -559,7 +559,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
     }
   }
 
-  //@Test
+  @Test
   public void query21Test() {
     try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(21);
@@ -600,7 +600,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
     return new ImmutablePair<>(reader, rs);
   }
 
-  //@Test
+  @Test
   public void tableauTpchQuery1Test() {
     try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(1);
@@ -633,7 +633,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
     }
   }
 
-  //@Test
+  @Test
   public void tableauTpchQuery3Test() {
     try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(3);
@@ -661,7 +661,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
   }
 
   // count distinct
-  //@Test
+  @Test
   public void tableauTpchQuery4Test() {
     try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(4);
@@ -686,7 +686,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
     }
   }
 
-  //@Test
+  @Test
   public void tableauTpchQuery5Test() {
     try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(5);
@@ -711,7 +711,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
     }
   }
 
-  //@Test
+  @Test
   public void tableauTpchQuery6Test() {
     try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(6);
@@ -735,7 +735,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
     }
   }
 
-  //@Test
+  @Test
   public void tableauTpchQuery7Test() {
     try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(7);
@@ -762,7 +762,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
     }
   }
 
-  //@Test
+  @Test
   public void tableauTpchQuery8Test() {
     try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(8);
@@ -788,7 +788,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
     }
   }
 
-  //@Test
+  @Test
   public void tableauTpchQuery9Test() {
     try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(9);
@@ -814,7 +814,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
     }
   }
 
-  //@Test
+  @Test
   public void tableauTpchQuery10Test() {
     try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(10);
@@ -845,7 +845,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
     }
   }
 
-  //@Test
+  @Test
   public void tableauTpchQuery11Test() {
     try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(11);
@@ -870,7 +870,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
     }
   }
 
-  //@Test
+  @Test
   public void tableauTpchQuery12Test() {
     try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(12);
@@ -897,7 +897,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
   }
 
   // count distinct
-  //@Test
+  @Test
   public void tableauTpchQuery13Test() {
     try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(13);
@@ -922,7 +922,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
     }
   }
 
-  //@Test
+  @Test
   public void tableauTpchQuery14Test() {
     try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(14);
@@ -947,7 +947,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
     }
   }
 
-  //@Test
+  @Test
   public void tableauTpchQuery15Test() {
     try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(15);
@@ -976,7 +976,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
   }
 
   // count distinct
-  ////@Test
+  //@Test
   public void tableauTpchQuery16Test() {
     try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(15);
@@ -1004,7 +1004,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
     }
   }
 
-  //@Test
+  @Test
   public void tableauTpchQuery17Test() {
     try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(17);
@@ -1028,7 +1028,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
     }
   }
 
-  //@Test
+  @Test
   public void tableauTpchQuery18Test() {
     try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(18);
@@ -1053,7 +1053,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
     }
   }
 
-  //@Test
+  @Test
   public void tableauTpchQuery19Test() {
     try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(19);
@@ -1078,7 +1078,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
   }
 
   // Error: Dong Young is fixing having bug
-  ////@Test
+  //@Test
   public void tableauTpchQuery20Test() {
     try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(20);
@@ -1105,7 +1105,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
 
   // Error: Dong Young is fixing having bug
   // Count distinct
-  ////@Test
+  //@Test
   public void tableauTpchQuery21Test() {
     try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(21);
@@ -1130,7 +1130,6 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
     }
   }
 
-  //Error: group by problem & asyncAgg node problem
   @Test
   public void tableauTpchQuery22Test() {
     try {
@@ -1141,7 +1140,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       while (reader.hasNext()) {
         DbmsQueryResult dbmsQueryResult = reader.next();
         cnt++;
-        if (cnt == 12) {
+        if (cnt == 1) {
           while (rs.next()) {
             dbmsQueryResult.next();
             assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
@@ -1149,13 +1148,12 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
           }
         }
       }
-      assertEquals(12, cnt);
+      assertEquals(1, cnt);
       System.out.println("test 22 passed");
     } catch (Exception e) {
       tableauTpchQuery22Test();
     }
   }
-
 
 
   @AfterClass

@@ -28,12 +28,7 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.verdictdb.core.execplan.ExecutableNode;
-import org.verdictdb.core.querying.AggExecutionNode;
-import org.verdictdb.core.querying.ExecutableNodeBase;
-import org.verdictdb.core.querying.IdCreator;
-import org.verdictdb.core.querying.ProjectionNode;
-import org.verdictdb.core.querying.QueryExecutionPlan;
-import org.verdictdb.core.querying.QueryNodeBase;
+import org.verdictdb.core.querying.*;
 import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.core.sqlobject.AbstractRelation;
@@ -61,13 +56,13 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
   private static final long serialVersionUID = -1670795390245860583L;
 
   private int aggColumnIdentiferNum = 0;
-  
+
   private static final String TIER_COLUMN_ALIAS_KEYWORD = "tier";
 
   private AsyncQueryExecutionPlan(String scratchpadSchemaName, ScrambleMetaSet scrambleMeta) {
     super(scratchpadSchemaName, scrambleMeta);
   }
-  
+
   private AsyncQueryExecutionPlan(IdCreator idCreator, ScrambleMetaSet scrambleMeta) {
     super(idCreator, scrambleMeta);
   }
@@ -100,10 +95,10 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
     for (int i = 0; i < aggBlocks.size(); i++) {
       // this node block contains the links to those nodes belonging to this block.
       AggExecutionNodeBlock nodeBlock = aggBlocks.get(i);
-      
+
       ExecutableNodeBase oldNode = nodeBlock.getBlockRootNode();
       ExecutableNodeBase newNode = convertToProgressiveAgg(scrambleMeta, nodeBlock);
-      
+
       List<ExecutableNodeBase> parents = oldNode.getExecutableNodeBaseParents();
       for (ExecutableNodeBase parent : parents) {
         Integer channel = parent.getChannelForSource(oldNode);
@@ -127,10 +122,10 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
    * into smaller- scale operations (which involve different portions of data).</p>
    *
    * @param scrambleMeta The metadata about the scrambled tables.
-   * @param aggNodeBlock A set of the links to the nodes that will be processed in the asynchronous 
+   * @param aggNodeBlock A set of the links to the nodes that will be processed in the asynchronous
    *                     manner.
-   * @return Returns     The root of the multiple aggregation nodes (each of which involves 
-   *                     different combinations of partitions)
+   * @return Returns     The root of the multiple aggregation nodes (each of which involves
+   * different combinations of partitions)
    * @throws VerdictDBValueException
    */
   public ExecutableNodeBase convertToProgressiveAgg(
@@ -253,10 +248,10 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
    * @param scrambleMeta Information about what tables have been scrambled.
    * @param blockNodes
    * @return ExecutableNodeBase is the reference to the scrambled base table. The triple is (schema,
-   *     table, alias) of scrambled tables.
+   * table, alias) of scrambled tables.
    */
   private static List<Pair<ExecutableNodeBase, Triple<String, String, String>>>
-      identifyScrambledNodes(ScrambleMetaSet scrambleMeta, List<ExecutableNodeBase> blockNodes) {
+  identifyScrambledNodes(ScrambleMetaSet scrambleMeta, List<ExecutableNodeBase> blockNodes) {
 
     List<Pair<ExecutableNodeBase, Triple<String, String, String>>> identified = new ArrayList<>();
 
@@ -323,7 +318,8 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
 
     if (root instanceof AggExecutionNode) {
       // check if it contains at least one scrambled table.
-      if (doesContainScramble(root, scrambleMeta)) {
+      if (doesContainScramble(root, scrambleMeta) &&
+          containScrambledColumn(root, scrambleMeta)) {
         AggExecutionNodeBlock block = new AggExecutionNodeBlock(root);
         aggblocks.add(block);
         return aggblocks;
@@ -336,6 +332,114 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
     }
 
     return aggblocks;
+  }
+
+
+  /**
+   *  Given BaseColumn column which is inside the aggregated column, return true if this column is column from scrambled table and
+   *  is contained by the selectQuery of node.
+   */
+  private boolean recursiveCheckAggregateColumnIsScramble(BaseColumn column, ExecutableNode node, ScrambleMetaSet scrambleMetas) {
+    SelectQuery query = ((CreateTableAsSelectNode) node).getSelectQuery();
+    for (AbstractRelation relation : query.getFromList()) {
+      // if relation is BaseTable or Join Table, check if it is scrambled table
+      if (relation instanceof JoinTable) {
+        for (AbstractRelation joinTable : ((JoinTable) relation).getJoinList()) {
+          if (column.getTableSourceAlias().equals(joinTable.getAliasName().get())) {
+            if (joinTable instanceof BaseTable && scrambleMetas.isScrambled(((BaseTable) joinTable).getSchemaName(), ((BaseTable) joinTable).getTableName())) {
+              return true;
+            }
+          }
+        }
+      }
+      else if (column.getTableSourceAlias().equals(relation.getAliasName().get())) {
+        if (relation instanceof BaseTable && scrambleMetas.isScrambled(((BaseTable) relation).getSchemaName(), ((BaseTable) relation).getTableName())) {
+          return true;
+        }
+      }
+    }
+
+    // Check its source to find where the origin of the column
+    for (ExecutableNode source : ((CreateTableAsSelectNode) node).getSources()) {
+      SelectQuery subquery = ((CreateTableAsSelectNode) source).getSelectQuery();
+      if (column.getTableSourceAlias().equals(subquery.getAliasName().get())) {
+        for (SelectItem sel : subquery.getSelectList()) {
+          // find the origin of the column, if it is columnOp, we need continue search the base column inside this columnOp
+          if (((AliasedColumn) sel).getAliasName().equals(column.getColumnName())) {
+            if (((AliasedColumn) sel).getColumn() instanceof BaseColumn) {
+              BaseColumn col = (BaseColumn) ((AliasedColumn) sel).getColumn();
+              if (recursiveCheckAggregateColumnIsScramble(col, source, scrambleMetas)) {
+                return true;
+              }
+            } else if (((AliasedColumn) sel).getColumn() instanceof ColumnOp) {
+              List<BaseColumn> baseColumnList = new ArrayList<>();
+              ColumnOp col = (ColumnOp) ((AliasedColumn) sel).getColumn();
+              List<ColumnOp> checklist = new ArrayList<>();
+              checklist.add(col);
+              while (!checklist.isEmpty()) {
+                ColumnOp columnOp = checklist.get(0);
+                checklist.remove(0);
+                for (UnnamedColumn c : columnOp.getOperands()) {
+                  if (c instanceof ColumnOp) {
+                    checklist.add((ColumnOp) c);
+                  } else if (c instanceof BaseColumn) {
+                    baseColumnList.add((BaseColumn) c);
+                  } else if (c instanceof AsteriskColumn && col.getOpType().equals("count")) {
+                    return true;
+                  }
+                }
+              }
+              for (BaseColumn baseColumn : baseColumnList) {
+                if (recursiveCheckAggregateColumnIsScramble(baseColumn, source, scrambleMetas)) {
+                  return true;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    return false;
+  }
+
+  /**
+   * return true if root has aggregated column that contains columns from scrambled table
+   *
+   */
+  private boolean containScrambledColumn(ExecutableNodeBase root, ScrambleMetaSet scrambleMetas) {
+    // add all base column in the aggregated SelectItem into aggColumns
+    // If count(*) appear, only need to check doesContainScramble.
+    List<BaseColumn> aggColumns = new ArrayList<>();
+    SelectQuery query = ((AggExecutionNode) root).getSelectQuery();
+    for (SelectItem sel : query.getSelectList()) {
+      if (sel.isAggregateColumn()) {
+        ColumnOp col = (ColumnOp) ((AliasedColumn) sel).getColumn();
+        List<ColumnOp> checklist = new ArrayList<>();
+        checklist.add(col);
+        while (!checklist.isEmpty()) {
+          ColumnOp columnOp = checklist.get(0);
+          checklist.remove(0);
+          for (UnnamedColumn c : columnOp.getOperands()) {
+            if (c instanceof ColumnOp) {
+              checklist.add((ColumnOp) c);
+            } else if (c instanceof BaseColumn) {
+              aggColumns.add((BaseColumn) c);
+            } else if ((c instanceof AsteriskColumn || c instanceof ConstantColumn) && col.getOpType().equals("count")) {
+              return true;
+            }
+          }
+        }
+      }
+    }
+
+    // recursive check whether those base columns are from scrambled table
+    for (BaseColumn column : aggColumns) {
+      if (recursiveCheckAggregateColumnIsScramble(column, root, scrambleMetas)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private boolean doesContainScramble(ExecutableNodeBase node, ScrambleMetaSet scrambleMeta) {
@@ -378,10 +482,10 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
 
   private List<BaseTable> identifyScrambledTables(
       ExecutableNodeBase node, ScrambleMetaSet scrambleMeta) {
-    
+
     SelectQuery query = ((QueryNodeBase) node).getSelectQuery();
     List<BaseTable> multiTierScrambleTables = new ArrayList<>();
-    
+
     // check within the query
     for (AbstractRelation rel : query.getFromList()) {
       if (rel instanceof BaseTable) {
@@ -412,7 +516,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
 
     return multiTierScrambleTables;
   }
-  
+
   /**
    * Rewrite the select list of the nodes in a block; the nodes that belong ot the block are
    * identified by the second parameter `nodeList`.
@@ -428,7 +532,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
         rewriteSelectListOfRootAndListedDependentsInner(root, nodeList, visitList);
     return rewritten;
   }
-  
+
   private ExecutableNodeBase rewriteSelectListOfRootAndListedDependentsInner(
       ExecutableNodeBase root,
       List<ExecutableNodeBase> nodeList,
@@ -444,12 +548,12 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
 
     return null;
   }
-  
+
   private void rewriteProjectionNodeForMultiTier(
       ProjectionNode node, List<BaseTable> scrambledTables, ScrambleMetaSet scrambleMeta) {
-    
+
 //    List<SelectItem> selectItemList = node.getSelectQuery().getSelectList();
-    
+
     for (BaseTable t : scrambledTables) {
       // Add tier column to the select list
       String tierColumnName = scrambleMeta.getTierColumn(t.getSchemaName(), t.getTableName());
@@ -466,14 +570,14 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
       }
 //      selectItemList.add(tierColumn);
       node.getSelectQuery().addSelectItem(tierColumn);
-  
+
       // Record the tier column alias with its corresponding scramble table
       ScrambleMeta meta = scrambleMeta.getSingleMeta(t.getSchemaName(), t.getTableName());
       node.getAggMeta().getTierColumnForScramble().put(meta, tierColumnAlias);
     }
-    
+
 //    node.getSelectQuery().addSelectItem();
-    
+
 //    List<SelectItem> selectItemList = node.getSelectQuery().getSelectList();
 //    if (selectItemList.get(0) instanceof AsteriskColumn) {
 //      for (BaseTable t : MultiTiertables) {
@@ -508,7 +612,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
 //    }
 //    verdictdbTierIndentiferNum = 0;
   }
-  
+
   void addTierColumnsRecursively(
       AggExecutionNodeBlock block, ExecutableNodeBase node, Set<ExecutableNode> visitList) {
 
@@ -525,7 +629,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
       List<SelectItem> newSelectlist =
           createUnfoldSelectlistWithBasicAgg(
               ((AggExecutionNode) node).getSelectQuery(), node.getAggMeta());
-      
+
       List<ProjectionNode> projectionNodeList = new ArrayList<>();
       for (ExecutableNodeBase source : node.getSources()) {
         if (source instanceof ProjectionNode && block.getNodesInBlock().contains(source)) {
@@ -540,14 +644,14 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
       ((AggExecutionNode) node).getSelectQuery().clearSelectList();
       ((AggExecutionNode) node).getSelectQuery().getSelectList().addAll(newSelectlist);
       aggColumnIdentiferNum = 0;
-      
+
       node.getAggMeta().setTierColumnForScramble(scrambleMetaAndTierColumnAlias);
-      
+
     } else if (node instanceof ProjectionNode) {
       rewriteProjectionNodeToAddTierColumn(block, (ProjectionNode) node);
     }
   }
-  
+
   /**
    * For example, convert
    * 1. avg(price)            -> sum(price) as 'agg0', count(price) as 'agg1'
@@ -558,17 +662,13 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
    * @return
    */
   private List<SelectItem> createUnfoldSelectlistWithBasicAgg(SelectQuery query, AggMeta meta) {
-    
+
     List<SelectItem> selectList = query.getSelectList();
     List<String> aggColumnAlias = new ArrayList<>();
     HashMap<String, String> maxminAlias = new HashMap<>();
     List<SelectItem> newSelectlist = new ArrayList<>();
-    List<SelectItem> originalSelectlist = new ArrayList<>();
-    for (SelectItem sel:selectList) {
-      originalSelectlist.add(sel.deepcopy());
-    }
-    meta.setOriginalSelectList(originalSelectlist);
-    
+    meta.setOriginalSelectList(selectList);
+
     for (SelectItem selectItem : selectList) {
       if (selectItem instanceof AliasedColumn) {
         List<ColumnOp> columnOps = getAggregateColumn(((AliasedColumn) selectItem).getColumn());
@@ -578,7 +678,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
           for (ColumnOp col : columnOps) {
             if (col.getOpType().equals("avg")) {
               if (!meta.getAggColumnAggAliasPair()
-                       .containsKey(new ImmutablePair<>("sum", col.getOperand(0)))) {
+                  .containsKey(new ImmutablePair<>("sum", col.getOperand(0)))) {
                 ColumnOp col1 = new ColumnOp("sum", col.getOperand(0));
                 newSelectlist.add(new AliasedColumn(col1, "agg" + aggColumnIdentiferNum));
                 meta.getAggColumnAggAliasPair()
@@ -588,8 +688,8 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
                 aggColumnAlias.add("agg" + aggColumnIdentiferNum++);
               }
               if (!meta.getAggColumnAggAliasPair()
-                       .containsKey(
-                           new ImmutablePair<>("count", (UnnamedColumn) new AsteriskColumn()))) {
+                  .containsKey(
+                      new ImmutablePair<>("count", (UnnamedColumn) new AsteriskColumn()))) {
                 ColumnOp col2 = new ColumnOp("count", new AsteriskColumn());
                 newSelectlist.add(new AliasedColumn(col2, "agg" + aggColumnIdentiferNum));
                 meta.getAggColumnAggAliasPair()
@@ -600,9 +700,9 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
               }
             } else if (col.getOpType().equals("count") || col.getOpType().equals("sum")) {
               if (col.getOpType().equals("count")
-                      && !meta.getAggColumnAggAliasPair()
-                              .containsKey(
-                                  new ImmutablePair<>("count", (UnnamedColumn) (new AsteriskColumn())))) {
+                  && !meta.getAggColumnAggAliasPair()
+                  .containsKey(
+                      new ImmutablePair<>("count", (UnnamedColumn) (new AsteriskColumn())))) {
                 ColumnOp col1 = new ColumnOp(col.getOpType());
                 newSelectlist.add(new AliasedColumn(col1, "agg" + aggColumnIdentiferNum));
                 meta.getAggColumnAggAliasPair()
@@ -611,8 +711,8 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
                         "agg" + aggColumnIdentiferNum);
                 aggColumnAlias.add("agg" + aggColumnIdentiferNum++);
               } else if (col.getOpType().equals("sum")
-                             && !meta.getAggColumnAggAliasPair()
-                                     .containsKey(new ImmutablePair<>(col.getOpType(), col.getOperand(0)))) {
+                  && !meta.getAggColumnAggAliasPair()
+                  .containsKey(new ImmutablePair<>(col.getOpType(), col.getOperand(0)))) {
                 ColumnOp col1 = new ColumnOp(col.getOpType(), col.getOperand(0));
                 newSelectlist.add(new AliasedColumn(col1, "agg" + aggColumnIdentiferNum));
                 meta.getAggColumnAggAliasPair()
@@ -642,7 +742,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
     meta.setMaxminAggAlias(maxminAlias);
     return newSelectlist;
   }
-  
+
   /**
    * Adds tier expressions to the end of the select list; and to the group-by list.
    *
@@ -655,14 +755,14 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
       List<SelectItem> newSelectList,
       ScrambleMetaSet scrambleMetaSet,
       List<ProjectionNode> projectionNodeSources) {
-  
+
     Map<ScrambleMeta, String> scrambleMetaAnditsAlias = new HashMap<>();
-    
+
     for (AbstractRelation table : query.getFromList()) {
       if (table instanceof BaseTable) {
         String schemaName = ((BaseTable) table).getSchemaName();
         String tableName = ((BaseTable) table).getTableName();
-        
+
         if (scrambleMetaSet.isScrambled(schemaName, tableName)) {
           ScrambleMeta singleMeta = scrambleMetaSet.getSingleMeta(schemaName, tableName);
           String tierColumnName = scrambleMetaSet.getTierColumn(schemaName, tableName);
@@ -678,7 +778,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
                   tierColumn,
                   newTierColumnAlias));
           query.addGroupby(tierColumn);
-  
+
           // Add to the tier column Map
           scrambleMetaAnditsAlias.put(singleMeta, newTierColumnAlias);
         }
@@ -687,7 +787,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
           if (jointable instanceof BaseTable) {
             String schemaName = ((BaseTable) jointable).getSchemaName();
             String tableName = ((BaseTable) jointable).getTableName();
-            
+
             if (scrambleMetaSet.isScrambled(schemaName, tableName)) {
               ScrambleMeta singleMeta = scrambleMetaSet.getSingleMeta(schemaName, tableName);
               String tierColumnName = scrambleMetaSet.getTierColumn(schemaName, tableName);
@@ -703,7 +803,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
                       tierColumn,
                       newTierColumnAlias));
               query.addGroupby(tierColumn);
-  
+
               // Add to the tier column Map
               scrambleMetaAnditsAlias.put(singleMeta, newTierColumnAlias);
             }
@@ -711,15 +811,15 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
         }
       }
     }
-    
+
     // Add possible tier column if its sources are projectionNode
     for (ProjectionNode source : projectionNodeSources) {
       for (Map.Entry<ScrambleMeta, String> entry :
           source.getAggMeta().getTierColumnForScramble().entrySet()) {
-        
+
         ScrambleMeta singleMeta = entry.getKey();
         String oldtierAlias = entry.getValue();
-        
+
         // Add tier column to select list
         SelectItem selectItem;
         String newTierColumnAlias = generateTierColumnAliasName();
@@ -737,16 +837,16 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
         newSelectList.add(selectItem);
 
         query.addGroupby(column);
-  
+
         // Add to the tier column Map
         scrambleMetaAnditsAlias.put(singleMeta, newTierColumnAlias);
       }
     }
 //    verdictdbTierIndentiferNum = 0;
-    
+
     return scrambleMetaAnditsAlias;
   }
-  
+
   private void rewriteProjectionNodeToAddTierColumn(AggExecutionNodeBlock block, ProjectionNode node) {
     // If it is a leaf node, check whether it contains scramble table
     if (node.getSources().size() == 0) {
@@ -757,7 +857,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
       }
       return;
     }
-    
+
     // Otherwise, we first need to call the function recursively to the sources
     List<ProjectionNode> projectionNodesSources = new ArrayList<>();
     for (ExecutableNode source : node.getSources()) {
@@ -801,14 +901,14 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
     }
 //    verdictdbTierIndentiferNum = 0;
   }
-  
+
   private String generateTierColumnAliasName() {
     return generateAliasName(TIER_COLUMN_ALIAS_KEYWORD);
   }
-  
+
   private void resetTierColumnAliasGeneration() {
     resetAliasNameGeneration(TIER_COLUMN_ALIAS_KEYWORD);
   }
-  
+
 }
 
