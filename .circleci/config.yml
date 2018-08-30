@@ -371,9 +371,11 @@ jobs:
 
   deploy-doc:
     docker:
-    - image: maven:3.5.4-jdk-8-slim
+    - image: continuumio/miniconda3
     steps:
     - run: apt-get update; apt-get install -y git
+    - checkout
+    - run: pip install mkdocs mkdocs-material
     - run: cd docs; mkdocs build; cd ..;
     - run: git checkout -b gh-pages   # temp branch
     - run: rm .gitignore
