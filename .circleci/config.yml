@@ -356,29 +356,42 @@ jobs:
       # Customize the JVM maximum heap limit
       MAVEN_OPTS: -Xmx3200m
     steps:
-      - run: apt-get update; apt-get install -y git default-jdk maven
-      - checkout
-      # Set up maven dependencies
-      - restore_cache:
-          keys:
-          - verdict-dependencies-{{ checksum "pom.xml" }}
-      - run: cd pyverdict; python setup.py develop;
-      - run: pytest
-      - save_cache:
-          paths:
-          - ~/.m2
-          key: verdict-dependencies-{{ checksum "pom.xml" }}
+    - run: apt-get update; apt-get install -y git default-jdk maven
+    - checkout
+    # Set up maven dependencies
+    - restore_cache:
+        keys:
+        - verdict-dependencies-{{ checksum "pom.xml" }}
+    - run: cd pyverdict; python setup.py develop;
+    - run: pytest
+    - save_cache:
+        paths:
+        - ~/.m2
+        key: verdict-dependencies-{{ checksum "pom.xml" }}
+
+  deploy-doc:
+    docker:
+    - image: maven:3.5.4-jdk-8-slim
+    steps:
+    - run: apt-get update; apt-get install -y git
+    - run: cd docs; mkdocs build; cd ..;
+    - run: git checkout -b gh-pages   # temp branch
+    - run: rm .gitignore
+    - run: git add docs/site/*; git commit -m 'init docs';
+    - run: git remote add doc-origin git@github.com:verdictdb/verdictdb-doc.git
+    - run: git push -f doc-origin gh-pages:gh-pages
 
 workflows:
   version: 2
   build_and_test:
     jobs:
-    - build-jdk7
-    - build-jdk8
-    - build-jdk8-update-codecov
-    - build-spark
-    - build-impala-redshift
-    - build-pyverdict
+    # - build-jdk7
+    # - build-jdk8
+    # - build-jdk8-update-codecov
+    # - build-spark
+    # - build-impala-redshift
+    # - build-pyverdict
+    - deploy-doc
     #- update-codecov
     # - maven-version-check
     # - docker-env-check
