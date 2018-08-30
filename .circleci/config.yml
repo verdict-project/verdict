@@ -390,13 +390,13 @@ workflows:
       - build-spark
       - build-impala-redshift
       - build-pyverdict
-          # filters:
-          #   branches:
-          #     only: master
+          filters:
+            branches:
+              only: master
       - deploy-doc
-          # filters:
-          #   branches:
-          #     only: master
+          filters:
+            branches:
+              only: master
     #- update-codecov
     # - maven-version-check
     # - docker-env-check
