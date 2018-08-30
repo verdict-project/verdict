@@ -379,6 +379,7 @@ jobs:
     - run: cd docs; mkdocs build; cd ..;
     - run: git checkout -b gh-pages   # temp branch
     - run: rm .gitignore
+    - run: git config user.email "pyongjoo@umich.edu"; git config user.name "Yongjoo Park"
     - run: git add docs/site/*; git commit -m 'init docs';
     - run: git remote add doc-origin git@github.com:verdictdb/verdictdb-doc.git
     - run: git push -f doc-origin gh-pages:gh-pages
