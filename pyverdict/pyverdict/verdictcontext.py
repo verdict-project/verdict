@@ -6,8 +6,9 @@ from time import sleep
 
 
 class VerdictContext:
-    """main interface to interact with the java objects
-    require specifying the jdbc driver jar path
+    """
+    The main interface to interact with the java objects.
+    The path to the jdbc drivers must be specified to use them.
     """
 
     def __init__(self, url, class_path):
