@@ -64,21 +64,72 @@ where order_date between date '2018-01-01' and date '2018-01-31'
 
 ### Step 2: progressive aggregation DAG construction
 
+VerdictDB converts a part of the DAG to enable progressive aggregations. The affected parts are the aggregate queries including scrambles in its from clause or the projections of scrambles. After the conversion, the DAG looks like below.
+
+![zoomify](/images/dag2.png){: .center}
+
+First, each of the projection nodes at the bottom only involves a part of the scramble. In this simple example, the single scramble is split into three projections. See that the following query includes an extra filtering predicate, i.e., `verdictdbblock = 0`, to only select the particular block.
 
 ```sql
-create table temp_table2
-select product, sum_price / count_price as avg_price
-from (
-  select product, sum(sales_price) as sum_price, count(sales_price) as count_price
-  from temp_table1 t
-  group by product
-) verdictdb_inner
-order by avg_price desc
+-- P1
+create table temp_table1
+select product, price * (1 - discount) as sales_price
+from sales_table_scramble
+where order_date between date '2018-01-01' and date '2018-01-31'
+  and verdictdbblock = 0
 ```
+
+Second, the aggregation is separately computed for each of those projections. It is important to note that the original `avg` function was converted into two separate aggregate functions, i.e., `sum` and `count`. The `avg` function value will be restored later.
+
+```sql
+-- A1
+create table temp_table2
+select
+  product,
+  sum(sales_price) as sum_price,
+  count(sales_price) as count_price
+from temp_table1 t
+group by product;
+```
+
+Observe that the individual aggregation nodes (A1, A2, and A3) only involves its own verdictdbblock, i.e., identified with 0, 1, and 2. To compute the exact answers, we combine those individual aggregates using additional nodes Combiners (C1 and C2). Naturally, the number of the Combiners is always one fewer than the number of individual aggregate nodes. Suppose A1 creates a temporary table `temp_table2`, A2 creates `temp_table3`, and A3 creates `temp_table4`. Then, the Combiners perform the operations as follows.
+
+```sql
+-- C1
+create table temp_table5
+select
+  product,
+  sum(sum_price) as sum_price,
+  count(count_price) as count_price
+from (
+  select *
+  from temp_table2
+  union all
+  select *
+  from temp_table3) t
+group by product;
+```
+
+The nodes also propagate some necessary metadata about the processed verdictdbblocks thus far.
+
+Finally, the node S collects those aggregates, scale them appropriately, and restore the original select items.
+
+```sql
+-- S
+create table temp_table7
+select product, (3.0 * sum_price) / (3.0 * count_price) as avg_price
+from temp_table5
+group by product;
+```
+
+In the above query (for the node S), `3.0 * sum_price` is an unbiased estimator for `sum(sales_price)`, and `3.0 * count_price` is an unbiased estimator for `count(sales_price)`. The dividing the sum by the count, we obtain the average. Note that those scaling factors differ depending on the source nodes (e.g., A1, C1, and C2).
 
 
 ### Step 3: plan simplification
 
+VerdictDB simplifies the plan if possible. This process helps avoiding unnecessary temporary table creations.
+
 
 ### Step 4: Execution / Cleaning
 
+VerdictDB executes the plan and removes the temporary tables if necessary.
