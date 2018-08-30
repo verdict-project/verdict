@@ -20,9 +20,10 @@ def test_count():
     cur.close()
     conn_mysql.close()
 
-def verdict_connect(host, port, usr, pwd, jdbc_driver):
-    connect_string = 'jdbc:mysql://{:s}:{:d}'.format(host, port)
-    return pyverdict.VerdictContext(connect_string, usr, pwd, jdbc_driver)
+def verdict_connect(host, port, usr, pwd, class_path):
+    connection_string = \
+        'jdbc:mysql://{:s}:{:d}?user={:s}&password={:s}'.format(host, port, usr, pwd)
+    return pyverdict.VerdictContext(connection_string, class_path)
 
 def mysql_connect(host, port, usr, pwd):
     return pymysql.connect(host=host, port=port, user=usr, passwd=pwd, autocommit=True)
