@@ -35,8 +35,6 @@ import org.verdictdb.core.sqlobject.ColumnOp;
 import org.verdictdb.core.sqlobject.SelectItem;
 import org.verdictdb.core.sqlobject.UnnamedColumn;
 
-import com.google.common.collect.DiscreteDomains;
-import com.google.common.collect.Ranges;
 import com.google.common.collect.Sets;
 
 /**
