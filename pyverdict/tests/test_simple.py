@@ -1,3 +1,4 @@
+import os
 import pyverdict
 import pymysql
 
@@ -9,7 +10,10 @@ def test_count():
     cur.execute('CREATE TABLE IF NOT EXISTS pyverdict_simple_test.test (id INT)')
     cur.execute('INSERT INTO pyverdict_simple_test.test SELECT 1')
 
-    conn_verdict = verdict_connect('localhost', 3306, 'root', '', 'tests/lib/mysql-connector-java-5.1.46.jar')
+    thispath = os.path.dirname(os.path.realpath(__file__))
+    mysql_jar = os.path.join(thispath, 'lib', 'mysql-connector-java-5.1.46.jar')
+    # print(mysql_jar)
+    conn_verdict = verdict_connect('localhost', 3306, 'root', '', mysql_jar)
     result = conn_verdict.sql('SELECT COUNT(1) from pyverdict_simple_test.test')
     assert result.fetch_one() == 1
     cur.execute('DROP SCHEMA IF EXISTS pyverdict_simple_test')
