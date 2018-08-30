@@ -25,21 +25,55 @@ We suppose that a scramble `sales_table_scramble` has been created for the `sale
 
 ### Step 1: regular DAG construction
 
+The given query is decomposed into multiple queries, each of which is a flat query. Except for the root node, all other nodes include `create table as select ...` queries. The query for a parent node depends on its children.
+
+Below we depict the DAG and the queries for those nodes.
+
 
 ```sql
+-- Q1
+select *
+from temp_table2
+```
+
+
+```sql
+-- Q2
+create table temp_table2
 select product, avg(sales_price) as avg_price
-from (
-  select product, price * (1 - discount) as sales_price
-  from sales_table
-  where order_date between date '2018-01-01' and date '2018-01-31'
-) t
+from temp_table1 t
 group by product
 order by avg_price desc
 ```
 
 
+```sql
+-- Q3
+create table temp_table1
+select product, price * (1 - discount) as sales_price
+from sales_table_scramble
+where order_date between date '2018-01-01' and date '2018-01-31'
+```
+
+
+
 ### Step 2: progressive aggregation DAG construction
 
 
-### Step 3: Execution / Cleaning
+```sql
+create table temp_table2
+select product, sum_price / count_price as avg_price
+from (
+  select product, sum(sales_price) as sum_price, count(sales_price) as count_price
+  from temp_table1 t
+  group by product
+) verdictdb_inner
+order by avg_price desc
+```
+
+
+### Step 3: plan simplification
+
+
+### Step 4: Execution / Cleaning
 
