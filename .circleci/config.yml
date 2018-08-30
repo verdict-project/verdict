@@ -58,9 +58,9 @@ jobs:
       # Set up maven dependencies
       - restore_cache:
           keys:
-          - verdict-dependencies-{{ checksum "pom.xml" }}
-          # fallback to using the latest cache if no exact match is found
-          # - v1-dependencies-
+            - verdict-dependencies-{{ checksum "pom.xml" }}
+            # fallback to using the latest cache if no exact match is found
+            # - v1-dependencies-
       #- run: mvn install:install-file -Dfile=src/test/resources/jars/ImpalaJDBC41-2.6.3.jar -DgroupId=com.cloudera -DartifactId=impala-jdbc41 -Dversion=2.6.3 -Dpackaging=jar
       # - run: mvn dependency:go-offline
       # Setup necessary test data
@@ -181,9 +181,9 @@ jobs:
       # Set up maven dependencies
       - restore_cache:
           keys:
-          - verdict-dependencies-{{ checksum "pom.xml" }}
-          # fallback to using the latest cache if no exact match is found
-          # - v1-dependencies-
+            - verdict-dependencies-{{ checksum "pom.xml" }}
+            # fallback to using the latest cache if no exact match is found
+            # - v1-dependencies-
       #- run: mvn install:install-file -Dfile=src/test/resources/jars/ImpalaJDBC41-2.6.3.jar -DgroupId=com.cloudera -DartifactId=impala-jdbc41 -Dversion=2.6.3 -Dpackaging=jar
       # - run: mvn dependency:go-offline
 
@@ -245,9 +245,9 @@ jobs:
       # Set up maven dependencies
       - restore_cache:
           keys:
-          - verdict-dependencies-{{ checksum "pom.xml" }}
-          # fallback to using the latest cache if no exact match is found
-          # - v1-dependencies-
+            - verdict-dependencies-{{ checksum "pom.xml" }}
+            # fallback to using the latest cache if no exact match is found
+            # - v1-dependencies-
       #- run: mvn install:install-file -Dfile=src/test/resources/jars/ImpalaJDBC41-2.6.3.jar -DgroupId=com.cloudera -DartifactId=impala-jdbc41 -Dversion=2.6.3 -Dpackaging=jar
       # - run: mvn dependency:go-offline
       # Setup necessary test data
@@ -303,9 +303,9 @@ jobs:
       # Set up maven dependencies
       - restore_cache:
           keys:
-          - verdict-dependencies-{{ checksum "pom.xml" }}
-          # fallback to using the latest cache if no exact match is found
-          # - v1-dependencies-
+            - verdict-dependencies-{{ checksum "pom.xml" }}
+            # fallback to using the latest cache if no exact match is found
+            # - v1-dependencies-
       #- run: mvn install:install-file -Dfile=src/test/resources/jars/ImpalaJDBC41-2.6.3.jar -DgroupId=com.cloudera -DartifactId=impala-jdbc41 -Dversion=2.6.3 -Dpackaging=jar
       # - run: mvn dependency:go-offline
       # Setup necessary test data
@@ -389,14 +389,14 @@ workflows:
       - build-jdk8-update-codecov
       - build-spark
       - build-impala-redshift
-      - build-pyverdict:
-          filters:
-            branches:
-              only: master
-      - deploy-doc:
-          filters:
-            branches:
-              only: master
+      - build-pyverdict
+          # filters:
+          #   branches:
+          #     only: master
+      - deploy-doc
+          # filters:
+          #   branches:
+          #     only: master
     #- update-codecov
     # - maven-version-check
     # - docker-env-check
