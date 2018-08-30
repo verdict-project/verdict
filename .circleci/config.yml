@@ -377,6 +377,7 @@ jobs:
     - checkout
     - run: pip install mkdocs mkdocs-material
     - run: cd docs; mkdocs build; cd ..; rm .gitignore;
+    - run: git add docs/site/*; git commit -m 'init doc';
     - run: git subtree split --prefix docs/site -b gh-pages
     - run: git remote add doc-origin git@github.com:verdictdb/verdictdb-doc.git
     - run: git config user.email "pyongjoo@umich.edu"; git config user.name "Yongjoo Park"
