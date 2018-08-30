@@ -425,16 +425,16 @@ public class TpchExecutionPlanTest {
                 new AliasedColumn(
                     new BaseColumn("tpch", "orders", "vt2", "o_shippriority"), "o_shippriority"),
                 new AliasedColumn(
-                    new BaseColumn("l_orderkey"), AsyncAggExecutionNode.getGroupByAlias() + "1"),
+                    new BaseColumn("l_orderkey"), AsyncAggExecutionNode.getGroupByAlias() + "0"),
                 new AliasedColumn(
-                    new BaseColumn("o_orderdate"), AsyncAggExecutionNode.getGroupByAlias() + "2"),
+                    new BaseColumn("o_orderdate"), AsyncAggExecutionNode.getGroupByAlias() + "1"),
                 new AliasedColumn(
                     new BaseColumn("o_shippriority"),
-                    AsyncAggExecutionNode.getGroupByAlias() + "3"),
-                new AliasedColumn(revenue, AsyncAggExecutionNode.getOrderByAlias() + "1"),
+                    AsyncAggExecutionNode.getGroupByAlias() + "2"),
+                new AliasedColumn(revenue, AsyncAggExecutionNode.getOrderByAlias() + "0"),
                 new AliasedColumn(
                     new BaseColumn("tpch", "orders", "vt2", "o_orderdate"),
-                    AsyncAggExecutionNode.getOrderByAlias() + "2")),
+                    AsyncAggExecutionNode.getOrderByAlias() + "1")),
             Arrays.asList(customer, orders, lineitem));
     expected.addFilterByAnd(
         new ColumnOp(
@@ -532,10 +532,10 @@ public class TpchExecutionPlanTest {
                 new AliasedColumn(new ColumnOp("count", new AsteriskColumn()), "order_count"),
                 new AliasedColumn(
                     new BaseColumn("o_orderpriority"),
-                    AsyncAggExecutionNode.getGroupByAlias() + "1"),
+                    AsyncAggExecutionNode.getGroupByAlias() + "0"),
                 new AliasedColumn(
                     new BaseColumn("tpch", "orders", "vt1", "o_orderpriority"),
-                    AsyncAggExecutionNode.getOrderByAlias() + "1")),
+                    AsyncAggExecutionNode.getOrderByAlias() + "0")),
             orders);
 
     assertEquals(
@@ -622,8 +622,8 @@ public class TpchExecutionPlanTest {
                 new AliasedColumn(new BaseColumn("tpch", "nation", "vt5", "n_name"), "n_name"),
                 new AliasedColumn(revenue, "revenue"),
                 new AliasedColumn(
-                    new BaseColumn("n_name"), AsyncAggExecutionNode.getGroupByAlias() + "1"),
-                new AliasedColumn(revenue, AsyncAggExecutionNode.getOrderByAlias() + "1")),
+                    new BaseColumn("n_name"), AsyncAggExecutionNode.getGroupByAlias() + "0"),
+                new AliasedColumn(revenue, AsyncAggExecutionNode.getOrderByAlias() + "0")),
             Arrays.asList(customer, orders, lineitem, supplier, nation, region));
     expected.addFilterByAnd(
         new ColumnOp(
@@ -963,20 +963,20 @@ public class TpchExecutionPlanTest {
                 new AliasedColumn(
                     new ColumnOp("sum", new BaseColumn("tpch", "vt1", "volume")), "revenue"),
                 new AliasedColumn(
-                    new BaseColumn("supp_nation"), AsyncAggExecutionNode.getGroupByAlias() + "1"),
+                    new BaseColumn("supp_nation"), AsyncAggExecutionNode.getGroupByAlias() + "0"),
                 new AliasedColumn(
-                    new BaseColumn("cust_nation"), AsyncAggExecutionNode.getGroupByAlias() + "2"),
+                    new BaseColumn("cust_nation"), AsyncAggExecutionNode.getGroupByAlias() + "1"),
                 new AliasedColumn(
-                    new BaseColumn("l_year"), AsyncAggExecutionNode.getGroupByAlias() + "3"),
+                    new BaseColumn("l_year"), AsyncAggExecutionNode.getGroupByAlias() + "2"),
                 new AliasedColumn(
                     new BaseColumn("tpch", "vt1", "supp_nation"),
-                    AsyncAggExecutionNode.getOrderByAlias() + "1"),
+                    AsyncAggExecutionNode.getOrderByAlias() + "0"),
                 new AliasedColumn(
                     new BaseColumn("tpch", "vt1", "cust_nation"),
-                    AsyncAggExecutionNode.getOrderByAlias() + "2"),
+                    AsyncAggExecutionNode.getOrderByAlias() + "1"),
                 new AliasedColumn(
                     new BaseColumn("tpch", "vt1", "l_year"),
-                    AsyncAggExecutionNode.getOrderByAlias() + "3")),
+                    AsyncAggExecutionNode.getOrderByAlias() + "2")),
             new BaseTable("placeholderSchema_1_0", "placeholderTable_1_0", "vt1"));
     expected.addGroupby(
         Arrays.<GroupingAttribute>asList(
@@ -1181,10 +1181,10 @@ public class TpchExecutionPlanTest {
                 new AliasedColumn(
                     new ColumnOp("sum", new BaseColumn("tpch", "vt1", "volume")), "denominator"),
                 new AliasedColumn(
-                    new BaseColumn("o_year"), AsyncAggExecutionNode.getGroupByAlias() + "1"),
+                    new BaseColumn("o_year"), AsyncAggExecutionNode.getGroupByAlias() + "0"),
                 new AliasedColumn(
                     new BaseColumn("tpch", "vt1", "o_year"),
-                    AsyncAggExecutionNode.getOrderByAlias() + "1")),
+                    AsyncAggExecutionNode.getOrderByAlias() + "0")),
             new BaseTable("placeholderSchema_1_0", "placeholderTable_1_0", "vt1"));
     expected.addGroupby(new BaseColumn("o_year"));
     expected.addOrderby(new OrderbyAttribute("o_year"));
@@ -1357,15 +1357,15 @@ public class TpchExecutionPlanTest {
                 new AliasedColumn(
                     new ColumnOp("sum", new BaseColumn("tpch", "vt1", "amount")), "sum_profit"),
                 new AliasedColumn(
-                    new BaseColumn("nation"), AsyncAggExecutionNode.getGroupByAlias() + "1"),
+                    new BaseColumn("nation"), AsyncAggExecutionNode.getGroupByAlias() + "0"),
                 new AliasedColumn(
-                    new BaseColumn("o_year"), AsyncAggExecutionNode.getGroupByAlias() + "2"),
+                    new BaseColumn("o_year"), AsyncAggExecutionNode.getGroupByAlias() + "1"),
                 new AliasedColumn(
                     new BaseColumn("tpch", "vt1", "nation"),
-                    AsyncAggExecutionNode.getOrderByAlias() + "1"),
+                    AsyncAggExecutionNode.getOrderByAlias() + "0"),
                 new AliasedColumn(
                     new BaseColumn("tpch", "vt1", "o_year"),
-                    AsyncAggExecutionNode.getOrderByAlias() + "2")),
+                    AsyncAggExecutionNode.getOrderByAlias() + "1")),
             new BaseTable("placeholderSchema_1_0", "placeholderTable_1_0", "vt1"));
     expected.addGroupby(
         Arrays.<GroupingAttribute>asList(new BaseColumn("nation"), new BaseColumn("o_year")));
@@ -1485,21 +1485,21 @@ public class TpchExecutionPlanTest {
                 new AliasedColumn(
                     new BaseColumn("tpch", "customer", "vt1", "c_comment"), "c_comment"),
                 new AliasedColumn(
-                    new BaseColumn("c_custkey"), AsyncAggExecutionNode.getGroupByAlias() + "1"),
+                    new BaseColumn("c_custkey"), AsyncAggExecutionNode.getGroupByAlias() + "0"),
                 new AliasedColumn(
-                    new BaseColumn("c_name"), AsyncAggExecutionNode.getGroupByAlias() + "2"),
+                    new BaseColumn("c_name"), AsyncAggExecutionNode.getGroupByAlias() + "1"),
                 new AliasedColumn(
-                    new BaseColumn("c_acctbal"), AsyncAggExecutionNode.getGroupByAlias() + "3"),
+                    new BaseColumn("c_acctbal"), AsyncAggExecutionNode.getGroupByAlias() + "2"),
                 new AliasedColumn(
-                    new BaseColumn("c_phone"), AsyncAggExecutionNode.getGroupByAlias() + "4"),
+                    new BaseColumn("c_phone"), AsyncAggExecutionNode.getGroupByAlias() + "3"),
                 new AliasedColumn(
-                    new BaseColumn("n_name"), AsyncAggExecutionNode.getGroupByAlias() + "5"),
+                    new BaseColumn("n_name"), AsyncAggExecutionNode.getGroupByAlias() + "4"),
                 new AliasedColumn(
-                    new BaseColumn("c_address"), AsyncAggExecutionNode.getGroupByAlias() + "6"),
+                    new BaseColumn("c_address"), AsyncAggExecutionNode.getGroupByAlias() + "5"),
                 new AliasedColumn(
-                    new BaseColumn("c_comment"), AsyncAggExecutionNode.getGroupByAlias() + "7"),
+                    new BaseColumn("c_comment"), AsyncAggExecutionNode.getGroupByAlias() + "6"),
                 new AliasedColumn(
-                    revenue.getColumn(), AsyncAggExecutionNode.getOrderByAlias() + "1")),
+                    revenue.getColumn(), AsyncAggExecutionNode.getOrderByAlias() + "0")),
             Arrays.asList(customer, orders, lineitem, nation));
     expected.addFilterByAnd(
         new ColumnOp(
@@ -1784,7 +1784,7 @@ public class TpchExecutionPlanTest {
                     new ColumnOp("count", new BaseColumn("tpch", "orders", "vt2", "o_orderkey")),
                     "c_count"),
                 new AliasedColumn(
-                    new BaseColumn("c_custkey"), AsyncAggExecutionNode.getGroupByAlias() + "1")),
+                    new BaseColumn("c_custkey"), AsyncAggExecutionNode.getGroupByAlias() + "0")),
             join);
     expected.addGroupby(new BaseColumn("c_custkey"));
     assertEquals(
@@ -1972,7 +1972,7 @@ public class TpchExecutionPlanTest {
                                             "tpch", "lineitem", "vt1", "l_discount")))))),
                     "s2"),
                 new AliasedColumn(
-                    new BaseColumn("l_suppkey"), AsyncAggExecutionNode.getGroupByAlias() + "1")),
+                    new BaseColumn("l_suppkey"), AsyncAggExecutionNode.getGroupByAlias() + "0")),
             lineitem);
     expected.addFilterByAnd(
         new ColumnOp(
@@ -2106,7 +2106,7 @@ public class TpchExecutionPlanTest {
                                 "avg", new BaseColumn("tpch", "lineitem", "vt3", "l_quantity")))),
                     "t_avg_quantity"),
                 new AliasedColumn(
-                    new BaseColumn("l_partkey"), AsyncAggExecutionNode.getGroupByAlias() + "1")),
+                    new BaseColumn("l_partkey"), AsyncAggExecutionNode.getGroupByAlias() + "0")),
             new BaseTable("tpch", "lineitem", "vt3"));
     expected.addGroupby(new BaseColumn("l_partkey"));
     expected.setAliasName("vt2");
@@ -2197,7 +2197,7 @@ public class TpchExecutionPlanTest {
                     new ColumnOp("sum", new BaseColumn("tpch", "lineitem", "vt4", "l_quantity")),
                     "t_sum_quantity"),
                 new AliasedColumn(
-                    new BaseColumn("l_orderkey"), AsyncAggExecutionNode.getGroupByAlias() + "1")),
+                    new BaseColumn("l_orderkey"), AsyncAggExecutionNode.getGroupByAlias() + "0")),
             new BaseTable("tpch", "lineitem", "vt4"));
     expected.addGroupby(new BaseColumn("l_orderkey"));
     expected.setAliasName("vt3");
@@ -2654,9 +2654,9 @@ public class TpchExecutionPlanTest {
                                 "sum", new BaseColumn("tpch", "lineitem", "vt5", "l_quantity")))),
                     "sum_quantity"),
                 new AliasedColumn(
-                    new BaseColumn("l_partkey"), AsyncAggExecutionNode.getGroupByAlias() + "1"),
+                    new BaseColumn("l_partkey"), AsyncAggExecutionNode.getGroupByAlias() + "0"),
                 new AliasedColumn(
-                    new BaseColumn("l_suppkey"), AsyncAggExecutionNode.getGroupByAlias() + "2")),
+                    new BaseColumn("l_suppkey"), AsyncAggExecutionNode.getGroupByAlias() + "1")),
             new BaseTable("tpch", "lineitem", "vt5"));
     expected.addFilterByAnd(
         new ColumnOp(

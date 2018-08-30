@@ -165,7 +165,7 @@ public class AsyncAggExecutionNode extends ProjectionNode {
     // add (1) order-by, (2) limit, (3) having clauses to the select query
     QueryNodeBase aggRoot = (QueryNodeBase) aggNodeBlock.getBlockRootNode();
     SelectQuery originalAggQuery = aggRoot.getSelectQuery();
-    int orderByCount = 1;
+    int orderByCount = 0;
     for (OrderbyAttribute orderBy : originalAggQuery.getOrderby()) {
       String aliasName = ORDER_BY_ALIAS + (orderByCount++);
       //      if (orderBy.getAttribute() instanceof AliasedColumn) {
@@ -627,6 +627,7 @@ public class AsyncAggExecutionNode extends ProjectionNode {
     }*/
 
     boolean firstHaving = true;
+    int orderByIndex = 0;
     for (SelectItem sel : originalSelectList) {
       SelectItem replacedSel = this.replaceColumnWithAggMeta(sel, aggMeta);
       if (replacedSel != null) {
@@ -638,6 +639,10 @@ public class AsyncAggExecutionNode extends ProjectionNode {
               firstHaving = false;
             }
             queryToReplace.addHavingByAnd(ac.getColumn());
+            continue;
+          } else if (ac.getAliasName().startsWith(ORDER_BY_ALIAS)) {
+            OrderbyAttribute attribute = queryToReplace.getOrderby().get(orderByIndex++);
+            attribute.setAttribute(ac.getColumn());
             continue;
           }
         }
@@ -676,6 +681,13 @@ public class AsyncAggExecutionNode extends ProjectionNode {
                       TIER_CONSOLIDATED_TABLE_ALIAS, ((AliasedColumn) sel).getAliasName()));
           newSelectlist.add(new AliasedColumn(col, ((AliasedColumn) sel).getAliasName()));
           aggContents.put(((AliasedColumn) sel).getAliasName(), col);
+          String alias = ((AliasedColumn) sel).getAliasName();
+
+          // Add the item to group-by if it is group-by column
+          if (alias.startsWith(GROUP_BY_ALIAS)) {
+            UnnamedColumn newcol = new BaseColumn(TIER_CONSOLIDATED_TABLE_ALIAS, alias);
+            groupby.add(newcol);
+          }
         }
         // If it is a max/min aggregation, we need to maximize/minimize
         else if (sourceAggMeta

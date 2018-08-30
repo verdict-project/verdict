@@ -41,6 +41,8 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
 
   private int aggColumnIdentiferNum = 0;
 
+  //  private Map<String, Integer> aggColumnIdentifierMap = new HashMap<>();
+
   private static final String TIER_COLUMN_ALIAS_KEYWORD = "tier";
 
   private AsyncQueryExecutionPlan(String scratchpadSchemaName, ScrambleMetaSet scrambleMeta) {
@@ -552,79 +554,103 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
     for (SelectItem selectItem : selectList) {
       if (selectItem instanceof AliasedColumn) {
         AliasedColumn ac = (AliasedColumn) selectItem;
-        String aliasPrefix = "";
-        // Simply add the select item if it is HAVING condition used by outer query.
-        if (ac.getAliasName().startsWith(AsyncAggExecutionNode.getHavingConditionAlias())) {
-          aliasPrefix = AsyncAggExecutionNode.getHavingConditionAlias();
-        } else if (ac.getAliasName().startsWith(AsyncAggExecutionNode.getGroupByAlias())) {
-          aliasPrefix = AsyncAggExecutionNode.getGroupByAlias();
-        } else if (ac.getAliasName().startsWith(AsyncAggExecutionNode.getOrderByAlias())) {
-          aliasPrefix = AsyncAggExecutionNode.getOrderByAlias();
+        String newAlias = "";
+        String prefix = "";
+        // Set alias of the new select items accordingly
+        if (ac.getAliasName().startsWith(AsyncAggExecutionNode.getHavingConditionAlias())
+            || ac.getAliasName().startsWith(AsyncAggExecutionNode.getGroupByAlias())
+            || ac.getAliasName().startsWith(AsyncAggExecutionNode.getOrderByAlias())) {
+          prefix = ac.getAliasName();
+          newAlias = ac.getAliasName();
         } else {
-          aliasPrefix = "agg";
+          prefix = "agg";
+          newAlias = prefix + aggColumnIdentiferNum;
         }
         List<ColumnOp> columnOps = getAggregateColumn(((AliasedColumn) selectItem).getColumn());
         // If it contains agg columns
         if (!columnOps.isEmpty()) {
           meta.getAggColumn().put(selectItem, columnOps);
+          int cnt = 0;
           for (ColumnOp col : columnOps) {
+            if (ac.getAliasName().startsWith(AsyncAggExecutionNode.getHavingConditionAlias())) {
+              newAlias = prefix + cnt;
+              ++cnt;
+            }
             if (col.getOpType().equals("avg")) {
               if (!meta.getAggColumnAggAliasPair()
                   .containsKey(new ImmutablePair<>("sum", col.getOperand(0)))) {
                 ColumnOp col1 = new ColumnOp("sum", col.getOperand(0));
-                newSelectlist.add(new AliasedColumn(col1, aliasPrefix + aggColumnIdentiferNum));
+                newSelectlist.add(new AliasedColumn(col1, newAlias));
                 meta.getAggColumnAggAliasPair()
-                    .put(
-                        new ImmutablePair<>("sum", col1.getOperand(0)),
-                        aliasPrefix + aggColumnIdentiferNum);
-                aggColumnAlias.add(aliasPrefix + aggColumnIdentiferNum++);
-              } else {
+                    .put(new ImmutablePair<>("sum", col1.getOperand(0)), newAlias);
+                aggColumnAlias.add(newAlias);
+                ++aggColumnIdentiferNum;
+              } else if (!newAlias.startsWith("agg")) {
                 ColumnOp col1 = new ColumnOp("sum", col.getOperand(0));
-                newSelectlist.add(new AliasedColumn(col1, aliasPrefix + aggColumnIdentiferNum));
-                aggColumnAlias.add(aliasPrefix + aggColumnIdentiferNum++);
+                newSelectlist.add(new AliasedColumn(col1, newAlias));
+                aggColumnAlias.add(newAlias);
               }
               if (!meta.getAggColumnAggAliasPair()
                   .containsKey(
                       new ImmutablePair<>("count", (UnnamedColumn) new AsteriskColumn()))) {
+                if (prefix.equals("agg")) {
+                  newAlias = prefix + aggColumnIdentiferNum;
+                } else {
+                  newAlias += "_cnt";
+                }
+                ++aggColumnIdentiferNum;
                 ColumnOp col2 = new ColumnOp("count", new AsteriskColumn());
-                newSelectlist.add(new AliasedColumn(col2, aliasPrefix + aggColumnIdentiferNum));
+                newSelectlist.add(new AliasedColumn(col2, newAlias));
                 meta.getAggColumnAggAliasPair()
                     .put(
                         new ImmutablePair<>("count", (UnnamedColumn) new AsteriskColumn()),
-                        aliasPrefix + aggColumnIdentiferNum);
-                aggColumnAlias.add(aliasPrefix + aggColumnIdentiferNum++);
+                        newAlias);
+                aggColumnAlias.add(newAlias);
               }
             } else if (col.getOpType().equals("count") || col.getOpType().equals("sum")) {
-              if (col.getOpType().equals("count")
-                  && !meta.getAggColumnAggAliasPair()
-                      .containsKey(
-                          new ImmutablePair<>("count", (UnnamedColumn) (new AsteriskColumn())))) {
-                ColumnOp col1 = new ColumnOp(col.getOpType());
-                newSelectlist.add(new AliasedColumn(col1, aliasPrefix + aggColumnIdentiferNum));
-                meta.getAggColumnAggAliasPair()
-                    .put(
-                        new ImmutablePair<>(col.getOpType(), (UnnamedColumn) new AsteriskColumn()),
-                        aliasPrefix + aggColumnIdentiferNum);
-                aggColumnAlias.add(aliasPrefix + aggColumnIdentiferNum++);
-              } else if (col.getOpType().equals("sum")
-                  && !meta.getAggColumnAggAliasPair()
-                      .containsKey(new ImmutablePair<>(col.getOpType(), col.getOperand(0)))) {
-                ColumnOp col1 = new ColumnOp(col.getOpType(), col.getOperand(0));
-                newSelectlist.add(new AliasedColumn(col1, aliasPrefix + aggColumnIdentiferNum));
-                meta.getAggColumnAggAliasPair()
-                    .put(
-                        new ImmutablePair<>(col.getOpType(), col1.getOperand(0)),
-                        aliasPrefix + aggColumnIdentiferNum);
-                aggColumnAlias.add(aliasPrefix + aggColumnIdentiferNum++);
+              if (col.getOpType().equals("count")) {
+                if (!meta.getAggColumnAggAliasPair()
+                    .containsKey(
+                        new ImmutablePair<>("count", (UnnamedColumn) (new AsteriskColumn())))) {
+                  ColumnOp col1 = new ColumnOp(col.getOpType());
+                  newSelectlist.add(new AliasedColumn(col1, newAlias));
+                  meta.getAggColumnAggAliasPair()
+                      .put(
+                          new ImmutablePair<>(
+                              col.getOpType(), (UnnamedColumn) new AsteriskColumn()),
+                          newAlias);
+                  aggColumnAlias.add(newAlias);
+                  ++aggColumnIdentiferNum;
+                } else if (!newAlias.startsWith("agg")) {
+                  ColumnOp col1 = new ColumnOp("count", col.getOperand(0));
+                  newSelectlist.add(new AliasedColumn(col1, newAlias));
+                  aggColumnAlias.add(newAlias);
+                }
+              } else if (col.getOpType().equals("sum")) {
+                if (!meta.getAggColumnAggAliasPair()
+                    .containsKey(new ImmutablePair<>(col.getOpType(), col.getOperand(0)))) {
+                  ColumnOp col1 = new ColumnOp(col.getOpType(), col.getOperand(0));
+                  newSelectlist.add(new AliasedColumn(col1, newAlias));
+                  meta.getAggColumnAggAliasPair()
+                      .put(new ImmutablePair<>(col.getOpType(), col1.getOperand(0)), newAlias);
+                  aggColumnAlias.add(newAlias);
+                  ++aggColumnIdentiferNum;
+                } else if (!newAlias.startsWith("agg")) {
+                  ColumnOp col1 = new ColumnOp("sum", col.getOperand(0));
+                  newSelectlist.add(new AliasedColumn(col1, newAlias));
+                  aggColumnAlias.add(newAlias);
+                }
               }
             } else if (col.getOpType().equals("max") || col.getOpType().equals("min")) {
               ColumnOp col1 = new ColumnOp(col.getOpType(), col.getOperand(0));
-              newSelectlist.add(new AliasedColumn(col1, aliasPrefix + aggColumnIdentiferNum));
+              newSelectlist.add(new AliasedColumn(col1, newAlias));
               meta.getAggColumnAggAliasPairOfMaxMin()
-                  .put(
-                      new ImmutablePair<>(col.getOpType(), col1.getOperand(0)),
-                      aliasPrefix + aggColumnIdentiferNum);
-              maxminAlias.put(aliasPrefix + aggColumnIdentiferNum++, col.getOpType());
+                  .put(new ImmutablePair<>(col.getOpType(), col1.getOperand(0)), newAlias);
+              maxminAlias.put(newAlias, col.getOpType());
+              ++aggColumnIdentiferNum;
+            }
+            if (prefix.equals("agg")) {
+              newAlias = prefix + aggColumnIdentiferNum;
             }
           }
         } else {

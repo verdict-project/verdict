@@ -122,6 +122,9 @@ public class RedshiftUniformScramblingQueryTest {
             SCHEMA_NAME, SCHEMA_NAME);
     ResultSet rs1 = vc.createStatement().executeQuery(sql);
     ResultSet rs2 = conn.createStatement().executeQuery(sql);
+    int columnCount = rs2.getMetaData().getColumnCount();
+    int columnCount2 = rs1.getMetaData().getColumnCount();
+    assertEquals(columnCount, columnCount2);
     while (rs1.next() && rs2.next()) {
       assertEquals(rs1.getInt(1), rs2.getInt(1));
       System.out.println(String.format("%d : %d", rs1.getInt(1), rs2.getInt(1)));
@@ -136,9 +139,8 @@ public class RedshiftUniformScramblingQueryTest {
             "SELECT AVG(\"orders\".\"o_totalprice\") as \"avg_price\"\n"
                 + "FROM \"%s\".\"orders\" \"orders\"\n"
                 + "GROUP BY o_orderstatus\n"
-                + "HAVING avg(\"orders\".\"o_totalprice\") >\n"
-                + "(SELECT avg(\"orders\".\"o_totalprice\") FROM \"%s\".\"orders\" \"orders\")\n"
-                + "ORDER BY o_orderstatus\n",
+                + "HAVING avg(\"orders\".\"o_orderkey\") > 10\n"
+                + "ORDER BY avg(o_orderkey)\n",
             SCHEMA_NAME, SCHEMA_NAME);
     ResultSet rs1 = vc.createStatement().executeQuery(sql);
     ResultSet rs2 = conn.createStatement().executeQuery(sql);
@@ -153,7 +155,7 @@ public class RedshiftUniformScramblingQueryTest {
   }
 
   @Test
-  public void runQuery2WithHavingTest() throws SQLException {
+  public void runQueryWithHavingTest2() throws SQLException {
     String sql =
         String.format(
             "SELECT o_orderpriority, COUNT(\"orders\".\"o_orderkey\") as \"cnt\"\n"
@@ -175,7 +177,7 @@ public class RedshiftUniformScramblingQueryTest {
     assertEquals(rs1.next(), rs2.next());
   }
 
-  @Test(expected = VerdictDBDbmsException.class)
+  @Test(expected = SQLException.class)
   public void runQueryWithHavingSubqueryTest() throws SQLException {
     String sql =
         String.format(

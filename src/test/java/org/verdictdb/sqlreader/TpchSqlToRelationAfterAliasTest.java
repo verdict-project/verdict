@@ -6,6 +6,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.verdictdb.connection.StaticMetaData;
 import org.verdictdb.core.sqlobject.*;
+import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
 
 import java.sql.SQLException;
@@ -1378,7 +1379,7 @@ public class TpchSqlToRelationAfterAliasTest {
     assertEquals(expected, relation);
   }
 
-  @Test
+  @Test(expected = VerdictDBDbmsException.class)
   public void Query11Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     AbstractRelation partsupp = new BaseTable("tpch", "partsupp", "vt1");

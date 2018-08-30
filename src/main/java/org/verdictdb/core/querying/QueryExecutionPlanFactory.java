@@ -120,7 +120,7 @@ public class QueryExecutionPlanFactory {
     //    query.addOrderby(query.getOrderby());
     //  if (query.getLimit().isPresent()) selectQuery.addLimit(query.getLimit().get());
 
-    int groupbyCount = 1;
+    int groupbyCount = 0;
     for (GroupingAttribute attr : query.getGroupby()) {
       UnnamedColumn groupByCol = findActualGroupByExpression(attr, query);
       query.addSelectItem(
@@ -137,7 +137,7 @@ public class QueryExecutionPlanFactory {
       query.addSelectItem(havingColumn);
     }
 
-    int orderByCount = 1;
+    int orderByCount = 0;
     for (OrderbyAttribute attribute : query.getOrderby()) {
       GroupingAttribute attr = attribute.getAttribute();
       UnnamedColumn orderByCol = findActualGroupByExpression(attr, query);

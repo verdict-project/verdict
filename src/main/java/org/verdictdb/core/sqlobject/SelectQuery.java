@@ -182,6 +182,10 @@ public class SelectQuery extends AbstractRelation implements SqlConvertible {
     this.groupby = new ArrayList<>();
   }
 
+  public void clearOrderBy() {
+    this.orderby = new ArrayList<>();
+  }
+
   public void clearSelectList() {
     this.selectList = new ArrayList<>();
   }
