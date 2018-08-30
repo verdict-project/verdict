@@ -29,6 +29,11 @@ The given query is decomposed into multiple queries, each of which is a flat que
 
 Below we depict the DAG and the queries for those nodes.
 
+<!-- <div class="img-center">
+  <img src="/images/dag1.png" class="img-center" />
+</div> -->
+![zoomify](/images/dag1.png){: .center}
+
 
 ```sql
 -- Q1

@@ -22,6 +22,11 @@
   font-size: 1.2em;
 }
 
+.center {
+  display: block;
+  margin: 0 auto;
+}
+
 @media only screen and (max-width: 76.1875em) {
   .md-nav--primary .md-nav__title--site {
     background-color: #3D3F57 !important;
@@ -31,6 +36,7 @@
     background-color: #3D3F57 !important;
   }
 }
+
 
 /* .md-nav__title--site {
   background-color: #3D3F57 !important;

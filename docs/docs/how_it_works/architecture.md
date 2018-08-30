@@ -4,7 +4,9 @@
 
 VerdictDB is a thin Java library placed between the user (or an application) and the backend database. Its Python library, i.e., `pyverdict`, also relies on the Java library. The user can make a connection to VerdictDB either using the standard JDBC or the public API provided by VerdictDB. VerdictDB communicates with the backend database also using JDBC except for special cases (e.g., Apache Spark's SparkSession).
 
-<img width="400px" class="img-responsive" style="margin: 0 auto;" src="http://verdictdb.org/image/verdict-architecture.png" />
+<!-- <img width="400px" class="img-responsive center" style="margin: 0 auto;" src="http://verdictdb.org/image/verdict-architecture.png" /> -->
+
+![archi](http://verdictdb.org/image/verdict-architecture.png){: .center width="400px"}
 
 
 ## Internal Architecture
