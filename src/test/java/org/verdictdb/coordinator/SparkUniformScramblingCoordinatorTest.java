@@ -11,6 +11,7 @@ import org.apache.spark.sql.SparkSession;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.verdictdb.VerdictContext;
 import org.verdictdb.commons.DatabaseConnectionHelpers;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.DbmsQueryResult;
@@ -36,6 +37,15 @@ public class SparkUniformScramblingCoordinatorTest {
   @AfterClass
   public static void tearDown() {
     spark.sql(String.format("DROP SCHEMA IF EXISTS %s CASCADE", TEST_SCHEMA));
+  }
+  
+  @Test
+  public void testScramblingLineitemWithBlocksize() throws VerdictDBException {
+    VerdictContext verdict = VerdictContext.fromSparkSession(spark);
+    verdict.sql(
+        String.format(
+            "create scramble %s.lineitem_scramble from %s.lineitem blocksize 10", 
+            TEST_SCHEMA, TEST_SCHEMA));
   }
 
   @Test

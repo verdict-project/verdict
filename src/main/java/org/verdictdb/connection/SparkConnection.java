@@ -63,9 +63,17 @@ public class SparkConnection extends DbmsConnection {
   @Override
   public List<String> getTables(String schema) throws VerdictDBDbmsException {
     List<String> tables = new ArrayList<>();
-    DbmsQueryResult queryResult = execute(syntax.getTableCommand(schema));
-    while (queryResult.next()) {
-      tables.add((String) queryResult.getValue(syntax.getTableNameColumnIndex()));
+    try {
+      DbmsQueryResult queryResult = execute(syntax.getTableCommand(schema));
+      while (queryResult.next()) {
+        tables.add((String) queryResult.getValue(syntax.getTableNameColumnIndex()));
+      }
+    } catch (Exception e) {
+      if (e.getMessage().contains("not found")) {
+        // do nothing
+      } else {
+        throw e;
+      }
     }
     return tables;
   }
@@ -144,7 +152,8 @@ public class SparkConnection extends DbmsConnection {
       }
       return srs;
     } catch (Exception e) {
-      throw new VerdictDBDbmsException(e.getMessage());
+      String msg = "Issued the following query: " + sql + "\n" + e.getMessage();
+      throw new VerdictDBDbmsException(msg);
     }
   }
 

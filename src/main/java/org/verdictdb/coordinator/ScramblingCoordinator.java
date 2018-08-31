@@ -259,10 +259,12 @@ public class ScramblingCoordinator {
     }
 
     // create a schema if not exists
-    CreateSchemaQuery createSchemaQuery = new CreateSchemaQuery(newSchema);
-    createSchemaQuery.setIfNotExists(true);
-    String sql = QueryToSql.convert(conn.getSyntax(), createSchemaQuery);
-    conn.execute(sql);
+    if (!conn.getSchemas().contains(newSchema)) {
+      CreateSchemaQuery createSchemaQuery = new CreateSchemaQuery(newSchema);
+      createSchemaQuery.setIfNotExists(true);
+      String sql = QueryToSql.convert(conn.getSyntax(), createSchemaQuery);
+      conn.execute(sql);
+    }
 
     // overwrite options with custom options.
     Map<String, String> effectiveOptions = new HashMap<String, String>();

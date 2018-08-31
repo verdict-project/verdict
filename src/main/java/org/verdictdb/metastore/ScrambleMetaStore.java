@@ -135,17 +135,22 @@ public class ScrambleMetaStore extends VerdictMetaStore {
    * @throws VerdictDBException
    */
   public void addToStore(ScrambleMetaSet scrambleMetaSet) throws VerdictDBException {
-
+    String sql;
+    
     // create a schema if not exists
-    CreateSchemaQuery createSchemaQuery = new CreateSchemaQuery(storeSchema);
-    createSchemaQuery.setIfNotExists(true);
-    String sql = QueryToSql.convert(conn.getSyntax(), createSchemaQuery);
-    conn.execute(sql);
+    if (!conn.getSchemas().contains(storeSchema)) {
+      CreateSchemaQuery createSchemaQuery = new CreateSchemaQuery(storeSchema);
+      createSchemaQuery.setIfNotExists(true);
+      sql = QueryToSql.convert(conn.getSyntax(), createSchemaQuery);
+      conn.execute(sql);
+    }
 
     // create a new table if not exists
-    CreateTableDefinitionQuery createTableQuery = createScrambleMetaStoreTableStatement();
-    sql = QueryToSql.convert(conn.getSyntax(), createTableQuery);
-    conn.execute(sql);
+    if (!conn.getTables(storeSchema).contains(getMetaStoreTableName())) {
+      CreateTableDefinitionQuery createTableQuery = createScrambleMetaStoreTableStatement();
+      sql = QueryToSql.convert(conn.getSyntax(), createTableQuery);
+      conn.execute(sql);
+    }
 
     // insert a new entry
     StringBuilder insertSqls = new StringBuilder();
