@@ -390,9 +390,6 @@ workflows:
       - build-spark
       - build-impala-redshift
       - build-pyverdict:
-          filters:
-            branches:
-              only: master
       - deploy-doc:
           filters:
             branches:
