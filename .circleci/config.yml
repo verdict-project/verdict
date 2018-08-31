@@ -339,7 +339,7 @@ jobs:
         - ~/.m2
         key: verdict-dependencies-{{ checksum "pom.xml" }}
 
-  build-tableau-redshift:
+  build-redshift:
     docker:
     # specify the version you desire here
     - image: maven:3.5.4-jdk-8-slim
@@ -390,7 +390,7 @@ workflows:
     - build-jdk8-update-codecov
     - build-spark
     - build-impala-redshift
-    - build-tableau-redshift
+    - build-redshift
     #- update-codecov
     # - maven-version-check
     # - docker-env-check
