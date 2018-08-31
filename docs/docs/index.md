@@ -12,8 +12,8 @@ VerdictDB is a thin, platform-independent, interactive analytics library that wo
     - [Install / Download](/getting_started/install)
     - [Connecting to Databases](/getting_started/connection)
     - [Scrambling](/getting_started/scrambling)
-    - [Interactive Querying](/getting_started/querying)
-    - [Result Structure](/getting_started/results)
+    - [Traditional Querying](/getting_started/querying)
+    - [Stream Querying](/getting_started/stream)
 1. How VerdictDB works
     - [Basics](/how_it_works/basics)
     - [Architecture](/how_it_works/architecture)
@@ -22,9 +22,12 @@ VerdictDB is a thin, platform-independent, interactive analytics library that wo
     - [Setting up MySQL database](/tutorial/mysql)
     - [Setting up TPC-H data](/tutorial/tpch)
     - [An example Java application](/tutorial/example)
+    - [ML-based Analytics](/tutorial/advanced)
+1. Reference
+    - [Query Syntax](/reference/query_syntax)
 
 
 
-## License
+## License and Developments
 
-VerdictDB is under [the Apache License](https://www.apache.org/licenses/LICENSE-2.0), thus is completely free for both commercial and non-commercial purposes.
+VerdictDB is under [the Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0); thus, it is completely free for both commercial and non-commercial purposes. VerdictDB is developed by the database group at the University of Michigan, Ann Arbor.

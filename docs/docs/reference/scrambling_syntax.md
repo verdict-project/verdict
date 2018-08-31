@@ -1,9 +1,5 @@
-# Creating Scrambles
+# Scrambling Syntax
 
-A scramble is a special table used by VerdictDB to speed up query processing. The information about the created scrambles is stored in its metadata table and is used at query time.
-
-
-## Syntax
 
 ```sql
 CREATE SCRAMBLE newSchema.newTable FROM originalSchema.originalTable;

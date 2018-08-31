@@ -21,3 +21,30 @@
 .codehilite {
   font-size: 1.2em;
 }
+
+.center {
+  display: block;
+  margin: 0 auto;
+}
+
+code {
+  color: #863030 !important;
+  font-size: 100% !important;
+}
+
+@media only screen and (max-width: 76.1875em) {
+  .md-nav--primary .md-nav__title--site {
+    background-color: #3D3F57 !important;
+  }
+
+  .md-sidebar--primary * .md-nav__source {
+    background-color: #3D3F57 !important;
+  }
+}
+
+
+/* .md-nav__title--site {
+  background-color: #3D3F57 !important;
+} */
+
+/*  */

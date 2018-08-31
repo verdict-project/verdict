@@ -1,18 +1,19 @@
-site_name: VerdictDB Docs
+site_name: VerdictDB Documentation
 site_url: 'https://docs.verdictdb.org/'
 
 copyright: 'Copyright &copy; 2018 The University of Michigan'
 
 # Pages
-pages:
+nav:
   - Home: index.md
   - Getting Started:
     - Quickstart: getting_started/quickstart.md
     - Download/Install: getting_started/install.md
-    - Connecting to Data Sources: getting_started/connection.md
-    - Creating Scrambles: getting_started/scrambling.md
-    - Interactive Querying: getting_started/querying.md
-    - Result Structure: getting_started/results.md
+    - Connect to Data Sources: getting_started/connection.md
+    - Create Scrambles: getting_started/scrambling.md
+    - Simple Querying: getting_started/querying.md
+    - Stream Querying: getting_started/streaming.md
+    # - Result Structure: getting_started/results.md
   - How it works:
     - Basics: how_it_works/basics.md
     - Architecture: how_it_works/architecture.md
@@ -21,7 +22,11 @@ pages:
     - Setup MySQL (Optional): tutorial/mysql.md
     - Load TPC-H Data: tutorial/tpch.md
     - Example VerdictDB Application: tutorial/example.md
+    - ML-based Analytics: tutorial/advanced.md
   - Reference:
+    - Query Syntax:
+      - Scrambling: reference/scrambling_syntax.md
+      - Select Query: reference/query_syntax.md
     - Javadoc: reference/javadoc.md
   #   - VerdictDB Queries: reference/supported_queries.md
 
@@ -54,6 +59,7 @@ markdown_extensions:
   - markdown.extensions.meta
   - markdown.extensions.toc:
       permalink: true
+  - markdown.extensions.attr_list
   - pymdownx.arithmatex
   - pymdownx.betterem:
       smart_enable: all
@@ -71,3 +77,30 @@ markdown_extensions:
   - pymdownx.tasklist:
       custom_checkbox: true
   - pymdownx.tilde
+
+  # - markdown.extensions.admonition
+  # - markdown.extensions.codehilite:
+  #     guess_lang: false
+  # - markdown.extensions.def_list
+  # - markdown.extensions.footnotes
+  # - markdown.extensions.meta
+  # - markdown.extensions.attr_list
+  # - markdown.extensions.toc:
+  #     permalink: true
+  # - pymdownx.arithmatex
+  # - pymdownx.betterem:
+  #     smart_enable: all
+  # - pymdownx.caret
+  # - pymdownx.critic
+  # - pymdownx.details
+  # - pymdownx.emoji:
+  #     emoji_generator: !!python/name:pymdownx.emoji.to_svg
+  # - pymdownx.inlinehilite
+  # - pymdownx.keys
+  # - pymdownx.magiclink
+  # - pymdownx.mark
+  # - pymdownx.smartsymbols
+  # - pymdownx.superfences
+  # - pymdownx.tasklist:
+  #     custom_checkbox: true
+  # - pymdownx.tilde
