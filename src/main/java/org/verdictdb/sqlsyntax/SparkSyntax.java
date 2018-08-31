@@ -122,4 +122,9 @@ public class SparkSyntax extends SqlSyntax {
     }
     return true;
   }
+  
+  @Override
+  public String getGenericStringDataTypeName() {
+    return "STRING";
+  }
 }

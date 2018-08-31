@@ -24,7 +24,8 @@ import java.util.List;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.hive.com.esotericsoftware.minlog.Log;
+import org.verdictdb.VerdictResultStream;
+import org.verdictdb.VerdictSingleResult;
 import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.commons.VerdictOption;
 import org.verdictdb.connection.DbmsConnection;

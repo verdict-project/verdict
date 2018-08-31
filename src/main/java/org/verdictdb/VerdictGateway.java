@@ -1,7 +1,8 @@
 package org.verdictdb;
 
-import py4j.GatewayServer;
 import org.verdictdb.commons.VerdictDBLogger;
+
+import py4j.GatewayServer;
 
 public class VerdictGateway {
 

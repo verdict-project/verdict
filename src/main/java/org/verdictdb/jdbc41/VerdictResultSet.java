@@ -40,7 +40,7 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.verdictdb.coordinator.VerdictSingleResult;
+import org.verdictdb.VerdictSingleResult;
 
 public class VerdictResultSet implements ResultSet {
 

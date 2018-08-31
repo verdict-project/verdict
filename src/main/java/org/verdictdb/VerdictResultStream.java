@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-package org.verdictdb.coordinator;
+package org.verdictdb;
 
 import java.util.Iterator;
 

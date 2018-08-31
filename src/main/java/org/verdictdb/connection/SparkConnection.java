@@ -24,6 +24,8 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
+import org.verdictdb.commons.StringSplitter;
+import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.sqlsyntax.SparkSyntax;
 import org.verdictdb.sqlsyntax.SqlSyntax;
@@ -35,6 +37,8 @@ public class SparkConnection extends DbmsConnection {
   SqlSyntax syntax;
 
   String currentSchema;
+  
+  private VerdictDBLogger log = VerdictDBLogger.getLogger(this.getClass());;
 
   public SparkConnection(SparkSession sc) {
     this.sc = sc;
@@ -118,17 +122,28 @@ public class SparkConnection extends DbmsConnection {
   }
 
   @Override
-  public DbmsQueryResult execute(String query) throws VerdictDBDbmsException {
+  public DbmsQueryResult execute(String sql) throws VerdictDBDbmsException {
+    String quoteChars = "'\"";
+    List<String> sqls = StringSplitter.splitOnSemicolon(sql, quoteChars);
+    DbmsQueryResult finalResult = null;
+    for (String s : sqls) {
+      finalResult = executeSingle(s);
+    }
+    return finalResult;
+  }
+  
+  public DbmsQueryResult executeSingle(String sql) throws VerdictDBDbmsException {
+    sql = sql.replace(";", "");   // remove semicolons
+    log.debug("Issuing the following query to Spark: " + sql);
+
     try {
-      // System.out.println("query to issue " + query);
       SparkQueryResult srs = null;
-      Dataset<Row> result = sc.sql(query);
+      Dataset<Row> result = sc.sql(sql);
       if (result != null) {
         srs = new SparkQueryResult(result);
       }
       return srs;
     } catch (Exception e) {
-      //      e.printStackTrace();
       throw new VerdictDBDbmsException(e.getMessage());
     }
   }

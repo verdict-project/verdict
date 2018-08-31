@@ -16,6 +16,11 @@
 
 package org.verdictdb.commons;
 
+import java.util.Iterator;
+
+import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
+
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.filter.ThresholdFilter;
@@ -23,10 +28,6 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.Appender;
 import ch.qos.logback.core.ConsoleAppender;
 import ch.qos.logback.core.FileAppender;
-import org.slf4j.LoggerFactory;
-import org.slf4j.Marker;
-
-import java.util.Iterator;
 
 public class VerdictDBLogger implements org.slf4j.Logger {
 

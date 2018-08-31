@@ -38,8 +38,6 @@ import org.verdictdb.core.sqlobject.OrderbyAttribute;
 import org.verdictdb.core.sqlobject.SelectItem;
 import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.exception.VerdictDBException;
-import org.verdictdb.sqlsyntax.ImpalaSyntax;
-import org.verdictdb.sqlsyntax.RedshiftSyntax;
 import org.verdictdb.sqlwriter.QueryToSql;
 
 public class ScrambleMetaStore extends VerdictMetaStore {
@@ -165,12 +163,7 @@ public class ScrambleMetaStore extends VerdictMetaStore {
     // create table
     String schemaAndTableColumnType = "VARCHAR(100)";
     String addedAtColumnType = "TIMESTAMP";
-    String dataColumnType = "TEXT";
-    if (conn.getSyntax() instanceof ImpalaSyntax) {
-      schemaAndTableColumnType = "STRING";
-    } else if (conn.getSyntax() instanceof RedshiftSyntax) {
-      dataColumnType = "VARCHAR(MAX)";
-    }
+    String dataColumnType = conn.getSyntax().getGenericStringDataTypeName();
 
     CreateTableDefinitionQuery query = new CreateTableDefinitionQuery();
     query.setSchemaName(storeSchema);

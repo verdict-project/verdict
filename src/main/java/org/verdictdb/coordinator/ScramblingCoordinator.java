@@ -16,19 +16,29 @@
 
 package org.verdictdb.coordinator;
 
-import com.google.common.base.Optional;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+
 import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.core.execplan.ExecutablePlanRunner;
-import org.verdictdb.core.scrambling.*;
+import org.verdictdb.core.scrambling.FastConvergeScramblingMethod;
+import org.verdictdb.core.scrambling.ScrambleMeta;
+import org.verdictdb.core.scrambling.ScramblingMethod;
+import org.verdictdb.core.scrambling.ScramblingPlan;
+import org.verdictdb.core.scrambling.UniformScramblingMethod;
 import org.verdictdb.core.sqlobject.CreateSchemaQuery;
 import org.verdictdb.core.sqlobject.CreateScrambleQuery;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBValueException;
 import org.verdictdb.sqlwriter.QueryToSql;
 
-import java.util.*;
-import java.util.Map.Entry;
+import com.google.common.base.Optional;
 
 public class ScramblingCoordinator {
 
