@@ -586,8 +586,8 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
 
   Pair<ExecutionResultReader, ResultSet> getRedshiftQueryAnswerPair(int queryNum)
       throws VerdictDBException, SQLException, IOException {
-    String filename = "query" + queryNum + "_redshift.sql";
-    //String filename = "companya/templated/redshift_queries/" + queryNum + ".sql";
+    //String filename = "query" + queryNum + "_redshift.sql";
+    String filename = "companya/templated/redshift_queries/" + queryNum + ".sql";
     File file = new File("src/test/resources/tpch_test_query/" + filename);
     String sql = Files.toString(file, Charsets.UTF_8);
 
@@ -601,7 +601,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
   }
 
   @Test
-  public void tableauTpchQuery1Test() {
+  public void TpchQuery1Test() {
     try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(1);
       ExecutionResultReader reader = answerPair.getLeft();
@@ -629,12 +629,12 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       assertEquals(10, cnt);
       System.out.println("test 1 passed");
     } catch (Exception e) {
-      tableauTpchQuery1Test();
+      TpchQuery1Test();
     }
   }
 
   @Test
-  public void tableauTpchQuery3Test() {
+  public void TpchQuery3Test() {
     try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(3);
       ExecutionResultReader reader = answerPair.getLeft();
@@ -656,13 +656,13 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       assertEquals(12, cnt);
       System.out.println("test 3 passed");
     } catch (Exception e) {
-      tableauTpchQuery3Test();
+      TpchQuery3Test();
     }
   }
 
   // count distinct
   @Test
-  public void tableauTpchQuery4Test() {
+  public void TpchQuery4Test() {
     try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(4);
       ExecutionResultReader reader = answerPair.getLeft();
@@ -682,12 +682,12 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       assertEquals(12, cnt);
       System.out.println("test 4 passed");
     } catch (Exception e) {
-      tableauTpchQuery4Test();
+      TpchQuery4Test();
     }
   }
 
   @Test
-  public void tableauTpchQuery5Test() {
+  public void TpchQuery5Test() {
     try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(5);
       ExecutionResultReader reader = answerPair.getLeft();
@@ -707,12 +707,12 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       assertEquals(12, cnt);
       System.out.println("test 5 passed");
     } catch (Exception e) {
-      tableauTpchQuery5Test();
+      TpchQuery5Test();
     }
   }
 
   @Test
-  public void tableauTpchQuery6Test() {
+  public void TpchQuery6Test() {
     try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(6);
       ExecutionResultReader reader = answerPair.getLeft();
@@ -731,12 +731,12 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       assertEquals(10, cnt);
       System.out.println("test 6 passed");
     } catch (Exception e) {
-      tableauTpchQuery6Test();
+      TpchQuery6Test();
     }
   }
 
   @Test
-  public void tableauTpchQuery7Test() {
+  public void TpchQuery7Test() {
     try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(7);
       ExecutionResultReader reader = answerPair.getLeft();
@@ -758,12 +758,12 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       assertEquals(12, cnt);
       System.out.println("test 7 passed");
     } catch (Exception e) {
-      tableauTpchQuery7Test();
+      TpchQuery7Test();
     }
   }
 
   @Test
-  public void tableauTpchQuery8Test() {
+  public void TpchQuery8Test() {
     try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(8);
       ExecutionResultReader reader = answerPair.getLeft();
@@ -784,12 +784,12 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       assertEquals(12, cnt);
       System.out.println("test 8 passed");
     } catch (Exception e) {
-      tableauTpchQuery8Test();
+      TpchQuery8Test();
     }
   }
 
   @Test
-  public void tableauTpchQuery9Test() {
+  public void TpchQuery9Test() {
     try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(9);
       ExecutionResultReader reader = answerPair.getLeft();
@@ -810,12 +810,12 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       assertEquals(12, cnt);
       System.out.println("test 9 passed");
     } catch (Exception e) {
-      tableauTpchQuery9Test();
+      TpchQuery9Test();
     }
   }
 
   @Test
-  public void tableauTpchQuery10Test() {
+  public void TpchQuery10Test() {
     try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(10);
       ExecutionResultReader reader = answerPair.getLeft();
@@ -841,12 +841,12 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       assertEquals(12, cnt);
       System.out.println("test 10 passed");
     } catch (Exception e) {
-      tableauTpchQuery10Test();
+      TpchQuery10Test();
     }
   }
 
   @Test
-  public void tableauTpchQuery11Test() {
+  public void TpchQuery11Test() {
     try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(11);
       ExecutionResultReader reader = answerPair.getLeft();
@@ -866,12 +866,12 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       assertEquals(1, cnt);
       System.out.println("test 11 passed");
     } catch (Exception e) {
-      tableauTpchQuery11Test();
+      TpchQuery11Test();
     }
   }
 
   @Test
-  public void tableauTpchQuery12Test() {
+  public void TpchQuery12Test() {
     try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(12);
       ExecutionResultReader reader = answerPair.getLeft();
@@ -892,13 +892,13 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       assertEquals(12, cnt);
       System.out.println("test 12 passed");
     } catch (Exception e) {
-      tableauTpchQuery12Test();
+      TpchQuery12Test();
     }
   }
 
   // count distinct
   @Test
-  public void tableauTpchQuery13Test() {
+  public void TpchQuery13Test() {
     try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(13);
       ExecutionResultReader reader = answerPair.getLeft();
@@ -918,12 +918,12 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       assertEquals(3, cnt);
       System.out.println("test 13 passed");
     } catch (Exception e) {
-      tableauTpchQuery13Test();
+      TpchQuery13Test();
     }
   }
 
   @Test
-  public void tableauTpchQuery14Test() {
+  public void TpchQuery14Test() {
     try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(14);
       ExecutionResultReader reader = answerPair.getLeft();
@@ -943,12 +943,12 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       assertEquals(10, cnt);
       System.out.println("test 14 passed");
     } catch (Exception e) {
-      tableauTpchQuery14Test();
+      TpchQuery14Test();
     }
   }
 
   @Test
-  public void tableauTpchQuery15Test() {
+  public void TpchQuery15Test() {
     try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(15);
       ExecutionResultReader reader = answerPair.getLeft();
@@ -971,13 +971,13 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       assertEquals(12, cnt);
       System.out.println("test 15 passed");
     } catch (Exception e) {
-      tableauTpchQuery15Test();
+      TpchQuery15Test();
     }
   }
 
   // count distinct
   //@Test
-  public void tableauTpchQuery16Test() {
+  public void TpchQuery16Test() {
     try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(15);
       ExecutionResultReader reader = answerPair.getLeft();
@@ -1000,12 +1000,12 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       assertEquals(12, cnt);
       System.out.println("test 15 passed");
     } catch (Exception e) {
-      tableauTpchQuery15Test();
+      TpchQuery15Test();
     }
   }
 
   @Test
-  public void tableauTpchQuery17Test() {
+  public void TpchQuery17Test() {
     try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(17);
       ExecutionResultReader reader = answerPair.getLeft();
@@ -1024,12 +1024,12 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       assertEquals(10, cnt);
       System.out.println("test 17 passed");
     } catch (Exception e) {
-      tableauTpchQuery17Test();
+      TpchQuery17Test();
     }
   }
 
   @Test
-  public void tableauTpchQuery18Test() {
+  public void TpchQuery18Test() {
     try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(18);
       ExecutionResultReader reader = answerPair.getLeft();
@@ -1049,12 +1049,12 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       assertEquals(12, cnt);
       System.out.println("test 18 passed");
     } catch (Exception e) {
-      tableauTpchQuery18Test();
+      TpchQuery18Test();
     }
   }
 
   @Test
-  public void tableauTpchQuery19Test() {
+  public void TpchQuery19Test() {
     try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(19);
       ExecutionResultReader reader = answerPair.getLeft();
@@ -1073,12 +1073,12 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       assertEquals(10, cnt);
       System.out.println("test 19 passed");
     } catch (Exception e) {
-      tableauTpchQuery19Test();
+      TpchQuery19Test();
     }
   }
 
   @Test
-  public void tableauTpchQuery20Test() {
+  public void TpchQuery20Test() {
     try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(20);
       ExecutionResultReader reader = answerPair.getLeft();
@@ -1098,13 +1098,13 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       assertEquals(10, cnt);
       System.out.println("test 20 passed");
     } catch (Exception e) {
-      tableauTpchQuery20Test();
+      TpchQuery20Test();
     }
   }
 
   // Count distinct
   //@Test
-  public void tableauTpchQuery21Test() {
+  public void TpchQuery21Test() {
     try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(21);
       ExecutionResultReader reader = answerPair.getLeft();
@@ -1124,12 +1124,12 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       assertEquals(10, cnt);
       System.out.println("test 21 passed");
     } catch (Exception e) {
-      tableauTpchQuery21Test();
+      TpchQuery21Test();
     }
   }
 
   @Test
-  public void tableauTpchQuery22Test() {
+  public void TpchQuery22Test() {
     try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(22);
       ExecutionResultReader reader = answerPair.getLeft();
@@ -1138,7 +1138,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       while (reader.hasNext()) {
         DbmsQueryResult dbmsQueryResult = reader.next();
         cnt++;
-        if (cnt == 1) {
+        if (cnt == 3) {
           while (rs.next()) {
             dbmsQueryResult.next();
             assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
@@ -1146,10 +1146,10 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
           }
         }
       }
-      assertEquals(1, cnt);
+      assertEquals(3, cnt);
       System.out.println("test 22 passed");
     } catch (Exception e) {
-      tableauTpchQuery22Test();
+      TpchQuery22Test();
     }
   }
 

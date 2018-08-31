@@ -123,9 +123,9 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
    *
    * @param scrambleMeta The metadata about the scrambled tables.
    * @param aggNodeBlock A set of the links to the nodes that will be processed in the asynchronous
-   *     manner.
+   *                     manner.
    * @return Returns The root of the multiple aggregation nodes (each of which involves different
-   *     combinations of partitions)
+   * combinations of partitions)
    * @throws VerdictDBValueException
    */
   public ExecutableNodeBase convertToProgressiveAgg(
@@ -320,8 +320,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
 
     if (root instanceof AggExecutionNode) {
       // check if it contains at least one scrambled table.
-      if (doesContainScramble(root, scrambleMeta) &&
-          containScrambledColumn(root, scrambleMeta)) {
+      if (doesContainScramble(root, scrambleMeta)) {
         AggExecutionNodeBlock block = new AggExecutionNodeBlock(root);
         aggblocks.add(block);
         return aggblocks;
@@ -336,113 +335,6 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
     return aggblocks;
   }
 
-
-  /**
-   *  Given BaseColumn column which is inside the aggregated column, return true if this column is column from scrambled table and
-   *  is contained by the selectQuery of node.
-   */
-  private boolean recursiveCheckAggregateColumnIsScramble(BaseColumn column, ExecutableNode node, ScrambleMetaSet scrambleMetas) {
-    SelectQuery query = ((CreateTableAsSelectNode) node).getSelectQuery();
-    for (AbstractRelation relation : query.getFromList()) {
-      // if relation is BaseTable or Join Table, check if it is scrambled table
-      if (relation instanceof JoinTable) {
-        for (AbstractRelation joinTable : ((JoinTable) relation).getJoinList()) {
-          if (column.getTableSourceAlias().equals(joinTable.getAliasName().get())) {
-            if (joinTable instanceof BaseTable && scrambleMetas.isScrambled(((BaseTable) joinTable).getSchemaName(), ((BaseTable) joinTable).getTableName())) {
-              return true;
-            }
-          }
-        }
-      }
-      else if (column.getTableSourceAlias().equals(relation.getAliasName().get())) {
-        if (relation instanceof BaseTable && scrambleMetas.isScrambled(((BaseTable) relation).getSchemaName(), ((BaseTable) relation).getTableName())) {
-          return true;
-        }
-      }
-    }
-
-    // Check its source to find where the origin of the column
-    for (ExecutableNode source : ((CreateTableAsSelectNode) node).getSources()) {
-      SelectQuery subquery = ((CreateTableAsSelectNode) source).getSelectQuery();
-      if (column.getTableSourceAlias().equals(subquery.getAliasName().get())) {
-        for (SelectItem sel : subquery.getSelectList()) {
-          // find the origin of the column, if it is columnOp, we need continue search the base column inside this columnOp
-          if (((AliasedColumn) sel).getAliasName().equals(column.getColumnName())) {
-            if (((AliasedColumn) sel).getColumn() instanceof BaseColumn) {
-              BaseColumn col = (BaseColumn) ((AliasedColumn) sel).getColumn();
-              if (recursiveCheckAggregateColumnIsScramble(col, source, scrambleMetas)) {
-                return true;
-              }
-            } else if (((AliasedColumn) sel).getColumn() instanceof ColumnOp) {
-              List<BaseColumn> baseColumnList = new ArrayList<>();
-              ColumnOp col = (ColumnOp) ((AliasedColumn) sel).getColumn();
-              List<ColumnOp> checklist = new ArrayList<>();
-              checklist.add(col);
-              while (!checklist.isEmpty()) {
-                ColumnOp columnOp = checklist.get(0);
-                checklist.remove(0);
-                for (UnnamedColumn c : columnOp.getOperands()) {
-                  if (c instanceof ColumnOp) {
-                    checklist.add((ColumnOp) c);
-                  } else if (c instanceof BaseColumn) {
-                    baseColumnList.add((BaseColumn) c);
-                  } else if (c instanceof AsteriskColumn && col.getOpType().equals("count")) {
-                    return true;
-                  }
-                }
-              }
-              for (BaseColumn baseColumn : baseColumnList) {
-                if (recursiveCheckAggregateColumnIsScramble(baseColumn, source, scrambleMetas)) {
-                  return true;
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-
-    return false;
-  }
-
-  /**
-   * return true if root has aggregated column that contains columns from scrambled table
-   *
-   */
-  private boolean containScrambledColumn(ExecutableNodeBase root, ScrambleMetaSet scrambleMetas) {
-    // add all base column in the aggregated SelectItem into aggColumns
-    // If count(*) appear, only need to check doesContainScramble.
-    List<BaseColumn> aggColumns = new ArrayList<>();
-    SelectQuery query = ((AggExecutionNode) root).getSelectQuery();
-    for (SelectItem sel : query.getSelectList()) {
-      if (sel.isAggregateColumn()) {
-        ColumnOp col = (ColumnOp) ((AliasedColumn) sel).getColumn();
-        List<ColumnOp> checklist = new ArrayList<>();
-        checklist.add(col);
-        while (!checklist.isEmpty()) {
-          ColumnOp columnOp = checklist.get(0);
-          checklist.remove(0);
-          for (UnnamedColumn c : columnOp.getOperands()) {
-            if (c instanceof ColumnOp) {
-              checklist.add((ColumnOp) c);
-            } else if (c instanceof BaseColumn) {
-              aggColumns.add((BaseColumn) c);
-            } else if ((c instanceof AsteriskColumn || c instanceof ConstantColumn) && col.getOpType().equals("count")) {
-              return true;
-            }
-          }
-        }
-      }
-    }
-
-    // recursive check whether those base columns are from scrambled table
-    for (BaseColumn column : aggColumns) {
-      if (recursiveCheckAggregateColumnIsScramble(column, root, scrambleMetas)) {
-        return true;
-      }
-    }
-    return false;
-  }
 
   private boolean doesContainScramble(ExecutableNodeBase node, ScrambleMetaSet scrambleMeta) {
     SelectQuery query = ((QueryNodeBase) node).getSelectQuery();
@@ -574,13 +466,18 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
       //      selectItemList.add(tierColumn);
       node.getSelectQuery().addSelectItem(tierColumn);
 
+      // ProjectionNode allow to have group by only if group by refers to all select items
+      if (!node.getSelectQuery().getGroupby().isEmpty()) {
+        node.getSelectQuery().addGroupby(((AliasedColumn) tierColumn).getColumn());
+      }
+
       // Record the tier column alias with its corresponding scramble table
       ScrambleMeta meta = scrambleMeta.getSingleMeta(t.getSchemaName(), t.getTableName());
       node.getAggMeta().getTierColumnForScramble().put(meta, tierColumnAlias);
     }
-    
+
 //    node.getSelectQuery().addSelectItem();
-    
+
 //    List<SelectItem> selectItemList = node.getSelectQuery().getSelectList();
 //    if (selectItemList.get(0) instanceof AsteriskColumn) {
 //      for (BaseTable t : MultiTiertables) {
@@ -877,7 +774,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
       }
     }
 //    verdictdbTierIndentiferNum = 0;
-    
+
     return scrambleMetaAnditsAlias;
   }
 
@@ -887,7 +784,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
     if (node.getSources().size() == 0) {
       List<BaseTable> multiTierScrambleTables = identifyScrambledTables(node, scrambleMeta);
       // rewrite itself
-      if (!multiTierScrambleTables.isEmpty() && node.getSelectQuery().getGroupby().isEmpty()) {
+      if (!multiTierScrambleTables.isEmpty()) {
         rewriteProjectionNodeForMultiTier(node, multiTierScrambleTables, scrambleMeta);
       }
       return;
@@ -901,38 +798,37 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
       }
     }
 
-    if (node.getSelectQuery().getGroupby().isEmpty()) {
-      // Add tier column if its placeholder table has scramble table
-      List<SelectItem> selectItemList = node.getSelectQuery().getSelectList();
-      for (ProjectionNode source : projectionNodesSources) {
-        for (Map.Entry<ScrambleMeta, String> entry :
-            source.getAggMeta().getTierColumnForScramble().entrySet()) {
 
-          String oldtierAlias = entry.getValue();
-          String tierColumnAlias = generateTierColumnAliasName();
+    // Add tier column if its placeholder table has scramble table
+    List<SelectItem> selectItemList = node.getSelectQuery().getSelectList();
+    for (ProjectionNode source : projectionNodesSources) {
+      for (Map.Entry<ScrambleMeta, String> entry :
+          source.getAggMeta().getTierColumnForScramble().entrySet()) {
+
+        String oldtierAlias = entry.getValue();
+        String tierColumnAlias = generateTierColumnAliasName();
 //        VERDICTDB_TIER_COLUMN_NAME + verdictdbTierIndentiferNum++;
 
-          // Add tier column to select list
-          SelectItem selectItem;
-          if (source.getSelectQuery().getAliasName().isPresent()) {
-            String sourceAlias = source.getSelectQuery().getAliasName().get();
-            selectItem =
-                new AliasedColumn(new BaseColumn(sourceAlias, oldtierAlias), tierColumnAlias);
-          } else {
-            selectItem = new AliasedColumn(new BaseColumn(oldtierAlias), tierColumnAlias);
-          }
-          selectItemList.add(selectItem);
-
-          // Construct tier column Map
-          node.getAggMeta().getTierColumnForScramble().put(entry.getKey(), tierColumnAlias);
+        // Add tier column to select list
+        SelectItem selectItem;
+        if (source.getSelectQuery().getAliasName().isPresent()) {
+          String sourceAlias = source.getSelectQuery().getAliasName().get();
+          selectItem =
+              new AliasedColumn(new BaseColumn(sourceAlias, oldtierAlias), tierColumnAlias);
+        } else {
+          selectItem = new AliasedColumn(new BaseColumn(oldtierAlias), tierColumnAlias);
         }
-      }
-      List<BaseTable> multiTierScrambleTables = identifyScrambledTables(node, scrambleMeta);
+        selectItemList.add(selectItem);
 
-      // Add tier column if itself contain scramble table
-      if (!multiTierScrambleTables.isEmpty()) {
-        rewriteProjectionNodeForMultiTier(node, multiTierScrambleTables, scrambleMeta);
+        // Construct tier column Map
+        node.getAggMeta().getTierColumnForScramble().put(entry.getKey(), tierColumnAlias);
       }
+    }
+    List<BaseTable> multiTierScrambleTables = identifyScrambledTables(node, scrambleMeta);
+
+    // Add tier column if itself contain scramble table
+    if (!multiTierScrambleTables.isEmpty()) {
+      rewriteProjectionNodeForMultiTier(node, multiTierScrambleTables, scrambleMeta);
     }
     //    verdictdbTierIndentiferNum = 0;
   }
