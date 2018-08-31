@@ -1,9 +1,10 @@
-# An Example VerdictDB Application
+# VerdictDB on MySQL
 
-On this page, we will demonstrate an example of a Java application with a VerdictDB library that creates a scrambled table for your database, then executes a query that enable VerdictDB to utilize the scrambled table. 
+On this page, we will demonstrate an example of a Java application with a VerdictDB library that creates a scrambled table for your database, then executes a query that enable VerdictDB to utilize the scrambled table.
 
-Here we assume 1) your MySQL database is running and 
+Here we assume 1) your MySQL database is running and
 2) TPC-H data has been loaded into your database following the instructions in the previous **Setup TPC-H Data** page.
+
 
 ## Getting VerdictDB Example Application
 
@@ -15,9 +16,15 @@ $ git clone git@github.com:verdictdb/verdictdb-tutorial.git
 
 This will clone the current VerdictDB tutorial application into `your_working_directory/verdictdb-tutorial`.
 
+Move into the `verdictdb_on_mysql` directory, where the example we will use is located.
+```bash
+cd verdictdb_on_mysql
+```
+
+
 ## Compiling the Application
 
-The tutorial application has been set up with `maven` and you should be able to build a runnable jar file by running the following command:
+The tutorial application has been set up with Apache Maven and you should be able to build a runnable jar file by running the following command:
 
 ```bash
 $ mvn package
@@ -32,7 +39,7 @@ The script takes 4 arguments: `hostname`, `port`, `name of database/schema`, and
 
 ## Creating a Scrambled Table
 
-In this tutorial, we are going to create a scrambled table on `lineitem` table. 
+In this tutorial, we are going to create a scrambled table on `lineitem` table.
 With the example application, you can create one by simply running the following command (assuming you are running the MySQL database following our **Setup MySQL** page):
 
 ```bash

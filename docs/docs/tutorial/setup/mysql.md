@@ -1,4 +1,4 @@
-# Setup MySQL/MariaDB for VerdictDB Tutorial (Optional)
+# Setup MySQL / MariaDB
 
 If you already have your own MySQL database set up, you can skip this step and proceed with the next step to load TPC-H data.
 

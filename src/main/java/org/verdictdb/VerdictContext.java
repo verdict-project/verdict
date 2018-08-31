@@ -17,12 +17,14 @@
 package org.verdictdb;
 
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.spark.sql.SparkSession;
 import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.commons.VerdictOption;
 import org.verdictdb.connection.CachedDbmsConnection;
 import org.verdictdb.connection.ConcurrentJdbcConnection;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.JdbcConnection;
+import org.verdictdb.connection.SparkConnection;
 import org.verdictdb.coordinator.ExecutionContext;
 import org.verdictdb.coordinator.VerdictResultStream;
 import org.verdictdb.coordinator.VerdictSingleResult;
@@ -96,6 +98,11 @@ public class VerdictContext {
     CreateSchemaQuery query = new CreateSchemaQuery(schema);
     query.setIfNotExists(true);
     conn.execute(query);
+  }
+  
+  public static VerdictContext fromSparkSession(SparkSession spark) {
+    DbmsConnection conn = new SparkConnection(spark);
+    return new VerdictContext(conn);
   }
 
   /**
