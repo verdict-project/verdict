@@ -389,7 +389,7 @@ workflows:
       - build-jdk8-update-codecov
       - build-spark
       - build-impala-redshift
-      - build-pyverdict:
+      - build-pyverdict
       - deploy-doc:
           filters:
             branches:
