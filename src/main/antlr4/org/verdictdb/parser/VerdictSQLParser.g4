@@ -66,7 +66,8 @@ verdict_statement
 create_scramble_statement
     : CREATE SCRAMBLE (IF NOT EXISTS)? scrambled_table=table_name FROM original_table=table_name
       (METHOD scrambling_method_name)? 
-      (SIZE percent=(FLOAT | DECIMAL) '%')?
+      (SIZE percent=(FLOAT | DECIMAL) '%')? 
+      (BLOCKSIZE blocksize=DECIMAL)?
     ;
 
 scrambling_method_name

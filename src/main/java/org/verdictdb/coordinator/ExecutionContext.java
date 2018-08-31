@@ -158,7 +158,6 @@ public class ExecutionContext {
 
   public VerdictResultStream streamsql(String query) throws VerdictDBException {
     // determines the type of the given query and forward it to an appropriate coordinator.
-
     QueryType queryType = identifyQueryType(query);
 
     if (queryType.equals(QueryType.select)) {
@@ -170,16 +169,15 @@ public class ExecutionContext {
 
       ExecutionResultReader reader = coordinator.process(query, queryContext);
       VerdictResultStream stream = new VerdictResultStreamFromExecutionResultReader(reader, this);
-
       return stream;
 
     } else if (queryType.equals(QueryType.scrambling)) {
-
       log.debug("Query type: scrambling");
       CreateScrambleQuery scrambleQuery = generateScrambleQuery(query);
       ScramblingCoordinator scrambler =
           new ScramblingCoordinator(
-              conn, scrambleQuery.getNewSchema(), options.getVerdictTempSchemaName());
+              conn, scrambleQuery.getNewSchema(), 
+              options.getVerdictTempSchemaName(), scrambleQuery.getBlockSize());
 
       // Specifying size/ratio of scrambled table is not supported.
       if (scrambleQuery.getSize() != 1.0) {
@@ -200,18 +198,22 @@ public class ExecutionContext {
       log.debug("Query type: set_default_schema");
       updateDefaultSchemaFromQuery(query);
       return null;
+      
     } else if (queryType.equals(QueryType.show_databases)) {
       log.debug("Query type: show_databases");
       VerdictResultStream stream = generateShowSchemaResultFromQuery();
       return stream;
+      
     } else if (queryType.equals(QueryType.show_tables)) {
       log.debug("Query type: show_tables");
       VerdictResultStream stream = generateShowTablesResultFromQuery(query);
       return stream;
+      
     } else if (queryType.equals(QueryType.describe_table)) {
       log.debug("Query type: describe_table");
       VerdictResultStream stream = generateDesribeTableResultFromQuery(query);
       return stream;
+      
     } else {
       throw new VerdictDBTypeException("Unexpected type of query: " + query);
     }
@@ -242,6 +244,9 @@ public class ExecutionContext {
                 .replace("`", ""); // remove all types of 'quotes'
         double percent =
             (ctx.percent == null) ? 1.0 : Double.parseDouble(ctx.percent.getText());
+        long blocksize =
+            (ctx.blocksize == null) ? (long) 1e6 : Long.parseLong(ctx.blocksize.getText());
+        
         CreateScrambleQuery query =
             new CreateScrambleQuery(
                 scrambleTable.getSchemaName(),
@@ -249,7 +254,8 @@ public class ExecutionContext {
                 originalTable.getSchemaName(),
                 originalTable.getTableName(),
                 method,
-                percent);
+                percent,
+                blocksize);
         if (ctx.IF() != null) query.setIfNotExists(true);
         return query;
       }
