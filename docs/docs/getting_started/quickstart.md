@@ -5,7 +5,7 @@ We will install VerdictDB, create a connection, and issue a simple query to Verd
 
 ## Install
 
-Create an [empty Maven project](https://maven.apache.org/guides/getting-started/maven-in-five-minutes.html) project and
+Create an [empty Maven project](https://maven.apache.org/guides/getting-started/maven-in-five-minutes.html) and
 place the following dependency in the `<dependencies>` of your pom.xml.
 ```pom
 <dependency>
