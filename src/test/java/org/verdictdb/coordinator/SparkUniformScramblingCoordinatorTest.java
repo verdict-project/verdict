@@ -12,6 +12,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.VerdictContext;
+import org.verdictdb.VerdictSingleResult;
 import org.verdictdb.commons.DatabaseConnectionHelpers;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.DbmsQueryResult;
@@ -46,6 +47,9 @@ public class SparkUniformScramblingCoordinatorTest {
         String.format(
             "create scramble %s.lineitem_scramble from %s.lineitem blocksize 10", 
             TEST_SCHEMA, TEST_SCHEMA));
+    
+    VerdictSingleResult rs = verdict.sql(String.format("select count(*) from %s.lineitem", TEST_SCHEMA));
+//    rs.printCsv();
   }
 
   @Test
