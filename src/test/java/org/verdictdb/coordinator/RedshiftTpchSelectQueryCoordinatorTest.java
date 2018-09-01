@@ -591,7 +591,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
     String filename = "companya/templated/redshift_queries/" + queryNum + ".sql";
     File file = new File(classLoader.getResource(filename).getFile());
     String sql = Files.toString(file, Charsets.UTF_8);
-
+    System.out.println(sql);
     dbmsConn.setDefaultSchema(REDSHIFT_SCHEMA);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsConn, options);
     coordinator.setScrambleMetaSet(meta);
