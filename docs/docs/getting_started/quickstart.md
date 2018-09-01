@@ -1,11 +1,11 @@
 # Quickstart Guide
 
-We will install VerdictDB, create a connection, and issue a simple query to VerdictDB. In this Quickstart Guide, we will use an MySQL database for VerdictDB's backend database. See [How to Connect](/getting_started/connection/) for the examples of connecting to other databases.
+We will install VerdictDB, create a connection, and issue a simple query to VerdictDB. In this Quickstart Guide, we will use MySQL for VerdictDB's backend database. See [How to Connect](/getting_started/connection/) for the examples of connecting to other databases.
 
 
 ## Install
 
-Create a [Maven](https://maven.apache.org/) project and
+Create an [empty Maven project](https://maven.apache.org/guides/getting-started/maven-in-five-minutes.html) and
 place the following dependency in the `<dependencies>` of your pom.xml.
 ```pom
 <dependency>
@@ -31,7 +31,8 @@ We will first generate small data to play with.
 
 ```java
 // Suppose username is root and password is rootpassword.
-Connection mysqlConn = DriverManager.getConnection("jdbc:mysql://localhost", "root", "rootpassword");
+Connection mysqlConn =
+    DriverManager.getConnection("jdbc:mysql://localhost", "root", "rootpassword");
 Statement stmt = mysqlConn.createStatement();
 stmt.execute("create schema myschema");
 stmt.execute("create table myschema.sales (" +
@@ -57,7 +58,8 @@ for (int i = 0; i < 1000; i++) {
 Create a JDBC connection to VerdictDB.
 
 ```java
-Connection verdict = DriverManager.getConnection("jdbc:verdict:mysql://localhost", "root", "rootpassword");
+Connection verdict =
+    DriverManager.getConnection("jdbc:verdict:mysql://localhost", "root", "rootpassword");
 Statement vstmt = verdict.createStatement();
 ```
 
@@ -96,7 +98,8 @@ public class FirstVerdictDBExample {
 
   public static void main(String args[]) throws SQLException {
     // Suppose username is root and password is rootpassword.
-    Connection mysqlConn = DriverManager.getConnection("jdbc:mysql://localhost", "root", "rootpassword");
+    Connection mysqlConn =
+        DriverManager.getConnection("jdbc:mysql://localhost", "root", "rootpassword");
     Statement stmt = mysqlConn.createStatement();
     stmt.execute("create schema myschema");
     stmt.execute("create table myschema.sales (" +
@@ -114,7 +117,8 @@ public class FirstVerdictDBExample {
           product, price));
     }
 
-    Connection verdict = DriverManager.getConnection("jdbc:verdict:mysql://localhost", "root", "rootpassword");
+    Connection verdict =
+        DriverManager.getConnection("jdbc:verdict:mysql://localhost", "root", "rootpassword");
     Statement vstmt = verdict.createStatement();
 
     // Use CREATE SCRAMBLE syntax to create scrambled tables.

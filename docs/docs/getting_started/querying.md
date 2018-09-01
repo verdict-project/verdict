@@ -1,56 +1,40 @@
-# Interactive Querying
+# Simple Querying
 
-VerdictDB can give interactive answers for aggregate queries, which include `avg`, `sum`, `count`, `min`, and `max`. The SQL query syntax is almost identical to the standard.
+VerdictDB's basic query interface returns a single *(approximate)* result set (i.e., a table) given a query. This is the same interface as what most databases offer; thus, this interface is convenient to use VerdictDB as a drop-in-replacement of other databases.
+
+There are two approaches to VerdictDB's basic query interface:
+
+1. VerdicDB JDBC Driver's regular `executeQuery()` method
+2. VerdictContext's `sql()` method
+
+We describe them in more detail below.
 
 
-## Syntax
+## VerdictDB's JDBC Driver
 
-```sql
-SELECT [select_item, ] aggregate_expr [, aggregate_expr] [, ...]
-FROM table_source
-[WHERE predicate]
-[GROUP BY group_expr]
-[ORDER BY ordering_expr]
-[LIMIT number];
+Suppose we aim to query the average price of the items in the `sales` table, i.e., `select avg(price) from sales`. Then, issuing the query in a traditional way to the VerdictDB's JDBC interface returns an approximate answer by default.
 
-select_item := regular_expr [AS alias];
+The below code shows an example.
 
-table_source := base_table
-              | base_table, table_source
-              | base_table [INNER | LEFT | RIGHT] JOIN table_source ON condition
-              | select_query;
-
-group_expr := regular_expr | alias;
-
-aggregate_expr := avg(regular_expr)
-                | sum(regular_expr)
-                | count(regular_expr)
-                | min(regular_expr)
-                | max(regular_expr);
-
-regular_expr := unary_func(regular_expr)
-              | binary_func(regular_expr, regular_expr)
-              | regular_expr op regular_expr;
-
-op := + | - | * | / | and | or;
+```java
+Connection verdict = DriverManager.getConnection("jdbc:verdict:mysql://localhost", "root", "rootpassword");
+Statement stmt = verdict.createStatement();
+ResultSet rs = stmt.executeQuery("select avg(price) from sales");
 ```
 
-
-## How does VerdictDB compute them?
-
-VerdictDB applies different rules for different types of aggregate functions as follows. VerdictDB relies on the state-of-the-art techniques available in the literature.
+!!! note "Note: Direct querying to the backend"
+    You can always send a query directly to the backend database by preceding a query with the `bypass` keyword, e.g., `bypass select avg(price) from sales`. Then, VerdictDB sends the query to the backend database without any query rewriting or extra processing. This approach can be used for all other queries, such as `create schema ...`, `set key=value`, etc.
 
 
-### AVG, SUM, COUNT
+## VerdictContext
 
-VerdictDB's answers are always *unbiased estimators* of the true answers. For instance, if only 10% of the data (that amounts to the 10% uniform random sample of the data) is processed, the unbiased estimator for the count function is 10 times the answer computed on the 10% of the data. This logic becomes more complex as unbiased samples (within scrambles) are used for different types of aggregate functions. VerdictDB performs these computations (and proper scaling) all automatically.
+Issuing a query using `VerdictContext.sql()` method returns a single approximate query result. See the example below.
 
+```java
+String connectionString = "jdbc:mysql://localhost?user=root&password=rootpassword";
+VerdictContext verdict = VerdictContext.fromJdbcConnectionString(connectionString);
+VerdictSingleResult rs = verdict.sql("select avg(price) from sales");
+```
 
-### MIN, MAX
-
-VerdictDB's answers to min and max functions are the min and max of the data that has been processed so far. For example, if 10% of the data was processed, then VerdictDB outputs min or max among those 10% data. Of course, the answers become more accurate as more data is processed and become exact when 100% data is processed. One possible concern is that the answers based on partial data may not be very accurate especially when a tiny fraction (e.g., 0.1%) of the data has been processed. To overcome this, VerdictDB processes outliers first. As a result, even the answers at the early stages are highly accurate.
-
-
-### COUNT-DISTINCT
-
-This is in preparation.
+!!! note
+    When creating an instance of VerdictContext, the JDBC url must not include the "verdict" keyword.
