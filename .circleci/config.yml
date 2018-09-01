@@ -380,48 +380,6 @@ jobs:
       - run: git remote add doc-origin git@github.com:verdictdb/verdictdb-doc.git
       - run: git push -f doc-origin gh-pages:gh-pages
 
-  build-redshift:
-    docker:
-    # specify the version you desire here
-    - image: maven:3.5.4-jdk-8-slim
-    # Specify service dependencies here if necessary
-    # CircleCI maintains a library of pre-built images
-    # documented at https://circleci.com/docs/2.0/circleci-images/
-    working_directory: ~/repo
-    environment:
-      # Customize the JVM maximum heap limit
-      MAVEN_OPTS: -Xmx3200m
-    steps:
-    - run: apt-get update; apt-get install -y git
-    - checkout
-    # Set up maven dependencies
-    - restore_cache:
-        keys:
-        - verdict-dependencies-{{ checksum "pom.xml" }}
-    # Setup necessary test data
-    - run: git clone git@github.com:verdictdb/verdictdb-private-resources.git
-    # Now build and test
-    - run:
-        name: Run Redshift unit tests
-        command: mvn test -Dtest=RedshiftTpchSelectQueryCoordinatorTest 2> /dev/null
-        no_output_timeout: 30m
-    - run:
-        name: Save test results
-        command: |
-          mkdir -p ~/junit/
-          find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} ~/junit/ \;
-        when: always
-    - store_test_results:
-        path: ~/junit
-    - store_artifacts:
-        path: ~/junit
-    - store_artifacts:
-        path: /tmp/verdictdb-debug.log
-    - save_cache:
-        paths:
-        - ~/.m2
-        key: verdict-dependencies-{{ checksum "pom.xml" }}
-
 workflows:
   version: 2
   build_and_test:
