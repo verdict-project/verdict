@@ -90,8 +90,8 @@ public class GroupByNumberTest {
       sparkConnection.execute(sql);
       fail();
     } catch (VerdictDBDbmsException e) {
-      if (e.getMessage().startsWith("GROUP BY position 1 is an aggregate function")) {
-
+      if (e.getMessage().contains("GROUP BY position 1 is an aggregate function")) {
+        // expected
       } else {
         throw e;
       }
@@ -108,7 +108,7 @@ public class GroupByNumberTest {
       fail();
     } catch (VerdictDBDbmsException e) {
       if (e.getMessage().contains("GROUP BY expression must not contain aggregate functions: 1")) {
-
+        // expected
       } else {
         throw e;
       }

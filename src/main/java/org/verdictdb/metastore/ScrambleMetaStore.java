@@ -166,7 +166,7 @@ public class ScrambleMetaStore extends VerdictMetaStore {
 
   private CreateTableDefinitionQuery createScrambleMetaStoreTableStatement() {
     // create table
-    String schemaAndTableColumnType = "VARCHAR(100)";
+    String schemaAndTableColumnType = conn.getSyntax().getGenericStringDataTypeName();
     String addedAtColumnType = "TIMESTAMP";
     String dataColumnType = conn.getSyntax().getGenericStringDataTypeName();
 
