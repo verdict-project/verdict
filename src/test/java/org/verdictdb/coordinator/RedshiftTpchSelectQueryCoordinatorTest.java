@@ -587,11 +587,12 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
   Pair<ExecutionResultReader, ResultSet> getRedshiftQueryAnswerPair(int queryNum)
       throws VerdictDBException, SQLException, IOException {
     //String filename = "query" + queryNum + "_redshift.sql";
+    //File file = new File("src/test/resources/tpch_test_query/" + filename);
     ClassLoader classLoader = getClass().getClassLoader();
     String filename = "companya/templated/redshift_test_queries/query" + queryNum + "_redshift.sql";
     File file = new File(classLoader.getResource(filename).getFile());
     String sql = Files.toString(file, Charsets.UTF_8);
-    
+
     dbmsConn.setDefaultSchema(REDSHIFT_SCHEMA);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsConn, options);
     coordinator.setScrambleMetaSet(meta);
@@ -662,7 +663,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
   }
 
   // count distinct
-  @Test
+  //@Test
   public void TpchQuery4Test() {
     try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(4);
@@ -898,7 +899,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
   }
 
   // count distinct
-  @Test
+  //@Test
   public void TpchQuery13Test() {
     try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(13);
