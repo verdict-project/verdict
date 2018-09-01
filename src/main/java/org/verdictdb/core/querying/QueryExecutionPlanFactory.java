@@ -16,23 +16,27 @@
 
 package org.verdictdb.core.querying;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.coordinator.QueryContext;
+import org.verdictdb.core.querying.ola.AsyncAggExecutionNode;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.core.sqlobject.AbstractRelation;
+import org.verdictdb.core.sqlobject.AliasReference;
 import org.verdictdb.core.sqlobject.AliasedColumn;
 import org.verdictdb.core.sqlobject.AsteriskColumn;
 import org.verdictdb.core.sqlobject.BaseColumn;
 import org.verdictdb.core.sqlobject.BaseTable;
 import org.verdictdb.core.sqlobject.ColumnOp;
+import org.verdictdb.core.sqlobject.GroupingAttribute;
 import org.verdictdb.core.sqlobject.JoinTable;
+import org.verdictdb.core.sqlobject.OrderbyAttribute;
 import org.verdictdb.core.sqlobject.SelectItem;
 import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.core.sqlobject.SubqueryColumn;
 import org.verdictdb.core.sqlobject.UnnamedColumn;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class QueryExecutionPlanFactory {
 
@@ -105,8 +109,8 @@ public class QueryExecutionPlanFactory {
         selectAll.createPlaceHolderTable("t");
     SelectQuery selectQuery =
         SelectQuery.create(new AsteriskColumn(), baseAndSubscriptionTicket.getLeft());
-//    selectQuery.addOrderby(query.getOrderby());
-//    if (query.getLimit().isPresent()) selectQuery.addLimit(query.getLimit().get());
+    //    selectQuery.addOrderby(query.getOrderby());
+    //    if (query.getLimit().isPresent()) selectQuery.addLimit(query.getLimit().get());
     selectAll.setSelectQuery(selectQuery);
 
     if (query.isSupportedAggregate()) {
@@ -126,10 +130,100 @@ public class QueryExecutionPlanFactory {
       IdCreator idCreator, SelectQuery query) {
     AggExecutionNode node = new AggExecutionNode(idCreator, null);
     convertSubqueriesToDependentNodes(query, node);
-//    query.addOrderby(query.getOrderby());
-//  if (query.getLimit().isPresent()) selectQuery.addLimit(query.getLimit().get());
+    //    query.addOrderby(query.getOrderby());
+    //  if (query.getLimit().isPresent()) selectQuery.addLimit(query.getLimit().get());
+
+    /*
+     * Here we add expressions in HAVING, GROUP-BY and ORDER-BY into the select list of
+     * the original query to calculate their approximate values later.
+     *
+     * We have two assumptions:
+     * 1. If the having clause includes a base column outside an aggregate function,
+     *    the column must have appeared in the groupby clause. Otherwise, the query itself is
+     *    ill-formed.
+     * 2. If the having clause includes an aggregate function, the function can safely appear
+     *    in the select list because the select list must already include other aggregate functions.
+     *    Otherwise, it is not an aggregate query;thus, the having clause should not have been
+     *    used in the first place.
+     *
+     * For example, the following original query:
+     * SELECT a
+     * FROM t
+     * GROUP BY g
+     * HAVING h
+     * ORDER BY o
+     *
+     * becomes:
+     * SELECT a, g, h, o
+     * FROM t
+     * GROUP BY g
+     * HAVING h
+     * ORDER BY o
+     *
+     * so that with AsyncAggExecutionNode, we can do something like below:
+     * (note that this is a lot more simpler than the actual re-written query)
+     *
+     * SELECT a
+     * FROM (SELECT approx(a) as a, approx(g) as g, approx(h) as h, approx(o) as o
+     *       FROM scrambled(t))
+     * GROUP BY g
+     * HAVING h
+     * ORDER BY o
+     *
+     * The logic in AsyncQueryExecutionPlan and AsyncAggExecutionNode will generate
+     * {approx(g), approx(h), ...} for us and we simply need to substitute these expressions
+     * accordingly later.
+     *
+     */
+
+    int groupbyCount = 0;
+    for (GroupingAttribute attr : query.getGroupby()) {
+      UnnamedColumn groupByCol = findActualGroupByExpression(attr, query);
+      query.addSelectItem(
+          new AliasedColumn(
+              groupByCol, AsyncAggExecutionNode.getGroupByAlias() + (groupbyCount++)));
+    }
+
+    if (query.getHaving().isPresent()) {
+      UnnamedColumn havingCopy = query.getHaving().get().deepcopy();
+      AliasedColumn havingColumn =
+          new AliasedColumn(havingCopy, AsyncAggExecutionNode.getHavingConditionAlias());
+      query.addSelectItem(havingColumn);
+    }
+
+    int orderByCount = 0;
+    for (OrderbyAttribute attribute : query.getOrderby()) {
+      GroupingAttribute attr = attribute.getAttribute();
+      UnnamedColumn orderByCol = findActualGroupByExpression(attr, query);
+      query.addSelectItem(
+          new AliasedColumn(
+              orderByCol, AsyncAggExecutionNode.getOrderByAlias() + (orderByCount++)));
+    }
+
     node.setSelectQuery(query);
     return node;
+  }
+
+  private static UnnamedColumn findActualGroupByExpression(
+      GroupingAttribute attr, SelectQuery query) {
+    UnnamedColumn col = (UnnamedColumn) attr;
+    if (attr instanceof AliasReference) {
+      AliasReference ref = (AliasReference) attr;
+      String origAliasName =
+          ref.getAliasName().replaceAll("\"", "").replaceAll("'", "").replaceAll("`", "");
+      for (SelectItem item : query.getSelectList()) {
+        if (item instanceof AliasedColumn) {
+          AliasedColumn ac = (AliasedColumn) item;
+          String otherAliasName =
+              ac.getAliasName().replaceAll("\"", "").replaceAll("'", "").replaceAll("`", "");
+          if (origAliasName.equals(otherAliasName)) {
+            col = ac.getColumn();
+            break;
+          }
+        }
+      }
+    }
+    return col;
   }
 
   private static ProjectionNode createProjectionNodeAndItsDependents(

@@ -16,11 +16,11 @@
 
 package org.verdictdb.core.sqlobject;
 
-import java.io.Serializable;
-
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
+
+import java.io.Serializable;
 
 public class OrderbyAttribute implements Serializable {
 
@@ -50,11 +50,14 @@ public class OrderbyAttribute implements Serializable {
     this.order = order;
   }
 
-  public OrderbyAttribute(
-      GroupingAttribute attribute, String order, String nullsOrder) {
+  public OrderbyAttribute(GroupingAttribute attribute, String order, String nullsOrder) {
     this.attribute = attribute;
     this.order = order;
     this.nullsOrder = nullsOrder;
+  }
+
+  public void setAttribute(GroupingAttribute attribute) {
+    this.attribute = attribute;
   }
 
   public String getOrder() {

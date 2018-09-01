@@ -3,64 +3,49 @@ package org.verdictdb.core.querying.simplifier;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.common.base.Optional;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.core.execplan.ExecutionInfoToken;
-import org.verdictdb.core.querying.CreateTableAsSelectNode;
-import org.verdictdb.core.querying.ExecutableNodeBase;
-import org.verdictdb.core.querying.PlaceHolderRecord;
-import org.verdictdb.core.querying.QueryNodeBase;
-import org.verdictdb.core.querying.QueryNodeWithPlaceHolders;
-import org.verdictdb.core.sqlobject.AbstractRelation;
-import org.verdictdb.core.sqlobject.BaseTable;
-import org.verdictdb.core.sqlobject.ColumnOp;
-import org.verdictdb.core.sqlobject.JoinTable;
-import org.verdictdb.core.sqlobject.SelectQuery;
-import org.verdictdb.core.sqlobject.SqlConvertible;
-import org.verdictdb.core.sqlobject.SubqueryColumn;
-import org.verdictdb.core.sqlobject.UnnamedColumn;
+import org.verdictdb.core.querying.*;
+import org.verdictdb.core.sqlobject.*;
 import org.verdictdb.exception.VerdictDBException;
-
-import com.google.common.base.Optional;
 
 /**
  * Used for simplifying two nodes into one. This class may be used in a recursively way to simplify
  * an arbitrary deep nodes into a single node (as long as the condition is satisfied).
- * 
- * This class relines on an important assumption:
- * 1. The token of a child node must not rely on its query results.
- * 
- * The logic based on the above assumption can be found in the createQuery() method. Traditionally,
- * createToken() must use the result of createQuery(); however, based on the assumption, the token
- * of the child is created without actually running its query. Note that the child's select query
- * is consolidated into the parent query as a subquery.
- * 
- * @author Yongjoo Park
  *
+ * <p>This class relines on an important assumption: 1. The token of a child node must not rely on
+ * its query results.
+ *
+ * <p>The logic based on the above assumption can be found in the createQuery() method.
+ * Traditionally, createToken() must use the result of createQuery(); however, based on the
+ * assumption, the token of the child is created without actually running its query. Note that the
+ * child's select query is consolidated into the parent query as a subquery.
+ *
+ * @author Yongjoo Park
  */
 public class DirectRetrievalExecutionNode extends QueryNodeWithPlaceHolders {
 
   private static final long serialVersionUID = -561220173745897906L;
-  
+
   private QueryNodeWithPlaceHolders parentNode;
-  
+
   private CreateTableAsSelectNode childNode;
 
   public DirectRetrievalExecutionNode(
-      SelectQuery selectQuery,
-      QueryNodeWithPlaceHolders parent,
-      CreateTableAsSelectNode child) {
+      SelectQuery selectQuery, QueryNodeWithPlaceHolders parent, CreateTableAsSelectNode child) {
     super(parent.getId(), selectQuery);
     parentNode = parent;
     childNode = child;
-    
-//    for (PlaceHolderRecord record : parentNode.getPlaceholderRecords()) {
-//      addPlaceholderRecord(record);
-//    }
-//    for (PlaceHolderRecord record : childNode.getPlaceholderRecords()) {
-//      addPlaceholderRecord(record);
-//    }
+
+    //    for (PlaceHolderRecord record : parentNode.getPlaceholderRecords()) {
+    //      addPlaceholderRecord(record);
+    //    }
+    //    for (PlaceHolderRecord record : childNode.getPlaceholderRecords()) {
+    //      addPlaceholderRecord(record);
+    //    }
   }
-  
+
   @Override
   public PlaceHolderRecord removePlaceholderRecordForChannel(int channel) {
     PlaceHolderRecord record = parentNode.removePlaceholderRecordForChannel(channel);
@@ -70,28 +55,28 @@ public class DirectRetrievalExecutionNode extends QueryNodeWithPlaceHolders {
     record = childNode.removePlaceholderRecordForChannel(channel);
     return record;
   }
-  
+
   public static DirectRetrievalExecutionNode create(
-      QueryNodeWithPlaceHolders parent,
-      CreateTableAsSelectNode child) {
-    
+      QueryNodeWithPlaceHolders parent, CreateTableAsSelectNode child) {
+
     SelectQuery parentQuery = parent.getSelectQuery();
-    
+
     // find place holders in the parent query and replace with the child query
     int childChannel = parent.getChannelForSource(child);
     PlaceHolderRecord placeHolderToRemove = parent.removePlaceholderRecordForChannel(childChannel);
     BaseTable baseTableToRemove = placeHolderToRemove.getPlaceholderTable();
-    
+
     // replace in the source list
     parentQuery = (SelectQuery) consolidateSource(parentQuery, child, baseTableToRemove);
-//    List<AbstractRelation> parentFromList = parentQuery.getFromList();
-//    List<AbstractRelation> newParentFromList = new ArrayList<>();
-//    for (AbstractRelation originalSource : parentFromList) {
-//      AbstractRelation newSource = consolidateSource(originalSource, child, baseTableToRemove);
-//      newParentFromList.add(newSource);
-//    }
-//    parentQuery.setFromList(newParentFromList);
-    
+    //    List<AbstractRelation> parentFromList = parentQuery.getFromList();
+    //    List<AbstractRelation> newParentFromList = new ArrayList<>();
+    //    for (AbstractRelation originalSource : parentFromList) {
+    //      AbstractRelation newSource = consolidateSource(originalSource, child,
+    // baseTableToRemove);
+    //      newParentFromList.add(newSource);
+    //    }
+    //    parentQuery.setFromList(newParentFromList);
+
     // Filter: replace the placeholder BaseTable (in the filter list) with
     // the SelectQuery of the child
     Optional<UnnamedColumn> parentFilterOptional = parentQuery.getFilter();
@@ -101,12 +86,12 @@ public class DirectRetrievalExecutionNode extends QueryNodeWithPlaceHolders {
       parentQuery.clearFilter();
       parentQuery.addFilterByAnd(newFilter);
     }
-    
-    DirectRetrievalExecutionNode node = 
+
+    DirectRetrievalExecutionNode node =
         new DirectRetrievalExecutionNode(parentQuery, parent, child);
     return node;
   }
-  
+
   /**
    * May consonlidate a single source with `child`. This is a helper function for simplify2().
    *
@@ -117,14 +102,14 @@ public class DirectRetrievalExecutionNode extends QueryNodeWithPlaceHolders {
    */
   private static AbstractRelation consolidateSource(
       AbstractRelation originalSource, ExecutableNodeBase child, BaseTable baseTableToRemove) {
-  
+
     // exception
     if (!(child instanceof QueryNodeBase)) {
       return originalSource;
     }
-    
+
     SelectQuery childQuery = ((QueryNodeBase) child).getSelectQuery();
-    
+
     if (originalSource instanceof BaseTable) {
       BaseTable baseTableSource = (BaseTable) originalSource;
       if (baseTableSource.equals(baseTableToRemove)) {
@@ -142,7 +127,7 @@ public class DirectRetrievalExecutionNode extends QueryNodeWithPlaceHolders {
       }
       joinTableSource.setJoinList(newJoinSourceList);
       return joinTableSource;
-      
+
     } else if (originalSource instanceof SelectQuery) {
       SelectQuery selectQuerySource = (SelectQuery) originalSource;
       List<AbstractRelation> originalFromList = selectQuerySource.getFromList();
@@ -153,12 +138,12 @@ public class DirectRetrievalExecutionNode extends QueryNodeWithPlaceHolders {
       }
       selectQuerySource.setFromList(newFromList);
       return selectQuerySource;
-      
+
     } else {
       return originalSource;
     }
   }
-  
+
   /**
    * May consolidate a single filter with `child`. This is a helper function for simplify2().
    *
@@ -169,14 +154,14 @@ public class DirectRetrievalExecutionNode extends QueryNodeWithPlaceHolders {
    */
   private static UnnamedColumn consolidateFilter(
       UnnamedColumn originalFilter, ExecutableNodeBase child, BaseTable baseTableToRemove) {
-    
+
     // exception
     if (!(child instanceof QueryNodeBase)) {
       return originalFilter;
     }
-    
+
     SelectQuery childSelectQuery = ((QueryNodeBase) child).getSelectQuery();
-  
+
     if (originalFilter instanceof ColumnOp) {
       ColumnOp originalColumnOp = (ColumnOp) originalFilter;
       List<UnnamedColumn> newOperands = new ArrayList<>();
@@ -194,16 +179,16 @@ public class DirectRetrievalExecutionNode extends QueryNodeWithPlaceHolders {
       }
       return originalSubquery;
     }
-    
+
     return originalFilter;
   }
-  
+
   @Override
   public SqlConvertible createQuery(List<ExecutionInfoToken> tokens) throws VerdictDBException {
     // this will replace the placeholders contained the subquery.
     childNode.createQuery(tokens);
     ExecutionInfoToken childToken = childNode.createToken(null);
-    
+
     // also pass the tokens possibly created by child.
     List<ExecutionInfoToken> newTokens = new ArrayList<>();
     newTokens.addAll(tokens);
@@ -211,12 +196,11 @@ public class DirectRetrievalExecutionNode extends QueryNodeWithPlaceHolders {
     parentNode.createQuery(newTokens);
     return selectQuery;
   }
-  
+
   @Override
   public ExecutionInfoToken createToken(DbmsQueryResult result) {
     ExecutionInfoToken token = new ExecutionInfoToken();
     token.setKeyValue("queryResult", result);
     return token;
   }
-
 }

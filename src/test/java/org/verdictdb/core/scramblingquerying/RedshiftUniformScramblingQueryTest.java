@@ -35,7 +35,7 @@ import org.verdictdb.commons.VerdictOption;
 import org.verdictdb.exception.VerdictDBDbmsException;
 
 /** Created by Dong Young Yoon on 8/16/18. */
-public class RedshiftTest {
+public class RedshiftUniformScramblingQueryTest {
 
   private static Map<String, Connection> connMap = new HashMap<>();
 
@@ -69,7 +69,7 @@ public class RedshiftTest {
   private static final String SCHEMA_NAME =
       "verdictdb_tpch_query_test_" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
 
-  public RedshiftTest() {}
+  public RedshiftUniformScramblingQueryTest() {}
 
   @BeforeClass
   public static void setupDatabases() throws SQLException, VerdictDBDbmsException, IOException {
@@ -122,6 +122,9 @@ public class RedshiftTest {
             SCHEMA_NAME, SCHEMA_NAME);
     ResultSet rs1 = vc.createStatement().executeQuery(sql);
     ResultSet rs2 = conn.createStatement().executeQuery(sql);
+    int columnCount = rs2.getMetaData().getColumnCount();
+    int columnCount2 = rs1.getMetaData().getColumnCount();
+    assertEquals(columnCount, columnCount2);
     while (rs1.next() && rs2.next()) {
       assertEquals(rs1.getInt(1), rs2.getInt(1));
       System.out.println(String.format("%d : %d", rs1.getInt(1), rs2.getInt(1)));
@@ -129,19 +132,21 @@ public class RedshiftTest {
     assertEquals(rs1.next(), rs2.next());
   }
 
-//  @Test
+  @Test
   public void runQueryWithHavingTest() throws SQLException {
     String sql =
         String.format(
             "SELECT AVG(\"orders\".\"o_totalprice\") as \"avg_price\"\n"
                 + "FROM \"%s\".\"orders\" \"orders\"\n"
                 + "GROUP BY o_orderstatus\n"
-                + "HAVING avg(\"orders\".\"o_totalprice\") >\n"
-                + "(SELECT avg(\"orders\".\"o_totalprice\") FROM \"%s\".\"orders\" \"orders\")\n"
-                + "ORDER BY o_orderstatus\n",
+                + "HAVING avg(\"orders\".\"o_orderkey\") > 10\n"
+                + "ORDER BY avg(o_orderkey) + min(o_orderkey) + max(o_orderkey)\n",
             SCHEMA_NAME, SCHEMA_NAME);
     ResultSet rs1 = vc.createStatement().executeQuery(sql);
     ResultSet rs2 = conn.createStatement().executeQuery(sql);
+    int columnCount = rs2.getMetaData().getColumnCount();
+    int columnCount2 = rs1.getMetaData().getColumnCount();
+    assertEquals(columnCount, columnCount2);
     while (rs1.next() && rs2.next()) {
       assertEquals(rs1.getInt(1), rs2.getInt(1));
       System.out.println(String.format("%d : %d", rs1.getInt(1), rs2.getInt(1)));
@@ -149,26 +154,42 @@ public class RedshiftTest {
     assertEquals(rs1.next(), rs2.next());
   }
 
-//  @Test
-  public void runQuery2WithHavingTest() throws SQLException {
+  @Test
+  public void runQueryWithHavingTest2() throws SQLException {
     String sql =
         String.format(
             "SELECT o_orderpriority, COUNT(\"orders\".\"o_orderkey\") as \"cnt\"\n"
                 + "FROM \"%s\".\"orders\" \"orders\"\n"
                 + "GROUP BY o_orderpriority\n"
-                + "HAVING avg(\"orders\".\"o_totalprice\") >=\n"
+                + "HAVING max(\"orders\".\"o_totalprice\") >=\n"
+                + "1000\n"
+                + "ORDER BY o_orderpriority + 4\n",
+            SCHEMA_NAME, SCHEMA_NAME);
+    ResultSet rs2 = conn.createStatement().executeQuery(sql);
+    ResultSet rs1 = vc.createStatement().executeQuery(sql);
+    int columnCount = rs2.getMetaData().getColumnCount();
+    int columnCount2 = rs1.getMetaData().getColumnCount();
+    assertEquals(columnCount, columnCount2);
+    while (rs1.next() && rs2.next()) {
+      assertEquals(rs1.getString(1), rs2.getString(1));
+      assertEquals(rs1.getInt(2), rs2.getInt(2));
+    }
+    assertEquals(rs1.next(), rs2.next());
+  }
+
+  @Test(expected = SQLException.class)
+  public void runQueryWithHavingSubqueryTest() throws SQLException {
+    String sql =
+        String.format(
+            "SELECT o_orderpriority, COUNT(\"orders\".\"o_orderkey\") as \"cnt\"\n"
+                + "FROM \"%s\".\"orders\" \"orders\"\n"
+                + "GROUP BY o_orderpriority\n"
+                + "HAVING max(\"orders\".\"o_totalprice\") >=\n"
                 + "(SELECT avg(\"orders\".\"o_totalprice\") FROM \"%s\".\"orders\" \"orders\")\n"
                 + "ORDER BY o_orderpriority + 4\n",
             SCHEMA_NAME, SCHEMA_NAME);
     ResultSet rs2 = conn.createStatement().executeQuery(sql);
     ResultSet rs1 = vc.createStatement().executeQuery(sql);
-    //    while (rs2.next()) {
-    //      System.out.println(String.format("%s, %d", rs2.getString(1), rs2.getInt(2)));
-    //    }
-    //    System.out.println("----");
-    //    while (rs1.next()) {
-    //      System.out.println(String.format("%s, %d", rs1.getString(1), rs1.getInt(2)));
-    //    }
     int columnCount = rs2.getMetaData().getColumnCount();
     int columnCount2 = rs1.getMetaData().getColumnCount();
     assertEquals(columnCount, columnCount2);
