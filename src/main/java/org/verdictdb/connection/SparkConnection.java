@@ -40,6 +40,11 @@ public class SparkConnection extends DbmsConnection {
   
   private VerdictDBLogger log = VerdictDBLogger.getLogger(this.getClass());;
 
+  public SparkConnection(Object sc) {
+    this.sc = (SparkSession) sc;
+    this.syntax = new SparkSyntax();
+  }
+  
   public SparkConnection(SparkSession sc) {
     this.sc = sc;
     this.syntax = new SparkSyntax();

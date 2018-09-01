@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Properties;
 
 import org.apache.commons.lang3.RandomStringUtils;
-import org.apache.spark.sql.SparkSession;
 import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.commons.VerdictOption;
 import org.verdictdb.connection.CachedDbmsConnection;
@@ -64,11 +63,12 @@ public class VerdictContext {
    */
   private List<ExecutionContext> executionContexts = new LinkedList<>();
 
-  public VerdictContext(DbmsConnection conn) {
+  public VerdictContext(DbmsConnection conn) throws VerdictDBException {
     this.conn = new CachedDbmsConnection(conn);
     this.contextId = RandomStringUtils.randomAlphanumeric(5);
     this.options = new VerdictOption();
     this.metaStore = getCachedMetaStore(conn, options);
+    initialize(options);
   }
 
   public VerdictContext(DbmsConnection conn, VerdictOption options) throws VerdictDBException {
@@ -98,9 +98,26 @@ public class VerdictContext {
     conn.execute(query);
   }
   
-  public static VerdictContext fromSparkSession(SparkSession spark) {
+  /**
+   * Initializes VerdictContext from a SparkSession instance.
+   * 
+   * @param spark The actual type must be SparkSession; however, the type must not explicitly
+   * appear in this file. If it does, it causes a ClassNotFound error when VerdictContext is used
+   * for JDBC connection (i.e., when not submitted to any Spark cluster) because SparkSession
+   * is imported as "provided" scope in our maven dependency list.
+   * 
+   * @return
+   * @throws VerdictDBException 
+   */
+  public static VerdictContext fromSparkSession(Object spark) throws VerdictDBException {
     DbmsConnection conn = new SparkConnection(spark);
     return new VerdictContext(conn);
+  }
+  
+  public static VerdictContext fromSparkSession(Object spark, VerdictOption option) 
+      throws VerdictDBException {
+    DbmsConnection conn = new SparkConnection(spark);
+    return new VerdictContext(conn, option);
   }
 
   /**
@@ -109,10 +126,10 @@ public class VerdictContext {
    *
    * @param jdbcConn
    * @return
-   * @throws VerdictDBDbmsException
+   * @throws VerdictDBException 
    */
   public static VerdictContext fromJdbcConnection(Connection jdbcConn)
-      throws VerdictDBDbmsException {
+      throws VerdictDBException {
     DbmsConnection conn = JdbcConnection.create(jdbcConn);
     return new VerdictContext(conn);
   }
