@@ -587,8 +587,9 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
   Pair<ExecutionResultReader, ResultSet> getRedshiftQueryAnswerPair(int queryNum)
       throws VerdictDBException, SQLException, IOException {
     //String filename = "query" + queryNum + "_redshift.sql";
+    ClassLoader classLoader = getClass().getClassLoader();
     String filename = "companya/templated/redshift_queries/" + queryNum + ".sql";
-    File file = new File("src/test/resources/tpch_test_query/" + filename);
+    File file = new File(classLoader.getResource(filename).getFile());
     String sql = Files.toString(file, Charsets.UTF_8);
 
     dbmsConn.setDefaultSchema(REDSHIFT_SCHEMA);
