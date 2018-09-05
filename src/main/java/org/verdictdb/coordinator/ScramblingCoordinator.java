@@ -18,6 +18,7 @@ package org.verdictdb.coordinator;
 
 import com.google.common.base.Optional;
 import org.verdictdb.commons.VerdictDBLogger;
+import org.verdictdb.connection.ConcurrentJdbcConnection;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.core.execplan.ExecutablePlanRunner;
 import org.verdictdb.core.scrambling.*;
@@ -287,6 +288,11 @@ public class ScramblingCoordinator {
             newSchema, newTable, originalSchema, originalTable, scramblingMethod, effectiveOptions);
     ExecutablePlanRunner.runTillEnd(conn, plan);
     log.info(String.format("Finished creating %s.%s", newSchema, newTable));
+
+    // Reinitiate Connections after table creation is done
+    if (conn instanceof ConcurrentJdbcConnection) {
+      ((ConcurrentJdbcConnection) conn).reinitiateConnection();
+    }
 
     // compose scramble meta
     String blockColumn = effectiveOptions.get("blockColumnName");
