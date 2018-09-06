@@ -257,6 +257,8 @@ public class AsyncAggExecutionNode extends ProjectionNode {
       aggcol.setOperand(0, scalingColumn);
     }
 
+
+
     selectQuery = replaceWithOriginalSelectList(selectQuery, sourceAggMeta);
 
     //    System.out.println("Finished composing a query in AsyncAggNode.");

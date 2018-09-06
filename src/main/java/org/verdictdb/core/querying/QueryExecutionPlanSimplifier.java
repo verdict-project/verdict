@@ -119,6 +119,15 @@ public class QueryExecutionPlanSimplifier {
     if (child.getSubscribers().size() > 1) {
       return null;
     }
+
+    // fourth condition: cannot simplify if a AsyncAggExecutionNode child's parent has multiple AsyncAggExecutionNode children
+    if (child instanceof AsyncAggExecutionNode) {
+      for (ExecutableNodeBase source:parent.getSources()) {
+        if (!source.equals(child) && source instanceof AsyncAggExecutionNode) {
+          return null;
+        }
+      }
+    }
     
     // Now actually consolidate
     ExecutableNodeBase newParent = null;
