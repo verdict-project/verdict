@@ -577,7 +577,10 @@ public class VerdictResultSet implements ResultSet {
 
   @Override
   public Timestamp getTimestamp(String columnLabel, Calendar cal) throws SQLException {
-    throw new SQLFeatureNotSupportedException();
+    if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
+      int index = columnLabel.indexOf(standardizedLabel(columnLabel)) + 1;
+      return getTimestamp(index, cal);
+    } else throw new SQLException("ColumnLabel does not exist.");
   }
 
   @Override
