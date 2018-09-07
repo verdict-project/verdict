@@ -85,7 +85,7 @@ public class PrestoSyntax extends SqlSyntax {
 
   @Override
   public String getQuoteString() {
-    return "`";
+    return "\"";
   }
 
   @Override
