@@ -33,6 +33,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.sqlsyntax.HiveSyntax;
+import org.verdictdb.sqlsyntax.PrestoSyntax;
 import org.verdictdb.sqlsyntax.ImpalaSyntax;
 import org.verdictdb.sqlsyntax.PostgresqlSyntax;
 import org.verdictdb.sqlsyntax.RedshiftSyntax;
@@ -364,7 +365,7 @@ public class JdbcConnection extends DbmsConnection {
       }
     }
     // Hive and Spark append partition information at the end of the "DESCRIBE TABLE" statement.
-    else if (syntax instanceof HiveSyntax || syntax instanceof SparkSyntax) {
+    else if (syntax instanceof HiveSyntax || syntax instanceof SparkSyntax || syntax instanceof PrestoSyntax) {
       boolean hasPartitionInfoStarted = false;
       while (queryResult.next()) {
         String name = queryResult.getString(0);

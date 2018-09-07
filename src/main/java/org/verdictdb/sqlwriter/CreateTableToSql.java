@@ -34,6 +34,7 @@ import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBTypeException;
 import org.verdictdb.sqlsyntax.HiveSyntax;
+import org.verdictdb.sqlsyntax.PrestoSyntax;
 import org.verdictdb.sqlsyntax.ImpalaSyntax;
 import org.verdictdb.sqlsyntax.PostgresqlSyntax;
 import org.verdictdb.sqlsyntax.SparkSyntax;
@@ -235,7 +236,7 @@ public class CreateTableToSql {
     }
     
     // parquet format
-    if (syntax instanceof HiveSyntax || syntax instanceof ImpalaSyntax) {
+    if (syntax instanceof HiveSyntax || syntax instanceof ImpalaSyntax || syntax instanceof PrestoSyntax) {
       sql.append("stored as parquet ");
     }
 
