@@ -155,11 +155,10 @@ public class ConcurrentJdbcConnection extends DbmsConnection {
 
   @Override
   public DbmsConnection copy() {
-    return new ConcurrentJdbcConnection(connections);
-  }
-
-  public JdbcConnection getLatestRunningConnection() {
-    return connections.get(nextConnectionIndex);
+    ConcurrentJdbcConnection copy = new ConcurrentJdbcConnection(connections);
+    copy.url = url;
+    copy.info = info;
+    return copy;
   }
 
   public void reinitiateConnection() throws VerdictDBDbmsException {

@@ -18,6 +18,7 @@ package org.verdictdb.coordinator;
 
 import com.google.common.base.Optional;
 import org.verdictdb.commons.VerdictDBLogger;
+import org.verdictdb.connection.CachedDbmsConnection;
 import org.verdictdb.connection.ConcurrentJdbcConnection;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.core.execplan.ExecutablePlanRunner;
@@ -292,6 +293,9 @@ public class ScramblingCoordinator {
     // Reinitiate Connections after table creation is done
     if (conn instanceof ConcurrentJdbcConnection) {
       ((ConcurrentJdbcConnection) conn).reinitiateConnection();
+    } else if (conn instanceof CachedDbmsConnection
+        && ((CachedDbmsConnection) conn).getOriginalConnection() instanceof ConcurrentJdbcConnection) {
+      ((ConcurrentJdbcConnection) ((CachedDbmsConnection) conn).getOriginalConnection()).reinitiateConnection();
     }
 
     // compose scramble meta
