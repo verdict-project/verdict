@@ -135,6 +135,10 @@ public class SelectQueryCoordinator implements Coordinator {
 
     SelectQuery selectQuery = standardizeQuery(query);
 
+    if (!isSupportQuery(selectQuery)) {
+      throw new VerdictDBException("Query contains unsupported syntax.");
+    }
+
     // make plan
     // if the plan does not include any aggregates, it will simply be a parsed structure of the
     // original query.
@@ -167,6 +171,58 @@ public class SelectQueryCoordinator implements Coordinator {
   public void abort() {
     log.debug(String.format("Closes %s.", this.getClass().getSimpleName()));
     planRunner.abort();
+  }
+
+  /**
+   * @param query Select query
+   * @return false if the query contain the syntax that is not supported by VerdictDB
+   */
+  private boolean isSupportQuery(SelectQuery query) {
+    // current, only count distinct should return false;
+
+    // check select list
+    for (SelectItem selectItem:query.getSelectList()) {
+      if (selectItem instanceof AliasedColumn &&
+          ((AliasedColumn) selectItem).getColumn() instanceof ColumnOp) {
+        if (((ColumnOp) ((AliasedColumn) selectItem).getColumn()).doesColumnOpContainOpType("countdistinct")) {
+          return false;
+        }
+      }
+    }
+    // check from list
+    for (AbstractRelation table:query.getFromList()) {
+      if (table instanceof SelectQuery) {
+        if (!isSupportQuery((SelectQuery) table)) {
+          return false;
+        }
+      }
+      else if (table instanceof JoinTable) {
+        for (AbstractRelation jointable:((JoinTable) table).getJoinList()) {
+          if (jointable instanceof SelectQuery) {
+            if (!isSupportQuery((SelectQuery) jointable)) {
+              return false;
+            }
+          }
+        }
+      }
+    }
+    // check filter
+    if (query.getFilter().isPresent()) {
+      UnnamedColumn where = query.getFilter().get();
+      if (where instanceof ColumnOp &&
+          ((ColumnOp)where).doesColumnOpContainOpType("countdistinct")) {
+        return false;
+      }
+    }
+    // check having
+    if (query.getHaving().isPresent()) {
+      UnnamedColumn having = query.getHaving().get();
+      if (having instanceof ColumnOp &&
+          ((ColumnOp)having).doesColumnOpContainOpType("countdistinct")) {
+        return false;
+      }
+    }
+    return true;
   }
 
   private SelectQuery standardizeQuery(String query) throws VerdictDBException {

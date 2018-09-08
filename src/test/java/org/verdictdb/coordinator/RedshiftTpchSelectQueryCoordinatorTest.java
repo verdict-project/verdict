@@ -1,6 +1,7 @@
 package org.verdictdb.coordinator;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.io.IOException;
@@ -663,10 +664,12 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
   }
 
   // count distinct
-  //@Test
+  @Test
   public void TpchQuery4Test() {
     try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(4);
+      fail();
+      /*
       ExecutionResultReader reader = answerPair.getLeft();
       ResultSet rs = answerPair.getRight();
       int cnt = 0;
@@ -682,9 +685,9 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
         }
       }
       assertEquals(12, cnt);
-      System.out.println("test 4 passed");
+      */
     } catch (Exception e) {
-      TpchQuery4Test();
+      System.out.println("test 4 passed");
     }
   }
 
@@ -899,10 +902,12 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
   }
 
   // count distinct
-  //@Test
+  @Test
   public void TpchQuery13Test() {
     try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(13);
+      fail();
+      /*
       ExecutionResultReader reader = answerPair.getLeft();
       ResultSet rs = answerPair.getRight();
       int cnt = 0;
@@ -918,9 +923,9 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
         }
       }
       assertEquals(3, cnt);
-      System.out.println("test 13 passed");
+      */
     } catch (Exception e) {
-      TpchQuery13Test();
+      System.out.println("test 13 passed");
     }
   }
 
@@ -978,10 +983,12 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
   }
 
   // count distinct
-  //@Test
+  @Test
   public void TpchQuery16Test() {
     try {
-      Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(15);
+      Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(16);
+      fail();
+      /*
       ExecutionResultReader reader = answerPair.getLeft();
       ResultSet rs = answerPair.getRight();
       int cnt = 0;
@@ -1000,9 +1007,9 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
         }
       }
       assertEquals(12, cnt);
-      System.out.println("test 15 passed");
+      */
     } catch (Exception e) {
-      TpchQuery15Test();
+      System.out.println("test 16 passed");
     }
   }
 
@@ -1105,10 +1112,12 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
   }
 
   // Count distinct
-  //@Test
+  @Test
   public void TpchQuery21Test() {
     try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(21);
+      fail();
+      /*
       ExecutionResultReader reader = answerPair.getLeft();
       ResultSet rs = answerPair.getRight();
       int cnt = 0;
@@ -1123,10 +1132,9 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
           }
         }
       }
-      assertEquals(10, cnt);
-      System.out.println("test 21 passed");
+      */
     } catch (Exception e) {
-      TpchQuery21Test();
+      System.out.println("test 21 passed");
     }
   }
 

@@ -364,6 +364,24 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
     return aggExists;
   }
 
+  public boolean doesColumnOpContainOpType(String opType) {
+    if (this.getOpType().equals(opType)) {
+      return true;
+    }
+    boolean opTypeExists = false;
+    List<UnnamedColumn> ops = this.getOperands();
+    for (UnnamedColumn c : ops) {
+      if (c instanceof ColumnOp) {
+        if (((ColumnOp) c).doesColumnOpContainOpType(opType)) {
+          opTypeExists = true;
+          break;
+        }
+      }
+    }
+    return opTypeExists;
+  }
+
+
   @Override
   public boolean isAggregateColumn() {
     return isColumnOpAggregate();
