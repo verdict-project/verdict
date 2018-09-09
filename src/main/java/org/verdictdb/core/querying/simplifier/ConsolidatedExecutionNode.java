@@ -14,17 +14,22 @@ import org.verdictdb.exception.VerdictDBException;
  * Used for simplifying two nodes into one. This class may be used in a recursively way to simplify
  * an arbitrary deep nodes into a single node (as long as the condition is satisfied).
  *
- * <p>This class relines on an important assumption: 1. The token of a child node must not rely on
- * its query results.
- *
- * <p>The logic based on the above assumption can be found in the createQuery() method.
+ * Assumptions:
+ * <ol>
+ * <li>
+ * The token of a child node must not rely on its query results. Nodes like CreateTableAsSelect
+ * is supposed to pass the name of a temporary table, which doesn't depend on the its query result.
+ * </li>
+ * </ol>
+ * 
+ * The logic based on the above assumption can be found in the createQuery() method.
  * Traditionally, createToken() must use the result of createQuery(); however, based on the
  * assumption, the token of the child is created without actually running its query. Note that the
  * child's select query is consolidated into the parent query as a subquery.
  *
  * @author Yongjoo Park
  */
-public class DirectRetrievalExecutionNode extends QueryNodeWithPlaceHolders {
+public class ConsolidatedExecutionNode extends QueryNodeWithPlaceHolders {
 
   private static final long serialVersionUID = -561220173745897906L;
 
@@ -32,7 +37,7 @@ public class DirectRetrievalExecutionNode extends QueryNodeWithPlaceHolders {
 
   private CreateTableAsSelectNode childNode;
 
-  public DirectRetrievalExecutionNode(
+  public ConsolidatedExecutionNode(
       SelectQuery selectQuery, QueryNodeWithPlaceHolders parent, CreateTableAsSelectNode child) {
     super(parent.getId(), selectQuery);
     parentNode = parent;
@@ -56,7 +61,7 @@ public class DirectRetrievalExecutionNode extends QueryNodeWithPlaceHolders {
     return record;
   }
 
-  public static DirectRetrievalExecutionNode create(
+  public static ConsolidatedExecutionNode create(
       QueryNodeWithPlaceHolders parent, CreateTableAsSelectNode child) {
 
     SelectQuery parentQuery = parent.getSelectQuery();
@@ -87,8 +92,8 @@ public class DirectRetrievalExecutionNode extends QueryNodeWithPlaceHolders {
       parentQuery.addFilterByAnd(newFilter);
     }
 
-    DirectRetrievalExecutionNode node =
-        new DirectRetrievalExecutionNode(parentQuery, parent, child);
+    ConsolidatedExecutionNode node =
+        new ConsolidatedExecutionNode(parentQuery, parent, child);
     return node;
   }
 
@@ -199,8 +204,8 @@ public class DirectRetrievalExecutionNode extends QueryNodeWithPlaceHolders {
 
   @Override
   public ExecutionInfoToken createToken(DbmsQueryResult result) {
-    ExecutionInfoToken token = new ExecutionInfoToken();
-    token.setKeyValue("queryResult", result);
+    // pass the information from the internal parent node
+    ExecutionInfoToken token = parentNode.createToken(result);
     return token;
   }
 }

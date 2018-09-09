@@ -142,15 +142,19 @@ public class ExecutableNodeBase implements ExecutableNode, Serializable {
    * Removes node from the subscription list (i.e., sources).
    *
    * @param node
+   * @return The channel via which the removed node was previously subscribed.
    */
-  public void cancelSubscriptionTo(ExecutableNodeBase node) {
+  public int cancelSubscriptionTo(ExecutableNodeBase node) {
     List<Pair<ExecutableNodeBase, Integer>> newSources = new ArrayList<>();
     Set<Integer> leftChannels = new HashSet<>();
+    int originalChannel = -1;
     for (Pair<ExecutableNodeBase, Integer> s : sources) {
       if (!s.getLeft().equals(node)) {
         newSources.add(s);
         leftChannels.add(s.getRight());
         continue;
+      } else {
+        originalChannel = s.getRight();
       }
     }
     sources = newSources;
@@ -168,6 +172,8 @@ public class ExecutableNodeBase implements ExecutableNode, Serializable {
 
     // inform the node
     node.removeSubscriber(this);
+    
+    return originalChannel;
   }
 
   private void removeSubscriber(ExecutableNodeBase node) {
@@ -207,18 +213,37 @@ public class ExecutableNodeBase implements ExecutableNode, Serializable {
     return channels;
   }
   
+//  public void replaceSubscriber(
+//      ExecutableNodeBase oldSubscriber, 
+//      ExecutableNodeBase newSubscriber) {
+//    List<ExecutableNodeBase> newSubscribers = new ArrayList<>();
+//    for (ExecutableNodeBase n : subscribers) {
+//      if (n.equals(oldSubscriber)) {
+//        newSubscribers.add(newSubscriber);
+//      } else {
+//        newSubscribers.add(n);
+//      }
+//    }
+//    subscribers = newSubscribers;
+//  }
+  
   public void replaceSource(ExecutableNodeBase oldSource, ExecutableNodeBase newSource) {
-    List<Pair<ExecutableNodeBase, Integer>> newSources = new ArrayList<>();
-    for (Pair<ExecutableNodeBase, Integer> sourceChannel : sources) {
-      ExecutableNodeBase source = sourceChannel.getLeft();
-      Integer channel = sourceChannel.getRight();
-      if (source.equals(oldSource)) {
-        newSources.add(Pair.of(newSource, channel));
-      } else {
-        newSources.add(sourceChannel);
-      }
+    int subscribedChannel = cancelSubscriptionTo(oldSource);
+    if (subscribedChannel > 0) {
+      // positive channel indicates the old source existed in the source list
+      subscribeTo(newSource, subscribedChannel);
     }
-    sources = newSources;
+//    List<Pair<ExecutableNodeBase, Integer>> newSources = new ArrayList<>();
+//    for (Pair<ExecutableNodeBase, Integer> sourceChannel : sources) {
+//      ExecutableNodeBase source = sourceChannel.getLeft();
+//      Integer channel = sourceChannel.getRight();
+//      if (source.equals(oldSource)) {
+//        newSources.add(Pair.of(newSource, channel));
+//      } else {
+//        newSources.add(sourceChannel);
+//      }
+//    }
+//    sources = newSources;
   }
 
   @Override

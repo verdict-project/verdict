@@ -189,12 +189,12 @@ public class QueryExecutionPlanSimplifier {
     // Now actually consolidate
     ExecutableNodeBase newParent = null;
     if ((parent instanceof SelectAllExecutionNode ||
-        parent instanceof DirectRetrievalExecutionNode ||
+        parent instanceof ConsolidatedExecutionNode ||
         parent instanceof AggExecutionNode) && 
         (child instanceof AsyncAggExecutionNode
             || child instanceof AggExecutionNode
             || child instanceof ProjectionNode)) {
-      newParent = DirectRetrievalExecutionNode.create(
+      newParent = ConsolidatedExecutionNode.create(
           (QueryNodeWithPlaceHolders) parent, (CreateTableAsSelectNode) child);
     }
     

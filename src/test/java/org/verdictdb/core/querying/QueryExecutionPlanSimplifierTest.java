@@ -11,7 +11,7 @@ import org.junit.Test;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.core.querying.ola.AsyncQueryExecutionPlan;
-import org.verdictdb.core.querying.simplifier.DirectRetrievalExecutionNode;
+import org.verdictdb.core.querying.simplifier.ConsolidatedExecutionNode;
 import org.verdictdb.core.querying.simplifier.QueryExecutionPlanSimplifier;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.core.sqlobject.ColumnOp;
@@ -191,7 +191,7 @@ public class QueryExecutionPlanSimplifierTest {
     QueryExecutionPlanSimplifier.simplify2(asyncPlan);
 
     // Test 1: after simplication, the root must be the instanceof DirectRetrievalExecutionNode
-    assertTrue(asyncPlan.getRootNode() instanceof DirectRetrievalExecutionNode);
+    assertTrue(asyncPlan.getRootNode() instanceof ConsolidatedExecutionNode);
 
     // Test 2: the number of children must be equal to the agg block count. 
     assertEquals(3, asyncPlan.getRootNode().getSourceCount());
@@ -213,14 +213,14 @@ public class QueryExecutionPlanSimplifierTest {
     asyncPlan.getRoot().print();
 
     // Test 1: after simplifying, the root must be the instance of DirectRetrievalExecutionNode.
-    assertTrue(asyncPlan.getRootNode() instanceof DirectRetrievalExecutionNode);
+    assertTrue(asyncPlan.getRootNode() instanceof ConsolidatedExecutionNode);
 
     // Test 2: the number of children must be equal to the agg block count. 
     assertEquals(3, asyncPlan.getRootNode().getSourceCount());
     
     // Test 3: the individual aggregate node must be consolidated into DirectRetrievalExecutionNode
     ExecutableNodeBase firstAgg = asyncPlan.getRootNode().getSources().get(0);
-    assertEquals(DirectRetrievalExecutionNode.class, firstAgg.getClass());
+    assertEquals(ConsolidatedExecutionNode.class, firstAgg.getClass());
   }
 
   @Test
