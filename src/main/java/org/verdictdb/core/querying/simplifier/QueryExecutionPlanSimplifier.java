@@ -14,14 +14,24 @@
  *    limitations under the License.
  */
 
-package org.verdictdb.core.querying;
+package org.verdictdb.core.querying.simplifier;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
+import org.verdictdb.core.querying.AggExecutionNode;
+import org.verdictdb.core.querying.CreateTableAsSelectNode;
+import org.verdictdb.core.querying.ExecutableNodeBase;
+import org.verdictdb.core.querying.PlaceHolderRecord;
+import org.verdictdb.core.querying.ProjectionNode;
+import org.verdictdb.core.querying.QueryExecutionPlan;
+import org.verdictdb.core.querying.QueryNodeBase;
+import org.verdictdb.core.querying.QueryNodeWithPlaceHolders;
+import org.verdictdb.core.querying.SelectAllExecutionNode;
 import org.verdictdb.core.querying.ola.AsyncAggExecutionNode;
-import org.verdictdb.core.querying.simplifier.DirectRetrievalExecutionNode;
 import org.verdictdb.core.sqlobject.AbstractRelation;
 import org.verdictdb.core.sqlobject.AsteriskColumn;
 import org.verdictdb.core.sqlobject.BaseTable;
@@ -37,11 +47,11 @@ public class QueryExecutionPlanSimplifier {
   /**
    * Simplifies the originalPlan in place.
    *
-   * The parent node may consolidates with its child when all of the following conditions are
+   * The parent node may consolidate with its child when all of the following conditions are
    * satisfied:
    * 1. The child node is a descendant of CreateTableAsSelectNode
    * 2. The child node is the unique source of the channel to which the child node is set to
-   * broadcast
+   *    broadcast
    * 3. The parent is the only subscriber of the child.
    * 4. ProjectionNode can be safely consolidated.
    * 5. AggExecutionNode can only be consolidated when its aggMeta is empty.
@@ -52,6 +62,29 @@ public class QueryExecutionPlanSimplifier {
    */
   public static void simplify2(QueryExecutionPlan originalPlan)
       throws VerdictDBValidationException {
+    
+    // first, simplify the root and its sources
+    ExecutableNodeBase parent = originalPlan.getRootNode();
+    ExecutableNodeBase newParent = simplify2ParentNode(parent);
+    originalPlan.setRootNode(newParent);
+    
+    // next, simplify the sources
+    // A triple below is (grandParent, parent, childIndex); a consolidation may combine the parent 
+    // and the child, which is set as the new child of the grandParent.
+    List<Triple<ExecutableNodeBase, ExecutableNodeBase, Integer>> parentSourceList =
+        new LinkedList<>();
+    
+    while (parentSourceList.size() > 0) {
+      // take one candidate
+      Triple<ExecutableNodeBase, ExecutableNodeBase, Integer> triple = parentSourceList.remove(0);
+      ExecutableNodeBase grandParent = triple.getLeft();
+      parent = triple.getMiddle();
+      int childIndex = triple.getRight();
+      ExecutableNodeBase child = parent.getSources().get(childIndex);
+      
+      // add the (parent, child, grandChild) as a next candidate
+      
+    }
 
     // Every iteration of this loop completely reconfigure placeholder list and subscription list
     // properly so that the next iteration does not need to know about the previous iteration.
@@ -76,6 +109,44 @@ public class QueryExecutionPlanSimplifier {
         originalPlan.setRootNode(newParent);
       }
     }
+  }
+  
+  /**
+   * Consolidates a node to its children until possible. Note that this function may consolidate
+   * one or more levels.
+   * 
+   * @param parent This parent node and its children will be simplified if available.
+   * @return A new parent that will replace the passed parent. If the returned parent is identical
+   *         to the passed parent, it means no consolidation occurred.
+   * @throws VerdictDBValidationException 
+   */
+  private static ExecutableNodeBase simplify2ParentNode(ExecutableNodeBase parent) 
+      throws VerdictDBValidationException {
+    
+    // Every iteration of this loop completely reconfigure placeholder list and subscription list
+    // properly so that the next iteration does not need to know about the previous iteration.
+    while (true) {
+      List<ExecutableNodeBase> sources = parent.getSources();
+  
+      // if the parent has no child, this loop will immediately finish.
+      // if any child is consolidated, this loop will start all over again from the beginning
+      // however, since each consolidation removes a node from the tree, this loop only iterates
+      // as many times as the number of the nodes in the tree.
+      ExecutableNodeBase newParent = null;
+      for (int childIndex = 0; childIndex < sources.size(); childIndex++) {
+        newParent = consolidates(parent, childIndex);
+        if (newParent != null) {
+          break;
+        }
+      }
+      if (newParent == null) {
+        break;
+      } else {
+        parent = newParent;
+      }
+    }
+    
+    return parent;
   }
   
   /**
@@ -120,9 +191,10 @@ public class QueryExecutionPlanSimplifier {
       return null;
     }
 
-    // fourth condition: cannot simplify if a AsyncAggExecutionNode child's parent has multiple AsyncAggExecutionNode children
+    // fourth condition: cannot simplify if a AsyncAggExecutionNode (i.e., child)'s parent has 
+    // another AsyncAggExecutionNode among its children.
     if (child instanceof AsyncAggExecutionNode) {
-      for (ExecutableNodeBase source:parent.getSources()) {
+      for (ExecutableNodeBase source : parent.getSources()) {
         if (!source.equals(child) && source instanceof AsyncAggExecutionNode) {
           return null;
         }

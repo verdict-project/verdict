@@ -48,10 +48,19 @@ public class ExecutableNodeBase implements ExecutableNode, Serializable {
 
   private static final long serialVersionUID = 1424215482199124961L;
 
+  /**
+   *  parent; the tokens are broadcasted to these nodes
+   */
   List<ExecutableNodeBase> subscribers = new ArrayList<>();
 
+  /**
+   *  pairs of a source and the channel; see below for channel
+   */
   List<Pair<ExecutableNodeBase, Integer>> sources = new ArrayList<>();
 
+  /**
+   *  pairs of channel ID and the queue for containing broadcasted tokens.
+   */
   Map<Integer, ExecutionTokenQueue> channels = new TreeMap<>();
 
   protected AggMeta aggMeta = new AggMeta();
@@ -197,6 +206,14 @@ public class ExecutableNodeBase implements ExecutableNode, Serializable {
   public Map<Integer, ExecutionTokenQueue> getSourceQueues() {
     return channels;
   }
+  
+  public void replaceSource(ExecutableNodeBase oldSource, ExecutableNodeBase newSource) {
+    List<Pair<ExecutableNodeBase, Integer>> newSources = new ArrayList<>();
+    for (Pair<ExecutableNodeBase, Integer> sourceChannel : sources) {
+      ExecutableNodeBase source = sourceChannel.getLeft();
+      Integer channel = sourceChannel.getRight();
+    }
+  }
 
   @Override
   public List<ExecutableNode> getSubscribers() {
@@ -246,6 +263,10 @@ public class ExecutableNodeBase implements ExecutableNode, Serializable {
     }
 
     return ss;
+  }
+  
+  public int getSourceCount() {
+    return getSources().size();
   }
 
   public Integer getChannelForSource(ExecutableNodeBase node) {
