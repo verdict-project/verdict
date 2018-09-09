@@ -22,6 +22,7 @@ import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
+import org.verdictdb.core.execplan.ExecutableNode;
 import org.verdictdb.core.querying.AggExecutionNode;
 import org.verdictdb.core.querying.CreateTableAsSelectNode;
 import org.verdictdb.core.querying.ExecutableNodeBase;
@@ -69,51 +70,35 @@ public class QueryExecutionPlanSimplifier {
     originalPlan.setRootNode(newParent);
     
     // next, simplify the sources
-    // A triple below is (grandParent, parent, childIndex); a consolidation may combine the parent 
+    // A triple below is (grandParent, parent); a consolidation may combine the parent 
     // and the child, which is set as the new child of the grandParent.
-    List<Triple<ExecutableNodeBase, ExecutableNodeBase, Integer>> parentSourceList =
+    List<Pair<ExecutableNodeBase, ExecutableNodeBase>> parentSourceList =
         new LinkedList<>();
+    for (ExecutableNodeBase child : newParent.getSources()) {
+      parentSourceList.add(Pair.of(newParent, child));
+    }
     
     while (parentSourceList.size() > 0) {
       // take one candidate
-      Triple<ExecutableNodeBase, ExecutableNodeBase, Integer> triple = parentSourceList.remove(0);
-      ExecutableNodeBase grandParent = triple.getLeft();
-      parent = triple.getMiddle();
-      int childIndex = triple.getRight();
-      ExecutableNodeBase child = parent.getSources().get(childIndex);
+      Pair<ExecutableNodeBase, ExecutableNodeBase> candidate = parentSourceList.remove(0);
+      ExecutableNodeBase grandParent = candidate.getLeft();
+      parent = candidate.getRight();
       
-      // add the (parent, child, grandChild) as a next candidate
+      // consolidates if possible
+      newParent = simplify2ParentNode(parent);
+      grandParent.replaceSource(parent, newParent);
       
-    }
-
-    // Every iteration of this loop completely reconfigure placeholder list and subscription list
-    // properly so that the next iteration does not need to know about the previous iteration.
-    while (true) {
-      ExecutableNodeBase parent = originalPlan.getRootNode();
-      List<ExecutableNodeBase> sources = parent.getSources();
-  
-      // if the parent has no child, this loop will immediately finish.
-      // if any child is consolidated, this loop will start all over again from the beginning
-      // however, since each consolidation removes a node from the tree, this loop only iterates
-      // as many times as the number of the nodes in the tree.
-      ExecutableNodeBase newParent = null;
-      for (int childIndex = 0; childIndex < sources.size(); childIndex++) {
-        newParent = consolidates(parent, childIndex);
-        if (newParent != null) {
-          break;
-        }
+      // add the (parent, child) as a next candidate
+      for (ExecutableNodeBase child : newParent.getSources()) {
+        parentSourceList.add(Pair.of(newParent, child));
       }
-      if (newParent == null) {
-        break;
-      } else {
-        originalPlan.setRootNode(newParent);
-      }
+      
     }
   }
   
   /**
    * Consolidates a node to its children until possible. Note that this function may consolidate
-   * one or more levels.
+   * one or more levels. This is a helper function for simplify2().
    * 
    * @param parent This parent node and its children will be simplified if available.
    * @return A new parent that will replace the passed parent. If the returned parent is identical
@@ -204,7 +189,8 @@ public class QueryExecutionPlanSimplifier {
     // Now actually consolidate
     ExecutableNodeBase newParent = null;
     if ((parent instanceof SelectAllExecutionNode ||
-        parent instanceof DirectRetrievalExecutionNode) && 
+        parent instanceof DirectRetrievalExecutionNode ||
+        parent instanceof AggExecutionNode) && 
         (child instanceof AsyncAggExecutionNode
             || child instanceof AggExecutionNode
             || child instanceof ProjectionNode)) {
@@ -227,13 +213,20 @@ public class QueryExecutionPlanSimplifier {
       newParent.subscribeTo(childSource, childSourceChannel);
     }
     
-    // restore the original subscriptions to the children
+    // copy the old parent's subscriptions under the new parent
     for (Pair<ExecutableNodeBase, Integer> sourceAndChannel : parent.getSourcesAndChannels()) {
       ExecutableNodeBase source = sourceAndChannel.getLeft();
       int channel = sourceAndChannel.getRight();
       parent.cancelSubscriptionTo(source);
       newParent.subscribeTo(source, channel);
     }
+    
+    // let the parents of the old parent subscribe instead to the new parent
+    List<ExecutableNode> subscribers = parent.getSubscribers();
+    for (ExecutableNode n : subscribers) {
+      ((ExecutableNodeBase) n).replaceSource(parent, newParent);
+    }
+    
     
     // One extra step: if the root node is the "select *" query without any group-by clauses
     // we just use the inner query.

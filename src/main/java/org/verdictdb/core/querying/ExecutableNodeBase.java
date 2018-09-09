@@ -212,7 +212,13 @@ public class ExecutableNodeBase implements ExecutableNode, Serializable {
     for (Pair<ExecutableNodeBase, Integer> sourceChannel : sources) {
       ExecutableNodeBase source = sourceChannel.getLeft();
       Integer channel = sourceChannel.getRight();
+      if (source.equals(oldSource)) {
+        newSources.add(Pair.of(newSource, channel));
+      } else {
+        newSources.add(sourceChannel);
+      }
     }
+    sources = newSources;
   }
 
   @Override
