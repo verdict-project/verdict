@@ -1,6 +1,7 @@
 package org.verdictdb;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.io.IOException;
@@ -144,15 +145,15 @@ public class VariantMySqlTpchQueryWithoutScramblesTest {
     }
   }
 
+
+  // count distinct
   @Test
   public void Query4Test() throws VerdictDBException, SQLException, IOException {
-    Pair<VerdictSingleResult, ResultSet> answerPair = getAnswer(4);
-    ResultSet rs = answerPair.getRight();
-    VerdictSingleResult result = answerPair.getLeft();
-    while (rs.next()) {
-      result.next();
-      assertEquals(rs.getLong(1), result.getLong(0));
-      assertEquals(rs.getString(2), result.getString(1));
+    try {
+      Pair<VerdictSingleResult, ResultSet> answerPair = getAnswer(4);
+      fail();
+    } catch (VerdictDBException e) {
+
     }
   }
 
@@ -262,15 +263,13 @@ public class VariantMySqlTpchQueryWithoutScramblesTest {
     }
   }
 
+  // count distinct
   @Test
   public void Query13Test() throws VerdictDBException, SQLException, IOException {
-    Pair<VerdictSingleResult, ResultSet> answerPair = getAnswer(13);
-    ResultSet rs = answerPair.getRight();
-    VerdictSingleResult result = answerPair.getLeft();
-    while (rs.next()) {
-      result.next();
-      assertEquals(rs.getInt(1), result.getInt(0));
-      assertEquals(rs.getInt(2), result.getInt(1));
+    try {
+      Pair<VerdictSingleResult, ResultSet> answerPair = getAnswer(13);
+      fail();
+    } catch (VerdictDBException e) {
     }
   }
 
@@ -301,9 +300,16 @@ public class VariantMySqlTpchQueryWithoutScramblesTest {
     }
   }
 
+  // count distinct
   @Test
   public void Query16Test() throws VerdictDBException, SQLException, IOException {
-    Pair<VerdictSingleResult, ResultSet> answerPair = getAnswer(16);
+    try {
+      Pair<VerdictSingleResult, ResultSet> answerPair = getAnswer(16);
+      fail();
+    } catch (VerdictDBException e) {
+
+    }
+    /*
     ResultSet rs = answerPair.getRight();
     VerdictSingleResult result = answerPair.getLeft();
     while (rs.next()) {
@@ -313,6 +319,7 @@ public class VariantMySqlTpchQueryWithoutScramblesTest {
       assertEquals(rs.getInt(3), result.getInt(2));
       assertEquals(rs.getString(4), result.getString(3));
     }
+    */
   }
 
   @Test
@@ -368,6 +375,13 @@ public class VariantMySqlTpchQueryWithoutScramblesTest {
 
   @Test
   public void Query21Test() throws VerdictDBException, SQLException, IOException {
+    try {
+      Pair<VerdictSingleResult, ResultSet> answerPair = getAnswer(21);
+      fail();
+    } catch (VerdictDBException e) {
+
+    }
+    /*
     Pair<VerdictSingleResult, ResultSet> answerPair = getAnswer(21);
     ResultSet rs = answerPair.getRight();
     VerdictSingleResult result = answerPair.getLeft();
@@ -377,6 +391,7 @@ public class VariantMySqlTpchQueryWithoutScramblesTest {
       assertEquals(rs.getDouble(2), result.getDouble(1), 1e-5);
       assertEquals(rs.getDouble(3), result.getDouble(2), 1e-5);
     }
+    */
   }
 
   //  @Test
