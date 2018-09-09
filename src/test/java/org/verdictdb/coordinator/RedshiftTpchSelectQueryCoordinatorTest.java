@@ -1123,7 +1123,6 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
           }
         }
       }
-      TpchQuery21Test();
     } catch (Exception e) {
       System.out.println("test 21 passed");
     }

@@ -149,11 +149,13 @@ public class VariantMySqlTpchQueryWithoutScramblesTest {
   // count distinct
   @Test
   public void Query4Test() throws VerdictDBException, SQLException, IOException {
-    try {
-      Pair<VerdictSingleResult, ResultSet> answerPair = getAnswer(4);
-      fail();
-    } catch (VerdictDBException e) {
-
+    Pair<VerdictSingleResult, ResultSet> answerPair = getAnswer(4);
+    ResultSet rs = answerPair.getRight();
+    VerdictSingleResult result = answerPair.getLeft();
+    while (rs.next()) {
+      result.next();
+      assertEquals(rs.getLong(1), result.getLong(0));
+      assertEquals(rs.getString(2), result.getString(1));
     }
   }
 
@@ -371,13 +373,6 @@ public class VariantMySqlTpchQueryWithoutScramblesTest {
 
   @Test
   public void Query21Test() throws VerdictDBException, SQLException, IOException {
-    try {
-      Pair<VerdictSingleResult, ResultSet> answerPair = getAnswer(21);
-      fail();
-    } catch (VerdictDBException e) {
-
-    }
-    /*
     Pair<VerdictSingleResult, ResultSet> answerPair = getAnswer(21);
     ResultSet rs = answerPair.getRight();
     VerdictSingleResult result = answerPair.getLeft();
@@ -387,7 +382,6 @@ public class VariantMySqlTpchQueryWithoutScramblesTest {
       assertEquals(rs.getDouble(2), result.getDouble(1), 1e-5);
       assertEquals(rs.getDouble(3), result.getDouble(2), 1e-5);
     }
-    */
   }
 
   //  @Test

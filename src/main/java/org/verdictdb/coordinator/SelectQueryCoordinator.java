@@ -135,9 +135,9 @@ public class SelectQueryCoordinator implements Coordinator {
 
     SelectQuery selectQuery = standardizeQuery(query);
 
-    if (!isSupportQuery(selectQuery)) {
-      throw new VerdictDBException("Query contains unsupported syntax.");
-    }
+    // Check the query does not have unsupported syntax, such as count distinct with other agg.
+    // Otherwise, it will throw to an exception
+    ensureQuerySupport(selectQuery);
 
     // make plan
     // if the plan does not include any aggregates, it will simply be a parsed structure of the
@@ -175,9 +175,9 @@ public class SelectQueryCoordinator implements Coordinator {
 
   /**
    * @param query Select query
-   * @return false if the query contain the syntax that is not supported by VerdictDB
+   * @return check if the query contain the syntax that is not supported by VerdictDB
    */
-  private boolean isSupportQuery(SelectQuery query) {
+  private void ensureQuerySupport(SelectQuery query) throws VerdictDBException {
     // current, only if count distinct appear along with other aggregation function will return false
 
     // check select list
@@ -195,23 +195,19 @@ public class SelectQueryCoordinator implements Coordinator {
           containAggregatedItem = true;
         }
         if (containAggregatedItem && containCountDistinctItem) {
-          return false;
+          throw new VerdictDBException("Count distinct and other aggregation should not both appear in one query");
         }
       }
     }
     // check from list
     for (AbstractRelation table:query.getFromList()) {
       if (table instanceof SelectQuery) {
-        if (!isSupportQuery((SelectQuery) table)) {
-          return false;
-        }
+        ensureQuerySupport((SelectQuery) table);
       }
       else if (table instanceof JoinTable) {
         for (AbstractRelation jointable:((JoinTable) table).getJoinList()) {
           if (jointable instanceof SelectQuery) {
-            if (!isSupportQuery((SelectQuery) jointable)) {
-              return false;
-            }
+            ensureQuerySupport((SelectQuery) jointable);
           }
         }
       }
@@ -230,10 +226,9 @@ public class SelectQueryCoordinator implements Coordinator {
         containAggregatedItem = true;
       }
       if (containAggregatedItem && containCountDistinctItem) {
-        return false;
+        throw new VerdictDBException("Count distinct and other aggregation should not both appear in one query");
       }
     }
-    return true;
   }
 
   private SelectQuery standardizeQuery(String query) throws VerdictDBException {

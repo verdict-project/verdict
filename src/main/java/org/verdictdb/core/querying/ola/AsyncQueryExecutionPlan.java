@@ -633,7 +633,10 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
                 if (!meta.getAggColumnAggAliasPair()
                     .containsKey(
                         new ImmutablePair<>("count", (UnnamedColumn) (new AsteriskColumn())))
-                    && (col.getOperand() instanceof AsteriskColumn || col.getOperand() instanceof ConstantColumn)) {
+                    && (col.getOperands().isEmpty()
+                      || col.getOperand() instanceof AsteriskColumn
+                      || col.getOperand() instanceof ConstantColumn
+                      || col.getOperand() instanceof BaseColumn)) {
                   ColumnOp col1 = new ColumnOp(col.getOpType());
                   newSelectlist.add(new AliasedColumn(col1, newAlias));
                   meta.getAggColumnAggAliasPair()
@@ -643,7 +646,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
                           newAlias);
                   aggColumnAlias.add(newAlias);
                   ++aggColumnIdentiferNum;
-                } else if (!meta.getAggColumnAggAliasPair()
+                } else if (col.getOperand(0) instanceof ColumnOp && !meta.getAggColumnAggAliasPair()
                     .containsKey(new ImmutablePair<>(col.getOpType(), col.getOperand(0)))) {
                   ColumnOp col1 = new ColumnOp(col.getOpType(), col.getOperand(0));
                   newSelectlist.add(new AliasedColumn(col1, newAlias));
