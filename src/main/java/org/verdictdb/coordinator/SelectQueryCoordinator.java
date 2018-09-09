@@ -178,13 +178,23 @@ public class SelectQueryCoordinator implements Coordinator {
    * @return false if the query contain the syntax that is not supported by VerdictDB
    */
   private boolean isSupportQuery(SelectQuery query) {
-    // current, only count distinct should return false;
+    // current, only if count distinct appear along with other aggregation function will return false
 
     // check select list
+    boolean containAggregatedItem = false;
+    boolean containCountDistinctItem = false;
     for (SelectItem selectItem:query.getSelectList()) {
       if (selectItem instanceof AliasedColumn &&
           ((AliasedColumn) selectItem).getColumn() instanceof ColumnOp) {
         if (((ColumnOp) ((AliasedColumn) selectItem).getColumn()).doesColumnOpContainOpType("countdistinct")) {
+          ((ColumnOp) ((AliasedColumn) selectItem).getColumn()).replaceAllColumnOpOpType("countdistinct", "approx_countdistinct");
+          containCountDistinctItem = true;
+        }
+        if (!containAggregatedItem &&
+            (((AliasedColumn) selectItem).getColumn()).isAggregateColumn()) {
+          containAggregatedItem = true;
+        }
+        if (containAggregatedItem && containCountDistinctItem) {
           return false;
         }
       }
@@ -206,19 +216,20 @@ public class SelectQueryCoordinator implements Coordinator {
         }
       }
     }
-    // check filter
-    if (query.getFilter().isPresent()) {
-      UnnamedColumn where = query.getFilter().get();
-      if (where instanceof ColumnOp &&
-          ((ColumnOp)where).doesColumnOpContainOpType("countdistinct")) {
-        return false;
-      }
-    }
-    // check having
+
+    // also need to check having since we will convert having clause into select list
     if (query.getHaving().isPresent()) {
       UnnamedColumn having = query.getHaving().get();
       if (having instanceof ColumnOp &&
           ((ColumnOp)having).doesColumnOpContainOpType("countdistinct")) {
+        containCountDistinctItem = true;
+        ((ColumnOp) having).replaceAllColumnOpOpType("countdistnct", "approx_countdistinct");
+      }
+      if (having instanceof ColumnOp &&
+          having.isAggregateColumn()) {
+        containAggregatedItem = true;
+      }
+      if (containAggregatedItem && containCountDistinctItem) {
         return false;
       }
     }

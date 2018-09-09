@@ -632,7 +632,8 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
               if (col.getOpType().equals("count")) {
                 if (!meta.getAggColumnAggAliasPair()
                     .containsKey(
-                        new ImmutablePair<>("count", (UnnamedColumn) (new AsteriskColumn())))) {
+                        new ImmutablePair<>("count", (UnnamedColumn) (new AsteriskColumn())))
+                    && (col.getOperand() instanceof AsteriskColumn || col.getOperand() instanceof ConstantColumn)) {
                   ColumnOp col1 = new ColumnOp(col.getOpType());
                   newSelectlist.add(new AliasedColumn(col1, newAlias));
                   meta.getAggColumnAggAliasPair()
@@ -640,6 +641,14 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
                           new ImmutablePair<>(
                               col.getOpType(), (UnnamedColumn) new AsteriskColumn()),
                           newAlias);
+                  aggColumnAlias.add(newAlias);
+                  ++aggColumnIdentiferNum;
+                } else if (!meta.getAggColumnAggAliasPair()
+                    .containsKey(new ImmutablePair<>(col.getOpType(), col.getOperand(0)))) {
+                  ColumnOp col1 = new ColumnOp(col.getOpType(), col.getOperand(0));
+                  newSelectlist.add(new AliasedColumn(col1, newAlias));
+                  meta.getAggColumnAggAliasPair()
+                      .put(new ImmutablePair<>(col.getOpType(), col1.getOperand(0)), newAlias);
                   aggColumnAlias.add(newAlias);
                   ++aggColumnIdentiferNum;
                 } else if (!newAlias.startsWith("agg")) {

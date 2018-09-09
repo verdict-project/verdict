@@ -163,7 +163,7 @@ public class JdbcTpchQueryForAllDatabasesTest {
       }
       // query 4, 13, 16, 21 contains count distinct
       for (int query = 1; query <= queryCount; ++query) {
-        if (query!=4 && query!=13 && query!=16 && query!=21) {
+        if (query!=21) {
           params.add(new Object[] {database, String.valueOf(query)});
         }
       }

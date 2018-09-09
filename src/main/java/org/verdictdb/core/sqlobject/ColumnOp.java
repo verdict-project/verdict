@@ -49,6 +49,7 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
    *   <li>min
    *   <li>max
    *   <li>countdistinct
+   *   <li>approx_countdistinct
    *   <li>substr
    *   <li>substring
    *   <li>rand
@@ -379,6 +380,23 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
       }
     }
     return opTypeExists;
+  }
+
+  /**
+   * It will search through the columnOp recursively, to replace the opTypeBeforeReplace with the opTypeAfterReplace
+   */
+  public void replaceAllColumnOpOpType(String opTypeBeforeReplace, String opTypeAfterReplace) {
+    if (this.getOpType().equals(opTypeBeforeReplace)) {
+      this.setOpType(opTypeAfterReplace);
+    }
+    List<UnnamedColumn> ops = this.getOperands();
+    for (UnnamedColumn c : ops) {
+      if (c instanceof ColumnOp) {
+        if (((ColumnOp) c).doesColumnOpContainOpType(opTypeBeforeReplace)) {
+          this.setOpType(opTypeAfterReplace);
+        }
+      }
+    }
   }
 
 

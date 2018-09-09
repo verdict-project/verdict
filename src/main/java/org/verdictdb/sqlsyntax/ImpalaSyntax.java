@@ -138,4 +138,9 @@ public class ImpalaSyntax extends SqlSyntax {
     String newType = typeMap.get(type.toLowerCase());
     return (newType != null) ? newType : type;
   }
+
+  @Override
+  public String getApproximateCountDistinct(String column) {
+    return String.format("ndv(%s)", column);
+  }
 }
