@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.google.common.base.Optional;
+
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.core.execplan.ExecutionInfoToken;
 import org.verdictdb.core.querying.*;
@@ -66,23 +69,15 @@ public class ConsolidatedExecutionNode extends QueryNodeWithPlaceHolders {
 
     SelectQuery parentQuery = parent.getSelectQuery();
 
-    // find place holders in the parent query and replace with the child query
+    // find placeholders in the parent query and replace with the child query
     int childChannel = parent.getChannelForSource(child);
     PlaceHolderRecord placeHolderToRemove = parent.removePlaceholderRecordForChannel(childChannel);
     BaseTable baseTableToRemove = placeHolderToRemove.getPlaceholderTable();
 
     // replace in the source list
     parentQuery = (SelectQuery) consolidateSource(parentQuery, child, baseTableToRemove);
-    //    List<AbstractRelation> parentFromList = parentQuery.getFromList();
-    //    List<AbstractRelation> newParentFromList = new ArrayList<>();
-    //    for (AbstractRelation originalSource : parentFromList) {
-    //      AbstractRelation newSource = consolidateSource(originalSource, child,
-    // baseTableToRemove);
-    //      newParentFromList.add(newSource);
-    //    }
-    //    parentQuery.setFromList(newParentFromList);
 
-    // Filter: replace the placeholder BaseTable (in the filter list) with
+    // filter: replace the placeholder BaseTable (in the filter list) with
     // the SelectQuery of the child
     Optional<UnnamedColumn> parentFilterOptional = parentQuery.getFilter();
     if (parentFilterOptional.isPresent()) {
@@ -198,8 +193,15 @@ public class ConsolidatedExecutionNode extends QueryNodeWithPlaceHolders {
     List<ExecutionInfoToken> newTokens = new ArrayList<>();
     newTokens.addAll(tokens);
     newTokens.add(childToken);
-    parentNode.createQuery(newTokens);
-    return selectQuery;
+    
+    // this is a bad trick to use the createQuery function of the parent node.
+    // we set the consolidated query (of this node) to the parentNode, and let the parent node
+    // create a new query using the consolidated select query.
+    // for now, the only use case is that the parent node creates a "create table ..." query that
+    // contains the consolidated select query.
+    parentNode.setSelectQuery(selectQuery);
+    SqlConvertible consolidatedQuery = parentNode.createQuery(newTokens);
+    return consolidatedQuery;
   }
 
   @Override
@@ -207,5 +209,15 @@ public class ConsolidatedExecutionNode extends QueryNodeWithPlaceHolders {
     // pass the information from the internal parent node
     ExecutionInfoToken token = parentNode.createToken(result);
     return token;
+  }
+  
+  @Override
+  public String toString() {
+    return new ToStringBuilder(this, ToStringStyle.DEFAULT_STYLE)
+        .append("subscriberCount", getSubscribers().size())
+        .append("sourceCount", getSources().size())
+        .append("parent", parentNode)
+        .append("child", childNode)
+        .toString();
   }
 }
