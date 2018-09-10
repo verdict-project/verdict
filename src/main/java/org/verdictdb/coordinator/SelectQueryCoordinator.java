@@ -195,7 +195,7 @@ public class SelectQueryCoordinator implements Coordinator {
           containAggregatedItem = true;
         }
         if (containAggregatedItem && containCountDistinctItem) {
-          throw new VerdictDBException("Count distinct and other aggregation should not both appear in one query");
+          throw new VerdictDBException("Count distinct and other aggregate functions cannot appear in the same select list.");
         }
       }
     }
@@ -226,7 +226,7 @@ public class SelectQueryCoordinator implements Coordinator {
         containAggregatedItem = true;
       }
       if (containAggregatedItem && containCountDistinctItem) {
-        throw new VerdictDBException("Count distinct and other aggregation should not both appear in one query");
+        throw new VerdictDBException("Count distinct and other aggregate functions cannot appear in the same select list.");
       }
     }
   }
