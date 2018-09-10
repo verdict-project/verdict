@@ -16,10 +16,10 @@
 
 package org.verdictdb.sqlsyntax;
 
-import com.google.common.collect.Lists;
-
 import java.util.Collection;
 import java.util.List;
+
+import com.google.common.collect.Lists;
 
 public class HiveSyntax extends SqlSyntax {
 
@@ -130,6 +130,11 @@ public class HiveSyntax extends SqlSyntax {
       return false;
     }
     return true;
+  }
+
+  @Override
+  public String getGenericStringDataTypeName() {
+    return "STRING";
   }
 
   @Override

@@ -28,6 +28,7 @@ AUTHORIZATION:                   A U T H O R I Z A T I O N;
 BACKUP:                          B A C K U P;
 BEGIN:                           B E G I N;
 BETWEEN:                         B E T W E E N;
+BLOCKSIZE:                       B L O C K S I Z E;
 BREAK:                           B R E A K;
 BROWSE:                          B R O W S E;
 BULK:                            B U L K;

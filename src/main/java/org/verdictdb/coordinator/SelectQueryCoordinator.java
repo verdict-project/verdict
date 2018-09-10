@@ -31,7 +31,14 @@ import org.verdictdb.core.querying.QueryExecutionPlanSimplifier;
 import org.verdictdb.core.querying.ola.AsyncQueryExecutionPlan;
 import org.verdictdb.core.resulthandler.ExecutionResultReader;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
-import org.verdictdb.core.sqlobject.*;
+import org.verdictdb.core.sqlobject.AbstractRelation;
+import org.verdictdb.core.sqlobject.BaseTable;
+import org.verdictdb.core.sqlobject.ColumnOp;
+import org.verdictdb.core.sqlobject.CreateSchemaQuery;
+import org.verdictdb.core.sqlobject.JoinTable;
+import org.verdictdb.core.sqlobject.SelectQuery;
+import org.verdictdb.core.sqlobject.SubqueryColumn;
+import org.verdictdb.core.sqlobject.UnnamedColumn;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sqlreader.NonValidatingSQLParser;
 import org.verdictdb.sqlreader.RelationStandardizer;
@@ -132,6 +139,16 @@ public class SelectQueryCoordinator implements Coordinator {
 
   public ExecutionResultReader process(String query, QueryContext context)
       throws VerdictDBException {
+    
+    // create scratchpad schema if not exists
+    if (!conn.getSchemas().contains(scratchpadSchema)) {
+      log.info(
+          String.format(
+              "The schema for temporary tables (%s) does not exist; so we create it.", 
+              scratchpadSchema));
+      CreateSchemaQuery createSchema = new CreateSchemaQuery(scratchpadSchema);
+      conn.execute(createSchema);
+    }
 
     SelectQuery selectQuery = standardizeQuery(query);
 

@@ -16,14 +16,14 @@
 
 package org.verdictdb;
 
-import org.junit.Test;
-import org.verdictdb.commons.VerdictOption;
-import org.verdictdb.exception.VerdictDBException;
+import static org.junit.Assert.assertEquals;
 
 import java.sql.SQLException;
 import java.util.Properties;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.Test;
+import org.verdictdb.commons.VerdictOption;
+import org.verdictdb.exception.VerdictDBException;
 
 /** Created by Dong Young Yoon on 8/9/18. */
 public class VerdictContextInitTest {

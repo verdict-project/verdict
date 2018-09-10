@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
 
-import org.verdictdb.coordinator.VerdictSingleResult;
+import org.verdictdb.VerdictSingleResult;
 
 import com.opencsv.CSVWriter;
 

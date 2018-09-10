@@ -14,6 +14,8 @@ def read_version(pom):
 
 root_dir = os.path.dirname(os.path.abspath(__file__))
 lib_dir = os.path.join(root_dir, 'pyverdict', 'lib')
+if not os.path.exists(lib_dir):
+    os.makedirs(lib_dir)
 pom_path = os.path.join(root_dir, '..', 'pom.xml')
 version = read_version(pom_path)
 jar_name = 'verdictdb-core-' + version + '-jar-with-dependencies.jar'

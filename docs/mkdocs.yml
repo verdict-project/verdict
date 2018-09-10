@@ -8,9 +8,9 @@ nav:
   - Home: index.md
   - Getting Started:
     - Quickstart: getting_started/quickstart.md
-    - Download/Install: getting_started/install.md
-    - Connect to Data Sources: getting_started/connection.md
-    - Create Scrambles: getting_started/scrambling.md
+    - Download / Install: getting_started/install.md
+    - Connecting to Data Sources: getting_started/connection.md
+    - Creating Scrambles: getting_started/scrambling.md
     - Simple Querying: getting_started/querying.md
     - Stream Querying: getting_started/streaming.md
     # - Result Structure: getting_started/results.md
@@ -19,9 +19,13 @@ nav:
     - Architecture: how_it_works/architecture.md
     - Query Processing: how_it_works/query_processing.md
   - Tutorial:
-    - Setup MySQL (Optional): tutorial/mysql.md
+    - Setup Databases (optional):
+      - MySQL: tutorial/setup/mysql.md
+      - Apache Spark: tutorial/setup/spark.md
     - Load TPC-H Data: tutorial/tpch.md
-    - Example VerdictDB Application: tutorial/example.md
+    - Example VerdictDB App:
+      - MySQL: tutorial/examples/mysql.md
+      - Apache Spark: tutorial/examples/spark.md
     - ML-based Analytics: tutorial/advanced.md
   - Reference:
     - Query Syntax:
@@ -48,6 +52,10 @@ repo_url: 'https://github.com/mozafari/verdictdb'
 
 extra_css:
   - 'stylesheets/extra.css'
+
+extra_javascript:
+  - 'javascripts/extra.js'
+
 
 # Extensions
 markdown_extensions:
@@ -77,30 +85,3 @@ markdown_extensions:
   - pymdownx.tasklist:
       custom_checkbox: true
   - pymdownx.tilde
-
-  # - markdown.extensions.admonition
-  # - markdown.extensions.codehilite:
-  #     guess_lang: false
-  # - markdown.extensions.def_list
-  # - markdown.extensions.footnotes
-  # - markdown.extensions.meta
-  # - markdown.extensions.attr_list
-  # - markdown.extensions.toc:
-  #     permalink: true
-  # - pymdownx.arithmatex
-  # - pymdownx.betterem:
-  #     smart_enable: all
-  # - pymdownx.caret
-  # - pymdownx.critic
-  # - pymdownx.details
-  # - pymdownx.emoji:
-  #     emoji_generator: !!python/name:pymdownx.emoji.to_svg
-  # - pymdownx.inlinehilite
-  # - pymdownx.keys
-  # - pymdownx.magiclink
-  # - pymdownx.mark
-  # - pymdownx.smartsymbols
-  # - pymdownx.superfences
-  # - pymdownx.tasklist:
-  #     custom_checkbox: true
-  # - pymdownx.tilde

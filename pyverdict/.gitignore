@@ -11,6 +11,7 @@
 env/
 
 build/
+verdictdb*jar
 
 # pytest cache files
 .pytest_cache/

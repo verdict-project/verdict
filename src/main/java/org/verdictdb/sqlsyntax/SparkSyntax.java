@@ -124,6 +124,11 @@ public class SparkSyntax extends SqlSyntax {
   }
 
   @Override
+  public String getGenericStringDataTypeName() {
+    return "STRING";
+  }
+
+  @Override
   public String getApproximateCountDistinct(String column) {
     return String.format("approx_count_distinct(%s)", column);
   }
