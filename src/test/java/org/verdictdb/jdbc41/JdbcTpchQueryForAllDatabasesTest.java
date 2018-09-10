@@ -161,8 +161,11 @@ public class JdbcTpchQueryForAllDatabasesTest {
           queryCount = TPCH_QUERY_COUNT;
           break;
       }
+      // query 4, 13, 16, 21 contains count distinct
       for (int query = 1; query <= queryCount; ++query) {
-        params.add(new Object[] {database, String.valueOf(query)});
+        if (query!=13 && query!=21) {
+          params.add(new Object[] {database, String.valueOf(query)});
+        }
       }
       if (database.equals("redshift")) {
         params.add(new Object[] {database, "e1"});
