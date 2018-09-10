@@ -360,6 +360,7 @@ jobs:
           keys:
           - verdict-dependencies-{{ checksum "pom.xml" }}
       - run: cd pyverdict; python setup.py develop;
+      - run: pip install pytest
       - run: pytest
       - save_cache:
           paths:
