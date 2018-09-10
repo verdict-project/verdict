@@ -1,13 +1,13 @@
-from .resultset import ResultSet
 import os
 import pkg_resources
+from . import verdictresult
 from py4j.java_gateway import JavaGateway
 from time import sleep
 
 
 class VerdictContext:
-    """
-    The main interface to interact with the java objects.
+    """The main Python interface to VerdictDB Java core.
+
     The path to the jdbc drivers must be specified to use them.
     """
 
@@ -16,7 +16,7 @@ class VerdictContext:
         self._context = self.get_context(self._gateway, url)
 
     def sql(self, query):
-        return ResultSet(self._context.sql(query))
+        return verdictresult.SingleResultSet(self._context.sql(query))
 
     def get_gateway(self, class_path):
         """
