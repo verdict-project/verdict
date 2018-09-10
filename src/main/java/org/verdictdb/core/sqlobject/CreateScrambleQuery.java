@@ -30,7 +30,15 @@ public class CreateScrambleQuery extends CreateTableQuery {
 
   private String method;
 
-  private double size = 1.0; // in fraction
+  /**
+   *  the total number of tuples in relation to that of the original table (in fraction)
+   */
+  private double size = 1.0; 
+  
+  /**
+   * the number of tuples for each block
+   */
+  private long blocksize;   
 
   public CreateScrambleQuery() {}
 
@@ -40,7 +48,8 @@ public class CreateScrambleQuery extends CreateTableQuery {
       String originalSchema,
       String originalTable,
       String method,
-      double size) {
+      double size,
+      long blocksize) {
     super();
     this.newSchema = newSchema;
     this.newTable = newTable;
@@ -48,6 +57,7 @@ public class CreateScrambleQuery extends CreateTableQuery {
     this.originalTable = originalTable;
     this.method = method;
     this.size = size;
+    this.blocksize = blocksize;
   }
 
   public String getNewSchema() {
@@ -72,6 +82,10 @@ public class CreateScrambleQuery extends CreateTableQuery {
 
   public double getSize() {
     return size;
+  }
+  
+  public long getBlockSize() {
+    return blocksize;
   }
 
   public void setNewSchema(String newSchema) {

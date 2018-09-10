@@ -68,6 +68,10 @@ public abstract class SqlSyntax {
   public String substituteTypeName(String type) {
     return type;
   }
+  
+  public String getGenericStringDataTypeName() {
+    return "TEXT";
+  }
 
   /**
    * The drivers returned by methods are loaded explicitly by JdbcConnection (when it makes a JDBC

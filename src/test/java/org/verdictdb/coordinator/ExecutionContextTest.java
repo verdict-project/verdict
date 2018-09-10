@@ -13,6 +13,8 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.VerdictContext;
+import org.verdictdb.VerdictResultStream;
+import org.verdictdb.VerdictSingleResult;
 import org.verdictdb.commons.DatabaseConnectionHelpers;
 import org.verdictdb.commons.VerdictOption;
 import org.verdictdb.connection.DbmsConnection;

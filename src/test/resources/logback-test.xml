@@ -35,7 +35,7 @@
 
     <!--<statusListener class="ch.qos.logback.core.status.OnConsoleStatusListener" />-->
     <statusListener class="ch.qos.logback.core.status.NopStatusListener"/>
-    <logger name="org.verdictdb" level="trace">
+    <logger name="org.verdictdb" level="info">
         <appender-ref ref="VERDICTDB_STDOUT"/>
     </logger>
     <root level="ERROR">

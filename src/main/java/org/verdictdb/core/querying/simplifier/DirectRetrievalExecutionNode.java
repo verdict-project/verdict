@@ -1,14 +1,14 @@
 package org.verdictdb.core.querying.simplifier;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.google.common.base.Optional;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.core.execplan.ExecutionInfoToken;
 import org.verdictdb.core.querying.*;
 import org.verdictdb.core.sqlobject.*;
 import org.verdictdb.exception.VerdictDBException;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Used for simplifying two nodes into one. This class may be used in a recursively way to simplify
