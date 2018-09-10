@@ -16,13 +16,13 @@ def test_data_types():
     rows = result.rows()
     # print(int_types)
     # print(types)
-    # print(rows[0])
+    print(rows)
     # print([type(x) for x in rows[0]])
 
     cur = mysql_conn.cursor()
     cur.execute('select * from {}.{}'.format(test_schema, test_table))
     expected_rows = cur.fetchall()
-    # print(expected_rows)
+    print(expected_rows)
     cur.close()
 
     # Now compare
@@ -104,6 +104,15 @@ def setup_sandbox():
           '2018-12-31', '2018-12-31 01:00:00', '2018-12-31 00:00:01', '10:59:59',
           18, 2018, 'abc', 'abc', '10', '10',
           '10', 'a', '10', 'abc', '1110', 'abc', '1110', 'abc', '1', '2'
+        )""".format(test_schema, test_table)
+        )
+    cur.execute("""
+        INSERT INTO {}.{} VALUES (
+            NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+            NULL, NULL, NULL, NULL, NULL,
+            NULL, NULL, NULL, NULL,
+            NULL, NULL, NULL, NULL, NULL, NULL,
+            NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
         )""".format(test_schema, test_table)
         )
     cur.close()

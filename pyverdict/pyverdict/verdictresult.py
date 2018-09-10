@@ -84,6 +84,9 @@ class SingleResultSet:
         """
         if col_type in SingleResultSet.type_to_read_in_str:
             value_str = resultset.getString(index)
+            if value_str is None:
+                return None
+                
             if col_type == 'date':
                 return datetime.strptime(value_str, "%Y-%m-%d").date()
             elif col_type == 'timestamp':
