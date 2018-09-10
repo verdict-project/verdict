@@ -25,7 +25,10 @@ def test_data_types():
     print(expected_rows)
     cur.close()
 
-    # Now compare
+    # Now test
+    assert len(expected_rows) == len(rows)
+    assert len(expected_rows) == result.rowcount
+
     for i in range(len(expected_rows)):
         expected_row = expected_rows[i]
         actual_row = rows[i]

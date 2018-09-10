@@ -15,39 +15,39 @@ class SingleResultSet:
     separate types defined in java.sql.Types.
 
     Type conversion rule (MySQL):
-    'bit' => boolean,       # due to MySQL driver bug
-    'tinyint' => int,
-    'bool' => boolean,      # due to MySQL driver bug ('bool' is treated as 'bit')
-    'smallint' => int,
-    'medimumInteger' => int,
-    'int' => int,
-    'integer => int',
-    'bigint' => int,
-    'decimal' => decimal.Decimal,
-    'dec' => decimal.Decimal,
-    'real' => float,
-    'double' => float,
-    'doubleprecision' => float,
-    'date' => JavaObject => datetime.date,
-    'datetime' => JavaObject => datetime.datetime,
+    'bit'                     => boolean,   # due to MySQL driver bug ('bit' is treated as boolean)
+    'tinyint'                 => int,
+    'bool'                    => boolean,
+    'smallint'                => int,
+    'medimumInteger'          => int,
+    'int'                     => int,
+    'integer                  => int,
+    'bigint'                  => int,
+    'decimal'                 => decimal.Decimal,
+    'dec'                     => decimal.Decimal,
+    'real'                    => float,
+    'double'                  => float,
+    'doubleprecision'         => float,
+    'date'      => JavaObject => datetime.date,
+    'datetime'  => JavaObject => datetime.datetime,
     'timestamp' => JavaObject => datetime.datetime,
-    'time' => JavaObject => datetime.timedelta,
-    'year(2)' => JavaObject => datetime.date,
-    'year(4)' => JavaObject => datetime.date,
-    'char' => str,
-    'varchar' => str,
-    'binary' => bytes,
-    'varbinary' => bytes,
-    'tinyblob' => bytes,
-    'tinytext' => str,
-    'blob' => bytes,
-    'text' => str,
-    'mediumBlob' => bytes,
-    'medimumText' => str,
-    'longBlob' => bytes,
-    'longText' => str,
-    'enumCol' => str,
-    'setCol' => str
+    'time'      => JavaObject => datetime.timedelta,
+    'year(2)'   => JavaObject => datetime.date,
+    'year(4)'   => JavaObject => datetime.date,
+    'char'                    => str,
+    'varchar'                 => str,
+    'binary'                  => bytes,
+    'varbinary'               => bytes,
+    'tinyblob'                => bytes,
+    'tinytext'                => str,
+    'blob'                    => bytes,
+    'text'                    => str,
+    'mediumBlob'              => bytes,
+    'medimumText'             => str,
+    'longBlob'                => bytes,
+    'longText'                => str,
+    'enumCol'                 => str,
+    'setCol'                  => str
     """
 
     type_to_read_in_str = set(['date', 'timestamp', 'time'])
@@ -58,6 +58,7 @@ class SingleResultSet:
         self._column_inttypes = column_inttypes
         self._column_types = column_types
         self._rows = rows
+        self.rowcount = len(rows)
 
     def rows(self):
         return self._rows
@@ -86,7 +87,7 @@ class SingleResultSet:
             value_str = resultset.getString(index)
             if value_str is None:
                 return None
-                
+
             if col_type == 'date':
                 return datetime.strptime(value_str, "%Y-%m-%d").date()
             elif col_type == 'timestamp':
