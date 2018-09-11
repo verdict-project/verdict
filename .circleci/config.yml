@@ -361,8 +361,8 @@ jobs:
           - verdict-dependencies-{{ checksum "pom.xml" }}
       - run: pwd; ls;
       - run: cd pyverdict; python setup.py install; pip install pytest;
-      - run: pwd; ls; cd pyverdict; pwd; ls;
-      - run: pytest
+      # - run: pwd; ls; cd pyverdict; pwd; ls;
+      - run: cd pyverdict; pytest;
       - save_cache:
           paths:
             - ~/.m2
