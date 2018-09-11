@@ -359,7 +359,7 @@ jobs:
       - restore_cache:
           keys:
           - verdict-dependencies-{{ checksum "pom.xml" }}
-      - run: cd pyverdict; python setup.py develop;
+      - run: cd pyverdict; pip install -e .;
       - run: pip install pytest
       - run: pytest
       - save_cache:
@@ -385,16 +385,16 @@ workflows:
   version: 2
   build_and_test:
     jobs:
-      - build-jdk7
-      - build-jdk8
-      - build-jdk8-update-codecov
-      - build-spark
-      - build-impala-redshift
+      #- build-jdk7
+      #- build-jdk8
+      #- build-jdk8-update-codecov
+      #- build-spark
+      #- build-impala-redshift
       - build-pyverdict
-      - deploy-doc:
-          filters:
-            branches:
-              only: master
+      #- deploy-doc:
+      #    filters:
+      #      branches:
+      #        only: master
     #- update-codecov
     # - maven-version-check
     # - docker-env-check
