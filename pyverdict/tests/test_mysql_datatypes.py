@@ -7,6 +7,7 @@ import pymysql
 test_schema = 'pyverdict_datatype_test_schema'
 test_table = 'pyverdict_datatype_test_table'
 
+
 def test_data_types():
     (mysql_conn, verdict_conn) = setup_sandbox()
 
