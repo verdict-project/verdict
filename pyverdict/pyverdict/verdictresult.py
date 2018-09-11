@@ -1,5 +1,7 @@
 
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
+import decimal
+import numpy as np
 
 
 class SingleResultSet:
@@ -52,6 +54,17 @@ class SingleResultSet:
 
     type_to_read_in_str = set(['date', 'timestamp', 'time'])
 
+    python_type_to_numpy_type = {
+        bool: np.bool_,
+        int: np.int64,
+        decimal.Decimal: np.float64,
+        str: np.unicode_,
+        bytes: np.unicode_,
+        date: np.datetime64,
+        datetime: np.datetime64,
+        timedelta: np.timedelta64
+    }
+
     def __init__(self, resultset):
         (heading, column_inttypes, column_types, rows) = self._read_all(resultset)
         self._heading = heading
@@ -71,6 +84,12 @@ class SingleResultSet:
 
     def typeJavaInt(self):
         return self._column_inttypes
+
+    def to_df(self):
+        """
+        Converts to a numpy array.
+        """
+        return None
 
     def _read_value(self, resultset, index, col_type):
         """Reads the value in a type-sensitive way

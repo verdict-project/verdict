@@ -52,6 +52,7 @@ setuptools.setup(
     include_package_data=True,
     install_requires=[
         'py4j >= 0.10.7',
-        'PyMySQL >= 0.9.2'
+        'PyMySQL >= 0.9.2',
+        'numpy >= 1.9'
     ]
  )
