@@ -23,6 +23,9 @@ public interface VerdictResultStream
 
   VerdictResultStream create(VerdictSingleResult singleResult);
 
+  // return true if all VerdictSingleResult are completed
+  boolean isCompleted();
+
   @Override
   boolean hasNext();
 

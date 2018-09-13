@@ -11,6 +11,7 @@ UNIFORM:                         U N I F O R M;
 FASTCONVERGE:                    F A S T C O N V E R G E;
 SCRAMBLE:                        S C R A M B L E;
 SCRAMBLES:                       S C R A M B L E S;
+STREAM:                          S T R E A M;
 GET:                             G E T;
 
 

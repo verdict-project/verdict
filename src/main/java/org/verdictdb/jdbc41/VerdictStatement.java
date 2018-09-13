@@ -22,10 +22,16 @@ import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.SQLWarning;
 
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.VerdictContext;
+import org.verdictdb.VerdictResultStream;
 import org.verdictdb.VerdictSingleResult;
 import org.verdictdb.coordinator.ExecutionContext;
 import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.parser.VerdictSQLParser;
+import org.verdictdb.parser.VerdictSQLParserBaseVisitor;
+import org.verdictdb.sqlreader.NonValidatingSQLParser;
 
 public class VerdictStatement implements java.sql.Statement {
 
@@ -38,6 +44,62 @@ public class VerdictStatement implements java.sql.Statement {
   public VerdictStatement(Connection conn, VerdictContext context) {
     this.conn = conn;
     this.executionContext = context.createNewExecutionContext();
+  }
+
+  public ResultSet sql(String query) throws VerdictDBException {
+    VerdictStreamResultSet resultSet = new VerdictStreamResultSet();
+    if (getStreamQueryIfExists(query).getKey()) {
+      query = query.replaceFirst("(?i)stream", "");
+      VerdictResultStream resultStream = executionContext.streamsql(query);
+      new Thread(new ExecuteStream(resultStream, resultSet)).start();
+      return resultSet;
+    }
+    return null;
+  }
+
+  /**
+   * Created by Shucheng Zhong on 9/13/18
+   *
+   * It will try to get the VerdictSingleResult from VerdictResultStream
+   * and append the VerdictSingleResult to VerdictStreamResultSet
+   * until all the VerdictSingleResults have return.
+   * Since it running on separate thread, it won't block user querying from
+   * the ResultSet
+   */
+  class ExecuteStream implements Runnable {
+
+    VerdictResultStream resultStream;
+
+    VerdictStreamResultSet resultSet;
+
+    ExecuteStream(VerdictResultStream resultStream, VerdictStreamResultSet resultSet) {
+      this.resultStream = resultStream;
+      this.resultSet = resultSet;
+    }
+
+    public void run() {
+      while (!resultStream.isCompleted()) {
+        while (resultStream.hasNext()) {
+          VerdictSingleResult singleResult = resultStream.next();
+          resultSet.appendSingleResult(singleResult);
+        }
+      }
+      resultSet.setCompleted();
+    }
+  }
+
+  private Pair<Boolean, String> getStreamQueryIfExists(String query) {
+    VerdictSQLParser parser = NonValidatingSQLParser.parserOf(query);
+
+    VerdictSQLParserBaseVisitor<Pair<Boolean, String>> visitor =
+        new VerdictSQLParserBaseVisitor<Pair<Boolean, String>>() {
+          @Override
+          public Pair<Boolean, String> visitStream_select_statement(VerdictSQLParser.Stream_select_statementContext ctx) {
+            return new ImmutablePair<>(true, ctx.select_statement().getText());
+          }
+        };
+
+    return visitor.visit(parser.verdict_statement());
   }
 
   @Override
@@ -151,7 +213,8 @@ public class VerdictStatement implements java.sql.Statement {
   }
 
   @Override
-  public void clearWarnings() throws SQLException {}
+  public void clearWarnings() throws SQLException {
+  }
 
   @Override
   public void setCursorName(String name) throws SQLException {

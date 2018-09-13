@@ -39,7 +39,7 @@ public class ExecutionTokenReader
   public ExecutionTokenReader(ExecutionTokenQueue queue) {
     this.queue = queue;
   }
-  
+
   @Override
   public Iterator<ExecutionInfoToken> iterator() {
     return this;
@@ -70,6 +70,7 @@ public class ExecutionTokenReader
     }
 
     if (queueBuffer.isStatusToken()) {
+      hasEndOfQueueReached = true;
       return false;
     } else {
       return true;
@@ -88,6 +89,7 @@ public class ExecutionTokenReader
     }
 
     if (queueBuffer.isStatusToken()) {
+      hasEndOfQueueReached = true;
       log.trace("A status token is read: " + queueBuffer);
       return null;
     } else {
