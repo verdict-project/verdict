@@ -81,10 +81,14 @@ public class VerdictStatement implements java.sql.Statement {
       while (!resultStream.isCompleted()) {
         while (resultStream.hasNext()) {
           VerdictSingleResult singleResult = resultStream.next();
+          if (!resultStream.hasNext()) {
+            resultSet.setCompleted();
+            System.out.println("Execution Completed\n");
+          }
           resultSet.appendSingleResult(singleResult);
         }
       }
-      resultSet.setCompleted();
+
     }
   }
 

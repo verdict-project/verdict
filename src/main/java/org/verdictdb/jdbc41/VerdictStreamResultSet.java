@@ -25,9 +25,6 @@ public class VerdictStreamResultSet extends VerdictResultSet {
 
   private static final String verdictStreamSequenceColumn = "verdict_sequence_number";
 
-  //todo: fix this
-  private ResultSetMetaData metadata;
-
   private boolean isCompleted = false;
 
   private long rowIndex = 0;
@@ -39,6 +36,8 @@ public class VerdictStreamResultSet extends VerdictResultSet {
   VerdictSingleResult queryResult;
 
   private int lastQueryResultIndex = 0;
+
+  private VerdictStreamResultSetMetaData metadata;
 
   public VerdictStreamResultSet() {
     super();
@@ -427,6 +426,14 @@ public class VerdictStreamResultSet extends VerdictResultSet {
 
   @Override
   public ResultSetMetaData getMetaData() throws SQLException {
+    if (metadata==null) {
+      try {
+        queryResult = queryResults.take();
+        metadata = new VerdictStreamResultSetMetaData(queryResult);
+      } catch (InterruptedException e) {
+
+      }
+    }
     return metadata;
   }
 
@@ -798,7 +805,7 @@ public class VerdictStreamResultSet extends VerdictResultSet {
 
   @Override
   public boolean next() throws SQLException {
-    // the first call
+    // on the first call
     if (queryResult==null && (!isCompleted || !queryResults.isEmpty())) {
       try {
         queryResult = queryResults.take();
