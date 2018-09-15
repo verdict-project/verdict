@@ -1,3 +1,9 @@
+/**
+ * Test the Correctness of VerdictStatement.sql() executing stream query using TPCH queries.
+ * It will compare direct query result from Mysql with Verdictdb's results from final block,
+ * which is supposed to be the same with the original results.
+ */
+
 package org.verdictdb.jdbc41;
 
 import com.google.common.base.Charsets;
@@ -9,15 +15,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.commons.DatabaseConnectionHelpers;
-import org.verdictdb.connection.*;
-import org.verdictdb.coordinator.ScramblingCoordinator;
-import org.verdictdb.coordinator.SelectQueryCoordinator;
-import org.verdictdb.core.resulthandler.ExecutionResultReader;
-import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.exception.VerdictDBException;
-import org.verdictdb.jdbc41.VerdictConnection;
-import org.verdictdb.jdbc41.VerdictStatement;
-import org.verdictdb.sqlsyntax.MysqlSyntax;
 
 import java.io.File;
 import java.io.IOException;

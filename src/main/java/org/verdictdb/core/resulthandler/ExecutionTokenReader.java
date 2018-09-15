@@ -27,9 +27,6 @@ public class ExecutionTokenReader
 
   ExecutionTokenQueue queue;
 
-  // set to true if the status token has been taken from "queue".
-  boolean hasEndOfQueueReached = false;
-
   ExecutionInfoToken queueBuffer = null;
   
   private VerdictDBLogger log = VerdictDBLogger.getLogger(getClass());
@@ -70,7 +67,6 @@ public class ExecutionTokenReader
     }
 
     if (queueBuffer.isStatusToken()) {
-      hasEndOfQueueReached = true;
       return false;
     } else {
       return true;
@@ -89,7 +85,6 @@ public class ExecutionTokenReader
     }
 
     if (queueBuffer.isStatusToken()) {
-      hasEndOfQueueReached = true;
       log.trace("A status token is read: " + queueBuffer);
       return null;
     } else {

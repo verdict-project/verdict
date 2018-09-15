@@ -28,7 +28,7 @@ public class VerdictResultStreamFromExecutionResultReader implements VerdictResu
 
   @Override
   public boolean isCompleted() {
-    return reader.hasEndofQueueReached();
+    return !reader.hasNext();
   }
 
   @Override

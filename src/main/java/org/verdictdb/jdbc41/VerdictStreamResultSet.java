@@ -12,7 +12,6 @@ import java.sql.Date;
 import java.util.*;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.Semaphore;
 
 /**
  * Created by: Shucheng Zhong on 9/12/18
@@ -24,9 +23,9 @@ import java.util.concurrent.Semaphore;
  */
 public class VerdictStreamResultSet extends VerdictResultSet {
 
-  private static final String verdictStreamSequenceColumn = "verdict_sequence_number";
+  private static final String verdictStreamSequenceColumn = "seq";
 
-  private boolean isCompleted = false;
+  boolean isCompleted = false;
 
   private long rowIndex = 0;
 
@@ -37,8 +36,6 @@ public class VerdictStreamResultSet extends VerdictResultSet {
   VerdictSingleResult queryResult;
 
   private int lastQueryResultIndex = 0;
-
-  private Semaphore mutex = new Semaphore(1);
 
   private VerdictStreamResultSetMetaData metadata;
 
@@ -811,15 +808,19 @@ public class VerdictStreamResultSet extends VerdictResultSet {
 
   /**
    * Require a mutex here. The stream is executed on the other thread. When the execution of the stream is finished,
-   * it will acquire the mutex. And here are two cases: 1) next() get the mutex, 2) the other thread get the mutex
+   * it will try to synchronize isCompleted flag by calling synchronized(isCompleted).
+   * And here are two cases: 1) next() executes first 2) the other thread executes first
    *
-   * 1) If next() first gets the mutex, the flag isCompleted is still false. next() will try to take new queryResult
-   * from queryResults and release the mutex. Then the other thread will take the mutex, append the queryresult and
-   * set the flag to be true.
+   * 1) If next() first executes, the flag isCompleted is still false. next() will try to take new queryResult
+   * from queryResults. As soon as, next doesn't acquire isCompleted flag. Then the other thread will take the
+   * acquire of isCompleted, append the queryresult and set the flag to be true. At that time, if another next() is called,
+   * it will get blocked at the line 'else if (queryResults.peek() == null && isCompleted)' until the other thread finishes
+   * its job.
    *
-   * 2) If the other thread gets the mutex, it will append the query result and set the flag to be true. Then next()
-   * takes the mutex. Since there are still queryResult in queryResults, next() will take it from the list so that
-   * the last queryResult won't be neglected.
+   * 2) If the other thread executes first, it will append the query result and set the flag to be true. Then waiting
+   * next() starts to execute. Since there are still queryResult in queryResults, next() will take it from the list so that
+   * the last queryResult won't be neglected. The second next() will return false, since queryResults.peek()==null and
+   * isCompleted==true.
    *
    * @return
    * @throws SQLException
@@ -833,16 +834,12 @@ public class VerdictStreamResultSet extends VerdictResultSet {
         lastQueryResultIndex++;
       }
       boolean hasMore = queryResult.next();
-      mutex.acquire();
       if (hasMore) {
         rowIndex++;
-        mutex.release();
         return true;
       } else if (queryResults.peek() == null && isCompleted) {
-        mutex.release();
         return false;
       } else {
-        mutex.release();
         queryResult = queryResults.take();
         lastQueryResultIndex++;
         return next();
@@ -850,24 +847,6 @@ public class VerdictStreamResultSet extends VerdictResultSet {
     } catch (InterruptedException e) {
       return false;
     }
-
-    //    if (rowCount == 1) {
-    //      isFirst = true;
-    //    }
-    //    else {
-    //      isFirst = false;
-    //    }
-    //
-    //    if (isBeforefirst) {
-    //      isBeforefirst = false;
-    //    }
-    //    boolean next = queryResult.next();
-    //    rowCount++;
-    //
-    //    if (!next) {
-    //      isAfterLast = true;
-    //    }
-    //    return next;
   }
 
   @Override
@@ -1345,18 +1324,6 @@ public class VerdictStreamResultSet extends VerdictResultSet {
   @Override
   public boolean wasNull() throws SQLException {
     return queryResults.isEmpty();
-  }
-
-  void lock() {
-    try {
-      mutex.acquire();
-    } catch (InterruptedException e) {
-
-    }
-  }
-
-  void unlock() {
-    mutex.release();
   }
 
 }

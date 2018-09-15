@@ -17,7 +17,7 @@ import static java.sql.Types.INTEGER;
  */
 public class VerdictStreamResultSetMetaData implements ResultSetMetaData {
 
-  private static final String verdictStreamSequenceColumn = "verdict_sequence_number";
+  private static final String verdictStreamSequenceColumn = "seq";
 
   private VerdictSingleResult queryResult;
 

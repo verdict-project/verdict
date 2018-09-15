@@ -81,19 +81,19 @@ public class VerdictStatement implements java.sql.Statement {
     }
 
     /**
-     * When the last SingleResult is returned, it will call mutex inside VerdictStreamResultSet to block call of next().
-     * It will set status of VerdictStreamResultSet to be complete and append the last SingleResult to VerdictStreamResultSet.
-     * Then it will release the mutex.
+     * When the last SingleResult is returned, it will synchronized the isCompleted flag of VerdictStreamResultSet
+     * to block possible call of next(). It will set status of VerdictStreamResultSet to be complete and
+     * append the last SingleResult to VerdictStreamResultSet.
      */
     public void run() {
       while (!resultStream.isCompleted()) {
         while (resultStream.hasNext()) {
           VerdictSingleResult singleResult = resultStream.next();
           if (!resultStream.hasNext()) {
-            resultSet.lock();
-            resultSet.appendSingleResult(singleResult);
-            resultSet.setCompleted();
-            resultSet.unlock();
+            synchronized ((Object) resultSet.isCompleted) {
+              resultSet.appendSingleResult(singleResult);
+              resultSet.setCompleted();
+            }
             log.debug("Execution Completed\n");
           } else {
             resultSet.appendSingleResult(singleResult);

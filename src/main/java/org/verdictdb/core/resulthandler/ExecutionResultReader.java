@@ -64,7 +64,4 @@ public class ExecutionResultReader implements Iterable<DbmsQueryResult>, Iterato
     throw new UnsupportedOperationException();
   }
 
-  public boolean hasEndofQueueReached() {
-    return reader.hasEndOfQueueReached;
-  }
 }
