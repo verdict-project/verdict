@@ -12,11 +12,12 @@ import java.sql.Date;
 import java.util.*;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.Semaphore;
 
 /**
  * Created by: Shucheng Zhong on 9/12/18
  * ResultSet type for stream select query when VerdictStatement.sql() is called.
- *
+ * <p>
  * It contains a blocking queue: queryResults. When user call next(), if no queryResult available,
  * it will try to take one from queryResults. Blocked if no results are returned from VerdictResultStream.
  * The first column is verdictStreamSequenceColumn, which should be int class that specify the block sequence number
@@ -36,6 +37,8 @@ public class VerdictStreamResultSet extends VerdictResultSet {
   VerdictSingleResult queryResult;
 
   private int lastQueryResultIndex = 0;
+
+  private Semaphore mutex = new Semaphore(1);
 
   private VerdictStreamResultSetMetaData metadata;
 
@@ -111,7 +114,7 @@ public class VerdictStreamResultSet extends VerdictResultSet {
 
   @Override
   public boolean first() throws SQLException {
-    if (queryResults.size()==0) {
+    if (queryResults.size() == 0) {
       return false;
     } else {
       rowIndex = 1;
@@ -150,8 +153,8 @@ public class VerdictStreamResultSet extends VerdictResultSet {
 
   @Override
   public BigDecimal getBigDecimal(int columnIndex) throws SQLException {
-    if (columnIndex==1) {
-      return BigDecimal.valueOf(lastQueryResultIndex + 1);
+    if (columnIndex == 1) {
+      return BigDecimal.valueOf(lastQueryResultIndex);
     }
     checkIndex(columnIndex);
 
@@ -160,8 +163,8 @@ public class VerdictStreamResultSet extends VerdictResultSet {
 
   @Override
   public BigDecimal getBigDecimal(int columnIndex, int scale) throws SQLException {
-    if (columnIndex==1) {
-      return BigDecimal.valueOf(lastQueryResultIndex + 1, scale);
+    if (columnIndex == 1) {
+      return BigDecimal.valueOf(lastQueryResultIndex, scale);
     }
     checkIndex(columnIndex);
 
@@ -335,8 +338,8 @@ public class VerdictStreamResultSet extends VerdictResultSet {
 
   @Override
   public double getDouble(int columnIndex) throws SQLException {
-    if (columnIndex==1) {
-      return lastQueryResultIndex + 1;
+    if (columnIndex == 1) {
+      return lastQueryResultIndex;
     }
     checkIndex(columnIndex);
     return queryResult.getDouble(columnIndex - 2);
@@ -364,8 +367,8 @@ public class VerdictStreamResultSet extends VerdictResultSet {
 
   @Override
   public float getFloat(int columnIndex) throws SQLException {
-    if (columnIndex==1) {
-      return lastQueryResultIndex + 1;
+    if (columnIndex == 1) {
+      return lastQueryResultIndex;
     }
     checkIndex(columnIndex);
     return queryResult.getFloat(columnIndex - 2);
@@ -388,8 +391,8 @@ public class VerdictStreamResultSet extends VerdictResultSet {
 
   @Override
   public int getInt(int columnIndex) throws SQLException {
-    if (columnIndex==1) {
-      return lastQueryResultIndex + 1;
+    if (columnIndex == 1) {
+      return lastQueryResultIndex;
     }
     checkIndex(columnIndex);
     return queryResult.getInt(columnIndex - 2);
@@ -407,8 +410,8 @@ public class VerdictStreamResultSet extends VerdictResultSet {
 
   @Override
   public long getLong(int columnIndex) throws SQLException {
-    if (columnIndex==1) {
-      return lastQueryResultIndex + 1;
+    if (columnIndex == 1) {
+      return lastQueryResultIndex;
     }
     checkIndex(columnIndex);
     return queryResult.getLong(columnIndex - 2);
@@ -426,13 +429,16 @@ public class VerdictStreamResultSet extends VerdictResultSet {
 
   @Override
   public ResultSetMetaData getMetaData() throws SQLException {
-    if (metadata==null) {
+    if (metadata == null && queryResult == null) {
       try {
         queryResult = queryResults.take();
         metadata = new VerdictStreamResultSetMetaData(queryResult);
+        lastQueryResultIndex++;
       } catch (InterruptedException e) {
 
       }
+    } else if (metadata == null && queryResult != null) {
+      metadata = new VerdictStreamResultSetMetaData(queryResult);
     }
     return metadata;
   }
@@ -534,8 +540,8 @@ public class VerdictStreamResultSet extends VerdictResultSet {
 
   @Override
   public short getShort(int columnIndex) throws SQLException {
-    if (columnIndex==1) {
-      return Integer.valueOf(lastQueryResultIndex + 1).shortValue();
+    if (columnIndex == 1) {
+      return Integer.valueOf(lastQueryResultIndex).shortValue();
     }
     checkIndex(columnIndex);
     return queryResult.getShort(columnIndex - 2);
@@ -570,8 +576,8 @@ public class VerdictStreamResultSet extends VerdictResultSet {
 
   @Override
   public String getString(int columnIndex) throws SQLException {
-    if (columnIndex==1) {
-      return Integer.valueOf(lastQueryResultIndex + 1).toString();
+    if (columnIndex == 1) {
+      return Integer.valueOf(lastQueryResultIndex).toString();
     }
     return queryResult.getString(columnIndex - 2);
   }
@@ -803,30 +809,46 @@ public class VerdictStreamResultSet extends VerdictResultSet {
     throw new SQLFeatureNotSupportedException();
   }
 
+  /**
+   * Require a mutex here. The stream is executed on the other thread. When the execution of the stream is finished,
+   * it will acquire the mutex. And here are two cases: 1) next() get the mutex, 2) the other thread get the mutex
+   *
+   * 1) If next() first gets the mutex, the flag isCompleted is still false. next() will try to take new queryResult
+   * from queryResults and release the mutex. Then the other thread will take the mutex, append the queryresult and
+   * set the flag to be true.
+   *
+   * 2) If the other thread gets the mutex, it will append the query result and set the flag to be true. Then next()
+   * takes the mutex. Since there are still queryResult in queryResults, next() will take it from the list so that
+   * the last queryResult won't be neglected.
+   *
+   * @return
+   * @throws SQLException
+   */
   @Override
   public boolean next() throws SQLException {
-    // on the first call
-    if (queryResult==null && (!isCompleted || !queryResults.isEmpty())) {
-      try {
+    try {
+      // on the first call
+      if (queryResult == null && (!isCompleted || !queryResults.isEmpty())) {
         queryResult = queryResults.take();
-      } catch (InterruptedException e) {
-
+        lastQueryResultIndex++;
       }
-    }
-    boolean hasMore = queryResult.next();
-    if (hasMore) {
-      rowIndex++;
-      return true;
-    } else if (queryResults.peek()==null && isCompleted) {
+      boolean hasMore = queryResult.next();
+      mutex.acquire();
+      if (hasMore) {
+        rowIndex++;
+        mutex.release();
+        return true;
+      } else if (queryResults.peek() == null && isCompleted) {
+        mutex.release();
+        return false;
+      } else {
+        mutex.release();
+        queryResult = queryResults.take();
+        lastQueryResultIndex++;
+        return next();
+      }
+    } catch (InterruptedException e) {
       return false;
-    } else {
-      try {
-        queryResult = queryResults.take();
-      } catch (InterruptedException e) {
-
-      }
-      lastQueryResultIndex++;
-      return next();
     }
 
     //    if (rowCount == 1) {
@@ -1323,6 +1345,18 @@ public class VerdictStreamResultSet extends VerdictResultSet {
   @Override
   public boolean wasNull() throws SQLException {
     return queryResults.isEmpty();
+  }
+
+  void lock() {
+    try {
+      mutex.acquire();
+    } catch (InterruptedException e) {
+
+    }
+  }
+
+  void unlock() {
+    mutex.release();
   }
 
 }

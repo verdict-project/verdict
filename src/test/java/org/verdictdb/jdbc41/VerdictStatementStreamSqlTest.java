@@ -41,7 +41,7 @@ public class VerdictStatementStreamSqlTest {
   }
 
   private static final String MYSQL_DATABASE =
-      "coordinator_test_" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
+      "verdictstatement_test_" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
 
   private static final String MYSQL_UESR = "root";
 

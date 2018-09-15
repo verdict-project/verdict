@@ -27,6 +27,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.VerdictContext;
 import org.verdictdb.VerdictResultStream;
 import org.verdictdb.VerdictSingleResult;
+import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.coordinator.ExecutionContext;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.parser.VerdictSQLParser;
@@ -40,6 +41,8 @@ public class VerdictStatement implements java.sql.Statement {
   ExecutionContext executionContext;
 
   VerdictSingleResult result;
+
+  private VerdictDBLogger log = VerdictDBLogger.getLogger(this.getClass());
 
   public VerdictStatement(Connection conn, VerdictContext context) {
     this.conn = conn;
@@ -59,7 +62,7 @@ public class VerdictStatement implements java.sql.Statement {
 
   /**
    * Created by Shucheng Zhong on 9/13/18
-   *
+   * <p>
    * It will try to get the VerdictSingleResult from VerdictResultStream
    * and append the VerdictSingleResult to VerdictStreamResultSet
    * until all the VerdictSingleResults have return.
@@ -77,15 +80,24 @@ public class VerdictStatement implements java.sql.Statement {
       this.resultSet = resultSet;
     }
 
+    /**
+     * When the last SingleResult is returned, it will call mutex inside VerdictStreamResultSet to block call of next().
+     * It will set status of VerdictStreamResultSet to be complete and append the last SingleResult to VerdictStreamResultSet.
+     * Then it will release the mutex.
+     */
     public void run() {
       while (!resultStream.isCompleted()) {
         while (resultStream.hasNext()) {
           VerdictSingleResult singleResult = resultStream.next();
           if (!resultStream.hasNext()) {
+            resultSet.lock();
+            resultSet.appendSingleResult(singleResult);
             resultSet.setCompleted();
-            System.out.println("Execution Completed\n");
+            resultSet.unlock();
+            log.debug("Execution Completed\n");
+          } else {
+            resultSet.appendSingleResult(singleResult);
           }
-          resultSet.appendSingleResult(singleResult);
         }
       }
 
