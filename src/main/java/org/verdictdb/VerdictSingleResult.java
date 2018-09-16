@@ -20,6 +20,7 @@ import java.sql.SQLException;
 
 import org.verdictdb.commons.AttributeValueRetrievalHelper;
 import org.verdictdb.commons.DBTablePrinter;
+import org.verdictdb.commons.DataTypeConverter;
 import org.verdictdb.commons.VerdictResultPrinter;
 import org.verdictdb.connection.DbmsQueryResultMetaData;
 import org.verdictdb.jdbc41.VerdictResultSet;
@@ -49,6 +50,11 @@ public abstract class VerdictSingleResult extends AttributeValueRetrievalHelper 
    * @return
    */
   public abstract int getColumnType(int index);
+
+  public String getColumnTypeName(int index) {
+    int typeInt = getColumnType(index);
+    return DataTypeConverter.typeName(typeInt);
+  }
 
   /**
    * set the index before the first one; when next() is called, the index will move to the first
@@ -91,7 +97,7 @@ public abstract class VerdictSingleResult extends AttributeValueRetrievalHelper 
     VerdictResultSet vrs = new VerdictResultSet(this);
     DBTablePrinter.printResultSet(vrs);
   }
-  
+
 //  // implemented in AttributeValueRetrievalHelper
 //  public abstract String getString(int index);
 //

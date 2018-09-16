@@ -129,6 +129,7 @@ public class JdbcTpchQueryForAllDatabasesTest {
     setupMysql();
     setupImpala();
     setupRedshift();
+    
     // TODO: Add below databases too
     //    setupPostgresql();
   }
