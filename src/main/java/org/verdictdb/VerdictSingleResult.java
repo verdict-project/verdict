@@ -19,8 +19,10 @@ package org.verdictdb;
 import java.sql.SQLException;
 
 import org.verdictdb.commons.AttributeValueRetrievalHelper;
+import org.verdictdb.commons.DBTablePrinter;
 import org.verdictdb.commons.VerdictResultPrinter;
 import org.verdictdb.connection.DbmsQueryResultMetaData;
+import org.verdictdb.jdbc41.VerdictResultSet;
 
 /**
  * Represents the result set returned from VerdictDB to the end user.
@@ -84,6 +86,11 @@ public abstract class VerdictSingleResult extends AttributeValueRetrievalHelper 
     System.out.println(toCsv());
   }
 
+  // Print in database form
+  public void print() {
+    VerdictResultSet vrs = new VerdictResultSet(this);
+    DBTablePrinter.printResultSet(vrs);
+  }
   
 //  // implemented in AttributeValueRetrievalHelper
 //  public abstract String getString(int index);
