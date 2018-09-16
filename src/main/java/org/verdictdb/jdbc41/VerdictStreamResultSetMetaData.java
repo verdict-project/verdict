@@ -1,7 +1,7 @@
 package org.verdictdb.jdbc41;
 
 import org.verdictdb.VerdictSingleResult;
-import org.verdictdb.connection.DataTypeConverter;
+import org.verdictdb.commons.DataTypeConverter;
 
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
