@@ -374,7 +374,7 @@ jobs:
     steps:
       - run: apt-get update; apt-get install -y git
       - checkout
-      - run: pip install mkdocs mkdocs-material
+      - run: pip install mkdocs mkdocs-material mkdocs-markdownextradata-plugin
       - run: cd docs; mkdocs build; cd ..; rm .gitignore;
       - run: git config user.email "pyongjoo@umich.edu"; git config user.name "Yongjoo Park"
       - run: git add docs/site/*; git commit -m 'init doc';
