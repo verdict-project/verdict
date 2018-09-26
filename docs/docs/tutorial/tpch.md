@@ -8,14 +8,14 @@ This is a step-by-step guide for setting up TPC-H data in different databases. T
 Go to your work directory (say `/home/username/workspace`) and download the data:
 
 ```bash
-cd /home/username/workspace
-curl http://dbgroup-internal.eecs.umich.edu/projects/verdictdb/tpch1g.zip -o tpch1g.zip
+$ cd /home/username/workspace
+$ curl http://dbgroup-internal.eecs.umich.edu/projects/verdictdb/tpch1g.zip -o tpch1g.zip
 ```
 
 Unzip the downloaded file:
 
 ```bash
-unzip tpch1g.zip
+$ unzip tpch1g.zip
 ```
 
 It will create a new directory named `tpch1g` under your work directory. The directory contains 8 sub-directories for each of 8 tables.
@@ -28,14 +28,14 @@ It will create a new directory named `tpch1g` under your work directory. The dir
 Connect to your MySQL database. Make sure you have already added MySQL to your PATH.
 
 ```bash
-mysql --local-infile -h 127.0.0.1 -uroot
+$ mysql --local-infile -h 127.0.0.1 -uroot
 ```
 
 Create a schema for test. (In mysql shell)
 
 ```bash
-create database tpch1g;
-use tpch1g;
+> create database tpch1g;
+> use tpch1g;
 ```
 
 Create empty tables; simply copy and paste the following table definition statements into the MySQL shell. We will import the data later into these tables.
@@ -164,7 +164,7 @@ LOAD DATA LOCAL INFILE '/home/username/workspace/tpch1g/lineitem/lineitem.tbl' I
 Connect to your Postgresql database.
 
 ```bash
-psql
+$ psql
 ```
 
 Create a schema for testing.

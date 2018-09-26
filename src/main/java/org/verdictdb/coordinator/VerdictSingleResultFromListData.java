@@ -5,15 +5,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.verdictdb.commons.AttributeValueRetrievalHelper;
-import org.verdictdb.connection.DataTypeConverter;
+import org.verdictdb.VerdictSingleResult;
+import org.verdictdb.commons.DataTypeConverter;
 import org.verdictdb.connection.DbmsQueryResultMetaData;
 
 import com.google.common.base.Optional;
 import com.rits.cloning.Cloner;
 
 public class VerdictSingleResultFromListData
-    extends AttributeValueRetrievalHelper implements VerdictSingleResult {
+    extends VerdictSingleResult {
 
   private Optional<List<List<Object>>> result;
 

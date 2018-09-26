@@ -16,14 +16,16 @@
 
 package org.verdictdb.core.scrambling;
 
+import static org.verdictdb.core.scrambling.ScramblingNode.computeConditionalProbabilityDistribution;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.verdictdb.commons.DataTypeConverter;
 import org.verdictdb.commons.VerdictDBLogger;
-import org.verdictdb.connection.DataTypeConverter;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.core.execplan.ExecutionInfoToken;
 import org.verdictdb.core.querying.CreateTableAsSelectNode;
@@ -49,8 +51,6 @@ import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBValueException;
 
 import com.google.common.base.Optional;
-
-import static org.verdictdb.core.scrambling.ScramblingNode.computeConditionalProbabilityDistribution;
 
 /**
  * Policy: 1. Tier 0: tuples containing outlier values. 2. Tier 1: tuples containing rare groups 3.

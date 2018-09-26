@@ -16,6 +16,13 @@
 
 package org.verdictdb;
 
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Properties;
+
 import org.apache.commons.lang3.RandomStringUtils;
 import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.commons.VerdictOption;
@@ -23,9 +30,8 @@ import org.verdictdb.connection.CachedDbmsConnection;
 import org.verdictdb.connection.ConcurrentJdbcConnection;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.JdbcConnection;
+import org.verdictdb.connection.SparkConnection;
 import org.verdictdb.coordinator.ExecutionContext;
-import org.verdictdb.coordinator.VerdictResultStream;
-import org.verdictdb.coordinator.VerdictSingleResult;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.core.sqlobject.CreateSchemaQuery;
 import org.verdictdb.exception.VerdictDBDbmsException;
@@ -35,13 +41,6 @@ import org.verdictdb.metastore.ScrambleMetaStore;
 import org.verdictdb.metastore.VerdictMetaStore;
 import org.verdictdb.sqlsyntax.SqlSyntax;
 import org.verdictdb.sqlsyntax.SqlSyntaxList;
-
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Properties;
 
 public class VerdictContext {
 
@@ -64,11 +63,12 @@ public class VerdictContext {
    */
   private List<ExecutionContext> executionContexts = new LinkedList<>();
 
-  public VerdictContext(DbmsConnection conn) {
+  public VerdictContext(DbmsConnection conn) throws VerdictDBException {
     this.conn = new CachedDbmsConnection(conn);
     this.contextId = RandomStringUtils.randomAlphanumeric(5);
     this.options = new VerdictOption();
     this.metaStore = getCachedMetaStore(conn, options);
+    initialize(options);
   }
 
   public VerdictContext(DbmsConnection conn, VerdictOption options) throws VerdictDBException {
@@ -97,6 +97,28 @@ public class VerdictContext {
     query.setIfNotExists(true);
     conn.execute(query);
   }
+  
+  /**
+   * Initializes VerdictContext from a SparkSession instance.
+   * 
+   * @param spark The actual type must be SparkSession; however, the type must not explicitly
+   * appear in this file. If it does, it causes a ClassNotFound error when VerdictContext is used
+   * for JDBC connection (i.e., when not submitted to any Spark cluster) because SparkSession
+   * is imported as "provided" scope in our maven dependency list.
+   * 
+   * @return
+   * @throws VerdictDBException 
+   */
+  public static VerdictContext fromSparkSession(Object spark) throws VerdictDBException {
+    DbmsConnection conn = new SparkConnection(spark);
+    return new VerdictContext(conn);
+  }
+  
+  public static VerdictContext fromSparkSession(Object spark, VerdictOption option) 
+      throws VerdictDBException {
+    DbmsConnection conn = new SparkConnection(spark);
+    return new VerdictContext(conn, option);
+  }
 
   /**
    * This method does not support concurrent execution of queries; thus, should not be used in
@@ -104,10 +126,10 @@ public class VerdictContext {
    *
    * @param jdbcConn
    * @return
-   * @throws VerdictDBDbmsException
+   * @throws VerdictDBException 
    */
   public static VerdictContext fromJdbcConnection(Connection jdbcConn)
-      throws VerdictDBDbmsException {
+      throws VerdictDBException {
     DbmsConnection conn = JdbcConnection.create(jdbcConn);
     return new VerdictContext(conn);
   }

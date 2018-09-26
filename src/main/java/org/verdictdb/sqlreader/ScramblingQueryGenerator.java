@@ -33,9 +33,11 @@ public class ScramblingQueryGenerator {
     String method = create_scramble_statement.METHOD().getText();
     String sizeInString = create_scramble_statement.SIZE().getText();
     double size = Math.min(Double.valueOf(sizeInString), 100.0) / 100.0;
+    long blocksize = Long.parseLong(create_scramble_statement.blocksize.getText());
 
     CreateScrambleQuery query =
-        new CreateScrambleQuery(newSchema, newTable, originalSchema, originalTable, method, size);
+        new CreateScrambleQuery(
+            newSchema, newTable, originalSchema, originalTable, method, size, blocksize);
 
     return query;
   }

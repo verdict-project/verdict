@@ -2,6 +2,9 @@ package org.verdictdb.coordinator;
 
 import java.util.Iterator;
 
+import org.verdictdb.VerdictResultStream;
+import org.verdictdb.VerdictSingleResult;
+
 public class VerdictResultStreamFromSingleResult implements VerdictResultStream {
 
   VerdictSingleResult result;

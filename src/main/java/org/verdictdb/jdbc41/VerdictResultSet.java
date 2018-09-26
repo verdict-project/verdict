@@ -40,8 +40,8 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.verdictdb.VerdictSingleResult;
 import org.apache.commons.lang3.time.FastDateFormat;
-import org.verdictdb.coordinator.VerdictSingleResult;
 
 public class VerdictResultSet implements ResultSet {
 

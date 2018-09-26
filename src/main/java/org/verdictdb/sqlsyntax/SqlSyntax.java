@@ -68,6 +68,10 @@ public abstract class SqlSyntax {
   public String substituteTypeName(String type) {
     return type;
   }
+  
+  public String getGenericStringDataTypeName() {
+    return "TEXT";
+  }
 
   /**
    * The drivers returned by methods are loaded explicitly by JdbcConnection (when it makes a JDBC
@@ -82,5 +86,13 @@ public abstract class SqlSyntax {
 
   public String getFallbackDefaultSchema() {
     throw new RuntimeException("This function must be implemented for each dbms syntax.");
+  }
+
+  /**
+   * Hive, Impala, Spark, Redshift have approximate count distinct function
+   * @return
+   */
+  public String getApproximateCountDistinct(String column) {
+    return String.format("count (distinct %s)", column);
   }
 }

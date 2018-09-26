@@ -16,19 +16,31 @@
 
 package org.verdictdb.coordinator;
 
-import com.google.common.base.Optional;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+
 import org.verdictdb.commons.VerdictDBLogger;
+import org.verdictdb.connection.CachedDbmsConnection;
+import org.verdictdb.connection.ConcurrentJdbcConnection;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.core.execplan.ExecutablePlanRunner;
-import org.verdictdb.core.scrambling.*;
+import org.verdictdb.core.scrambling.FastConvergeScramblingMethod;
+import org.verdictdb.core.scrambling.ScrambleMeta;
+import org.verdictdb.core.scrambling.ScramblingMethod;
+import org.verdictdb.core.scrambling.ScramblingPlan;
+import org.verdictdb.core.scrambling.UniformScramblingMethod;
 import org.verdictdb.core.sqlobject.CreateSchemaQuery;
 import org.verdictdb.core.sqlobject.CreateScrambleQuery;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBValueException;
 import org.verdictdb.sqlwriter.QueryToSql;
 
-import java.util.*;
-import java.util.Map.Entry;
+import com.google.common.base.Optional;
 
 public class ScramblingCoordinator {
 
@@ -249,10 +261,12 @@ public class ScramblingCoordinator {
     }
 
     // create a schema if not exists
-    CreateSchemaQuery createSchemaQuery = new CreateSchemaQuery(newSchema);
-    createSchemaQuery.setIfNotExists(true);
-    String sql = QueryToSql.convert(conn.getSyntax(), createSchemaQuery);
-    conn.execute(sql);
+    if (!conn.getSchemas().contains(newSchema)) {
+      CreateSchemaQuery createSchemaQuery = new CreateSchemaQuery(newSchema);
+      createSchemaQuery.setIfNotExists(true);
+      String sql = QueryToSql.convert(conn.getSyntax(), createSchemaQuery);
+      conn.execute(sql);
+    }
 
     // overwrite options with custom options.
     Map<String, String> effectiveOptions = new HashMap<String, String>();
@@ -287,6 +301,14 @@ public class ScramblingCoordinator {
             newSchema, newTable, originalSchema, originalTable, scramblingMethod, effectiveOptions);
     ExecutablePlanRunner.runTillEnd(conn, plan);
     log.info(String.format("Finished creating %s.%s", newSchema, newTable));
+
+    // Reinitiate Connections after table creation is done
+    if (conn instanceof ConcurrentJdbcConnection) {
+      ((ConcurrentJdbcConnection) conn).reinitiateConnection();
+    } else if (conn instanceof CachedDbmsConnection
+        && ((CachedDbmsConnection) conn).getOriginalConnection() instanceof ConcurrentJdbcConnection) {
+      ((ConcurrentJdbcConnection) ((CachedDbmsConnection) conn).getOriginalConnection()).reinitiateConnection();
+    }
 
     // compose scramble meta
     String blockColumn = effectiveOptions.get("blockColumnName");
