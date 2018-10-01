@@ -10,6 +10,7 @@ nav:
     - Quickstart: getting_started/quickstart.md
     - Download / Install: getting_started/install.md
     - Connecting to Data Sources: getting_started/connection.md
+    - VerdictDB JDBC Properties: getting_started/properties.md
     - Creating Scrambles: getting_started/scrambling.md
     - Simple Querying: getting_started/querying.md
     - Stream Querying: getting_started/streaming.md
@@ -55,6 +56,14 @@ extra_css:
 
 extra_javascript:
   - 'javascripts/extra.js'
+
+plugins:
+  - search
+  - markdownextradata
+
+extra:
+  verdictdb:
+    version: 0.5.5
 
 
 # Extensions
