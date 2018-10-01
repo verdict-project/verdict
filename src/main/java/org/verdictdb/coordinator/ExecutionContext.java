@@ -121,19 +121,20 @@ public class ExecutionContext {
   }
 
   public VerdictSingleResult sql(String query, boolean getResult) throws VerdictDBException {
-    QueryType queryType = identifyQueryType(query);
-    if ((queryType != QueryType.select &&
-        queryType != QueryType.show_databases &&
-        queryType != QueryType.show_tables &&
-        queryType != QueryType.describe_table
-    ) && getResult) {
-      throw new VerdictDBException(
-          "Can not issue data manipulation statements with executeQuery().");
-    }
     String bypassSql = checkBypass(query);
     if (bypassSql != null) {
       return executeAsIs(bypassSql);
     } else {
+      QueryType queryType = identifyQueryType(query);
+      if ((queryType != QueryType.select
+              && queryType != QueryType.show_databases
+              && queryType != QueryType.show_tables
+              && queryType != QueryType.describe_table)
+          && getResult) {
+        throw new VerdictDBException(
+            "Can not issue data manipulation statements with executeQuery().");
+      }
+
       VerdictResultStream stream = streamsql(query);
       if (stream == null) {
         return null;
