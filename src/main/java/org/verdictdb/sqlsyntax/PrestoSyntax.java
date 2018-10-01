@@ -16,22 +16,22 @@
 
 package org.verdictdb.sqlsyntax;
 
-import com.google.common.collect.Lists;
-
 import java.util.Collection;
 import java.util.List;
+
+import com.google.common.collect.Lists;
 
 public class PrestoSyntax extends SqlSyntax {
 
   @Override
   public Collection<String> getCandidateJDBCDriverClassNames() {
-    List<String> candidates = Lists.newArrayList("com.facebook.presto.jdbc.PrestoDriverf");
+    List<String> candidates = Lists.newArrayList("com.facebook.presto.jdbc.PrestoDriver");
     return candidates;
   }
 
   @Override
   public boolean doesSupportTablePartitioning() {
-    return true;
+    return false;
   }
 
   @Override
@@ -61,8 +61,8 @@ public class PrestoSyntax extends SqlSyntax {
   public String getPartitionByInCreateTable(
       List<String> partitionColumns, List<Integer> partitionCounts) {
     StringBuilder sql = new StringBuilder();
-    sql.append("partitioned by");
-    sql.append(" (");
+    sql.append("partitioned_by = ARRAY");
+    sql.append(" [");
     boolean isFirstColumn = true;
     for (String col : partitionColumns) {
       if (isFirstColumn) {
@@ -72,7 +72,7 @@ public class PrestoSyntax extends SqlSyntax {
         sql.append(", " + quoteName(col));
       }
     }
-    sql.append(")");
+    sql.append("], ");
     return sql.toString();
   }
 
@@ -130,5 +130,20 @@ public class PrestoSyntax extends SqlSyntax {
       return false;
     }
     return true;
+  }
+
+  @Override
+  public String getGenericStringDataTypeName() {
+    return "VARCHAR";
+  }
+
+  @Override
+  public String getApproximateCountDistinct(String column) {
+    return String.format("approx_distinct(%s)", column);
+  }
+
+  @Override
+  public String getTimestampPrefix() {
+    return "timestamp ";
   }
 }

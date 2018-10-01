@@ -227,6 +227,10 @@ public class CreateTableToSql {
       sql.append("using parquet ");
     }
 
+    if (syntax instanceof PrestoSyntax) {
+      sql.append("WITH (");
+    }
+
     // partitions
     if (syntax.doesSupportTablePartitioning() && query.getPartitionColumns().size() > 0) {
       sql.append(
@@ -236,8 +240,13 @@ public class CreateTableToSql {
     }
     
     // parquet format
-    if (syntax instanceof HiveSyntax || syntax instanceof ImpalaSyntax || syntax instanceof PrestoSyntax) {
+    if (syntax instanceof HiveSyntax || syntax instanceof ImpalaSyntax) {
       sql.append("stored as parquet ");
+    }
+
+    if (syntax instanceof PrestoSyntax) {
+      sql.append("format = 'orc'");
+      sql.append(") ");
     }
 
     // select
