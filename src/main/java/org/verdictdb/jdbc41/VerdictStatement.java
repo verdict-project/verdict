@@ -16,6 +16,11 @@
 
 package org.verdictdb.jdbc41;
 
+import org.verdictdb.VerdictContext;
+import org.verdictdb.VerdictSingleResult;
+import org.verdictdb.coordinator.ExecutionContext;
+import org.verdictdb.exception.VerdictDBException;
+
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -24,12 +29,8 @@ import java.sql.SQLWarning;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
-import org.verdictdb.VerdictContext;
 import org.verdictdb.VerdictResultStream;
-import org.verdictdb.VerdictSingleResult;
 import org.verdictdb.commons.VerdictDBLogger;
-import org.verdictdb.coordinator.ExecutionContext;
-import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.parser.VerdictSQLParser;
 import org.verdictdb.parser.VerdictSQLParserBaseVisitor;
 import org.verdictdb.sqlreader.NonValidatingSQLParser;
@@ -121,7 +122,7 @@ public class VerdictStatement implements java.sql.Statement {
   @Override
   public boolean execute(String sql) throws SQLException {
     try {
-      result = executionContext.sql(sql);
+      result = executionContext.sql(sql, false);
       if (result == null) {
         return false;
       }

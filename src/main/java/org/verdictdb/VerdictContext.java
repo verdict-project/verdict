@@ -16,13 +16,6 @@
 
 package org.verdictdb;
 
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Properties;
-
 import org.apache.commons.lang3.RandomStringUtils;
 import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.commons.VerdictOption;
@@ -34,13 +27,19 @@ import org.verdictdb.connection.SparkConnection;
 import org.verdictdb.coordinator.ExecutionContext;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.core.sqlobject.CreateSchemaQuery;
-import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.metastore.CachedScrambleMetaStore;
 import org.verdictdb.metastore.ScrambleMetaStore;
 import org.verdictdb.metastore.VerdictMetaStore;
 import org.verdictdb.sqlsyntax.SqlSyntax;
 import org.verdictdb.sqlsyntax.SqlSyntaxList;
+
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Properties;
 
 public class VerdictContext {
 
@@ -97,24 +96,23 @@ public class VerdictContext {
     query.setIfNotExists(true);
     conn.execute(query);
   }
-  
+
   /**
    * Initializes VerdictContext from a SparkSession instance.
-   * 
-   * @param spark The actual type must be SparkSession; however, the type must not explicitly
-   * appear in this file. If it does, it causes a ClassNotFound error when VerdictContext is used
-   * for JDBC connection (i.e., when not submitted to any Spark cluster) because SparkSession
-   * is imported as "provided" scope in our maven dependency list.
-   * 
+   *
+   * @param spark The actual type must be SparkSession; however, the type must not explicitly appear
+   *     in this file. If it does, it causes a ClassNotFound error when VerdictContext is used for
+   *     JDBC connection (i.e., when not submitted to any Spark cluster) because SparkSession is
+   *     imported as "provided" scope in our maven dependency list.
    * @return
-   * @throws VerdictDBException 
+   * @throws VerdictDBException
    */
   public static VerdictContext fromSparkSession(Object spark) throws VerdictDBException {
     DbmsConnection conn = new SparkConnection(spark);
     return new VerdictContext(conn);
   }
-  
-  public static VerdictContext fromSparkSession(Object spark, VerdictOption option) 
+
+  public static VerdictContext fromSparkSession(Object spark, VerdictOption option)
       throws VerdictDBException {
     DbmsConnection conn = new SparkConnection(spark);
     return new VerdictContext(conn, option);
@@ -126,10 +124,9 @@ public class VerdictContext {
    *
    * @param jdbcConn
    * @return
-   * @throws VerdictDBException 
+   * @throws VerdictDBException
    */
-  public static VerdictContext fromJdbcConnection(Connection jdbcConn)
-      throws VerdictDBException {
+  public static VerdictContext fromJdbcConnection(Connection jdbcConn) throws VerdictDBException {
     DbmsConnection conn = JdbcConnection.create(jdbcConn);
     return new VerdictContext(conn);
   }
@@ -330,7 +327,7 @@ public class VerdictContext {
    */
   public VerdictSingleResult sql(String query) throws VerdictDBException {
     ExecutionContext exec = createNewExecutionContext();
-    VerdictSingleResult result = exec.sql(query);
+    VerdictSingleResult result = exec.sql(query, false);
     removeExecutionContext(exec);
     return result;
   }
