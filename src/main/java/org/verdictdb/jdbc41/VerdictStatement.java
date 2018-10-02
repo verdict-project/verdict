@@ -27,8 +27,6 @@ import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.SQLWarning;
 
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.VerdictResultStream;
 import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.parser.VerdictSQLParser;
@@ -71,7 +69,7 @@ public class VerdictStatement implements java.sql.Statement {
     }
 
     /**
-     * When the last SingleResult is returned, it will synchronized the isCompleted flag of VerdictStreamResultSet
+     * When the last SingleResult is returned, it will synchronized the hasReadAllQueryResults flag of VerdictStreamResultSet
      * to block possible call of next(). It will set status of VerdictStreamResultSet to be complete and
      * append the last SingleResult to VerdictStreamResultSet.
      */
@@ -80,9 +78,9 @@ public class VerdictStatement implements java.sql.Statement {
         while (resultStream.hasNext()) {
           VerdictSingleResult singleResult = resultStream.next();
           if (!resultStream.hasNext()) {
-            // Must have synchronized keyword. Need to make sure the block is atomic because VerdictStreamResultSet.next() also use isCompleted flag.
+            // Must have synchronized keyword. Need to make sure the block is atomic because VerdictStreamResultSet.next() also use hasReadAllQueryResults flag.
             // Otherwise, VerdictStreamResultSet may be unware the processing is completed after the last singleResult is appended.
-            synchronized ((Object) resultSet.isCompleted) {
+            synchronized ((Object) resultSet.hasReadAllQueryResults) {
               resultSet.appendSingleResult(singleResult);
               resultSet.setCompleted();
             }

@@ -25,7 +25,7 @@ public class VerdictStreamResultSet extends VerdictResultSet {
 
   private static final String verdictStreamSequenceColumn = "seq";
 
-  boolean isCompleted = false;
+  boolean hasReadAllQueryResults = false;
 
   private long rowIndex = 0;
 
@@ -56,7 +56,7 @@ public class VerdictStreamResultSet extends VerdictResultSet {
    * return true if getting all SingleResults
    */
   void setCompleted() {
-    isCompleted = true;
+    hasReadAllQueryResults = true;
   }
 
   @Override
@@ -316,9 +316,13 @@ public class VerdictStreamResultSet extends VerdictResultSet {
 
   @Override
   public Date getDate(int columnIndex, Calendar cal) throws SQLException {
-    checkIndex(columnIndex);
-
-    throw new SQLFeatureNotSupportedException();
+    try {
+      FastDateFormat dateFormat = FastDateFormat.getInstance("yyyy-MM-dd HH:mm:ss.SSS", cal.getTimeZone());
+      return new Date(dateFormat.parse(queryResult.getDate(columnIndex - 2).toString()).getTime());
+    } catch (Exception e) {
+      SQLException error = new SQLException("Error parsing date");
+      throw error;
+    }
   }
 
   @Override
@@ -330,7 +334,10 @@ public class VerdictStreamResultSet extends VerdictResultSet {
 
   @Override
   public Date getDate(String columnLabel, Calendar cal) throws SQLException {
-    throw new SQLFeatureNotSupportedException();
+    if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
+      int index = columnLabel.indexOf(standardizedLabel(columnLabel)) + 1;
+      return getDate(index, cal);
+    } else throw new SQLException("ColumnLabel does not exist.");
   }
 
   @Override
@@ -597,7 +604,13 @@ public class VerdictStreamResultSet extends VerdictResultSet {
 
   @Override
   public Time getTime(int columnIndex, Calendar cal) throws SQLException {
-    throw new SQLFeatureNotSupportedException();
+    try {
+      FastDateFormat dateFormat = FastDateFormat.getInstance("yyyy-MM-dd HH:mm:ss.SSS", cal.getTimeZone());
+      return new Time(dateFormat.parse(queryResult.getTime(columnIndex - 2).toString()).getTime());
+    } catch (Exception e) {
+      SQLException error = new SQLException("Error parsing time");
+      throw error;
+    }
   }
 
   @Override
@@ -609,7 +622,10 @@ public class VerdictStreamResultSet extends VerdictResultSet {
 
   @Override
   public Time getTime(String columnLabel, Calendar cal) throws SQLException {
-    throw new SQLFeatureNotSupportedException();
+    if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
+      int index = columnLabel.indexOf(standardizedLabel(columnLabel)) + 1;
+      return getTime(index, cal);
+    } else throw new SQLException("ColumnLabel does not exist.");
   }
 
   @Override
@@ -808,19 +824,19 @@ public class VerdictStreamResultSet extends VerdictResultSet {
 
   /**
    * Require a mutex here. The stream is executed on the other thread. When the execution of the stream is finished,
-   * it will try to synchronize isCompleted flag by calling synchronized(isCompleted).
+   * it will try to synchronize hasReadAllQueryResults flag by calling synchronized(hasReadAllQueryResults).
    * And here are two cases: 1) next() executes first 2) the other thread executes first
    *
-   * 1) If next() first executes, the flag isCompleted is still false. next() will try to take new queryResult
-   * from queryResults. As soon as, next doesn't acquire isCompleted flag. Then the other thread will take the
-   * acquire of isCompleted, append the queryresult and set the flag to be true. At that time, if another next() is called,
-   * it will get blocked at the line 'else if (queryResults.peek() == null && isCompleted)' until the other thread finishes
+   * 1) If next() first executes, the flag hasReadAllQueryResults is still false. next() will try to take new queryResult
+   * from queryResults. As soon as, next doesn't acquire hasReadAllQueryResults flag. Then the other thread will take the
+   * acquire of hasReadAllQueryResults, append the queryresult and set the flag to be true. At that time, if another next() is called,
+   * it will get blocked at the line 'else if (queryResults.peek() == null && hasReadAllQueryResults)' until the other thread finishes
    * its job.
    *
    * 2) If the other thread executes first, it will append the query result and set the flag to be true. Then waiting
    * next() starts to execute. Since there are still queryResult in queryResults, next() will take it from the list so that
    * the last queryResult won't be neglected. The second next() will return false, since queryResults.peek()==null and
-   * isCompleted==true.
+   * hasReadAllQueryResults==true.
    *
    * @return
    * @throws SQLException
@@ -829,7 +845,7 @@ public class VerdictStreamResultSet extends VerdictResultSet {
   public boolean next() throws SQLException {
     try {
       // on the first call
-      if (queryResult == null && (!isCompleted || !queryResults.isEmpty())) {
+      if (queryResult == null && (!hasReadAllQueryResults || !queryResults.isEmpty())) {
         queryResult = queryResults.take();
         lastQueryResultIndex++;
       }
@@ -837,7 +853,7 @@ public class VerdictStreamResultSet extends VerdictResultSet {
       if (hasMore) {
         rowIndex++;
         return true;
-      } else if (queryResults.peek() == null && isCompleted) {
+      } else if (queryResults.peek() == null && hasReadAllQueryResults) {
         return false;
       } else {
         queryResult = queryResults.take();
