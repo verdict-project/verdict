@@ -23,7 +23,7 @@ import java.util.concurrent.LinkedBlockingDeque;
  */
 public class VerdictStreamResultSet extends VerdictResultSet {
 
-  private Thread runningThread;
+  private VerdictStatement.ExecuteStream runnable;
 
   private static final String verdictStreamSequenceColumn = "seq";
 
@@ -63,8 +63,8 @@ public class VerdictStreamResultSet extends VerdictResultSet {
     hasReadAllQueryResults = true;
   }
 
-  void setRunningThread(Thread t) {
-    this.runningThread = t;
+  void setRunnable(VerdictStatement.ExecuteStream r) {
+    this.runnable = r;
   }
 
   @Override
@@ -105,7 +105,7 @@ public class VerdictStreamResultSet extends VerdictResultSet {
   @Override
   public void close() {
     isClosed = true;
-    runningThread.interrupt();
+    runnable.abort();
   }
 
   @Override

@@ -63,9 +63,12 @@ public class VerdictStatement implements java.sql.Statement {
 
     VerdictStreamResultSet resultSet;
 
-    ExecuteStream(VerdictResultStream resultStream, VerdictStreamResultSet resultSet) {
+    ExecutionContext executionContext;
+
+    ExecuteStream(VerdictResultStream resultStream, VerdictStreamResultSet resultSet, ExecutionContext executionContext) {
       this.resultStream = resultStream;
       this.resultSet = resultSet;
+      this.executionContext = executionContext;
     }
 
     /**
@@ -90,36 +93,23 @@ public class VerdictStatement implements java.sql.Statement {
           }
         }
       }
+    }
 
+    public void abort() {
+      executionContext.abort();
     }
   }
 
   private Boolean checkStreamQuery(String query) {
-    VerdictSQLParser parser = NonValidatingSQLParser.parserOf(query);
-
-    VerdictSQLParserBaseVisitor<Boolean> visitor =
-        new VerdictSQLParserBaseVisitor<Boolean>() {
-          @Override
-          public Boolean visitStream_select_statement(VerdictSQLParser.Stream_select_statementContext ctx) {
-            return true;
-          }
-        };
-
-    return visitor.visit(parser.verdict_statement())!=null;
+    if (query.trim().toLowerCase().startsWith("stream")) {
+      return true;
+    }
+    return false;
   }
 
   @Override
   public boolean execute(String sql) throws SQLException {
     try {
-      if (checkStreamQuery(sql)) {
-        VerdictStreamResultSet resultSet = new VerdictStreamResultSet();
-        sql = sql.replaceFirst("(?i)stream", "");
-        VerdictResultStream resultStream = executionContext.streamsql(sql);
-        Thread thread = new Thread(new ExecuteStream(resultStream, resultSet));
-        resultSet.setRunningThread(thread);
-        thread.start();
-        return true;
-      }
       result = executionContext.sql(sql, false);
       if (result == null) {
         return false;
@@ -137,9 +127,9 @@ public class VerdictStatement implements java.sql.Statement {
         VerdictStreamResultSet resultSet = new VerdictStreamResultSet();
         sql = sql.replaceFirst("(?i)stream", "");
         VerdictResultStream resultStream = executionContext.streamsql(sql);
-        Thread thread = new Thread(new ExecuteStream(resultStream, resultSet));
-        resultSet.setRunningThread(thread);
-        thread.start();
+        ExecuteStream executeStream = new ExecuteStream(resultStream, resultSet, executionContext);
+        resultSet.setRunnable(executeStream);
+        new Thread(executeStream).start();
         return resultSet;
       }
       result = executionContext.sql(sql);
