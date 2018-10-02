@@ -23,9 +23,13 @@ import java.util.concurrent.LinkedBlockingDeque;
  */
 public class VerdictStreamResultSet extends VerdictResultSet {
 
+  private Thread runningThread;
+
   private static final String verdictStreamSequenceColumn = "seq";
 
   boolean hasReadAllQueryResults = false;
+
+  private boolean isClosed = false;
 
   private long rowIndex = 0;
 
@@ -59,6 +63,10 @@ public class VerdictStreamResultSet extends VerdictResultSet {
     hasReadAllQueryResults = true;
   }
 
+  void setRunningThread(Thread t) {
+    this.runningThread = t;
+  }
+
   @Override
   public boolean absolute(int row) throws SQLException {
     throw new SQLFeatureNotSupportedException();
@@ -82,8 +90,10 @@ public class VerdictStreamResultSet extends VerdictResultSet {
   }
 
   private void checkIndex(int index) throws SQLException {
-    if (index < 2) {
-      throw new SQLException("Column index must be a positive integer.");
+    if (index == 1) {
+      throw new SQLException("The first column of a streaming query result is the sequence number of each result set; thus, the values can be retrieved only in the types compatible with integer.");
+    } else if (index < 1) {
+      throw new SQLException("A column index must be a positive integer.");
     }
   }
 
@@ -94,6 +104,8 @@ public class VerdictStreamResultSet extends VerdictResultSet {
 
   @Override
   public void close() {
+    isClosed = true;
+    runningThread.interrupt();
   }
 
   @Override
@@ -713,7 +725,7 @@ public class VerdictStreamResultSet extends VerdictResultSet {
 
   @Override
   public boolean isClosed() throws SQLException {
-    return false;
+    return isClosed;
   }
 
   @Override
@@ -843,6 +855,7 @@ public class VerdictStreamResultSet extends VerdictResultSet {
    */
   @Override
   public boolean next() throws SQLException {
+    if (isClosed) return false;
     try {
       // on the first call
       if (queryResult == null && (!hasReadAllQueryResults || !queryResults.isEmpty())) {

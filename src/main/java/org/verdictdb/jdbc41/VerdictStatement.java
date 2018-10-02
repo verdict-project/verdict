@@ -105,7 +105,7 @@ public class VerdictStatement implements java.sql.Statement {
           }
         };
 
-    return visitor.visit(parser.verdict_statement());
+    return visitor.visit(parser.verdict_statement())!=null;
   }
 
   @Override
@@ -115,7 +115,9 @@ public class VerdictStatement implements java.sql.Statement {
         VerdictStreamResultSet resultSet = new VerdictStreamResultSet();
         sql = sql.replaceFirst("(?i)stream", "");
         VerdictResultStream resultStream = executionContext.streamsql(sql);
-        new Thread(new ExecuteStream(resultStream, resultSet)).start();
+        Thread thread = new Thread(new ExecuteStream(resultStream, resultSet));
+        resultSet.setRunningThread(thread);
+        thread.start();
         return true;
       }
       result = executionContext.sql(sql, false);
@@ -135,7 +137,9 @@ public class VerdictStatement implements java.sql.Statement {
         VerdictStreamResultSet resultSet = new VerdictStreamResultSet();
         sql = sql.replaceFirst("(?i)stream", "");
         VerdictResultStream resultStream = executionContext.streamsql(sql);
-        new Thread(new ExecuteStream(resultStream, resultSet)).start();
+        Thread thread = new Thread(new ExecuteStream(resultStream, resultSet));
+        resultSet.setRunningThread(thread);
+        thread.start();
         return resultSet;
       }
       result = executionContext.sql(sql);
