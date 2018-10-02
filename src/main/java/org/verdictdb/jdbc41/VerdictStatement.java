@@ -50,17 +50,6 @@ public class VerdictStatement implements java.sql.Statement {
     this.executionContext = context.createNewExecutionContext();
   }
 
-  public ResultSet sql(String query) throws VerdictDBException {
-    VerdictStreamResultSet resultSet = new VerdictStreamResultSet();
-    if (getStreamQueryIfExists(query).getKey()) {
-      query = query.replaceFirst("(?i)stream", "");
-      VerdictResultStream resultStream = executionContext.streamsql(query);
-      new Thread(new ExecuteStream(resultStream, resultSet)).start();
-      return resultSet;
-    }
-    return null;
-  }
-
   /**
    * Created by Shucheng Zhong on 9/13/18
    * <p>
@@ -91,6 +80,8 @@ public class VerdictStatement implements java.sql.Statement {
         while (resultStream.hasNext()) {
           VerdictSingleResult singleResult = resultStream.next();
           if (!resultStream.hasNext()) {
+            // Must have synchronized keyword. Need to make sure the block is atomic because VerdictStreamResultSet.next() also use isCompleted flag.
+            // Otherwise, VerdictStreamResultSet may be unware the processing is completed after the last singleResult is appended.
             synchronized ((Object) resultSet.isCompleted) {
               resultSet.appendSingleResult(singleResult);
               resultSet.setCompleted();
@@ -105,14 +96,14 @@ public class VerdictStatement implements java.sql.Statement {
     }
   }
 
-  private Pair<Boolean, String> getStreamQueryIfExists(String query) {
+  private Boolean checkStreamQuery(String query) {
     VerdictSQLParser parser = NonValidatingSQLParser.parserOf(query);
 
-    VerdictSQLParserBaseVisitor<Pair<Boolean, String>> visitor =
-        new VerdictSQLParserBaseVisitor<Pair<Boolean, String>>() {
+    VerdictSQLParserBaseVisitor<Boolean> visitor =
+        new VerdictSQLParserBaseVisitor<Boolean>() {
           @Override
-          public Pair<Boolean, String> visitStream_select_statement(VerdictSQLParser.Stream_select_statementContext ctx) {
-            return new ImmutablePair<>(true, ctx.select_statement().getText());
+          public Boolean visitStream_select_statement(VerdictSQLParser.Stream_select_statementContext ctx) {
+            return true;
           }
         };
 
@@ -122,6 +113,13 @@ public class VerdictStatement implements java.sql.Statement {
   @Override
   public boolean execute(String sql) throws SQLException {
     try {
+      if (checkStreamQuery(sql)) {
+        VerdictStreamResultSet resultSet = new VerdictStreamResultSet();
+        sql = sql.replaceFirst("(?i)stream", "");
+        VerdictResultStream resultStream = executionContext.streamsql(sql);
+        new Thread(new ExecuteStream(resultStream, resultSet)).start();
+        return true;
+      }
       result = executionContext.sql(sql, false);
       if (result == null) {
         return false;
@@ -135,6 +133,13 @@ public class VerdictStatement implements java.sql.Statement {
   @Override
   public ResultSet executeQuery(String sql) throws SQLException {
     try {
+      if (checkStreamQuery(sql)) {
+        VerdictStreamResultSet resultSet = new VerdictStreamResultSet();
+        sql = sql.replaceFirst("(?i)stream", "");
+        VerdictResultStream resultStream = executionContext.streamsql(sql);
+        new Thread(new ExecuteStream(resultStream, resultSet)).start();
+        return resultSet;
+      }
       result = executionContext.sql(sql);
       return new VerdictResultSet(result);
     } catch (VerdictDBException e) {

@@ -6,13 +6,12 @@ VerdictDB uses scrambles to process the query. In scrambles, original tables are
 
 There are two approaches to VerdictDB's stream querying:
 
-1. VerdicDB JDBC Driver's ```VerdictStatement.sql()``` method
+1. VerdicDB JDBC Driver's regular `executeQuery()` method
 1. VerdictContext's ```streamsql()``` method
 
 We describe them in more detail below.
 
 ## Use Stream Querying in VerdictStatement
-VerdictStatement implements ```java.sql.Statement``` data type. You can do stream querying by using VerdictStatement.
 
 ### Syntax
 ```
@@ -21,19 +20,14 @@ STREAM [SELECT QUERY]
 Note:
 
 1. [SELECT QUERY] is the SQL query you want to process.
-1. Use VerdictStatement.sql() to process the stream querying. VerdictStatement.executeQuery() does not support that syntax.
 
 
 ### Example
-
-First, get a VerdictStatement instance.
-```java
-Connection verdict = DriverManager.getConnection("jdbc:verdict:mysql://localhost", "root", "rootpassword");
-VerdictStatement vstmt = (VerdictStatement)verdict.createStatement();
-```
 Assume we want to find the average ```l_extendedprice``` in ```lineitem``` table.
 ```java
- ResultSet vrs = vstmt.sql("STREAM SELECT AVG(l_extendedprice) from lineitem");
+Connection verdict = DriverManager.getConnection("jdbc:verdict:mysql://localhost", "root", "rootpassword");
+Statement vstmt = verdict.createStatement();
+ResultSet vrs = vstmt.executeQuery("STREAM SELECT AVG(l_extendedprice) from lineitem");
 ```
 Then we can get the approximate results from ```vrs``` in JDBC way.
 ```java

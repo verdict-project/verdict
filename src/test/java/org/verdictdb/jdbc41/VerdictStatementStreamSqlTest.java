@@ -76,7 +76,7 @@ public class VerdictStatementStreamSqlTest {
     stmt.execute(String.format("use %s", MYSQL_DATABASE));
     vstmt.execute(String.format("use %s", MYSQL_DATABASE));
     ResultSet rs = stmt.executeQuery(sql);
-    ResultSet vrs = ((VerdictStatement) vstmt).sql("STREAM " + sql);
+    ResultSet vrs = ((VerdictStatement) vstmt).executeQuery("STREAM " + sql);
     System.out.println(String.format("Query %d Executed.", queryNum));
     return new ImmutablePair<>(vrs, rs);
   }
