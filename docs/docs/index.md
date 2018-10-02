@@ -13,7 +13,7 @@ VerdictDB is a thin, platform-independent, interactive analytics library that wo
     - [Connecting to Databases](/getting_started/connection)
     - [Scrambling](/getting_started/scrambling)
     - [Traditional Querying](/getting_started/querying)
-    - [Stream Querying](/getting_started/stream)
+    - [Stream Querying](/getting_started/streaming)
 1. How VerdictDB works
     - [Basics](/how_it_works/basics)
     - [Architecture](/how_it_works/architecture)
