@@ -132,7 +132,8 @@ public class ExecutionContext {
       if ((queryType != QueryType.select
               && queryType != QueryType.show_databases
               && queryType != QueryType.show_tables
-              && queryType != QueryType.describe_table)
+              && queryType != QueryType.describe_table
+              && queryType != QueryType.show_scrambles)
           && getResult) {
         throw new VerdictDBException(
             "Can not issue data manipulation statements with executeQuery().");
