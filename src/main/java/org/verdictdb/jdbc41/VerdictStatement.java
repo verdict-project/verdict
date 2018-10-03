@@ -16,16 +16,16 @@
 
 package org.verdictdb.jdbc41;
 
+import org.verdictdb.VerdictContext;
+import org.verdictdb.VerdictSingleResult;
+import org.verdictdb.coordinator.ExecutionContext;
+import org.verdictdb.exception.VerdictDBException;
+
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.SQLWarning;
-
-import org.verdictdb.VerdictContext;
-import org.verdictdb.VerdictSingleResult;
-import org.verdictdb.coordinator.ExecutionContext;
-import org.verdictdb.exception.VerdictDBException;
 
 public class VerdictStatement implements java.sql.Statement {
 
@@ -43,7 +43,7 @@ public class VerdictStatement implements java.sql.Statement {
   @Override
   public boolean execute(String sql) throws SQLException {
     try {
-      result = executionContext.sql(sql);
+      result = executionContext.sql(sql, false);
       if (result == null) {
         return false;
       }

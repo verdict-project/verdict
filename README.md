@@ -13,14 +13,6 @@ Documentation: https://docs.verdictdb.org
 
 
 
-Aug 28, 2018: Updating documentation... The current draft is available at docs.verdictdb.org
-
-Aug 15, 2018: Now it works well for most common queries! We will update our online tutorial shortly. Anyone should be able to easily set up (with Maven central) and see huge speedups for MySQL, PostgreSQL, Impala, and Redshift. (The support for Spark is internally already done as well, so will be included shortly.)
-
-Aug 2, 2018: We have almost finished the lastest update; just working on final quality checks.
-
-
-
 # Same SQL, Same DB, 100x-200x Faster Analytics
 
 <p align="center">
