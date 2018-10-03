@@ -27,9 +27,6 @@ public class ExecutionTokenReader
 
   ExecutionTokenQueue queue;
 
-  // set to true if the status token has been taken from "queue".
-  boolean hasEndOfQueueReached = false;
-
   ExecutionInfoToken queueBuffer = null;
   
   private VerdictDBLogger log = VerdictDBLogger.getLogger(getClass());
@@ -39,7 +36,7 @@ public class ExecutionTokenReader
   public ExecutionTokenReader(ExecutionTokenQueue queue) {
     this.queue = queue;
   }
-  
+
   @Override
   public Iterator<ExecutionInfoToken> iterator() {
     return this;

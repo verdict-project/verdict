@@ -27,6 +27,12 @@ import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.SQLWarning;
 
+import org.verdictdb.VerdictResultStream;
+import org.verdictdb.commons.VerdictDBLogger;
+import org.verdictdb.parser.VerdictSQLParser;
+import org.verdictdb.parser.VerdictSQLParserBaseVisitor;
+import org.verdictdb.sqlreader.NonValidatingSQLParser;
+
 public class VerdictStatement implements java.sql.Statement {
 
   Connection conn;
@@ -35,9 +41,70 @@ public class VerdictStatement implements java.sql.Statement {
 
   VerdictSingleResult result;
 
+  private VerdictDBLogger log = VerdictDBLogger.getLogger(this.getClass());
+
   public VerdictStatement(Connection conn, VerdictContext context) {
     this.conn = conn;
     this.executionContext = context.createNewExecutionContext();
+  }
+
+  /**
+   * Created by Shucheng Zhong on 9/13/18
+   * <p>
+   * It will try to get the VerdictSingleResult from VerdictResultStream
+   * and append the VerdictSingleResult to VerdictStreamResultSet
+   * until all the VerdictSingleResults have return.
+   * Since it running on separate thread, it won't block user querying from
+   * the ResultSet
+   */
+  class ExecuteStream implements Runnable {
+
+    VerdictResultStream resultStream;
+
+    VerdictStreamResultSet resultSet;
+
+    ExecutionContext executionContext;
+
+    ExecuteStream(VerdictResultStream resultStream, VerdictStreamResultSet resultSet, ExecutionContext executionContext) {
+      this.resultStream = resultStream;
+      this.resultSet = resultSet;
+      this.executionContext = executionContext;
+    }
+
+    /**
+     * When the last SingleResult is returned, it will synchronized the hasReadAllQueryResults flag of VerdictStreamResultSet
+     * to block possible call of next(). It will set status of VerdictStreamResultSet to be complete and
+     * append the last SingleResult to VerdictStreamResultSet.
+     */
+    public void run() {
+      while (!resultStream.isCompleted()) {
+        while (resultStream.hasNext()) {
+          VerdictSingleResult singleResult = resultStream.next();
+          if (!resultStream.hasNext()) {
+            // Must have synchronized keyword. Need to make sure the block is atomic because VerdictStreamResultSet.next() also use hasReadAllQueryResults flag.
+            // Otherwise, VerdictStreamResultSet may be unware the processing is completed after the last singleResult is appended.
+            synchronized ((Object) resultSet.hasReadAllQueryResults) {
+              resultSet.appendSingleResult(singleResult);
+              resultSet.setCompleted();
+            }
+            log.debug("Execution Completed\n");
+          } else {
+            resultSet.appendSingleResult(singleResult);
+          }
+        }
+      }
+    }
+
+    public void abort() {
+      executionContext.abort();
+    }
+  }
+
+  private Boolean checkStreamQuery(String query) {
+    if (query.trim().toLowerCase().startsWith("stream")) {
+      return true;
+    }
+    return false;
   }
 
   @Override
@@ -56,6 +123,15 @@ public class VerdictStatement implements java.sql.Statement {
   @Override
   public ResultSet executeQuery(String sql) throws SQLException {
     try {
+      if (checkStreamQuery(sql)) {
+        VerdictStreamResultSet resultSet = new VerdictStreamResultSet();
+        sql = sql.replaceFirst("(?i)stream", "");
+        VerdictResultStream resultStream = executionContext.streamsql(sql);
+        ExecuteStream executeStream = new ExecuteStream(resultStream, resultSet, executionContext);
+        resultSet.setRunnable(executeStream);
+        new Thread(executeStream).start();
+        return resultSet;
+      }
       result = executionContext.sql(sql);
       return new VerdictResultSet(result);
     } catch (VerdictDBException e) {
@@ -151,7 +227,8 @@ public class VerdictStatement implements java.sql.Statement {
   }
 
   @Override
-  public void clearWarnings() throws SQLException {}
+  public void clearWarnings() throws SQLException {
+  }
 
   @Override
   public void setCursorName(String name) throws SQLException {

@@ -1,66 +1,70 @@
-/*
- *    Copyright 2018 University of Michigan
- *
- *    Licensed under the Apache License, Version 2.0 (the "License");
- *    you may not use this file except in compliance with the License.
- *    You may obtain a copy of the License at
- *
- *        http://www.apache.org/licenses/LICENSE-2.0
- *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
- */
-
 package org.verdictdb.jdbc41;
+
+import org.apache.commons.lang3.time.FastDateFormat;
+import org.verdictdb.VerdictSingleResult;
 
 import java.io.InputStream;
 import java.io.Reader;
 import java.math.BigDecimal;
 import java.net.URL;
-import java.sql.Array;
-import java.sql.Blob;
-import java.sql.Clob;
+import java.sql.*;
 import java.sql.Date;
-import java.sql.NClob;
-import java.sql.Ref;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.RowId;
-import java.sql.SQLException;
-import java.sql.SQLFeatureNotSupportedException;
-import java.sql.SQLWarning;
-import java.sql.SQLXML;
-import java.sql.Statement;
-import java.sql.Time;
-import java.sql.Timestamp;
-import java.util.Calendar;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.BlockingDeque;
+import java.util.concurrent.LinkedBlockingDeque;
 
-import org.verdictdb.VerdictSingleResult;
-import org.apache.commons.lang3.time.FastDateFormat;
+/**
+ * Created by: Shucheng Zhong on 9/12/18
+ * ResultSet type for stream select query when VerdictStatement.sql() is called.
+ * <p>
+ * It contains a blocking queue: queryResults. When user call next(), if no queryResult available,
+ * it will try to take one from queryResults. Blocked if no results are returned from VerdictResultStream.
+ * The first column is verdictStreamSequenceColumn, which should be int class that specify the block sequence number
+ */
+public class VerdictStreamResultSet extends VerdictResultSet {
 
-public class VerdictResultSet implements ResultSet {
+  private VerdictStatement.ExecuteStream runnable;
 
-  private VerdictSingleResult queryResult;
+  private static final String verdictStreamSequenceColumn = "seq";
 
-  private ResultSetMetaData metadata;
+  boolean hasReadAllQueryResults = false;
+
+  private boolean isClosed = false;
 
   private long rowIndex = 0;
 
   private HashMap<String, Integer> colNameIdx = new HashMap<>();
 
-  public VerdictResultSet() {}
+  BlockingDeque<VerdictSingleResult> queryResults = new LinkedBlockingDeque<>();
 
-  public VerdictResultSet(VerdictSingleResult queryResult) {
-    this.queryResult = queryResult;
-    for (int i = 0; i < queryResult.getColumnCount(); i++) {
-      colNameIdx.put(queryResult.getColumnName(i), i);
-    }
-    metadata = new VerdictResultSetMetaData(queryResult);
+  VerdictSingleResult queryResult;
+
+  private int lastQueryResultIndex = 0;
+
+  private VerdictStreamResultSetMetaData metadata;
+
+  public VerdictStreamResultSet() {
+    super();
+  }
+
+  public VerdictStreamResultSet(VerdictSingleResult queryResult) {
+    super(queryResult);
+    queryResults.add(queryResult);
+  }
+
+  public void appendSingleResult(VerdictSingleResult queryResult) {
+    queryResults.add(queryResult);
+  }
+
+  /**
+   * return true if getting all SingleResults
+   */
+  void setCompleted() {
+    hasReadAllQueryResults = true;
+  }
+
+  void setRunnable(VerdictStatement.ExecuteStream r) {
+    this.runnable = r;
   }
 
   @Override
@@ -70,13 +74,13 @@ public class VerdictResultSet implements ResultSet {
 
   @Override
   public void afterLast() throws SQLException {
-    rowIndex = queryResult.getRowCount() + 1;
-    //    throw new SQLFeatureNotSupportedException();
+    throw new SQLFeatureNotSupportedException();
   }
 
   @Override
   public void beforeFirst() throws SQLException {
     rowIndex = 0;
+    lastQueryResultIndex = 0;
     //    throw new SQLFeatureNotSupportedException();
   }
 
@@ -86,8 +90,10 @@ public class VerdictResultSet implements ResultSet {
   }
 
   private void checkIndex(int index) throws SQLException {
-    if (index < 1) {
-      throw new SQLException("Column index must be a positive integer.");
+    if (index == 1) {
+      throw new SQLException("The first column of a streaming query result is the sequence number of each result set; thus, the values can be retrieved only in the types compatible with integer.");
+    } else if (index < 1) {
+      throw new SQLException("A column index must be a positive integer.");
     }
   }
 
@@ -98,6 +104,8 @@ public class VerdictResultSet implements ResultSet {
 
   @Override
   public void close() {
+    isClosed = true;
+    runnable.abort();
   }
 
   @Override
@@ -107,15 +115,19 @@ public class VerdictResultSet implements ResultSet {
 
   @Override
   public int findColumn(String columnLabel) throws SQLException {
-    return colNameIdx.get(standardizedLabel(columnLabel.toLowerCase())) + 1;
+    if (columnLabel.equals(standardizedLabel(verdictStreamSequenceColumn))) {
+      return 1;
+    }
+    return colNameIdx.get(standardizedLabel(columnLabel.toLowerCase())) + 2;
   }
 
   @Override
   public boolean first() throws SQLException {
-    if (queryResult.getRowCount() == 0) {
+    if (queryResults.size() == 0) {
       return false;
     } else {
       rowIndex = 1;
+      lastQueryResultIndex = 0;
       return true;
     }
     //    throw new SQLFeatureNotSupportedException();
@@ -125,7 +137,7 @@ public class VerdictResultSet implements ResultSet {
   public Array getArray(int columnIndex) throws SQLException {
     checkIndex(columnIndex);
 
-    return queryResult.getArray(columnIndex - 1);
+    return queryResult.getArray(columnIndex - 2);
   }
 
   @Override
@@ -138,7 +150,7 @@ public class VerdictResultSet implements ResultSet {
   @Override
   public InputStream getAsciiStream(int columnIndex) throws SQLException {
     checkIndex(columnIndex);
-    return queryResult.getAsciiStream(columnIndex - 1);
+    return queryResult.getAsciiStream(columnIndex - 2);
   }
 
   @Override
@@ -150,20 +162,29 @@ public class VerdictResultSet implements ResultSet {
 
   @Override
   public BigDecimal getBigDecimal(int columnIndex) throws SQLException {
+    if (columnIndex == 1) {
+      return BigDecimal.valueOf(lastQueryResultIndex);
+    }
     checkIndex(columnIndex);
 
-    return queryResult.getBigDecimal(columnIndex - 1);
+    return queryResult.getBigDecimal(columnIndex - 2);
   }
 
   @Override
   public BigDecimal getBigDecimal(int columnIndex, int scale) throws SQLException {
+    if (columnIndex == 1) {
+      return BigDecimal.valueOf(lastQueryResultIndex, scale);
+    }
     checkIndex(columnIndex);
 
-    return queryResult.getBigDecimal(columnIndex - 1, scale);
+    return queryResult.getBigDecimal(columnIndex - 2, scale);
   }
 
   @Override
   public BigDecimal getBigDecimal(String columnLabel) throws SQLException {
+    if (columnLabel.equals(verdictStreamSequenceColumn)) {
+      return getBigDecimal(1);
+    }
     if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
       return queryResult.getBigDecimal(standardizedLabel(columnLabel.toLowerCase()));
     } else throw new SQLException("ColumnLabel does not exist.");
@@ -171,6 +192,9 @@ public class VerdictResultSet implements ResultSet {
 
   @Override
   public BigDecimal getBigDecimal(String columnLabel, int scale) throws SQLException {
+    if (columnLabel.equals(verdictStreamSequenceColumn)) {
+      return getBigDecimal(1, scale);
+    }
     if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
       return queryResult.getBigDecimal(standardizedLabel(columnLabel.toLowerCase()), scale);
     } else throw new SQLException("ColumnLabel does not exist.");
@@ -179,7 +203,7 @@ public class VerdictResultSet implements ResultSet {
   @Override
   public InputStream getBinaryStream(int columnIndex) throws SQLException {
     checkIndex(columnIndex);
-    return queryResult.getBinaryStream(columnIndex - 1);
+    return queryResult.getBinaryStream(columnIndex - 2);
   }
 
   @Override
@@ -193,7 +217,7 @@ public class VerdictResultSet implements ResultSet {
   public Blob getBlob(int columnIndex) throws SQLException {
     checkIndex(columnIndex);
 
-    return queryResult.getBlob(columnIndex - 1);
+    return queryResult.getBlob(columnIndex - 2);
   }
 
   @Override
@@ -206,7 +230,7 @@ public class VerdictResultSet implements ResultSet {
   @Override
   public boolean getBoolean(int columnIndex) throws SQLException {
     checkIndex(columnIndex);
-    return queryResult.getBoolean(columnIndex - 1);
+    return queryResult.getBoolean(columnIndex - 2);
   }
 
   @Override
@@ -219,7 +243,7 @@ public class VerdictResultSet implements ResultSet {
   @Override
   public byte getByte(int columnIndex) throws SQLException {
     checkIndex(columnIndex);
-    return queryResult.getByte(columnIndex - 1);
+    return queryResult.getByte(columnIndex - 2);
 
     //    try {
     //      if (isValidType("byte", columnIndex)) {
@@ -250,7 +274,7 @@ public class VerdictResultSet implements ResultSet {
   @Override
   public byte[] getBytes(int columnIndex) throws SQLException {
     checkIndex(columnIndex);
-    return queryResult.getBytes(columnIndex - 1);
+    return queryResult.getBytes(columnIndex - 2);
   }
 
   @Override
@@ -276,7 +300,7 @@ public class VerdictResultSet implements ResultSet {
   public Clob getClob(int columnIndex) throws SQLException {
     checkIndex(columnIndex);
 
-    return queryResult.getClob(columnIndex - 1);
+    return queryResult.getClob(columnIndex - 2);
   }
 
   @Override
@@ -299,14 +323,18 @@ public class VerdictResultSet implements ResultSet {
   @Override
   public Date getDate(int columnIndex) throws SQLException {
     checkIndex(columnIndex);
-    return queryResult.getDate(columnIndex - 1);
+    return queryResult.getDate(columnIndex - 2);
   }
 
   @Override
   public Date getDate(int columnIndex, Calendar cal) throws SQLException {
-    checkIndex(columnIndex);
-
-    throw new SQLFeatureNotSupportedException();
+    try {
+      FastDateFormat dateFormat = FastDateFormat.getInstance("yyyy-MM-dd HH:mm:ss.SSS", cal.getTimeZone());
+      return new Date(dateFormat.parse(queryResult.getDate(columnIndex - 2).toString()).getTime());
+    } catch (Exception e) {
+      SQLException error = new SQLException("Error parsing date");
+      throw error;
+    }
   }
 
   @Override
@@ -318,17 +346,26 @@ public class VerdictResultSet implements ResultSet {
 
   @Override
   public Date getDate(String columnLabel, Calendar cal) throws SQLException {
-    throw new SQLFeatureNotSupportedException();
+    if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
+      int index = columnLabel.indexOf(standardizedLabel(columnLabel)) + 1;
+      return getDate(index, cal);
+    } else throw new SQLException("ColumnLabel does not exist.");
   }
 
   @Override
   public double getDouble(int columnIndex) throws SQLException {
+    if (columnIndex == 1) {
+      return lastQueryResultIndex;
+    }
     checkIndex(columnIndex);
-    return queryResult.getDouble(columnIndex - 1);
+    return queryResult.getDouble(columnIndex - 2);
   }
 
   @Override
   public double getDouble(String columnLabel) throws SQLException {
+    if (columnLabel.equals(verdictStreamSequenceColumn)) {
+      return getDouble(1);
+    }
     if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
       return queryResult.getDouble(standardizedLabel(columnLabel.toLowerCase()));
     } else throw new SQLException("ColumnLabel does not exist.");
@@ -346,12 +383,18 @@ public class VerdictResultSet implements ResultSet {
 
   @Override
   public float getFloat(int columnIndex) throws SQLException {
+    if (columnIndex == 1) {
+      return lastQueryResultIndex;
+    }
     checkIndex(columnIndex);
-    return queryResult.getFloat(columnIndex - 1);
+    return queryResult.getFloat(columnIndex - 2);
   }
 
   @Override
   public float getFloat(String columnLabel) throws SQLException {
+    if (columnLabel.equals(verdictStreamSequenceColumn)) {
+      return getFloat(1);
+    }
     if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
       return queryResult.getFloat(standardizedLabel(columnLabel.toLowerCase()));
     } else throw new SQLException("ColumnLabel does not exist.");
@@ -364,12 +407,18 @@ public class VerdictResultSet implements ResultSet {
 
   @Override
   public int getInt(int columnIndex) throws SQLException {
+    if (columnIndex == 1) {
+      return lastQueryResultIndex;
+    }
     checkIndex(columnIndex);
-    return queryResult.getInt(columnIndex - 1);
+    return queryResult.getInt(columnIndex - 2);
   }
 
   @Override
   public int getInt(String columnLabel) throws SQLException {
+    if (columnLabel.equals(verdictStreamSequenceColumn)) {
+      return getInt(1);
+    }
     if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
       return queryResult.getInt(standardizedLabel(columnLabel.toLowerCase()));
     } else throw new SQLException("ColumnLabel does not exist.");
@@ -377,12 +426,18 @@ public class VerdictResultSet implements ResultSet {
 
   @Override
   public long getLong(int columnIndex) throws SQLException {
+    if (columnIndex == 1) {
+      return lastQueryResultIndex;
+    }
     checkIndex(columnIndex);
-    return queryResult.getLong(columnIndex - 1);
+    return queryResult.getLong(columnIndex - 2);
   }
 
   @Override
   public long getLong(String columnLabel) throws SQLException {
+    if (columnLabel.equals(verdictStreamSequenceColumn)) {
+      return getLong(1);
+    }
     if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
       return queryResult.getLong(standardizedLabel(columnLabel.toLowerCase()));
     } else throw new SQLException("ColumnLabel does not exist.");
@@ -390,6 +445,17 @@ public class VerdictResultSet implements ResultSet {
 
   @Override
   public ResultSetMetaData getMetaData() throws SQLException {
+    if (metadata == null && queryResult == null) {
+      try {
+        queryResult = queryResults.take();
+        metadata = new VerdictStreamResultSetMetaData(queryResult);
+        lastQueryResultIndex++;
+      } catch (InterruptedException e) {
+
+      }
+    } else if (metadata == null && queryResult != null) {
+      metadata = new VerdictStreamResultSetMetaData(queryResult);
+    }
     return metadata;
   }
 
@@ -406,7 +472,7 @@ public class VerdictResultSet implements ResultSet {
   @Override
   public NClob getNClob(int columnIndex) throws SQLException {
     checkIndex(columnIndex);
-    return queryResult.getNClob(columnIndex - 1);
+    return queryResult.getNClob(columnIndex - 2);
   }
 
   @Override
@@ -429,7 +495,7 @@ public class VerdictResultSet implements ResultSet {
   @Override
   public Object getObject(int columnIndex) throws SQLException {
     checkIndex(columnIndex);
-    return queryResult.getValue(columnIndex - 1);
+    return queryResult.getValue(columnIndex - 2);
   }
 
   @Override
@@ -461,7 +527,7 @@ public class VerdictResultSet implements ResultSet {
 
   @Override
   public Ref getRef(int columnIndex) throws SQLException {
-    return queryResult.getRef(columnIndex - 1);
+    return queryResult.getRef(columnIndex - 2);
   }
 
   @Override
@@ -478,7 +544,7 @@ public class VerdictResultSet implements ResultSet {
 
   @Override
   public RowId getRowId(int columnIndex) throws SQLException {
-    return queryResult.getRowId(columnIndex - 1);
+    return queryResult.getRowId(columnIndex - 2);
   }
 
   @Override
@@ -490,12 +556,18 @@ public class VerdictResultSet implements ResultSet {
 
   @Override
   public short getShort(int columnIndex) throws SQLException {
+    if (columnIndex == 1) {
+      return Integer.valueOf(lastQueryResultIndex).shortValue();
+    }
     checkIndex(columnIndex);
-    return queryResult.getShort(columnIndex - 1);
+    return queryResult.getShort(columnIndex - 2);
   }
 
   @Override
   public short getShort(String columnLabel) throws SQLException {
+    if (columnLabel.equals(verdictStreamSequenceColumn)) {
+      return getShort(1);
+    }
     if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
       return queryResult.getShort(standardizedLabel(columnLabel.toLowerCase()));
     } else throw new SQLException("ColumnLabel does not exist.");
@@ -503,7 +575,7 @@ public class VerdictResultSet implements ResultSet {
 
   @Override
   public SQLXML getSQLXML(int columnIndex) throws SQLException {
-    return queryResult.getSQLXML(columnIndex - 1);
+    return queryResult.getSQLXML(columnIndex - 2);
   }
 
   @Override
@@ -520,11 +592,17 @@ public class VerdictResultSet implements ResultSet {
 
   @Override
   public String getString(int columnIndex) throws SQLException {
-    return queryResult.getString(columnIndex - 1);
+    if (columnIndex == 1) {
+      return Integer.valueOf(lastQueryResultIndex).toString();
+    }
+    return queryResult.getString(columnIndex - 2);
   }
 
   @Override
   public String getString(String columnLabel) throws SQLException {
+    if (columnLabel.equals(verdictStreamSequenceColumn)) {
+      return getString(1);
+    }
     if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
       return queryResult.getString(standardizedLabel(columnLabel.toLowerCase()));
     } else throw new SQLException("ColumnLabel does not exist.");
@@ -533,12 +611,18 @@ public class VerdictResultSet implements ResultSet {
   @Override
   public Time getTime(int columnIndex) throws SQLException {
     checkIndex(columnIndex);
-    return queryResult.getTime(columnIndex - 1);
+    return queryResult.getTime(columnIndex - 2);
   }
 
   @Override
   public Time getTime(int columnIndex, Calendar cal) throws SQLException {
-    throw new SQLFeatureNotSupportedException();
+    try {
+      FastDateFormat dateFormat = FastDateFormat.getInstance("yyyy-MM-dd HH:mm:ss.SSS", cal.getTimeZone());
+      return new Time(dateFormat.parse(queryResult.getTime(columnIndex - 2).toString()).getTime());
+    } catch (Exception e) {
+      SQLException error = new SQLException("Error parsing time");
+      throw error;
+    }
   }
 
   @Override
@@ -550,20 +634,23 @@ public class VerdictResultSet implements ResultSet {
 
   @Override
   public Time getTime(String columnLabel, Calendar cal) throws SQLException {
-    throw new SQLFeatureNotSupportedException();
+    if (colNameIdx.containsKey(standardizedLabel(columnLabel))) {
+      int index = columnLabel.indexOf(standardizedLabel(columnLabel)) + 1;
+      return getTime(index, cal);
+    } else throw new SQLException("ColumnLabel does not exist.");
   }
 
   @Override
   public Timestamp getTimestamp(int columnIndex) throws SQLException {
     checkIndex(columnIndex);
-    return queryResult.getTimestamp(columnIndex - 1);
+    return queryResult.getTimestamp(columnIndex - 2);
   }
 
   @Override
   public Timestamp getTimestamp(int columnIndex, Calendar cal) throws SQLException {
     try {
       FastDateFormat dateFormat = FastDateFormat.getInstance("yyyy-MM-dd HH:mm:ss.SSS", cal.getTimeZone());
-      return new Timestamp(dateFormat.parse(queryResult.getTimestamp(columnIndex - 1).toString()).getTime());
+      return new Timestamp(dateFormat.parse(queryResult.getTimestamp(columnIndex - 2).toString()).getTime());
     } catch (Exception e) {
       SQLException error = new SQLException("Error parsing time stamp");
       throw error;
@@ -593,7 +680,7 @@ public class VerdictResultSet implements ResultSet {
   @Override
   public InputStream getUnicodeStream(int columnIndex) throws SQLException {
     checkIndex(columnIndex);
-    return queryResult.getUnicodeStream(columnIndex - 1);
+    return queryResult.getUnicodeStream(columnIndex - 2);
   }
 
   @Override
@@ -605,7 +692,7 @@ public class VerdictResultSet implements ResultSet {
 
   @Override
   public URL getURL(int columnIndex) throws SQLException {
-    return queryResult.getURL(columnIndex - 1);
+    return queryResult.getURL(columnIndex - 2);
   }
 
   @Override
@@ -627,7 +714,7 @@ public class VerdictResultSet implements ResultSet {
 
   @Override
   public boolean isAfterLast() throws SQLException {
-    return rowIndex > queryResult.getRowCount();
+    throw new SQLFeatureNotSupportedException();
   }
 
   @Override
@@ -638,7 +725,7 @@ public class VerdictResultSet implements ResultSet {
 
   @Override
   public boolean isClosed() throws SQLException {
-    return false;
+    return isClosed;
   }
 
   @Override
@@ -649,7 +736,7 @@ public class VerdictResultSet implements ResultSet {
 
   @Override
   public boolean isLast() throws SQLException {
-    return rowIndex == queryResult.getRowCount();
+    throw new SQLFeatureNotSupportedException();
     //    throw new SQLFeatureNotSupportedException();
   }
 
@@ -747,33 +834,48 @@ public class VerdictResultSet implements ResultSet {
     throw new SQLFeatureNotSupportedException();
   }
 
+  /**
+   * Require a mutex here. The stream is executed on the other thread. When the execution of the stream is finished,
+   * it will try to synchronize hasReadAllQueryResults flag by calling synchronized(hasReadAllQueryResults).
+   * And here are two cases: 1) next() executes first 2) the other thread executes first
+   *
+   * 1) If next() first executes, the flag hasReadAllQueryResults is still false. next() will try to take new queryResult
+   * from queryResults. As soon as, next doesn't acquire hasReadAllQueryResults flag. Then the other thread will take the
+   * acquire of hasReadAllQueryResults, append the queryresult and set the flag to be true. At that time, if another next() is called,
+   * it will get blocked at the line 'else if (queryResults.peek() == null && hasReadAllQueryResults)' until the other thread finishes
+   * its job.
+   *
+   * 2) If the other thread executes first, it will append the query result and set the flag to be true. Then waiting
+   * next() starts to execute. Since there are still queryResult in queryResults, next() will take it from the list so that
+   * the last queryResult won't be neglected. The second next() will return false, since queryResults.peek()==null and
+   * hasReadAllQueryResults==true.
+   *
+   * @return
+   * @throws SQLException
+   */
   @Override
   public boolean next() throws SQLException {
-    boolean hasMore = queryResult.next();
-    if (hasMore) {
-      rowIndex++;
-      return true;
-    } else {
+    if (isClosed) return false;
+    try {
+      // on the first call
+      if (queryResult == null && (!hasReadAllQueryResults || !queryResults.isEmpty())) {
+        queryResult = queryResults.take();
+        lastQueryResultIndex++;
+      }
+      boolean hasMore = queryResult.next();
+      if (hasMore) {
+        rowIndex++;
+        return true;
+      } else if (queryResults.peek() == null && hasReadAllQueryResults) {
+        return false;
+      } else {
+        queryResult = queryResults.take();
+        lastQueryResultIndex++;
+        return next();
+      }
+    } catch (InterruptedException e) {
       return false;
     }
-
-    //    if (rowCount == 1) {
-    //      isFirst = true;
-    //    }
-    //    else {
-    //      isFirst = false;
-    //    }
-    //
-    //    if (isBeforefirst) {
-    //      isBeforefirst = false;
-    //    }
-    //    boolean next = queryResult.next();
-    //    rowCount++;
-    //
-    //    if (!next) {
-    //      isAfterLast = true;
-    //    }
-    //    return next;
   }
 
   @Override
@@ -1250,6 +1352,7 @@ public class VerdictResultSet implements ResultSet {
 
   @Override
   public boolean wasNull() throws SQLException {
-    return queryResult.wasNull();
+    return queryResults.isEmpty();
   }
+
 }

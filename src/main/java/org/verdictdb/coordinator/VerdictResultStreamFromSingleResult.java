@@ -30,6 +30,11 @@ public class VerdictResultStreamFromSingleResult implements VerdictResultStream 
   }
 
   @Override
+  public boolean isCompleted() {
+    return nextHaveCalled;
+  }
+
+  @Override
   public boolean hasNext() {
     return !nextHaveCalled;
   }

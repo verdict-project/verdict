@@ -50,6 +50,7 @@ options { tokenVocab=VerdictSQLLexer; }
 
 verdict_statement
     : select_statement
+    | stream_select_statement
     | create_scramble_statement
     | delete_scramble_statement
     | show_scrambles_statement
@@ -155,6 +156,10 @@ ddl_clause
 select_statement
     : with_expression? EXACT? query_expression order_by_clause? limit_clause? ';'?
     ;
+
+stream_select_statement
+   : STREAM select_statement
+   ;
 
 // https://msdn.microsoft.com/en-us/library/ms177564.aspx
 output_clause

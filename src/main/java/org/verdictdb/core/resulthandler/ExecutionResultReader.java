@@ -63,4 +63,5 @@ public class ExecutionResultReader implements Iterable<DbmsQueryResult>, Iterato
   public void remove() {
     throw new UnsupportedOperationException();
   }
+
 }
