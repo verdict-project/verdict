@@ -66,6 +66,8 @@ public class ScrambleMetaStore extends VerdictMetaStore {
 
   private static final String DELETED = "DELETED";
 
+  private static final String TIMESTAMP_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
+
   private DbmsConnection conn;
 
   private String storeSchema;
@@ -177,7 +179,7 @@ public class ScrambleMetaStore extends VerdictMetaStore {
     InsertValuesQuery insertQuery = new InsertValuesQuery();
     insertQuery.setSchemaName(getStoreSchema());
     insertQuery.setTableName(getMetaStoreTableName());
-    String timeStamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+    String timeStamp = new SimpleDateFormat(TIMESTAMP_FORMAT).format(new Date());
     insertQuery.setValues(
         Arrays.<Object>asList(
             originalTableSchema,
@@ -270,7 +272,7 @@ public class ScrambleMetaStore extends VerdictMetaStore {
     String scrambleSchema = meta.getSchemaName();
     String scrambleTable = meta.getTableName();
     String scrambleMethod = meta.getMethod();
-    String timeStamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+    String timeStamp = new SimpleDateFormat(TIMESTAMP_FORMAT).format(new Date());
     String jsonString = meta.toJsonString();
     query.setValues(
         Arrays.<Object>asList(

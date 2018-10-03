@@ -146,8 +146,6 @@ public class RedshiftScrambleManipulationTest {
         .execute(
             String.format(
                 "CREATE SCRAMBLE %s.orders_scramble4 FROM %s.orders", SCHEMA_NAME, SCHEMA_NAME));
-    // give 0.5 sec delay between creation and deletion of scrambled table
-    Thread.sleep(500);
     String sql =
         String.format("DROP SCRAMBLE %s.orders_scramble4 ON %s.orders", SCHEMA_NAME, SCHEMA_NAME);
     vc.createStatement().execute(sql);
@@ -189,8 +187,6 @@ public class RedshiftScrambleManipulationTest {
         .execute(
             String.format(
                 "CREATE SCRAMBLE %s.orders_scramble6 FROM %s.orders", SCHEMA_NAME, SCHEMA_NAME));
-    // give 0.5 sec delay between creation and deletion of scrambled table
-    Thread.sleep(500);
     String sql = String.format("DROP ALL SCRAMBLE %s.orders", SCHEMA_NAME);
     vc.createStatement().execute(sql);
 
@@ -241,8 +237,6 @@ public class RedshiftScrambleManipulationTest {
         .execute(
             String.format(
                 "CREATE SCRAMBLE %s.orders_scramble8 FROM %s.orders", SCHEMA_NAME, SCHEMA_NAME));
-    // give 0.5 sec delay between creation and deletion of scrambled table
-    Thread.sleep(500);
 
     sql = String.format("DROP SCRAMBLE %s.orders_scramble7 ON %s.orders", SCHEMA_NAME, SCHEMA_NAME);
     vc.createStatement().execute(sql);
