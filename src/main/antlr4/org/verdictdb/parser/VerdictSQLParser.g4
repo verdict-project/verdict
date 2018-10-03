@@ -52,7 +52,8 @@ verdict_statement
     : select_statement
     | stream_select_statement
     | create_scramble_statement
-    | delete_scramble_statement
+    | drop_scramble_statement
+    | drop_all_scrambles_statement
     | show_scrambles_statement
     | config_statement
     | other_statement
@@ -79,9 +80,13 @@ on_columns
     : ON column_name (',' column_name)*
     ;
 
-delete_scramble_statement
-    : DROP SCRAMBLE original_table=table_name
+drop_scramble_statement
+    : DROP SCRAMBLE scrambled_table=table_name ON original_table=table_name
     ;
+
+drop_all_scrambles_statement
+	: DROP ALL SCRAMBLE original_table=table_name
+	;
 
 show_scrambles_statement
     : SHOW SCRAMBLES

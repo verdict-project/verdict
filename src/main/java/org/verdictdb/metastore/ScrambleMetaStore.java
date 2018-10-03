@@ -16,16 +16,14 @@
 
 package org.verdictdb.metastore;
 
-import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
+import org.verdictdb.VerdictSingleResult;
 import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.commons.VerdictOption;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.DbmsQueryResult;
+import org.verdictdb.coordinator.VerdictSingleResultFromDbmsQueryResult;
 import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.core.sqlobject.BaseColumn;
@@ -39,6 +37,14 @@ import org.verdictdb.core.sqlobject.SelectItem;
 import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sqlwriter.QueryToSql;
+
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 
 public class ScrambleMetaStore extends VerdictMetaStore {
 
@@ -57,6 +63,10 @@ public class ScrambleMetaStore extends VerdictMetaStore {
   private static final String ADDED_AT_COLUMN = "added_at";
 
   private static final String DATA_COLUMN = "data";
+
+  private static final String DELETED = "DELETED";
+
+  private static final String TIMESTAMP_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
 
   private DbmsConnection conn;
 
@@ -115,6 +125,74 @@ public class ScrambleMetaStore extends VerdictMetaStore {
     addToStore(scrambleMetaSet);
   }
 
+  public VerdictSingleResult showScrambles() throws VerdictDBException {
+    String tableAlias = "t";
+    SelectQuery query =
+        SelectQuery.create(
+            Arrays.<SelectItem>asList(
+                new BaseColumn(tableAlias, ORIGINAL_SCHEMA_COLUMN),
+                new BaseColumn(tableAlias, ORIGINAL_TABLE_COLUMN),
+                new BaseColumn(tableAlias, SCRAMBLE_SCHEMA_COLUMN),
+                new BaseColumn(tableAlias, SCRAMBLE_TABLE_COLUMN),
+                new BaseColumn(tableAlias, ADDED_AT_COLUMN),
+                new BaseColumn(tableAlias, DATA_COLUMN)),
+            new BaseTable(storeSchema, METASTORE_TABLE_NAME, tableAlias));
+    query.addOrderby(new OrderbyAttribute(ADDED_AT_COLUMN, "desc"));
+    String sql = QueryToSql.convert(conn.getSyntax(), query);
+    DbmsQueryResult result = conn.execute(sql);
+
+    return new VerdictSingleResultFromDbmsQueryResult(result);
+  }
+
+  public void dropAllScrambleTable(BaseTable originalTable) throws VerdictDBException {
+    String originalTableSchema = originalTable.getSchemaName();
+    String originalTableName = originalTable.getTableName();
+    ScrambleMetaSet metaSet = this.retrieve();
+
+    for (Iterator<ScrambleMeta> it = metaSet.iterator(); it.hasNext(); ) {
+      ScrambleMeta meta = it.next();
+      if (meta.getOriginalTableName().equals(originalTableName)
+          && meta.getOriginalSchemaName().equals(originalTableSchema)) {
+        String scrambleTableSchema = meta.getSchemaName();
+        String scrambleTableName = meta.getTableName();
+        this.dropScrambleTable(
+            new BaseTable(originalTableSchema, originalTableName),
+            new BaseTable(scrambleTableSchema, scrambleTableName));
+      }
+    }
+  }
+
+  public void dropScrambleTable(BaseTable originalTable, BaseTable scrambleTable)
+      throws VerdictDBException {
+    String originalTableSchema = originalTable.getSchemaName();
+    String originalTableName = originalTable.getTableName();
+    String scrambleTableSchema = scrambleTable.getSchemaName();
+    String scrambleTableName = scrambleTable.getTableName();
+
+    // drop the actual scrambled table first.
+    DropTableQuery dropQuery = new DropTableQuery(scrambleTableSchema, scrambleTableName);
+    dropQuery.setIfExists(true);
+    String sql = QueryToSql.convert(conn.getSyntax(), dropQuery);
+    conn.execute(sql);
+
+    // update metadata with a new row where 'data' and 'method' marked as 'DELETED'
+    InsertValuesQuery insertQuery = new InsertValuesQuery();
+    insertQuery.setSchemaName(getStoreSchema());
+    insertQuery.setTableName(getMetaStoreTableName());
+    String timeStamp = new SimpleDateFormat(TIMESTAMP_FORMAT).format(new Date());
+    insertQuery.setValues(
+        Arrays.<Object>asList(
+            originalTableSchema,
+            originalTableName,
+            scrambleTableSchema,
+            scrambleTableName,
+            DELETED,
+            timeStamp,
+            DELETED));
+    sql = QueryToSql.convert(conn.getSyntax(), insertQuery);
+    conn.execute(sql);
+  }
+
   public void remove() throws VerdictDBException {
     // create a schema if not exists
     CreateSchemaQuery createSchemaQuery = new CreateSchemaQuery(storeSchema);
@@ -136,7 +214,7 @@ public class ScrambleMetaStore extends VerdictMetaStore {
    */
   public void addToStore(ScrambleMetaSet scrambleMetaSet) throws VerdictDBException {
     String sql;
-    
+
     // create a schema if not exists
     if (!conn.getSchemas().contains(storeSchema)) {
       CreateSchemaQuery createSchemaQuery = new CreateSchemaQuery(storeSchema);
@@ -194,7 +272,7 @@ public class ScrambleMetaStore extends VerdictMetaStore {
     String scrambleSchema = meta.getSchemaName();
     String scrambleTable = meta.getTableName();
     String scrambleMethod = meta.getMethod();
-    String timeStamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+    String timeStamp = new SimpleDateFormat(TIMESTAMP_FORMAT).format(new Date());
     String jsonString = meta.toJsonString();
     query.setValues(
         Arrays.<Object>asList(
@@ -215,56 +293,18 @@ public class ScrambleMetaStore extends VerdictMetaStore {
    */
   @Override
   public ScrambleMetaSet retrieve() {
-    ScrambleMetaSet retrieved = new ScrambleMetaSet();
-
-    try {
-      String storeSchema = getStoreSchema();
-      String storeTable = getMetaStoreTableName();
-
-      List<String> existingSchemas = conn.getSchemas();
-      if (existingSchemas.contains(storeSchema) == false) {
-        return new ScrambleMetaSet();
-      }
-
-      List<String> existingTables = conn.getTables(storeSchema);
-      if (existingTables.contains(storeTable) == false) {
-        return new ScrambleMetaSet();
-      }
-
-      // now ready to retrieve
-      String tableAlias = "t";
-      SelectQuery query =
-          SelectQuery.create(
-              Arrays.<SelectItem>asList(
-                  new BaseColumn(tableAlias, ADDED_AT_COLUMN),
-                  new BaseColumn(tableAlias, DATA_COLUMN)),
-              new BaseTable(storeSchema, storeTable, tableAlias));
-      query.addOrderby(new OrderbyAttribute(ADDED_AT_COLUMN));
-      String sql = QueryToSql.convert(conn.getSyntax(), query);
-      DbmsQueryResult result = conn.execute(sql);
-
-      while (result.next()) {
-        String jsonString = result.getString(1);
-        ScrambleMeta meta = ScrambleMeta.fromJsonString(jsonString);
-        retrieved.addScrambleMeta(meta);
-      }
-    } catch (VerdictDBException e) {
-      e.printStackTrace();
-    }
-
-    return retrieved;
+    return retrieve(conn, getStoreSchema());
   }
 
   /**
-   * Static version of retrieve() that uses default schema and table names
+   * Static version of retrieve()
    *
    * @return a set of scramble meta
    */
-  public static ScrambleMetaSet retrieve(DbmsConnection conn, VerdictOption options) {
+  public static ScrambleMetaSet retrieve(DbmsConnection conn, String storeSchema) {
     ScrambleMetaSet retrieved = new ScrambleMetaSet();
 
     try {
-      String storeSchema = options.getVerdictMetaSchemaName();
       String storeTable = METASTORE_TABLE_NAME;
 
       List<String> existingSchemas = conn.getSchemas();
@@ -282,15 +322,35 @@ public class ScrambleMetaStore extends VerdictMetaStore {
       SelectQuery query =
           SelectQuery.create(
               Arrays.<SelectItem>asList(
+                  new BaseColumn(tableAlias, ORIGINAL_SCHEMA_COLUMN),
+                  new BaseColumn(tableAlias, ORIGINAL_TABLE_COLUMN),
+                  new BaseColumn(tableAlias, SCRAMBLE_SCHEMA_COLUMN),
+                  new BaseColumn(tableAlias, SCRAMBLE_TABLE_COLUMN),
                   new BaseColumn(tableAlias, ADDED_AT_COLUMN),
                   new BaseColumn(tableAlias, DATA_COLUMN)),
               new BaseTable(storeSchema, storeTable, tableAlias));
-      query.addOrderby(new OrderbyAttribute(ADDED_AT_COLUMN));
+      query.addOrderby(new OrderbyAttribute(ADDED_AT_COLUMN, "desc"));
       String sql = QueryToSql.convert(conn.getSyntax(), query);
       DbmsQueryResult result = conn.execute(sql);
 
+      Set<Pair<BaseTable, BaseTable>> deletedSet = new HashSet<>();
+
       while (result.next()) {
-        String jsonString = result.getString(1);
+        String originalSchema = result.getString(0);
+        String originalTable = result.getString(1);
+        String scrambleSchema = result.getString(2);
+        String scrambleTable = result.getString(3);
+        BaseTable original = new BaseTable(originalSchema, originalTable);
+        BaseTable scramble = new BaseTable(scrambleSchema, scrambleTable);
+        Pair<BaseTable, BaseTable> pair = ImmutablePair.of(original, scramble);
+        String jsonString = result.getString(5);
+        if (jsonString.toUpperCase().equals(DELETED)) {
+          deletedSet.add(pair);
+        }
+        // skip the scrambled table has been deleted
+        if (deletedSet.contains(pair)) {
+          continue;
+        }
         ScrambleMeta meta = ScrambleMeta.fromJsonString(jsonString);
         retrieved.addScrambleMeta(meta);
       }

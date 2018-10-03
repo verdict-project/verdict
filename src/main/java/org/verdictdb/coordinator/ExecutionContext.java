@@ -69,10 +69,13 @@ public class ExecutionContext {
   private enum QueryType {
     select,
     scrambling,
+    drop_scramble,
+    drop_all_scrambles,
     set_default_schema,
     unknown,
     show_databases,
     show_tables,
+    show_scrambles,
     describe_table
   }
 
@@ -129,7 +132,8 @@ public class ExecutionContext {
       if ((queryType != QueryType.select
               && queryType != QueryType.show_databases
               && queryType != QueryType.show_tables
-              && queryType != QueryType.describe_table)
+              && queryType != QueryType.describe_table
+              && queryType != QueryType.show_scrambles)
           && getResult) {
         throw new VerdictDBException(
             "Can not issue data manipulation statements with executeQuery().");
@@ -212,6 +216,28 @@ public class ExecutionContext {
       refreshScrambleMetaStore();
       return null;
 
+    } else if (queryType.equals(QueryType.drop_scramble)) {
+      log.debug("Query type: drop_scramble");
+
+      ScrambleMetaStore metaStore = new ScrambleMetaStore(conn, options);
+      Pair<BaseTable, BaseTable> tablePair = getTablePairForDropScramble(query);
+      metaStore.dropScrambleTable(tablePair.getLeft(), tablePair.getRight());
+
+      return null;
+    } else if (queryType.equals(QueryType.drop_all_scrambles)) {
+      log.debug("Query type: drop_all_scrambles");
+
+      ScrambleMetaStore metaStore = new ScrambleMetaStore(conn, options);
+      BaseTable table = getTableForDropAllScramble(query);
+      metaStore.dropAllScrambleTable(table);
+
+      return null;
+    } else if (queryType.equals(QueryType.show_scrambles)) {
+      log.debug("Query type: show_scrambles");
+
+      ScrambleMetaStore metaStore = new ScrambleMetaStore(conn, options);
+      return new VerdictResultStreamFromSingleResult(metaStore.showScrambles());
+
     } else if (queryType.equals(QueryType.set_default_schema)) {
       log.debug("Query type: set_default_schema");
       updateDefaultSchemaFromQuery(query);
@@ -240,6 +266,36 @@ public class ExecutionContext {
   private void refreshScrambleMetaStore() {
     // no type check was added to make it fail if non-cached metastore is used.
     ((CachedScrambleMetaStore) this.metaStore).refreshCache();
+  }
+
+  private Pair<BaseTable, BaseTable> getTablePairForDropScramble(String query) {
+    VerdictSQLParser parser = NonValidatingSQLParser.parserOf(query);
+    VerdictSQLParserBaseVisitor<Pair<BaseTable, BaseTable>> visitor =
+        new VerdictSQLParserBaseVisitor<Pair<BaseTable, BaseTable>>() {
+          @Override
+          public Pair<BaseTable, BaseTable> visitDrop_scramble_statement(
+              VerdictSQLParser.Drop_scramble_statementContext ctx) {
+            RelationGen g = new RelationGen();
+            BaseTable originalTable = (BaseTable) g.visit(ctx.original_table);
+            BaseTable scrambleTable = (BaseTable) g.visit(ctx.scrambled_table);
+            return ImmutablePair.of(originalTable, scrambleTable);
+          }
+        };
+    return visitor.visit(parser.drop_scramble_statement());
+  }
+
+  private BaseTable getTableForDropAllScramble(String query) {
+    VerdictSQLParser parser = NonValidatingSQLParser.parserOf(query);
+    VerdictSQLParserBaseVisitor<BaseTable> visitor =
+        new VerdictSQLParserBaseVisitor<BaseTable>() {
+          @Override
+          public BaseTable visitDrop_all_scrambles_statement(
+              VerdictSQLParser.Drop_all_scrambles_statementContext ctx) {
+            RelationGen g = new RelationGen();
+            return (BaseTable) g.visit(ctx.original_table);
+          }
+        };
+    return visitor.visit(parser.drop_all_scrambles_statement());
   }
 
   private CreateScrambleQuery generateScrambleQuery(String query) {
@@ -414,6 +470,24 @@ public class ExecutionContext {
           public QueryType visitCreate_scramble_statement(
               VerdictSQLParser.Create_scramble_statementContext ctx) {
             return QueryType.scrambling;
+          }
+
+          @Override
+          public QueryType visitDrop_scramble_statement(
+              VerdictSQLParser.Drop_scramble_statementContext ctx) {
+            return QueryType.drop_scramble;
+          }
+
+          @Override
+          public QueryType visitDrop_all_scrambles_statement(
+              VerdictSQLParser.Drop_all_scrambles_statementContext ctx) {
+            return QueryType.drop_all_scrambles;
+          }
+
+          @Override
+          public QueryType visitShow_scrambles_statement(
+              VerdictSQLParser.Show_scrambles_statementContext ctx) {
+            return QueryType.show_scrambles;
           }
 
           @Override
