@@ -141,11 +141,13 @@ public class RedshiftScrambleManipulationTest {
   }
 
   @Test
-  public void DropScrambleTest() throws SQLException {
+  public void DropScrambleTest() throws SQLException, InterruptedException {
     vc.createStatement()
         .execute(
             String.format(
                 "CREATE SCRAMBLE %s.orders_scramble4 FROM %s.orders", SCHEMA_NAME, SCHEMA_NAME));
+    // give 0.5 sec delay between creation and deletion of scrambled table
+    Thread.sleep(500);
     String sql =
         String.format("DROP SCRAMBLE %s.orders_scramble4 ON %s.orders", SCHEMA_NAME, SCHEMA_NAME);
     vc.createStatement().execute(sql);
