@@ -184,9 +184,9 @@ public class ScrambleMetaStore extends VerdictMetaStore {
             originalTableName,
             scrambleTableSchema,
             scrambleTableName,
-            "DELETED",
+            DELETED,
             timeStamp,
-            "DELETED"));
+            DELETED));
     sql = QueryToSql.convert(conn.getSyntax(), insertQuery);
     conn.execute(sql);
   }
