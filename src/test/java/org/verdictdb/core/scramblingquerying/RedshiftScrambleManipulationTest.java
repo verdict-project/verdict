@@ -165,13 +165,13 @@ public class RedshiftScrambleManipulationTest {
     ResultSet rs = vc.createStatement().executeQuery(sql);
     int rowCount = 0;
     while (rs.next()) {
-      assertEquals(rs.getString(1), SCHEMA_NAME);
-      assertEquals(rs.getString(2), "orders");
-      assertEquals(rs.getString(3), SCHEMA_NAME);
+      assertEquals(SCHEMA_NAME, rs.getString(1));
+      assertEquals("orders", rs.getString(2));
+      assertEquals(SCHEMA_NAME, rs.getString(3));
       String scrambleName = rs.getString(4);
       assertTrue(scrambleName.startsWith("orders_scramble"));
       if (scrambleName.equals("orders_scramble4") && rowCount == 0) {
-        assertEquals(rs.getString(6), "DELETED");
+        assertEquals("DELETED", rs.getString(6));
       }
       ++rowCount;
     }
@@ -207,9 +207,9 @@ public class RedshiftScrambleManipulationTest {
     Set<String> deleted = new HashSet<>();
     int rowCount = 0;
     while (rs.next()) {
-      assertEquals(rs.getString(1), SCHEMA_NAME);
-      assertEquals(rs.getString(2), "orders");
-      assertEquals(rs.getString(3), SCHEMA_NAME);
+      assertEquals(SCHEMA_NAME, rs.getString(1));
+      assertEquals("orders", rs.getString(2));
+      assertEquals(SCHEMA_NAME, rs.getString(3));
       String scrambleName = rs.getString(4);
       assertTrue(scrambleName.startsWith("orders_scramble"));
       if (!deleted.contains(scrambleName)) {
