@@ -180,7 +180,7 @@ public class RedshiftScrambleManipulationTest {
   }
 
   @Test
-  public void DropAllScramblesTest() throws SQLException {
+  public void DropAllScramblesTest() throws SQLException, InterruptedException {
     vc.createStatement()
         .execute(
             String.format(
@@ -189,6 +189,8 @@ public class RedshiftScrambleManipulationTest {
         .execute(
             String.format(
                 "CREATE SCRAMBLE %s.orders_scramble6 FROM %s.orders", SCHEMA_NAME, SCHEMA_NAME));
+    // give 0.5 sec delay between creation and deletion of scrambled table
+    Thread.sleep(500);
     String sql = String.format("DROP ALL SCRAMBLE %s.orders", SCHEMA_NAME);
     vc.createStatement().execute(sql);
 
@@ -223,7 +225,8 @@ public class RedshiftScrambleManipulationTest {
   }
 
   @Test
-  public void DropScrambleAndGetScrambleMetaSetTest() throws SQLException, VerdictDBDbmsException {
+  public void DropScrambleAndGetScrambleMetaSetTest()
+      throws SQLException, VerdictDBDbmsException, InterruptedException {
 
     // drop all scrambled tables first.
     String sql = String.format("DROP ALL SCRAMBLE %s.orders", SCHEMA_NAME);
@@ -238,6 +241,8 @@ public class RedshiftScrambleManipulationTest {
         .execute(
             String.format(
                 "CREATE SCRAMBLE %s.orders_scramble8 FROM %s.orders", SCHEMA_NAME, SCHEMA_NAME));
+    // give 0.5 sec delay between creation and deletion of scrambled table
+    Thread.sleep(500);
 
     sql = String.format("DROP SCRAMBLE %s.orders_scramble7 ON %s.orders", SCHEMA_NAME, SCHEMA_NAME);
     vc.createStatement().execute(sql);
