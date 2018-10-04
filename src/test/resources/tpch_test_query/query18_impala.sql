@@ -7,17 +7,17 @@ select
   sum(l_quantity)
 from
   customer,
-  orders_scrambled,
+  orders,
   (select
   l_orderkey,
   sum(l_quantity) as t_sum_quantity
   from
-    lineitem_scrambled
+    lineitem
   where
     l_orderkey is not null
   group by
     l_orderkey) as t,
-  lineitem_scrambled l
+  lineitem l
 where
   c_custkey = o_custkey
   and o_orderkey = t.l_orderkey

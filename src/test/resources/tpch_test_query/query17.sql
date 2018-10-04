@@ -10,7 +10,7 @@ from (
   l_partkey as t_partkey,
   0.2 * avg(l_quantity) as t_avg_quantity
 from
-  lineitem_scrambled
+  lineitem
 group by l_partkey) as q17_lineitem_tmp_cached Inner Join
     (select
       l_quantity,
@@ -18,7 +18,7 @@ group by l_partkey) as q17_lineitem_tmp_cached Inner Join
       l_extendedprice
     from
       part,
-      lineitem_scrambled
+      lineitem
     where
       p_partkey = l_partkey
     ) as l1 on l1.l_partkey = t_partkey

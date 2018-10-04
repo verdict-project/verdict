@@ -9,8 +9,8 @@ select
     c_comment
 from
     customer,
-    orders_scrambled,
-    lineitem_scrambled,
+    orders,
+    lineitem,
     nation
 where
     c_custkey = o_custkey

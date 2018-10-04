@@ -10,7 +10,7 @@ from
     l_suppkey,
     0.5 * sum(l_quantity) as sum_quantity
   from
-    lineitem_scrambled
+    lineitem
 where
   l_shipdate >= '1994-01-01'
   and l_shipdate < '1998-01-01'

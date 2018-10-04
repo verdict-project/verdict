@@ -3,8 +3,8 @@ select
     sum(l_extendedprice * (1 - l_discount)) as revenue
 from
     customer,
-    orders_scrambled,
-    lineitem_scrambled,
+    orders,
+    lineitem,
     supplier,
     nation,
     region
