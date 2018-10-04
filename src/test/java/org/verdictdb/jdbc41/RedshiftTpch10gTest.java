@@ -71,7 +71,7 @@ public class RedshiftTpch10gTest {
     vc.close();
   }
   
-  @Test
+//  @Test
   public void testQ5() throws SQLException {
     String vcConnectionString =
         String.format("jdbc:verdict:redshift://%s/%s", REDSHIFT_HOST, REDSHIFT_DATABASE);
