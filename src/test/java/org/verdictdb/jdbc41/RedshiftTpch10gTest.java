@@ -35,7 +35,7 @@ public class RedshiftTpch10gTest {
   }
 
 //  @Test
-  public void test() throws SQLException {
+  public void testQ1() throws SQLException {
     String vcConnectionString =
         String.format("jdbc:verdict:redshift://%s/%s", REDSHIFT_HOST, REDSHIFT_DATABASE);
     Connection vc =
@@ -66,7 +66,50 @@ public class RedshiftTpch10gTest {
       System.out.println();
     }
     
+    rs.close();
+    stmt.close();
+    vc.close();
+  }
+  
+  @Test
+  public void testQ5() throws SQLException {
+    String vcConnectionString =
+        String.format("jdbc:verdict:redshift://%s/%s", REDSHIFT_HOST, REDSHIFT_DATABASE);
+    Connection vc =
+        DriverManager.getConnection(vcConnectionString, REDSHIFT_USER, REDSHIFT_PASSWORD);
     
+    String query = "SELECT \"N2\".\"n_name\" AS \"n_name\",\n" + 
+        "  SUM((\"lineitem\".\"l_extendedprice\" * (1 - \"lineitem\".\"l_discount\"))) AS \"sum_calculation_7060711085256495_ok\"\n" + 
+        "FROM \"tpch10g\".\"lineitem\" \"lineitem\"\n" + 
+        "  INNER JOIN \"tpch10g\".\"orders\" \"orders\" ON (\"lineitem\".\"l_orderkey\" = \"orders\".\"o_orderkey\")\n" + 
+        "  INNER JOIN \"tpch10g\".\"supplier\" \"supplier\" ON (\"lineitem\".\"l_suppkey\" = \"supplier\".\"s_suppkey\")\n" + 
+        "  INNER JOIN \"tpch10g\".\"customer\" \"customer\" ON (\"orders\".\"o_custkey\" = \"customer\".\"c_custkey\")\n" + 
+        "  INNER JOIN \"tpch10g\".\"nation\" \"N2\" ON (\"supplier\".\"s_nationkey\" = \"N2\".\"n_nationkey\")\n" + 
+        "  INNER JOIN \"tpch10g\".\"nation\" \"N1\" ON (\"customer\".\"c_nationkey\" = \"N1\".\"n_nationkey\")\n" + 
+        "  INNER JOIN \"tpch10g\".\"region\" \"region\" ON (\"N1\".\"n_regionkey\" = \"region\".\"r_regionkey\")\n" + 
+        "WHERE ((\"customer\".\"c_nationkey\" = \"supplier\".\"s_nationkey\") AND ((\"orders\".\"o_orderdate\" >= DATEADD(YEAR,0,CAST(DATE_TRUNC( 'YEAR', CAST((TIMESTAMP '1994-01-01 00:00:00.000') AS TIMESTAMP WITHOUT TIME ZONE) ) AS TIMESTAMP WITHOUT TIME ZONE))) AND (\"orders\".\"o_orderdate\" < DATEADD(YEAR,1,CAST(DATE_TRUNC( 'YEAR', CAST((TIMESTAMP '1994-01-01 00:00:00.000') AS TIMESTAMP WITHOUT TIME ZONE) ) AS TIMESTAMP WITHOUT TIME ZONE)))) AND (\"region\".\"r_name\" = 'ASIA'))\n" + 
+        "GROUP BY 1\n" + 
+        "ORDER BY 1\n";
+    
+    Statement stmt = vc.createStatement();
+    
+    long start = System.currentTimeMillis(); 
+    ResultSet rs = stmt.executeQuery(query);
+    
+    while (rs.next()) {
+      for (int i = 1; i <= 2; i++) {
+        System.out.print(rs.getString(i) + " ");
+      }
+      System.out.println();
+    }
+    
+    long finish = System.currentTimeMillis();
+    long timeElapsed = finish - start;
+    System.out.println(String.format("elapsed time: %.3f sec", timeElapsed / 1000.0));
+    
+    rs.close();
+    stmt.close();
+    vc.close();
   }
 
 }

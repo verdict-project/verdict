@@ -23,6 +23,13 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
+/**
+ * An internal over a certain dimension of a hypercube. The dimension is a subset table. The subset
+ * is identified relying on an interval over the dimension.
+ * 
+ * @author Yongjoo Park
+ *
+ */
 public class Dimension implements Serializable {
 
   private static final long serialVersionUID = 5797440034793360076L;

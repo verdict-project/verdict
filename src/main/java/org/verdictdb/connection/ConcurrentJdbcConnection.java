@@ -37,7 +37,7 @@ import org.verdictdb.sqlsyntax.SqlSyntaxList;
  */
 public class ConcurrentJdbcConnection extends DbmsConnection {
 
-  private static final int CONNECTION_POOL_SIZE = 10;
+  private static final int CONNECTION_POOL_SIZE = 5;
 
   private List<JdbcConnection> connections = new ArrayList<>();
 
