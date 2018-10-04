@@ -188,15 +188,7 @@ public class ExecutionContext {
       runningCoordinator = coordinator;
 
       ExecutionResultReader reader = coordinator.process(query, queryContext);
-      VerdictResultStream stream;
-      if (reader == null) {
-        // this means there are no scrambles available, we should run it as-is
-        log.debug("No scrambles available for the query. We will execute it as-is.");
-        runningCoordinator = null;
-        stream = new VerdictResultStreamFromSingleResult(executeAsIs(query));
-      } else {
-        stream = new VerdictResultStreamFromExecutionResultReader(reader, this);
-      }
+      VerdictResultStream stream = new VerdictResultStreamFromExecutionResultReader(reader, this);
       return stream;
     } else if (queryType.equals(QueryType.scrambling)) {
       log.debug("Query type: scrambling");

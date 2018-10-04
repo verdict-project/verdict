@@ -25,6 +25,8 @@ import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.MetaDataProvider;
 import org.verdictdb.connection.StaticMetaData;
 import org.verdictdb.core.execplan.ExecutablePlanRunner;
+import org.verdictdb.core.execplan.ExecutionInfoToken;
+import org.verdictdb.core.execplan.ExecutionTokenQueue;
 import org.verdictdb.core.querying.QueryExecutionPlan;
 import org.verdictdb.core.querying.QueryExecutionPlanFactory;
 import org.verdictdb.core.querying.ola.AsyncQueryExecutionPlan;
@@ -123,7 +125,14 @@ public class SelectQueryCoordinator implements Coordinator {
 
     SelectQuery selectQuery = standardizeQuery(query);
     if (selectQuery == null) {
-      return null;
+      // this means there are no scrambles available, we should run it as-is
+      log.debug("No scrambles available for the query. We will execute it as-is.");
+      ExecutionInfoToken token = ExecutionInfoToken.empty();
+      ExecutionTokenQueue queue = new ExecutionTokenQueue();
+      token.setKeyValue("queryResult", conn.execute(query));
+      queue.add(token);
+      queue.add(ExecutionInfoToken.successToken());
+      return new ExecutionResultReader(queue);
     }
 
     // Check the query does not have unsupported syntax, such as count distinct with other agg.
