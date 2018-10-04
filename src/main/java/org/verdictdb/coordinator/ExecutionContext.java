@@ -185,9 +185,14 @@ public class ExecutionContext {
       log.debug("Query type: select");
       ScrambleMetaSet metaset = metaStore.retrieve();
       SelectQueryCoordinator coordinator = new SelectQueryCoordinator(conn, metaset, options);
-      runningCoordinator = coordinator;
+      runningCoordinator = null;
 
       ExecutionResultReader reader = coordinator.process(query, queryContext);
+      if (coordinator.getLastQuery() != null) {
+        // this means there are scrambles for the query so that
+        // we need to abort the coordinator at the end.
+        runningCoordinator = coordinator;
+      }
       VerdictResultStream stream = new VerdictResultStreamFromExecutionResultReader(reader, this);
       return stream;
     } else if (queryType.equals(QueryType.scrambling)) {

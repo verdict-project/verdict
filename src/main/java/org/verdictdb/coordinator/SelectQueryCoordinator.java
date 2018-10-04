@@ -123,6 +123,7 @@ public class SelectQueryCoordinator implements Coordinator {
       conn.execute(createSchema);
     }
 
+    lastQuery = null;
     SelectQuery selectQuery = standardizeQuery(query);
     if (selectQuery == null) {
       // this means there are no scrambles available, we should run it as-is
