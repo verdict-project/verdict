@@ -133,7 +133,7 @@ public class AsyncAggJoinMultiTierScaleTest {
     QueryExecutionPlan queryExecutionPlan = QueryExecutionPlanFactory.create("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    Dimension d1 = new Dimension("originalSchema", "originalTable1_scrambled", 0, 1);
+    Dimension d1 = new Dimension("originalSchema", "originalTable1_scrambled", 0, 0);
     Dimension d2 = new Dimension("originalSchema", "originalTable2_scrambled", 0, 0);
     Assert.assertEquals(
         new HyperTableCube(Arrays.asList(d1, d2)), 
@@ -173,8 +173,7 @@ public class AsyncAggJoinMultiTierScaleTest {
         "inner join \"originalSchema\".\"originalTable2_scrambled\" as vt " +
         "on (vt.\"a_id\" = vt.\"b_id\") " +
         "where " +
-        "((vt.\"verdictdbaggblock\" >= 0) " +
-        "and (vt.\"verdictdbaggblock\" <= 1)) " +
+        "(vt.\"verdictdbaggblock\" = 0) " +
         "and (vt.\"verdictdbaggblock\" = 0) " +
         "group by vt.\"verdictdbtier\", vt.\"verdictdbtier\"";
     assertEquals(expected, actual);

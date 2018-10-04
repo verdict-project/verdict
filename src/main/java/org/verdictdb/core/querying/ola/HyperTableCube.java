@@ -75,10 +75,18 @@ public class HyperTableCube implements Serializable {
       Dimension thisDim = dimensions.get(i);
       if (i < dim - 1) {
         occupiedDims.add(
-            new Dimension(thisDim.getSchemaName(), thisDim.getTableName(), 1, 1));
+            new Dimension(
+                thisDim.getSchemaName(), 
+                thisDim.getTableName(), 
+                thisDim.getBegin(), 
+                thisDim.getBegin()));
       } else {
         occupiedDims.add(
-            new Dimension(thisDim.getSchemaName(), thisDim.getTableName(), 1, 0));
+            new Dimension(
+                thisDim.getSchemaName(), 
+                thisDim.getTableName(), 
+                thisDim.getBegin(), 
+                thisDim.getBegin()-1));
       }
     }
     HyperTableCube occupied = new HyperTableCube(occupiedDims);
