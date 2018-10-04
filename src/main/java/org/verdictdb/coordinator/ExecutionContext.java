@@ -188,9 +188,16 @@ public class ExecutionContext {
       runningCoordinator = coordinator;
 
       ExecutionResultReader reader = coordinator.process(query, queryContext);
-      VerdictResultStream stream = new VerdictResultStreamFromExecutionResultReader(reader, this);
+      VerdictResultStream stream;
+      if (reader == null) {
+        // this means there are no scrambles available, we should run it as-is
+        log.debug("No scrambles available for the query. We will execute it as-is.");
+        runningCoordinator = null;
+        stream = new VerdictResultStreamFromSingleResult(executeAsIs(query));
+      } else {
+        stream = new VerdictResultStreamFromExecutionResultReader(reader, this);
+      }
       return stream;
-
     } else if (queryType.equals(QueryType.scrambling)) {
       log.debug("Query type: scrambling");
       CreateScrambleQuery scrambleQuery = generateScrambleQuery(query);
@@ -255,7 +262,7 @@ public class ExecutionContext {
 
     } else if (queryType.equals(QueryType.describe_table)) {
       log.debug("Query type: describe_table");
-      VerdictResultStream stream = generateDesribeTableResultFromQuery(query);
+      VerdictResultStream stream = generateDescribeTableResultFromQuery(query);
       return stream;
 
     } else {
@@ -356,7 +363,7 @@ public class ExecutionContext {
     return new VerdictResultStreamFromSingleResult(result);
   }
 
-  private VerdictResultStream generateDesribeTableResultFromQuery(String query)
+  private VerdictResultStream generateDescribeTableResultFromQuery(String query)
       throws VerdictDBException {
     VerdictSQLParser parser = NonValidatingSQLParser.parserOf(query);
     VerdictSQLParserBaseVisitor<Pair<String, String>> visitor =
@@ -389,7 +396,7 @@ public class ExecutionContext {
     return new VerdictResultStreamFromSingleResult(result);
   }
 
-  private void updateDefaultSchemaFromQuery(String query) {
+  private void updateDefaultSchemaFromQuery(String query) throws VerdictDBDbmsException {
     VerdictSQLParser parser = NonValidatingSQLParser.parserOf(query);
     String schema = parser.use_statement().database.getText();
     conn.setDefaultSchema(schema);
