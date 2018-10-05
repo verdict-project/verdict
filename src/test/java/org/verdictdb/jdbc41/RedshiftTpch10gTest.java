@@ -34,14 +34,14 @@ public class RedshiftTpch10gTest {
     REDSHIFT_PASSWORD = System.getenv("VERDICTDB_TEST_REDSHIFT_PASSWORD");
   }
 
-//  @Test
+  @Test
   public void testQ1() throws SQLException {
     String vcConnectionString =
         String.format("jdbc:verdict:redshift://%s/%s", REDSHIFT_HOST, REDSHIFT_DATABASE);
     Connection vc =
         DriverManager.getConnection(vcConnectionString, REDSHIFT_USER, REDSHIFT_PASSWORD);
     
-    String query = "SELECT \"lineitem\".\"l_linestatus\" AS \"l_linestatus\",\n" + 
+    String query = "stream SELECT \"lineitem\".\"l_linestatus\" AS \"l_linestatus\",\n" + 
         "  \"lineitem\".\"l_returnflag\" AS \"l_returnflag\",\n" + 
         "  AVG(CAST(\"lineitem\".\"l_discount\" AS DOUBLE PRECISION)) AS \"avg_l_discount_ok\",\n" + 
         "  AVG(CAST(\"lineitem\".\"l_extendedprice\" AS DOUBLE PRECISION)) AS \"avg_l_extendedprice_ok\",\n" + 
@@ -60,7 +60,7 @@ public class RedshiftTpch10gTest {
     ResultSet rs = stmt.executeQuery(query);
     
     while (rs.next()) {
-      for (int i = 1; i <= 5; i++) {
+      for (int i = 1; i <= 6; i++) {
         System.out.print(rs.getString(i) + " ");
       }
       System.out.println();
@@ -78,7 +78,7 @@ public class RedshiftTpch10gTest {
     Connection vc =
         DriverManager.getConnection(vcConnectionString, REDSHIFT_USER, REDSHIFT_PASSWORD);
     
-    String query = "SELECT \"N2\".\"n_name\" AS \"n_name\",\n" + 
+    String query = "stream SELECT \"N2\".\"n_name\" AS \"n_name\",\n" + 
         "  SUM((\"lineitem\".\"l_extendedprice\" * (1 - \"lineitem\".\"l_discount\"))) AS \"sum_calculation_7060711085256495_ok\"\n" + 
         "FROM \"tpch10g\".\"lineitem\" \"lineitem\"\n" + 
         "  INNER JOIN \"tpch10g\".\"orders\" \"orders\" ON (\"lineitem\".\"l_orderkey\" = \"orders\".\"o_orderkey\")\n" + 
