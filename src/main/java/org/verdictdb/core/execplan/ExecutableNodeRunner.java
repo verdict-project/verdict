@@ -153,6 +153,14 @@ public class ExecutableNodeRunner implements Runnable {
     runDependents();
     return runOnThread();
   }
+  
+  private boolean doesThisNodeContainAsyncAggExecutionNode() {
+    ExecutableNodeBase leafOfThis = (ExecutableNodeBase) node;
+    while (leafOfThis instanceof ConsolidatedExecutionNode) {
+      leafOfThis = ((ConsolidatedExecutionNode) leafOfThis).getChildNode();
+    }
+    return leafOfThis instanceof AsyncAggExecutionNode;
+  }
 
   public boolean runOnThread() {
     log.trace(String.format("Invoked to run: %s", node.toString()));
@@ -184,12 +192,7 @@ public class ExecutableNodeRunner implements Runnable {
   }
   
   private void runDependents() {
-    ExecutableNodeBase leafOfThis = (ExecutableNodeBase) node;
-    while (leafOfThis instanceof ConsolidatedExecutionNode) {
-      leafOfThis = ((ConsolidatedExecutionNode) leafOfThis).getChildNode();
-    }
-    
-    if (leafOfThis instanceof AsyncAggExecutionNode) {
+    if (doesThisNodeContainAsyncAggExecutionNode()) {
       int maxNumberOfRunningNode = 10;
       if ((conn instanceof SparkConnection) ||
           (conn instanceof CachedDbmsConnection && 
@@ -376,8 +379,8 @@ public class ExecutableNodeRunner implements Runnable {
       // execution if necessary.
       ExecutableNodeRunner runner = dest.getRegisteredRunner();
       if (runner != null) {
-        runner.runOnThread();
-        //        runner.run();
+//        runner.runOnThread();
+        runner.runThisAndDependents();    // this is needed due to async node.
       }
     }
   }
