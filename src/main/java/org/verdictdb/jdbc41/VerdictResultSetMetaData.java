@@ -36,6 +36,11 @@ public class VerdictResultSetMetaData implements ResultSetMetaData {
     this.queryResult = queryResult;
   }
 
+  public boolean isAggregate(int column) {
+    return queryResult.getMetaData().isAggregate.get(column - 1);
+    // throw new SQLException("Not supported function.");
+  }
+
   @Override
   public <T> T unwrap(Class<T> iface) throws SQLException {
     throw new SQLException("Not supported function.");

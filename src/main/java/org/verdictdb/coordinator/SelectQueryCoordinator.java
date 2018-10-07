@@ -25,8 +25,7 @@ import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.MetaDataProvider;
 import org.verdictdb.connection.StaticMetaData;
 import org.verdictdb.core.execplan.ExecutablePlanRunner;
-import org.verdictdb.core.querying.QueryExecutionPlan;
-import org.verdictdb.core.querying.QueryExecutionPlanFactory;
+import org.verdictdb.core.querying.*;
 import org.verdictdb.core.querying.ola.AsyncQueryExecutionPlan;
 import org.verdictdb.core.querying.simplifier.QueryExecutionPlanSimplifier;
 import org.verdictdb.core.resulthandler.ExecutionResultReader;
@@ -208,6 +207,7 @@ public class SelectQueryCoordinator implements Coordinator {
       }
     }
   }
+
 
   private SelectQuery standardizeQuery(String query) throws VerdictDBException {
     // parse the query

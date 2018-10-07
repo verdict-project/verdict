@@ -201,6 +201,19 @@ public class ConsolidatedExecutionNode extends QueryNodeWithPlaceHolders {
     // contains the consolidated select query.
     parentNode.setSelectQuery(selectQuery);
     SqlConvertible consolidatedQuery = parentNode.createQuery(newTokens);
+
+    // Distinguish aggregated column
+    if (parentNode instanceof SelectAllExecutionNode) {
+      List<Boolean> isAggregated = new ArrayList<>();
+      for (SelectItem sel:selectQuery.getSelectList()) {
+        if (sel.isAggregateColumn()) {
+          isAggregated.add(true);
+        } else {
+          isAggregated.add(false);
+        }
+      }
+      ((SelectAllExecutionNode) parentNode).setAggregateColumn(isAggregated);
+    }
     return consolidatedQuery;
   }
 
@@ -219,5 +232,13 @@ public class ConsolidatedExecutionNode extends QueryNodeWithPlaceHolders {
         .append("parent", parentNode)
         .append("child", childNode)
         .toString();
+  }
+
+  public CreateTableAsSelectNode getChildNode() {
+    return childNode;
+  }
+
+  public QueryNodeWithPlaceHolders getParentNode() {
+    return parentNode;
   }
 }

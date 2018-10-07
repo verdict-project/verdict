@@ -140,19 +140,16 @@ public class ExecutionContext {
       }
 
       VerdictResultStream stream = streamsql(query);
+
       if (stream == null) {
         return null;
       }
-
+      AsyncAggExecutionRulerByCount ruler = new AsyncAggExecutionRulerByCount(1, stream, runningCoordinator);
       try {
-        VerdictSingleResult result = stream.next();
+        VerdictSingleResult result = ruler.fetchAnswerUntilAccurate();
         return result;
       } catch (RuntimeException e) {
         throw e;
-      } finally {
-        stream.close();
-        abort();
-        //        abortInParallel(stream);
       }
     }
   }
@@ -189,6 +186,7 @@ public class ExecutionContext {
 
       ExecutionResultReader reader = coordinator.process(query, queryContext);
       VerdictResultStream stream = new VerdictResultStreamFromExecutionResultReader(reader, this);
+
       return stream;
 
     } else if (queryType.equals(QueryType.scrambling)) {
