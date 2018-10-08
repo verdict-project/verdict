@@ -519,6 +519,9 @@ public class ExecutionContext {
         };
 
     QueryType type = visitor.visit(parser.verdict_statement());
+    if (type == null) {
+      type = QueryType.unknown;
+    }
     return type;
   }
 }
