@@ -16,18 +16,18 @@
 
 package org.verdictdb.connection;
 
+import org.apache.commons.lang3.tuple.Pair;
+import org.verdictdb.commons.VerdictDBLogger;
+import org.verdictdb.exception.VerdictDBDbmsException;
+import org.verdictdb.sqlsyntax.SqlSyntax;
+import org.verdictdb.sqlsyntax.SqlSyntaxList;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
-
-import org.apache.commons.lang3.tuple.Pair;
-import org.verdictdb.commons.VerdictDBLogger;
-import org.verdictdb.exception.VerdictDBDbmsException;
-import org.verdictdb.sqlsyntax.SqlSyntax;
-import org.verdictdb.sqlsyntax.SqlSyntaxList;
 
 /**
  * Maintains a pool of multiple java.sql.Connections to provide concurrent execution of queries to
@@ -123,7 +123,7 @@ public class ConcurrentJdbcConnection extends DbmsConnection {
   }
 
   @Override
-  public void setDefaultSchema(String schema) {
+  public void setDefaultSchema(String schema) throws VerdictDBDbmsException {
     for (JdbcConnection c : connections) {
       c.setDefaultSchema(schema);
     }
@@ -162,7 +162,7 @@ public class ConcurrentJdbcConnection extends DbmsConnection {
   }
 
   public void reinitiateConnection() throws VerdictDBDbmsException {
-    for (JdbcConnection connection:connections) {
+    for (JdbcConnection connection : connections) {
       try {
         // Timeout 1s
         if (!connection.getConnection().isValid(1)) {

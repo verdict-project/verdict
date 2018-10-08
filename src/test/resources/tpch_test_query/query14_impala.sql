@@ -3,7 +3,7 @@ select
         else 0 end) as numerator,
     sum(l_extendedprice * (1 - l_discount)) as denominator
 from
-    lineitem_scrambled,
+    lineitem,
     part
 where
     l_partkey = p_partkey

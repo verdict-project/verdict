@@ -16,14 +16,6 @@
 
 package org.verdictdb.connection;
 
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.commons.StringSplitter;
@@ -37,6 +29,14 @@ import org.verdictdb.sqlsyntax.SparkSyntax;
 import org.verdictdb.sqlsyntax.SqlSyntax;
 import org.verdictdb.sqlsyntax.SqlSyntaxList;
 
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
+
 public class JdbcConnection extends DbmsConnection {
 
   Connection conn;
@@ -48,11 +48,11 @@ public class JdbcConnection extends DbmsConnection {
   JdbcQueryResult jrs = null;
 
   private boolean outputDebugMessage = false;
-  
+
   private Statement runningStatement = null;
 
   private VerdictDBLogger log;
-  
+
   private boolean isAborting = false;
 
   public static JdbcConnection create(Connection conn) throws VerdictDBDbmsException {
@@ -88,7 +88,7 @@ public class JdbcConnection extends DbmsConnection {
     this.syntax = syntax;
     this.log = VerdictDBLogger.getLogger(this.getClass());
   }
-  
+
   @Override
   public void abort() {
     log.trace("Aborts a statement if running.");
@@ -102,7 +102,7 @@ public class JdbcConnection extends DbmsConnection {
           runningStatement = null;
         }
       }
-      
+
       isAborting = false;
     } catch (SQLException e) {
       e.printStackTrace();
@@ -131,14 +131,12 @@ public class JdbcConnection extends DbmsConnection {
     return finalResult;
   }
 
-  
-  
   private void setRunningStatement(Statement stmt) {
     synchronized (this) {
       runningStatement = stmt;
     }
   }
-  
+
   private Statement getRunningStatement() {
     synchronized (this) {
       return runningStatement;
@@ -217,7 +215,7 @@ public class JdbcConnection extends DbmsConnection {
       throws VerdictDBDbmsException {
     List<Pair<String, String>> columns = new ArrayList<>();
     String sql = syntax.getColumnsCommand(schema, table);
-    
+
     try {
       DbmsQueryResult queryResult = executeQuery(sql);
       while (queryResult.next()) {
@@ -241,10 +239,11 @@ public class JdbcConnection extends DbmsConnection {
         columns.add(
             new ImmutablePair<>(queryResult.getString(syntax.getColumnNameColumnIndex()), type));
       }
-      
+
     } catch (Exception e) {
-      if (syntax instanceof RedshiftSyntax && e.getMessage().matches("(?s).*schema .* does not exist;.*")) {
-         return columns;
+      if (syntax instanceof RedshiftSyntax
+          && e.getMessage().matches("(?s).*schema .* does not exist;.*")) {
+        return columns;
       } else {
         throw e;
       }
@@ -257,11 +256,11 @@ public class JdbcConnection extends DbmsConnection {
   public List<String> getPartitionColumns(String schema, String table)
       throws VerdictDBDbmsException {
     List<String> partition = new ArrayList<>();
-    
+
     if (!syntax.doesSupportTablePartitioning()) {
       return partition;
     }
-    
+
     DbmsQueryResult queryResult;
     if (syntax instanceof ImpalaSyntax) {
       try {
@@ -331,7 +330,12 @@ public class JdbcConnection extends DbmsConnection {
   }
 
   @Override
-  public void setDefaultSchema(String schema) {
+  public void setDefaultSchema(String schema) throws VerdictDBDbmsException {
+    try {
+      conn.setCatalog(schema);
+    } catch (SQLException e) {
+      throw new VerdictDBDbmsException(e);
+    }
     currentSchema = schema;
   }
 
@@ -352,7 +356,7 @@ public class JdbcConnection extends DbmsConnection {
   }
 
   @Override
-  public DbmsConnection copy() {
+  public DbmsConnection copy() throws VerdictDBDbmsException {
     JdbcConnection newConn = new JdbcConnection(conn, syntax);
     newConn.setDefaultSchema(currentSchema);
     newConn.jrs = this.jrs;

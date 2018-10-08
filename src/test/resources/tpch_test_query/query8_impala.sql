@@ -11,7 +11,7 @@ from
       l_extendedprice * (1 - l_discount) as volume,
       n2.n_name as nation
     from
-      lineitem_scrambled join orders_scrambled on l_orderkey = o_orderkey
+      lineitem join orders on l_orderkey = o_orderkey
       join supplier on s_suppkey = l_suppkey
       join part on p_partkey = l_partkey
       join customer on o_custkey = c_custkey

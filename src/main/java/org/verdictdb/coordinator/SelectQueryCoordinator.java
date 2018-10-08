@@ -25,13 +25,24 @@ import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.MetaDataProvider;
 import org.verdictdb.connection.StaticMetaData;
 import org.verdictdb.core.execplan.ExecutablePlanRunner;
+import org.verdictdb.core.execplan.ExecutionInfoToken;
+import org.verdictdb.core.execplan.ExecutionTokenQueue;
 import org.verdictdb.core.querying.QueryExecutionPlan;
 import org.verdictdb.core.querying.QueryExecutionPlanFactory;
 import org.verdictdb.core.querying.ola.AsyncQueryExecutionPlan;
 import org.verdictdb.core.querying.simplifier.QueryExecutionPlanSimplifier;
 import org.verdictdb.core.resulthandler.ExecutionResultReader;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
-import org.verdictdb.core.sqlobject.*;
+import org.verdictdb.core.sqlobject.AbstractRelation;
+import org.verdictdb.core.sqlobject.AliasedColumn;
+import org.verdictdb.core.sqlobject.BaseTable;
+import org.verdictdb.core.sqlobject.ColumnOp;
+import org.verdictdb.core.sqlobject.CreateSchemaQuery;
+import org.verdictdb.core.sqlobject.JoinTable;
+import org.verdictdb.core.sqlobject.SelectItem;
+import org.verdictdb.core.sqlobject.SelectQuery;
+import org.verdictdb.core.sqlobject.SubqueryColumn;
+import org.verdictdb.core.sqlobject.UnnamedColumn;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sqlreader.NonValidatingSQLParser;
 import org.verdictdb.sqlreader.RelationStandardizer;
@@ -101,18 +112,29 @@ public class SelectQueryCoordinator implements Coordinator {
 
   public ExecutionResultReader process(String query, QueryContext context)
       throws VerdictDBException {
-    
+
     // create scratchpad schema if not exists
     if (!conn.getSchemas().contains(scratchpadSchema)) {
       log.info(
           String.format(
-              "The schema for temporary tables (%s) does not exist; so we create it.", 
+              "The schema for temporary tables (%s) does not exist; so we create it.",
               scratchpadSchema));
       CreateSchemaQuery createSchema = new CreateSchemaQuery(scratchpadSchema);
       conn.execute(createSchema);
     }
 
+    lastQuery = null;
     SelectQuery selectQuery = standardizeQuery(query);
+    if (selectQuery == null) {
+      // this means there are no scrambles available, we should run it as-is
+      log.debug("No scrambles available for the query. We will execute it as-is.");
+      ExecutionInfoToken token = ExecutionInfoToken.empty();
+      ExecutionTokenQueue queue = new ExecutionTokenQueue();
+      token.setKeyValue("queryResult", conn.execute(query));
+      queue.add(token);
+      queue.add(ExecutionInfoToken.successToken());
+      return new ExecutionResultReader(queue);
+    }
 
     // Check the query does not have unsupported syntax, such as count distinct with other agg.
     // Otherwise, it will throw to an exception
@@ -156,34 +178,37 @@ public class SelectQueryCoordinator implements Coordinator {
    * @return check if the query contain the syntax that is not supported by VerdictDB
    */
   private void ensureQuerySupport(SelectQuery query) throws VerdictDBException {
-    // current, only if count distinct appear along with other aggregation function will return false
+    // current, only if count distinct appear along with other aggregation function will return
+    // false
 
     // check select list
     boolean containAggregatedItem = false;
     boolean containCountDistinctItem = false;
-    for (SelectItem selectItem:query.getSelectList()) {
-      if (selectItem instanceof AliasedColumn &&
-          ((AliasedColumn) selectItem).getColumn() instanceof ColumnOp) {
-        if (((ColumnOp) ((AliasedColumn) selectItem).getColumn()).doesColumnOpContainOpType("countdistinct")) {
-          ((ColumnOp) ((AliasedColumn) selectItem).getColumn()).replaceAllColumnOpOpType("countdistinct", "approx_countdistinct");
+    for (SelectItem selectItem : query.getSelectList()) {
+      if (selectItem instanceof AliasedColumn
+          && ((AliasedColumn) selectItem).getColumn() instanceof ColumnOp) {
+        if (((ColumnOp) ((AliasedColumn) selectItem).getColumn())
+            .doesColumnOpContainOpType("countdistinct")) {
+          ((ColumnOp) ((AliasedColumn) selectItem).getColumn())
+              .replaceAllColumnOpOpType("countdistinct", "approx_countdistinct");
           containCountDistinctItem = true;
         }
-        if (!containAggregatedItem &&
-            (((AliasedColumn) selectItem).getColumn()).isAggregateColumn()) {
+        if (!containAggregatedItem
+            && (((AliasedColumn) selectItem).getColumn()).isAggregateColumn()) {
           containAggregatedItem = true;
         }
         if (containAggregatedItem && containCountDistinctItem) {
-          throw new VerdictDBException("Count distinct and other aggregate functions cannot appear in the same select list.");
+          throw new VerdictDBException(
+              "Count distinct and other aggregate functions cannot appear in the same select list.");
         }
       }
     }
     // check from list
-    for (AbstractRelation table:query.getFromList()) {
+    for (AbstractRelation table : query.getFromList()) {
       if (table instanceof SelectQuery) {
         ensureQuerySupport((SelectQuery) table);
-      }
-      else if (table instanceof JoinTable) {
-        for (AbstractRelation jointable:((JoinTable) table).getJoinList()) {
+      } else if (table instanceof JoinTable) {
+        for (AbstractRelation jointable : ((JoinTable) table).getJoinList()) {
           if (jointable instanceof SelectQuery) {
             ensureQuerySupport((SelectQuery) jointable);
           }
@@ -194,17 +219,17 @@ public class SelectQueryCoordinator implements Coordinator {
     // also need to check having since we will convert having clause into select list
     if (query.getHaving().isPresent()) {
       UnnamedColumn having = query.getHaving().get();
-      if (having instanceof ColumnOp &&
-          ((ColumnOp)having).doesColumnOpContainOpType("countdistinct")) {
+      if (having instanceof ColumnOp
+          && ((ColumnOp) having).doesColumnOpContainOpType("countdistinct")) {
         containCountDistinctItem = true;
         ((ColumnOp) having).replaceAllColumnOpOpType("countdistnct", "approx_countdistinct");
       }
-      if (having instanceof ColumnOp &&
-          having.isAggregateColumn()) {
+      if (having instanceof ColumnOp && having.isAggregateColumn()) {
         containAggregatedItem = true;
       }
       if (containAggregatedItem && containCountDistinctItem) {
-        throw new VerdictDBException("Count distinct and other aggregate functions cannot appear in the same select list.");
+        throw new VerdictDBException(
+            "Count distinct and other aggregate functions cannot appear in the same select list.");
       }
     }
   }
@@ -220,9 +245,8 @@ public class SelectQueryCoordinator implements Coordinator {
     relation = gen.standardize(relation);
 
     ScrambleTableReplacer replacer = new ScrambleTableReplacer(scrambleMetaSet);
-    replacer.replace(relation);
-
-    return relation;
+    int scrambleCount = replacer.replace(relation);
+    return (scrambleCount == 0) ? null : relation;
   }
 
   private MetaDataProvider createMetaDataFor(SelectQuery relation) throws VerdictDBException {

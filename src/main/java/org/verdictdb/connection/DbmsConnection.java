@@ -35,7 +35,7 @@ public abstract class DbmsConnection implements MetaDataProvider {
    * @throws VerdictDBDbmsException
    */
   public abstract DbmsQueryResult execute(String sql) throws VerdictDBDbmsException;
-  
+
   public DbmsQueryResult execute(SqlConvertible query) throws VerdictDBException {
     String sql = QueryToSql.convert(getSyntax(), query);
     DbmsQueryResult result = execute(sql);
@@ -56,8 +56,8 @@ public abstract class DbmsConnection implements MetaDataProvider {
   //  public Connection getConnection();
 
   public abstract void close();
-  
+
   public abstract void abort();
 
-  public abstract DbmsConnection copy();
+  public abstract DbmsConnection copy() throws VerdictDBDbmsException;
 }

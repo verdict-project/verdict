@@ -1,6 +1,6 @@
 select
     sum(l_extendedprice * l_discount) as revenue
-    from lineitem_scrambled
+    from lineitem
 where
     l_shipdate >= '1992-12-01'
     and l_shipdate < '1998-12-01'
