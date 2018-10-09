@@ -34,6 +34,7 @@ import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBTypeException;
 import org.verdictdb.sqlsyntax.HiveSyntax;
+import org.verdictdb.sqlsyntax.PrestoSyntax;
 import org.verdictdb.sqlsyntax.ImpalaSyntax;
 import org.verdictdb.sqlsyntax.PostgresqlSyntax;
 import org.verdictdb.sqlsyntax.SparkSyntax;
@@ -226,6 +227,10 @@ public class CreateTableToSql {
       sql.append("using parquet ");
     }
 
+    if (syntax instanceof PrestoSyntax) {
+      sql.append("WITH (");
+    }
+
     // partitions
     if (syntax.doesSupportTablePartitioning() && query.getPartitionColumns().size() > 0) {
       sql.append(
@@ -237,6 +242,11 @@ public class CreateTableToSql {
     // parquet format
     if (syntax instanceof HiveSyntax || syntax instanceof ImpalaSyntax) {
       sql.append("stored as parquet ");
+    }
+
+    if (syntax instanceof PrestoSyntax) {
+      sql.append("format = 'orc'");
+      sql.append(") ");
     }
 
     // select

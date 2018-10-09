@@ -231,6 +231,7 @@ public class ScrambleMetaStore extends VerdictMetaStore {
     }
 
     // insert a new entry
+    String replacedString = "";
     StringBuilder insertSqls = new StringBuilder();
     for (ScrambleMeta meta : scrambleMetaSet) {
       InsertValuesQuery q = createInsertMetaQuery(meta);
@@ -238,8 +239,9 @@ public class ScrambleMetaStore extends VerdictMetaStore {
       LOG.debug("Adding a new scramble meta entry with the query: {}", s);
       insertSqls.append(s);
       insertSqls.append("; ");
+      replacedString = insertSqls.toString().replace(" 'timestamp  ", " timestamp '");
     }
-    conn.execute(insertSqls.toString());
+    conn.execute(replacedString);
   }
 
   private CreateTableDefinitionQuery createScrambleMetaStoreTableStatement() {
@@ -272,7 +274,10 @@ public class ScrambleMetaStore extends VerdictMetaStore {
     String scrambleSchema = meta.getSchemaName();
     String scrambleTable = meta.getTableName();
     String scrambleMethod = meta.getMethod();
-    String timeStamp = new SimpleDateFormat(TIMESTAMP_FORMAT).format(new Date());
+    String timeStamp =
+        conn.getSyntax().getTimestampPrefix()
+            + " "
+            + (new SimpleDateFormat(TIMESTAMP_FORMAT).format(new Date()));
     String jsonString = meta.toJsonString();
     query.setValues(
         Arrays.<Object>asList(
