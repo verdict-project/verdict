@@ -10,23 +10,20 @@ import java.util.List;
 
 public class QueryResultAccuracyEstimatorFromDifference extends QueryResultAccuracyEstimator {
 
-  VerdictResultStream resultStream;
-
   Coordinator runningCoordinator;
 
   // the values of the result should be within [(1-valueError)*prevValue, (1+valueError)*prevValue] of the previous result.
   // Otherwise, it will fetch next result.
   Double valueError = 0.05;
 
-  // the #column of the result should be within  [(1-groupCountError)*prev#column, (1+groupCountError)*prev#column] of the previous result.
+  // the #row of the result should be within  [(1-groupCountError)*prev#row, (1+groupCountError)*prev#row] of the previous result.
   // Otherwise, it will fetch next result.
   Double groupCountError = 0.05;
 
   // key is the values of non-aggregated column, value is the values of aggregated column
   HashMap<List<Object>, List<Object>> aggregatedMap = new HashMap<>();
 
-  QueryResultAccuracyEstimatorFromDifference(VerdictResultStream resultStream, Coordinator runningCoordinator) {
-    this.resultStream = resultStream;
+  QueryResultAccuracyEstimatorFromDifference(Coordinator runningCoordinator) {
     this.runningCoordinator = runningCoordinator;
   }
 
@@ -49,7 +46,6 @@ public class QueryResultAccuracyEstimatorFromDifference extends QueryResultAccur
       return false;
     } else {
       log.debug("Break condition has reached.");
-      resultStream.close();
       log.debug("Aborts an ExecutionContext: " + this);
       if (runningCoordinator != null) {
         Coordinator c = runningCoordinator;

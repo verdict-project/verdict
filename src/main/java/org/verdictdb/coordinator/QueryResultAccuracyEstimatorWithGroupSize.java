@@ -7,13 +7,11 @@ public class QueryResultAccuracyEstimatorWithGroupSize extends QueryResultAccura
 
   private int resultNumToBreak = 2;
 
-  VerdictResultStream resultStream;
 
   Coordinator runningCoordinator;
 
-  QueryResultAccuracyEstimatorWithGroupSize(int resultNumToBreak, VerdictResultStream resultStream, Coordinator runningCoordinator) {
+  QueryResultAccuracyEstimatorWithGroupSize(int resultNumToBreak, Coordinator runningCoordinator) {
     this.resultNumToBreak = resultNumToBreak;
-    this.resultStream = resultStream;
     this.runningCoordinator = runningCoordinator;
   }
 
@@ -28,7 +26,6 @@ public class QueryResultAccuracyEstimatorWithGroupSize extends QueryResultAccura
       return false;
     } else {
       log.debug("Break condition has reached.");
-      resultStream.close();
       log.debug("Aborts an ExecutionContext: " + this);
       if (runningCoordinator != null) {
         Coordinator c = runningCoordinator;

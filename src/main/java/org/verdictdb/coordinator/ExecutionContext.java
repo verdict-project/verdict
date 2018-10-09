@@ -144,16 +144,18 @@ public class ExecutionContext {
       if (stream == null) {
         return null;
       }
-      QueryResultAccuracyEstimator accEst = new QueryResultAccuracyEstimatorWithGroupSize(1, stream, runningCoordinator);
+      QueryResultAccuracyEstimator accEst = new QueryResultAccuracyEstimatorFromDifference(runningCoordinator);
       try {
         while (stream.hasNext()) {
           VerdictSingleResult rs = stream.next();
           accEst.add(rs);
           if (accEst.isLastResultAccurate()) {
+            stream.close();
             return rs; // also do abort the query execution
           }
         }
         // return the last result otherwise
+        stream.close();
         return accEst.getAnswers().get(accEst.answers.size()-1);
       } catch (RuntimeException e) {
         throw e;
