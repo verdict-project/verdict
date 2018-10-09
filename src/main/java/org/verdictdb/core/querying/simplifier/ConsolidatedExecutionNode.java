@@ -16,7 +16,7 @@ import org.verdictdb.exception.VerdictDBException;
 /**
  * Used for simplifying two nodes into one. This class may be used in a recursively way to simplify
  * an arbitrary deep nodes into a single node (as long as the condition is satisfied).
- *
+ * <p>
  * Assumptions:
  * <ol>
  * <li>
@@ -24,7 +24,7 @@ import org.verdictdb.exception.VerdictDBException;
  * is supposed to pass the name of a temporary table, which doesn't depend on the its query result.
  * </li>
  * </ol>
- * 
+ * <p>
  * The logic based on the above assumption can be found in the createQuery() method.
  * Traditionally, createToken() must use the result of createQuery(); however, based on the
  * assumption, the token of the child is created without actually running its query. Note that the
@@ -95,8 +95,8 @@ public class ConsolidatedExecutionNode extends QueryNodeWithPlaceHolders {
   /**
    * May consonlidate a single source with `child`. This is a helper function for simplify2().
    *
-   * @param originalSource The original source
-   * @param child The child node
+   * @param originalSource    The original source
+   * @param child             The child node
    * @param baseTableToRemove The placeholder to be replaced
    * @return A new source
    */
@@ -147,8 +147,8 @@ public class ConsolidatedExecutionNode extends QueryNodeWithPlaceHolders {
   /**
    * May consolidate a single filter with `child`. This is a helper function for simplify2().
    *
-   * @param originalFilter The original filter
-   * @param child The child node
+   * @param originalFilter    The original filter
+   * @param child             The child node
    * @param baseTableToRemove The placeholder to be replaced
    * @return
    */
@@ -193,7 +193,7 @@ public class ConsolidatedExecutionNode extends QueryNodeWithPlaceHolders {
     List<ExecutionInfoToken> newTokens = new ArrayList<>();
     newTokens.addAll(tokens);
     newTokens.add(childToken);
-    
+
     // this is a bad trick to use the createQuery function of the parent node.
     // we set the consolidated query (of this node) to the parentNode, and let the parent node
     // create a new query using the consolidated select query.
@@ -205,7 +205,7 @@ public class ConsolidatedExecutionNode extends QueryNodeWithPlaceHolders {
     // Distinguish aggregated column
     if (parentNode instanceof SelectAllExecutionNode) {
       List<Boolean> isAggregated = new ArrayList<>();
-      for (SelectItem sel:selectQuery.getSelectList()) {
+      for (SelectItem sel : selectQuery.getSelectList()) {
         if (sel.isAggregateColumn()) {
           isAggregated.add(true);
         } else {
@@ -223,7 +223,7 @@ public class ConsolidatedExecutionNode extends QueryNodeWithPlaceHolders {
     ExecutionInfoToken token = parentNode.createToken(result);
     return token;
   }
-  
+
   @Override
   public String toString() {
     return new ToStringBuilder(this, ToStringStyle.DEFAULT_STYLE)

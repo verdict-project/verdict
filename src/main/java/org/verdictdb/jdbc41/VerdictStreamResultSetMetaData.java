@@ -29,14 +29,6 @@ public class VerdictStreamResultSetMetaData implements ResultSetMetaData {
     this.queryResult = queryResult;
   }
 
-  public boolean isAggregate(int column) {
-    if (column==1) {
-      return false;
-    }
-    return queryResult.getMetaData().isAggregate.get(column - 2);
-    // throw new SQLException("Not supported function.");
-  }
-
   @Override
   public <T> T unwrap(Class<T> iface) throws SQLException {
     throw new SQLException("Not supported function.");

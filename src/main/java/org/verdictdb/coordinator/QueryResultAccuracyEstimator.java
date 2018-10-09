@@ -7,7 +7,7 @@ import org.verdictdb.commons.VerdictDBLogger;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class AsyncAggExecutionRuler {
+public abstract class QueryResultAccuracyEstimator {
 
   VerdictDBLogger log = VerdictDBLogger.getLogger(this.getClass());
 
@@ -17,11 +17,15 @@ public abstract class AsyncAggExecutionRuler {
     return answers;
   }
 
+  public void add(VerdictSingleResult rs) {
+    answers.add(rs);
+  }
+
   /**
    * fetch the answer from stream until the criterion of accuracy has been reached
    * @return the accurate answer
    */
-  public VerdictSingleResult fetchAnswerUntilAccurate() {
-    return null;
+  public boolean isLastResultAccurate() {
+    return false;
   }
 }

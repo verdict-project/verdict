@@ -80,8 +80,8 @@ public class ExecutionContext {
   }
 
   /**
-   * @param conn DbmsConnection
-   * @param contextId parent's context id
+   * @param conn         DbmsConnection
+   * @param contextId    parent's context id
    * @param serialNumber serial number of this ExecutionContext
    * @param options
    */
@@ -130,10 +130,10 @@ public class ExecutionContext {
     } else {
       QueryType queryType = identifyQueryType(query);
       if ((queryType != QueryType.select
-              && queryType != QueryType.show_databases
-              && queryType != QueryType.show_tables
-              && queryType != QueryType.describe_table
-              && queryType != QueryType.show_scrambles)
+          && queryType != QueryType.show_databases
+          && queryType != QueryType.show_tables
+          && queryType != QueryType.describe_table
+          && queryType != QueryType.show_scrambles)
           && getResult) {
         throw new VerdictDBException(
             "Can not issue data manipulation statements with executeQuery().");
@@ -144,10 +144,17 @@ public class ExecutionContext {
       if (stream == null) {
         return null;
       }
-      AsyncAggExecutionRulerByCount ruler = new AsyncAggExecutionRulerByCount(1, stream, runningCoordinator);
+      QueryResultAccuracyEstimator accEst = new QueryResultAccuracyEstimatorWithGroupSize(1, stream, runningCoordinator);
       try {
-        VerdictSingleResult result = ruler.fetchAnswerUntilAccurate();
-        return result;
+        while (stream.hasNext()) {
+          VerdictSingleResult rs = stream.next();
+          accEst.add(rs);
+          if (accEst.isLastResultAccurate()) {
+            return rs; // also do abort the query execution
+          }
+        }
+        // return the last result otherwise
+        return accEst.getAnswers().get(accEst.answers.size()-1);
       } catch (RuntimeException e) {
         throw e;
       }
