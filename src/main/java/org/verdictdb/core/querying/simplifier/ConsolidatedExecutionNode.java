@@ -241,12 +241,5 @@ public class ConsolidatedExecutionNode extends QueryNodeWithPlaceHolders {
         .append("child", childNode)
         .toString();
   }
-
-  public CreateTableAsSelectNode getChildNode() {
-    return childNode;
-  }
-
-  public QueryNodeWithPlaceHolders getParentNode() {
-    return parentNode;
-  }
+  
 }
