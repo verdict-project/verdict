@@ -17,6 +17,8 @@ public abstract class QueryResultAccuracyEstimator {
     return answers;
   }
 
+  int getAnswerCount() { return answers.size(); }
+
   public void add(VerdictSingleResult rs) {
     answers.add(rs);
   }

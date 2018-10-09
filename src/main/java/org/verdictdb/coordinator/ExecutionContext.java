@@ -156,7 +156,7 @@ public class ExecutionContext {
         }
         // return the last result otherwise
         stream.close();
-        return accEst.getAnswers().get(accEst.answers.size()-1);
+        return accEst.getAnswers().get(accEst.getAnswerCount()-1);
       } catch (RuntimeException e) {
         throw e;
       }
