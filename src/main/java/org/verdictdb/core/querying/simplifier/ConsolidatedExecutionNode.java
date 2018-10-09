@@ -241,5 +241,5 @@ public class ConsolidatedExecutionNode extends QueryNodeWithPlaceHolders {
         .append("child", childNode)
         .toString();
   }
-  
+
 }
