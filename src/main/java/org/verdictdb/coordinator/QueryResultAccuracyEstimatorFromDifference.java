@@ -60,7 +60,7 @@ public class QueryResultAccuracyEstimatorFromDifference extends QueryResultAccur
     HashMap<List<Object>, List<Object>> newAggregatedMap = new HashMap<>();
     VerdictSingleResult currentAnswer = answers.get(answers.size() - 1);
     // query result without asyncAggregate
-    if (currentAnswer.getMetaData().isAggregate.isEmpty()) {
+    if (currentAnswer.getMetaData()!=null && currentAnswer.getMetaData().isAggregate.isEmpty()) {
       return true;
     }
     while (currentAnswer.next()) {
