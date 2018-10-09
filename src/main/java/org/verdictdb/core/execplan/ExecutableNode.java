@@ -19,6 +19,7 @@ package org.verdictdb.core.execplan;
 import java.util.List;
 import java.util.Map;
 
+import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.core.sqlobject.SqlConvertible;
 import org.verdictdb.exception.VerdictDBException;
@@ -42,6 +43,9 @@ public interface ExecutableNode {
   public SqlConvertible createQuery(List<ExecutionInfoToken> tokens) throws VerdictDBException;
 
   public ExecutionInfoToken createToken(DbmsQueryResult result);
+  
+  
+  // Plan structure
 
   /**
    * The tokens are retrieved from these queues.

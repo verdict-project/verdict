@@ -1,12 +1,5 @@
 package org.verdictdb.sqlreader;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Statement;
-
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.commons.DatabaseConnectionHelpers;
@@ -20,6 +13,13 @@ import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sqlsyntax.MysqlSyntax;
+
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
+
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class MySqlSqlToRelationFailureTest {
 
@@ -46,7 +46,7 @@ public class MySqlSqlToRelationFailureTest {
 
   private static final String MYSQL_DATABASE = "coordinator_test";
 
-  private static final String MYSQL_UESR = "root";
+  private static final String MYSQL_USER = "root";
 
   private static final String MYSQL_PASSWORD = "";
 
@@ -56,7 +56,8 @@ public class MySqlSqlToRelationFailureTest {
         String.format("jdbc:mysql://%s?autoReconnect=true&useSSL=false", MYSQL_HOST);
     conn =
         DatabaseConnectionHelpers.setupMySql(
-            mysqlConnectionString, MYSQL_UESR, MYSQL_PASSWORD, MYSQL_DATABASE);
+            mysqlConnectionString, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE);
+    conn.setCatalog(MYSQL_DATABASE);
     stmt = conn.createStatement();
     DbmsConnection dbmsConn = JdbcConnection.create(conn);
 

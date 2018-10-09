@@ -9,7 +9,7 @@ select
     avg(l_extendedprice) as avg_price,
     avg(l_discount) as avg_disc,
     count(*) as count_order
-from  lineitem_scrambled
+from  lineitem
 where
     l_shipdate <= date '1998-12-01'
 group by

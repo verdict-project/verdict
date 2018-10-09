@@ -129,7 +129,7 @@ public class AsyncAggJoinScaleTest {
     QueryExecutionPlan queryExecutionPlan = QueryExecutionPlanFactory.create("verdictdb_temp", meta, (SelectQuery) relation);
     queryExecutionPlan.cleanUp();
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
-    Dimension d1 = new Dimension("originalSchema", "originalTable1_scrambled", 0, 1);
+    Dimension d1 = new Dimension("originalSchema", "originalTable1_scrambled", 0, 0);
     Dimension d2 = new Dimension("originalSchema", "originalTable2_scrambled", 0, 0);
     Assert.assertEquals(
         new HyperTableCube(Arrays.asList(d1, d2)), 
@@ -178,8 +178,7 @@ public class AsyncAggJoinScaleTest {
                             "from \"originalSchema\".\"originalTable1_scrambled\" as vt " +
                             "inner join \"originalSchema\".\"originalTable2_scrambled\" as vt " +
                             "on (vt.\"a_id\" = vt.\"b_id\") " +
-                            "where ((vt.\"verdictdbaggblock\" >= 0) " +
-                            "and (vt.\"verdictdbaggblock\" <= 1)) and (vt.\"verdictdbaggblock\" = 0) " +
+                            "where (vt.\"verdictdbaggblock\" = 0) and (vt.\"verdictdbaggblock\" = 0) " +
                             "group by vt.\"verdictdbtier\", vt.\"verdictdbtier\"";
     assertEquals(exepected2, actual);
 
@@ -219,7 +218,7 @@ public class AsyncAggJoinScaleTest {
         "select sum(verdictdb_internal_tier_consolidated.\"agg0\") as \"ss\" " +
             "from " +
             "(select (case when ((verdictdb_internal_before_scaling.\"verdictdb_tier_alias\" = 0) " +
-            "and (verdictdb_internal_before_scaling.\"verdictdb_tier_alias\" = 0)) then 2.0 else 1.0 end) * " +
+            "and (verdictdb_internal_before_scaling.\"verdictdb_tier_alias\" = 0)) then 4.0 else 1.0 end) * " +
             "verdictdb_internal_before_scaling.\"agg0\" as \"agg0\", " +
             "verdictdb_internal_before_scaling.\"verdictdb_tier_alias\" as \"verdictdb_tier_alias\", " +
             "verdictdb_internal_before_scaling.\"verdictdb_tier_alias\" as \"verdictdb_tier_alias\" " +

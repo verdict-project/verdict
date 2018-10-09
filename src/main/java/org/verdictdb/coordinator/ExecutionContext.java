@@ -191,13 +191,17 @@ public class ExecutionContext {
       log.debug("Query type: select");
       ScrambleMetaSet metaset = metaStore.retrieve();
       SelectQueryCoordinator coordinator = new SelectQueryCoordinator(conn, metaset, options);
-      runningCoordinator = coordinator;
+      runningCoordinator = null;
 
       ExecutionResultReader reader = coordinator.process(query, queryContext);
+      if (coordinator.getLastQuery() != null) {
+        // this means there are scrambles for the query so that
+        // we need to abort the coordinator at the end.
+        runningCoordinator = coordinator;
+      }
       VerdictResultStream stream = new VerdictResultStreamFromExecutionResultReader(reader, this);
 
       return stream;
-
     } else if (queryType.equals(QueryType.scrambling)) {
       log.debug("Query type: scrambling");
       CreateScrambleQuery scrambleQuery = generateScrambleQuery(query);
@@ -262,7 +266,7 @@ public class ExecutionContext {
 
     } else if (queryType.equals(QueryType.describe_table)) {
       log.debug("Query type: describe_table");
-      VerdictResultStream stream = generateDesribeTableResultFromQuery(query);
+      VerdictResultStream stream = generateDescribeTableResultFromQuery(query);
       return stream;
 
     } else {
@@ -363,7 +367,7 @@ public class ExecutionContext {
     return new VerdictResultStreamFromSingleResult(result);
   }
 
-  private VerdictResultStream generateDesribeTableResultFromQuery(String query)
+  private VerdictResultStream generateDescribeTableResultFromQuery(String query)
       throws VerdictDBException {
     VerdictSQLParser parser = NonValidatingSQLParser.parserOf(query);
     VerdictSQLParserBaseVisitor<Pair<String, String>> visitor =
@@ -396,7 +400,7 @@ public class ExecutionContext {
     return new VerdictResultStreamFromSingleResult(result);
   }
 
-  private void updateDefaultSchemaFromQuery(String query) {
+  private void updateDefaultSchemaFromQuery(String query) throws VerdictDBDbmsException {
     VerdictSQLParser parser = NonValidatingSQLParser.parserOf(query);
     String schema = parser.use_statement().database.getText();
     conn.setDefaultSchema(schema);
@@ -522,6 +526,9 @@ public class ExecutionContext {
         };
 
     QueryType type = visitor.visit(parser.verdict_statement());
+    if (type == null) {
+      type = QueryType.unknown;
+    }
     return type;
   }
 }

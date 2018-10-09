@@ -5,8 +5,8 @@ select
     o_shippriority
 from
     customer,
-    orders_scrambled,
-    lineitem_scrambled
+    orders,
+    lineitem
 where
     c_custkey = o_custkey
     and l_orderkey = o_orderkey

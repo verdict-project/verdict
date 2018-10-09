@@ -27,6 +27,7 @@ import org.verdictdb.connection.SparkConnection;
 import org.verdictdb.coordinator.ExecutionContext;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.core.sqlobject.CreateSchemaQuery;
+import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.metastore.CachedScrambleMetaStore;
 import org.verdictdb.metastore.ScrambleMetaStore;
@@ -242,7 +243,11 @@ public class VerdictContext {
   }
 
   public void setDefaultSchema(String schema) {
-    conn.setDefaultSchema(schema);
+    try {
+      conn.setDefaultSchema(schema);
+    } catch (VerdictDBDbmsException e) {
+      e.printStackTrace();
+    }
   }
 
   public void close() {
@@ -265,7 +270,12 @@ public class VerdictContext {
   }
 
   public DbmsConnection getCopiedConnection() {
-    return conn.copy();
+    try {
+      return conn.copy();
+    } catch (VerdictDBDbmsException e) {
+      e.printStackTrace();
+    }
+    return null;
   }
 
   public String getContextId() {
@@ -278,8 +288,13 @@ public class VerdictContext {
 
   public ExecutionContext createNewExecutionContext() {
     long execSerialNumber = getNextExecutionSerialNumber();
-    ExecutionContext exec =
-        new ExecutionContext(conn.copy(), metaStore, contextId, execSerialNumber, options.copy());
+    ExecutionContext exec = null;
+    try {
+      exec =
+          new ExecutionContext(conn.copy(), metaStore, contextId, execSerialNumber, options.copy());
+    } catch (VerdictDBDbmsException e) {
+      e.printStackTrace();
+    }
     executionContexts.add(exec);
     return exec;
   }

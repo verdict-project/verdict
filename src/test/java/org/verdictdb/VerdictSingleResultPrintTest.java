@@ -1,7 +1,4 @@
-/**
- * Test the functionality of VerdictSingleResult.print()
- */
-
+/** Test the functionality of VerdictSingleResult.print() */
 package org.verdictdb;
 
 import org.apache.commons.lang3.RandomStringUtils;
@@ -14,7 +11,9 @@ import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sqlsyntax.MysqlSyntax;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
 
 public class VerdictSingleResultPrintTest {
 
@@ -32,7 +31,7 @@ public class VerdictSingleResultPrintTest {
   private static final String MYSQL_DATABASE =
       "verdictstatement_test_" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
 
-  private static final String MYSQL_UESR = "root";
+  private static final String MYSQL_USER = "root";
 
   private static final String MYSQL_PASSWORD = "";
 
@@ -46,25 +45,31 @@ public class VerdictSingleResultPrintTest {
         String.format("jdbc:mysql://%s?autoReconnect=true&useSSL=false", MYSQL_HOST);
     Connection conn =
         DatabaseConnectionHelpers.setupMySql(
-            mysqlConnectionString, MYSQL_UESR, MYSQL_PASSWORD, MYSQL_DATABASE);
+            mysqlConnectionString, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE);
     DbmsConnection dbmsConnection = new JdbcConnection(conn, new MysqlSyntax());
     vc = new VerdictContext(dbmsConnection);
+    conn.setCatalog(MYSQL_DATABASE);
     stmt = conn.createStatement();
-    vc.sql(String.format(
-        "create scramble if not exists %s.lineitem_scrambled from %s.lineitem blocksize 100",
-        MYSQL_DATABASE, MYSQL_DATABASE));
-    vc.sql(String.format(
-        "create scramble if not exists %s.orders_scrambled from %s.orders blocksize 100",
-        MYSQL_DATABASE, MYSQL_DATABASE));
+    vc.sql(
+        String.format(
+            "create scramble if not exists %s.lineitem_scrambled from %s.lineitem blocksize 100",
+            MYSQL_DATABASE, MYSQL_DATABASE));
+    vc.sql(
+        String.format(
+            "create scramble if not exists %s.orders_scrambled from %s.orders blocksize 100",
+            MYSQL_DATABASE, MYSQL_DATABASE));
   }
 
   @Test
   public void testPrint() throws VerdictDBException {
-    VerdictResultStream verdictResultStream = vc.streamsql(
-        String.format("select     l_returnflag,\n" +
-            "    l_linestatus,\n" +
-            "    sum(l_quantity) as sum_qty from %s.lineitem group by l_linestatus, l_returnflag", MYSQL_DATABASE));
-    while (verdictResultStream.hasNext()){
+    VerdictResultStream verdictResultStream =
+        vc.streamsql(
+            String.format(
+                "select     l_returnflag,\n"
+                    + "    l_linestatus,\n"
+                    + "    sum(l_quantity) as sum_qty from %s.lineitem group by l_linestatus, l_returnflag",
+                MYSQL_DATABASE));
+    while (verdictResultStream.hasNext()) {
       VerdictSingleResult verdictSingleResult = verdictResultStream.next();
       verdictSingleResult.print();
     }

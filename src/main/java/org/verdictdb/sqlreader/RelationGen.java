@@ -285,7 +285,7 @@ public class RelationGen extends VerdictSQLParserBaseVisitor<AbstractRelation> {
   }
 
   private String stripQuote(String expr) {
-    return expr.replace("\"", "").replace("`", "");
+    return expr.replace("\"", "").replace("`", "").replace("'", "");
   }
 
   @Override
@@ -341,8 +341,8 @@ public class RelationGen extends VerdictSQLParserBaseVisitor<AbstractRelation> {
 
   @Override
   public AbstractRelation visitTable_name(VerdictSQLParser.Table_nameContext ctx) {
-    String schemaName = (ctx.schema == null) ? "" : ctx.schema.getText();
-    String tableName = (ctx.table == null) ? "" : ctx.table.getText();
+    String schemaName = (ctx.schema == null) ? "" : stripQuote(ctx.schema.getText());
+    String tableName = (ctx.table == null) ? "" : stripQuote(ctx.table.getText());
 
     return new BaseTable(schemaName, tableName);
   }

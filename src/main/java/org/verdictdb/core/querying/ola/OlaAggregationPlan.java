@@ -62,8 +62,9 @@ public class OlaAggregationPlan {
     }
     HyperTableCube originalCube = new HyperTableCube(dims);
 
-    // slice
-    cubes = originalCube.roundRobinSlice();
+    // slice: either approach works; ripple join approach simply ensures quicker latency.
+//    cubes = originalCube.roundRobinSlice();
+    cubes = originalCube.rippleJoinSlice();
   }
 
   // TODO: use this method to create a merged metadata
