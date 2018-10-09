@@ -27,6 +27,11 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.exception.VerdictDBValueException;
 
+/**
+ * Represents a subset of table identified by the blockid declared on each table.
+ * @author Yongjoo Park
+ *
+ */
 public class HyperTableCube implements Serializable {
 
   private static final long serialVersionUID = -2326120491898400014L;
@@ -59,6 +64,45 @@ public class HyperTableCube implements Serializable {
       }
     }
     return null;
+  }
+  
+  public List<HyperTableCube> rippleJoinSlice() throws VerdictDBValueException {
+    List<HyperTableCube> cubes = new ArrayList<>();
+    List<Dimension> occupiedDims = new ArrayList<>();
+    int dim = dimensions.size();
+    for (int i = 0; i < dim; i++) {
+      // set the last dimension 0 so that the sliceAt() will initially slice along that dimension
+      Dimension thisDim = dimensions.get(i);
+      if (i < dim - 1) {
+        occupiedDims.add(
+            new Dimension(
+                thisDim.getSchemaName(), 
+                thisDim.getTableName(), 
+                thisDim.getBegin(), 
+                thisDim.getBegin()));
+      } else {
+        occupiedDims.add(
+            new Dimension(
+                thisDim.getSchemaName(), 
+                thisDim.getTableName(), 
+                thisDim.getBegin(), 
+                thisDim.getBegin()-1));
+      }
+    }
+    HyperTableCube occupied = new HyperTableCube(occupiedDims);
+    
+    // In each iteration, a new slice (of type Cube) is created and added.
+    while (true) { 
+      Pair<HyperTableCube, HyperTableCube> sliceAndOccupied = sliceAt(occupied);
+      if (sliceAndOccupied == null) {
+        break;
+      }
+      HyperTableCube slice = sliceAndOccupied.getLeft();
+      cubes.add(slice);
+      occupied = sliceAndOccupied.getRight();
+    }
+    
+    return cubes;
   }
 
   public List<HyperTableCube> roundRobinSlice() throws VerdictDBValueException {
@@ -99,6 +143,58 @@ public class HyperTableCube implements Serializable {
     }
 
     return cubes;
+  }
+  
+  /**
+   * Chooses a block using the idea by ripple join (by Haas). A new cube is chosen using the
+   * nexIndices, which is increased by one (at one dimension or equivalently, for one of its 
+   * elements) after creating a new cube.
+   * 
+   * @param nexIndices
+   * @return (NewCube, OccupiedCube)
+   */
+  Pair<HyperTableCube, HyperTableCube> sliceAt(HyperTableCube occupied) {
+    // identify the dimension with the smallest value. if the values of all dimensions are equal
+    // then, the last dimension will be chosen.
+    int dimToExpand = -1;
+    int smallestIndex = Integer.MAX_VALUE;   // the largest index value thus far observed
+    int dim = dimensions.size();
+    for (int i = 0; i < dim; i++) {
+      int thisDimIndex = occupied.getDimension(i).getEnd();
+      if (thisDimIndex >= dimensions.get(i).getEnd()) {
+        // if the current end is at the last position, we should not increase this dimension.
+        continue;
+      }
+      
+      if (thisDimIndex <= smallestIndex) {
+        smallestIndex = thisDimIndex;
+        dimToExpand = i;
+      }
+    }
+    
+    // if there is no dimension to expand, return null to indicate that there is no more slice
+    if (dimToExpand == -1) {
+      return null;
+    }
+    
+    // a new hypercube is a slice over the largestIndex while using the entire interval for each of
+    // other dimensions.
+    List<Dimension> newDimensions = new ArrayList<>();
+    List<Dimension> expanded = new ArrayList<>();
+    for (int i = 0; i < occupied.getDimensions().size(); i++) {
+      Dimension d = occupied.getDimension(i);
+      if (i == dimToExpand) {
+        newDimensions.add(
+            new Dimension(d.getSchemaName(), d.getTableName(), d.getEnd()+1, d.getEnd()+1));
+        expanded.add(
+            new Dimension(d.getSchemaName(), d.getTableName(), d.getBegin(), d.getEnd()+1));
+      } else {
+        newDimensions.add(d);
+        expanded.add(d);
+      }
+    }
+    
+    return Pair.of(new HyperTableCube(newDimensions), new HyperTableCube(expanded));
   }
 
   /**

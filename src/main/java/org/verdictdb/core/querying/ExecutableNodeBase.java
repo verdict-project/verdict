@@ -34,6 +34,7 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.apache.commons.lang3.tuple.Pair;
+import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.core.execplan.ExecutableNode;
 import org.verdictdb.core.execplan.ExecutableNodeRunner;
@@ -71,8 +72,11 @@ public class ExecutableNodeBase implements ExecutableNode, Serializable {
   
   private UniqueChannelCreator channelCreator = new UniqueChannelCreator(this);
   
-  private ExecutableNodeRunner runner;
+  private ExecutableNodeRunner runner;    // for this node itself
+  
+//  private List<ExecutableNodeRunner> childNodeRunners = new ArrayList<>();    // for children
 
+  
   public ExecutableNodeBase(IdCreator creator) {
     this(creator.generateSerialNumber());
   }
@@ -362,18 +366,25 @@ public class ExecutableNodeBase implements ExecutableNode, Serializable {
   public String getStructure() {
     return print(0);
   }
+  
+  public String print(int indentSpace) {
+    return print(0, 3);
+  }
 
-  private String print(int indentSpace) {
+  private String print(int indentSpace, int pruneDepth) {
     StringBuilder builder = new StringBuilder();
     for (int i = 0; i < indentSpace; i++) {
       builder.append(" ");
     }
+    if (indentSpace > pruneDepth * 2) {
+      builder.append("... deep nodes are not shown ...\n");
+      return builder.toString();
+    }
     builder.append(this.toString());
     builder.append("\n");
-//    System.out.println(builder.toString());
-
+    
     for (ExecutableNodeBase dep : getExecutableNodeBaseDependents()) {
-      builder.append(dep.print(indentSpace + 2));
+      builder.append(dep.print(indentSpace + 2, pruneDepth));
     }
     
     return builder.toString();

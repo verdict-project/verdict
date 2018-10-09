@@ -144,19 +144,21 @@ public class AsyncAggExecutionNode extends ProjectionNode {
       c.registerSubscriber(ticket);
       //      node.subscribeTo(c, 0);
     }
+    
+    // FOR PARALLEL PROCESSING; we disable this.
     // make the leaf nodes dependent on the aggroot of the previous iteration
     // this will make all the operations on the (i+1)-th block performed after the operations
     // on the i-th block.
-    for (int i = 0; i < aggblocks.size(); i++) {
-      if (i > 0) {
-        AggExecutionNodeBlock aggblock = aggblocks.get(i);
-        List<ExecutableNodeBase> leafNodes = aggblock.getLeafNodes();
-        ExecutableNodeBase prevAggRoot = aggblocks.get(i - 1).getBlockRootNode();
-        for (ExecutableNodeBase leaf : leafNodes) {
-          leaf.subscribeTo(prevAggRoot, prevAggRoot.getId());
-        }
-      }
-    }
+//    for (int i = 0; i < aggblocks.size(); i++) {
+//      if (i > 0) {
+//        AggExecutionNodeBlock aggblock = aggblocks.get(i);
+//        List<ExecutableNodeBase> leafNodes = aggblock.getLeafNodes();
+//        ExecutableNodeBase prevAggRoot = aggblocks.get(i - 1).getBlockRootNode();
+//        for (ExecutableNodeBase leaf : leafNodes) {
+//          leaf.subscribeTo(prevAggRoot, prevAggRoot.getId());
+//        }
+//      }
+//    }
 
     //    // agg -> next agg (to enfore the execution order)
     //    for (int i = 0; i < individualAggs.size()-1; i++) {

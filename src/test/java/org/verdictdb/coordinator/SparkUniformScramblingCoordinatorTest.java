@@ -51,7 +51,7 @@ public class SparkUniformScramblingCoordinatorTest {
             TEST_SCHEMA, TEST_SCHEMA));
     
     VerdictSingleResult rs = verdict.sql(String.format("select count(*) from %s.lineitem", TEST_SCHEMA));
-//    rs.printCsv();
+    rs.printCsv();
   }
 
   @Test
