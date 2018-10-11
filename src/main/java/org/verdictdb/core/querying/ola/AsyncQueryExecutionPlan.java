@@ -90,6 +90,26 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
   ExecutableNodeBase makeAsyncronousAggIfAvailable(ExecutableNodeBase root)
       throws VerdictDBException {
     List<AggExecutionNodeBlock> aggBlocks = identifyTopAggBlocks(scrambleMeta, root);
+    //AggExecutionNodeBlock selectAggBlock = identifyTopSelectAggBlock(scrambleMeta, root);
+
+    // convert selectAggBlock to selectAsyncAggExecutionNode
+    /*
+    if (selectAggBlock!=null) {
+      ExecutableNodeBase oldNode = selectAggBlock.getBlockRootNode();
+      ExecutableNodeBase newNode = convertToSelectProgressiveAgg(scrambleMeta, selectAggBlock);
+
+      List<ExecutableNodeBase> parents = oldNode.getExecutableNodeBaseParents();
+      for (ExecutableNodeBase parent : parents) {
+        Integer channel = parent.getChannelForSource(oldNode);
+        if (channel == null) {
+          // do nothing
+        } else {
+          parent.cancelSubscriptionTo(oldNode);
+          parent.subscribeTo(newNode, channel);
+        }
+      }
+    }*/
+
     // converted nodes should be used in place of the original nodes.
     for (int i = 0; i < aggBlocks.size(); i++) {
       // this node block contains the links to those nodes belonging to this block.
@@ -111,6 +131,41 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
     }
 
     return root;
+  }
+
+  /**
+   * Converts the root node and its descendants into the configuration of selectAsyncAggExecutionNode
+   *
+   * <p>Basically aggregate subqueries are blocking operations while others operations are divided
+   * into smaller- scale operations (which involve different portions of data). It will directly return
+   * dbmsQueryResultType to root once every individual aggregate subquery is done.
+   *
+   * @param scrambleMeta The metadata about the scrambled tables.
+   * @param aggNodeBlock A set of the links to the nodes that will be processed in the asynchronous
+   *                     manner.
+   * @return Returns The root of the multiple aggregation nodes
+   * @throws VerdictDBValueException
+   */
+  public ExecutableNodeBase convertToSelectProgressiveAgg(
+      ScrambleMetaSet scrambleMeta, AggExecutionNodeBlock aggNodeBlock)
+      throws VerdictDBValueException {
+    List<ExecutableNodeBase> blockNodes = aggNodeBlock.getNodesInBlock();
+    List<ExecutableNodeBase> individualAggNodes = new ArrayList<>();
+    List<AggExecutionNodeBlock> aggblocks = new ArrayList<>();
+    // First, plan how to perform block aggregation
+    // filtering predicates that must inserted into different scrambled tables are identified.
+    List<Pair<ExecutableNodeBase, Triple<String, String, String>>> scrambledNodes =
+        identifyScrambledNodes(scrambleMeta, blockNodes);
+    List<Pair<String, String>> scrambles = new ArrayList<>();
+    for (Pair<ExecutableNodeBase, Triple<String, String, String>> a : scrambledNodes) {
+      String schemaName = a.getRight().getLeft();
+      String tableName = a.getRight().getMiddle();
+      scrambles.add(Pair.of(schemaName, tableName));
+    }
+    OlaAggregationPlan aggPlan = new OlaAggregationPlan(scrambleMeta, scrambles);
+    List<Pair<ExecutableNodeBase, ExecutableNodeBase>> oldSubscriptionInformation =
+        new ArrayList<>();
+    return null;
   }
 
   /**
@@ -320,7 +375,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
     if (root instanceof AggExecutionNode) {
       // check if it contains at least one scrambled table.
       // Also, if it is directly under select all node, we need to convert it into SelectAsyncAggExecutionNode
-      if (doesContainScramble(root, scrambleMeta) && !(root.getSubscribers().get(0) instanceof SelectAllExecutionNode)) {
+      if (doesContainScramble(root, scrambleMeta)/* && !(root.getSubscribers().get(0) instanceof SelectAllExecutionNode)*/) {
         AggExecutionNodeBlock block = new AggExecutionNodeBlock(root);
         aggblocks.add(block);
         return aggblocks;

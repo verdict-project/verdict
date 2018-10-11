@@ -47,7 +47,7 @@ public class PostgreSqlTpchSelectQueryCoordinatorTest {
 
   private static final String POSTGRES_USER = "postgres";
 
-  private static final String POSTGRES_PASSWORD = "";
+  private static final String POSTGRES_PASSWORD = "zhongshucheng123";
 
   static ScrambleMetaSet meta = new ScrambleMetaSet();
 
