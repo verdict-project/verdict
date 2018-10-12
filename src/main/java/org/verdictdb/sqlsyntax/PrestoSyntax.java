@@ -16,10 +16,10 @@
 
 package org.verdictdb.sqlsyntax;
 
+import com.google.common.collect.Lists;
+
 import java.util.Collection;
 import java.util.List;
-
-import com.google.common.collect.Lists;
 
 public class PrestoSyntax extends SqlSyntax {
 
@@ -140,10 +140,5 @@ public class PrestoSyntax extends SqlSyntax {
   @Override
   public String getApproximateCountDistinct(String column) {
     return String.format("approx_distinct(%s)", column);
-  }
-
-  @Override
-  public String getTimestampPrefix() {
-    return "timestamp ";
   }
 }

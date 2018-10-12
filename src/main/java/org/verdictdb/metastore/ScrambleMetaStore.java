@@ -21,6 +21,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.VerdictSingleResult;
 import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.commons.VerdictOption;
+import org.verdictdb.commons.VerdictTimestamp;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.coordinator.VerdictSingleResultFromDbmsQueryResult;
@@ -38,7 +39,6 @@ import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sqlwriter.QueryToSql;
 
-import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
@@ -65,8 +65,6 @@ public class ScrambleMetaStore extends VerdictMetaStore {
   private static final String DATA_COLUMN = "data";
 
   private static final String DELETED = "DELETED";
-
-  private static final String TIMESTAMP_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
 
   private DbmsConnection conn;
 
@@ -179,7 +177,7 @@ public class ScrambleMetaStore extends VerdictMetaStore {
     InsertValuesQuery insertQuery = new InsertValuesQuery();
     insertQuery.setSchemaName(getStoreSchema());
     insertQuery.setTableName(getMetaStoreTableName());
-    String timeStamp = new SimpleDateFormat(TIMESTAMP_FORMAT).format(new Date());
+    VerdictTimestamp timestamp = new VerdictTimestamp(new Date());
     insertQuery.setValues(
         Arrays.<Object>asList(
             originalTableSchema,
@@ -187,7 +185,7 @@ public class ScrambleMetaStore extends VerdictMetaStore {
             scrambleTableSchema,
             scrambleTableName,
             DELETED,
-            timeStamp,
+            timestamp,
             DELETED));
     sql = QueryToSql.convert(conn.getSyntax(), insertQuery);
     conn.execute(sql);
@@ -231,7 +229,6 @@ public class ScrambleMetaStore extends VerdictMetaStore {
     }
 
     // insert a new entry
-    String replacedString = "";
     StringBuilder insertSqls = new StringBuilder();
     for (ScrambleMeta meta : scrambleMetaSet) {
       InsertValuesQuery q = createInsertMetaQuery(meta);
@@ -239,9 +236,8 @@ public class ScrambleMetaStore extends VerdictMetaStore {
       LOG.debug("Adding a new scramble meta entry with the query: {}", s);
       insertSqls.append(s);
       insertSqls.append("; ");
-      replacedString = insertSqls.toString().replace(" 'timestamp  ", " timestamp '");
     }
-    conn.execute(replacedString);
+    conn.execute(insertSqls.toString());
   }
 
   private CreateTableDefinitionQuery createScrambleMetaStoreTableStatement() {
@@ -274,10 +270,7 @@ public class ScrambleMetaStore extends VerdictMetaStore {
     String scrambleSchema = meta.getSchemaName();
     String scrambleTable = meta.getTableName();
     String scrambleMethod = meta.getMethod();
-    String timeStamp =
-        conn.getSyntax().getTimestampPrefix()
-            + " "
-            + (new SimpleDateFormat(TIMESTAMP_FORMAT).format(new Date()));
+    VerdictTimestamp timestamp = new VerdictTimestamp(new Date());
     String jsonString = meta.toJsonString();
     query.setValues(
         Arrays.<Object>asList(
@@ -286,7 +279,7 @@ public class ScrambleMetaStore extends VerdictMetaStore {
             scrambleSchema,
             scrambleTable,
             scrambleMethod,
-            timeStamp,
+            timestamp,
             jsonString));
     return query;
   }

@@ -16,11 +16,13 @@
 
 package org.verdictdb.sqlwriter;
 
-import java.util.List;
-
+import org.verdictdb.commons.VerdictTimestamp;
 import org.verdictdb.core.sqlobject.InsertValuesQuery;
 import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.sqlsyntax.PrestoSyntax;
 import org.verdictdb.sqlsyntax.SqlSyntax;
+
+import java.util.List;
 
 public class InsertQueryToSql {
 
@@ -50,7 +52,13 @@ public class InsertQueryToSql {
       if (isFirst == false) {
         sql.append(", ");
       }
-      if (v instanceof String) {
+      if (v instanceof VerdictTimestamp) {
+        if (syntax instanceof PrestoSyntax) {
+          sql.append("timestamp '" + v.toString() + "'");
+        } else {
+          sql.append("'" + v.toString() + "'");
+        }
+      } else if (v instanceof String) {
         sql.append("'" + v + "'");
       } else {
         sql.append(v.toString());

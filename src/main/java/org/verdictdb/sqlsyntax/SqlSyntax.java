@@ -68,7 +68,7 @@ public abstract class SqlSyntax {
   public String substituteTypeName(String type) {
     return type;
   }
-  
+
   public String getGenericStringDataTypeName() {
     return "TEXT";
   }
@@ -90,13 +90,10 @@ public abstract class SqlSyntax {
 
   /**
    * Hive, Impala, Spark, Redshift have approximate count distinct function
+   *
    * @return
    */
   public String getApproximateCountDistinct(String column) {
     return String.format("count (distinct %s)", column);
-  }
-
-  public String getTimestampPrefix() {
-    return "";
   }
 }
