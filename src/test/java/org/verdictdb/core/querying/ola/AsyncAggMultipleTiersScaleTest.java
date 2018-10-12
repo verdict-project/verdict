@@ -385,7 +385,8 @@ public class AsyncAggMultipleTiersScaleTest {
     ExecutablePlanRunner.runTillEnd(jdbcConnection, queryExecutionPlan);
 //    stmt.execute("drop schema `verdictdb_temp` cascade;");
 
-    ExecutionInfoToken token1 = new ExecutionInfoToken(), token2 = new ExecutionInfoToken();
+    ExecutionInfoToken token1 = new ExecutionInfoToken();
+    ExecutionInfoToken token2 = new ExecutionInfoToken();
     token1.setKeyValue("schemaName", originalSchema);
     token1.setKeyValue("tableName", "originalTable_scrambled");
     token2.setKeyValue("schemaName", originalSchema);
@@ -452,11 +453,11 @@ public class AsyncAggMultipleTiersScaleTest {
         "when ((verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 1) " +
         "and (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 2)) then 2.0 " +
         "when ((verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 2) " +
-        "and (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 0)) then 1.0 " +
+        "and (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 0)) then 2.0 " +
         "when ((verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 2) " +
-        "and (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 1)) then 1.0 " +
+        "and (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 1)) then 2.0 " +
         "when ((verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 2) " +
-        "and (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 2)) then 2.0 " +
+        "and (verdictdb_internal_before_scaling.`verdictdb_tier_alias` = 2)) then 4.0 " +
         "else 1.0 end) * verdictdb_internal_before_scaling.`agg0` as `agg0`, " +
         "verdictdb_internal_before_scaling.`verdictdb_tier_alias` as `verdictdb_tier_alias`, " +
         "verdictdb_internal_before_scaling.`verdictdb_tier_alias` as `verdictdb_tier_alias` " +

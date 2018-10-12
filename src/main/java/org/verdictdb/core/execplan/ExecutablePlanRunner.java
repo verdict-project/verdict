@@ -59,7 +59,7 @@ public class ExecutablePlanRunner {
     ExecutionTokenReader reader = (new ExecutablePlanRunner(conn, plan)).getTokenReader();
     while (true) {
       ExecutionInfoToken token = reader.next();
-      //      System.out.println("runTillEnd: " + token);
+//      System.out.println("runTillEnd: " + token);
       if (token == null) {
         break;
       }
@@ -77,20 +77,39 @@ public class ExecutablePlanRunner {
       reader = new ExecutionTokenReader();
     }
     
-    // Run nodes
+    // Run nodes: approach 1
     // The nodes whose dependencies have not been finished will terminate immediately.
     // The leaf nodes will signal its parents (also called subscribers) to make them run.
     // The signal will be propagated throughout the tree as the nodes are completed.
+//    Set<Integer> groupIds = plan.getNodeGroupIDs();
+//    for (int gid : groupIds) {
+//      List<ExecutableNode> nodes = plan.getNodesInGroup(gid);
+//      for (ExecutableNode n : nodes) {
+//        ExecutableNodeRunner nodeRunner = new ExecutableNodeRunner(conn, n);
+//        nodeRunner.runOnThread();
+////        nodeRunner.run();
+//        nodeRunners.add(nodeRunner);
+//      }
+//    }
+    
+    // Run nodes: approach 2
+    // A parent node will run its children
+    // The parent node terminates when all of its children indicate completion.
+    
+    // first, assign node runner for all nodes.
     Set<Integer> groupIds = plan.getNodeGroupIDs();
     for (int gid : groupIds) {
       List<ExecutableNode> nodes = plan.getNodesInGroup(gid);
       for (ExecutableNode n : nodes) {
-        ExecutableNodeRunner nodeRunner = new ExecutableNodeRunner(conn, n);
-        nodeRunner.runOnThread();
-//        nodeRunner.run();
-        nodeRunners.add(nodeRunner);
+        nodeRunners.add(new ExecutableNodeRunner(conn, n));
       }
     }
+    
+    // second, run those nodes
+    ExecutableNodeBase root = (ExecutableNodeBase) plan.getReportingNode();
+    ExecutableNodeRunner nodeRunner = root.getRegisteredRunner();
+    nodeRunner.runThisAndDependents();
+//    nodeRunners.add(nodeRunner);
 
     return reader;
   }
@@ -104,7 +123,7 @@ public class ExecutablePlanRunner {
    * Kill all currently running threads.
    */
   public void abort() {
-    // setting the flag first helps properly catching exceptions.
+    // for approach 1: setting the flag first helps properly catching exceptions.
     for (ExecutableNodeRunner nodeRunner : nodeRunners) {
       nodeRunner.setAborted();
     }

@@ -134,13 +134,13 @@ public class JdbcConnectionTest {
   @Test
   public void testPostgresMetaData() throws VerdictDBDbmsException {
     JdbcConnection jdbc = new JdbcConnection(postgresConn, new PostgresqlSyntax());
-    System.out.println(jdbc.getColumns("public", "people"));
+//    System.out.println(jdbc.getColumns("public", "people"));
   }
 
   @Test
   public void testMySqlShowSchemas() throws VerdictDBDbmsException {
     JdbcConnection jdbc = new JdbcConnection(mysqlConn, new MysqlSyntax());
-    System.out.println(jdbc.getSchemas());
+//    System.out.println(jdbc.getSchemas());
   }
 
 }

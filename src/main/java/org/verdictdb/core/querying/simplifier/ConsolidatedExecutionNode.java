@@ -53,6 +53,14 @@ public class ConsolidatedExecutionNode extends QueryNodeWithPlaceHolders {
     //      addPlaceholderRecord(record);
     //    }
   }
+  
+  public ExecutableNodeBase getParentNode() {
+    return parentNode;
+  }
+  
+  public ExecutableNodeBase getChildNode() {
+    return childNode;
+  }
 
   @Override
   public PlaceHolderRecord removePlaceholderRecordForChannel(int channel) {

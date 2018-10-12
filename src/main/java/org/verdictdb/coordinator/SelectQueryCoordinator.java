@@ -156,7 +156,7 @@ public class SelectQueryCoordinator implements Coordinator {
     //    QueryExecutionPlan simplifiedAsyncPlan = QueryExecutionPlanSimplifier.simplify(asyncPlan);
     QueryExecutionPlanSimplifier.simplify2(asyncPlan);
     log.debug("Plan simplification done.");
-    log.debug(asyncPlan.getRoot().getStructure());
+    log.trace(asyncPlan.getRoot().getStructure());
 
     // execute the plan
     planRunner = new ExecutablePlanRunner(conn, asyncPlan);
@@ -169,8 +169,11 @@ public class SelectQueryCoordinator implements Coordinator {
 
   @Override
   public void abort() {
-    log.debug(String.format("Closes %s.", this.getClass().getSimpleName()));
-    planRunner.abort();
+    if (planRunner != null) {
+      log.debug(String.format("Closes %s.", this.getClass().getSimpleName()));
+      planRunner.abort();
+      planRunner = null;
+    }
   }
 
   /**
