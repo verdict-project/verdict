@@ -90,7 +90,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
   ExecutableNodeBase makeAsyncronousAggIfAvailable(ExecutableNodeBase root)
       throws VerdictDBException {
     List<AggExecutionNodeBlock> aggBlocks = identifyTopAggBlocks(scrambleMeta, root);
-    AggExecutionNodeBlock selectAggBlock = identifyTopSelectAggBlock(scrambleMeta, root);
+//    AggExecutionNodeBlock selectAggBlock = identifyTopSelectAggBlock(scrambleMeta, root);
 /*
     // convert selectAggBlock to selectAsyncAggExecutionNode
     if (selectAggBlock!=null) {
