@@ -12,7 +12,6 @@ import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.core.sqlobject.*;
 import org.verdictdb.exception.VerdictDBException;
-import org.verdictdb.exception.VerdictDBValueException;
 
 import java.util.*;
 
@@ -30,6 +29,9 @@ public class SelectAsyncAggExecutionNode extends QueryNodeBase {
 
   private ScrambleMetaSet scrambleMeta;
 
+  // The key is the values of every tier columns and the value is the scale factor.
+  // For instance, if we get condition {(tier1=0) and (tier2=1) -> 10.0}
+  // from composeScaleFactorForTierCombinations() method, this map will add {[0, 1] -> 10.0} to itself.
   private HashMap<List<Integer>, Double> conditionToScaleFactorMap = new HashMap<>();
 
   private Map<Integer, String> scrambledTableTierInfo;
@@ -46,11 +48,10 @@ public class SelectAsyncAggExecutionNode extends QueryNodeBase {
   }
 
   /**
-   * A factory method for AsyncAggExecutionNode.
+   * A factory method for SelectAsyncAggExecutionNode.
    *
-   * <p>This static method performs the following operations: 1. Link individual aggregate nodes and
-   * combiners appropriately. 2. Create a base table which includes several placeholders - scale
-   * factor placeholder - temp table placeholder
+   * <p>This static method performs the following operations: 1. Link individual selectAggregate nodes
+   * 2. Replace the SelectQuery with base aggregation and create a HashDbmsQueryResult object
    *
    * @param idCreator
    * @param selectAggs
@@ -257,14 +258,8 @@ public class SelectAsyncAggExecutionNode extends QueryNodeBase {
 
     Map<Integer, String> multipleTierTableTierInfo = new HashMap<>();
     List<ColumnOp> aggColumnlist = new ArrayList<>();
-    //    ScrambleMetaSet scrambleMetaSet = getScrambleMeta();
-
     List<HyperTableCube> cubes = sourceAggMeta.getCubes();
-    //    SelectQuery dependentQuery = (SelectQuery) token.getValue("dependentQuery");
-
-    //    dependentQuery.deepcopy().getSelectList();
     List<SelectItem> newSelectList = new ArrayList<>(sourceSelectList);
-    //    AggMeta aggMeta = (AggMeta) token.getValue("aggMeta");
 
     for (SelectItem selectItem : newSelectList) {
       if (selectItem instanceof AliasedColumn) {
@@ -318,119 +313,6 @@ public class SelectAsyncAggExecutionNode extends QueryNodeBase {
     }
 
     return Triple.of(aggColumnlist, newSelectList, multipleTierTableTierInfo);
-  }
-
-  /**
-   * Currently, assume block size is uniform
-   *
-   * @return Return tier permutation list and its scale factor
-   */
-  private HashMap<List<Integer>, Double> calculateScaleFactor(
-      AggMeta sourceAggMeta, Map<Integer, String> multipleTierTableTierInfo)
-      throws VerdictDBValueException {
-
-    List<HyperTableCube> cubes = sourceAggMeta.getCubes();
-    ScrambleMetaSet scrambleMetaSet = this.getScrambleMeta();
-    List<ScrambleMeta> metaForTablesList = new ArrayList<>();
-    List<Integer> blockCountList = new ArrayList<>();
-    List<Pair<Integer, Integer>> scrambleTableTierInfo =
-        new ArrayList<>(); // block span index for each table
-
-    for (Dimension d : cubes.get(0).getDimensions()) {
-      ScrambleMeta scrambleMeta =
-          scrambleMetaSet.getSingleMeta(d.getSchemaName(), d.getTableName());
-
-      blockCountList.add(
-          scrambleMetaSet.getAggregationBlockCount(d.getSchemaName(), d.getTableName()));
-      metaForTablesList.add(scrambleMeta);
-      scrambleTableTierInfo.add(
-          new ImmutablePair<>(
-              cubes.get(0).getDimensions().indexOf(d),
-              scrambleMetaSet
-                  .getSingleMeta(d.getSchemaName(), d.getTableName())
-                  .getNumberOfTiers()));
-
-      //      if (scrambleMeta.getNumberOfTiers() > 1 && !Initiated) {
-      if (scrambleMeta.getNumberOfTiers() > 1) {
-        //        ScrambleMeta meta = scrambleMetaSet.getSingleMeta(d.getSchemaName(),
-        // d.getTableName());
-        Map<ScrambleMeta, String> scrambleTableTierColumnAlias =
-            sourceAggMeta.getTierColumnForScramble();
-
-        if (scrambleTableTierColumnAlias.containsKey(scrambleMeta) == false) {
-          throw new VerdictDBValueException("The metadata for a scrambled table is not found.");
-        }
-
-      }
-    }
-
-    List<List<Integer>> tierPermuation = generateTierPermuation(scrambleTableTierInfo);
-    HashMap<List<Integer>, Double> scaleFactor = new HashMap<>();
-    for (List<Integer> tierlist : tierPermuation) {
-      double total = 0;
-      for (HyperTableCube cube : cubes) {
-        double scale = 1;
-        for (int i = 0; i < tierlist.size(); i++) {
-          int tier = tierlist.get(i);
-          Dimension d = cube.getDimensions().get(i);
-
-          double prob;
-          if (d.getBegin() == 0) {
-            prob = metaForTablesList.get(i).getCumulativeDistributionForTier(tier).get(d.getEnd());
-          } else {
-            prob =
-                metaForTablesList.get(i).getCumulativeDistributionForTier(tier).get(d.getEnd())
-                    - metaForTablesList
-                    .get(i)
-                    .getCumulativeDistributionForTier(tier)
-                    .get(d.getBegin() - 1);
-          }
-
-          scale = scale * prob;
-        }
-        total += scale;
-      }
-
-      if (total == 0) {
-        scaleFactor.put(tierlist, 0.0);
-      } else {
-        scaleFactor.put(tierlist, 1.0 / total);
-      }
-    }
-    return scaleFactor;
-  }
-
-  /**
-   * Generate the permuation of multiple tiers
-   *
-   * @param scrambleTableTierInfo
-   * @return
-   */
-  private List<List<Integer>> generateTierPermuation(
-      List<Pair<Integer, Integer>> scrambleTableTierInfo) {
-    if (scrambleTableTierInfo.size() == 1) {
-      List<List<Integer>> res = new ArrayList<>();
-      for (int tier = 0; tier < scrambleTableTierInfo.get(0).getRight(); tier++) {
-        res.add(Arrays.asList(tier));
-      }
-      return res;
-    } else {
-      List<Pair<Integer, Integer>> next =
-          scrambleTableTierInfo.subList(1, scrambleTableTierInfo.size());
-      List<List<Integer>> subres = generateTierPermuation(next);
-      List<List<Integer>> res = new ArrayList<>();
-      for (int tier = 0; tier < scrambleTableTierInfo.get(0).getRight(); tier++) {
-        for (List<Integer> tierlist : subres) {
-          List<Integer> newTierlist = new ArrayList<>();
-          for (int i : tierlist) {
-            newTierlist.add(Integer.valueOf(i));
-          }
-          newTierlist.add(0, tier);
-          res.add(newTierlist);
-        }
-      }
-      return res;
-    }
   }
 
   private SelectItem replaceColumnWithAggMeta(SelectItem sel, AggMeta aggMeta) {
@@ -535,9 +417,6 @@ public class SelectAsyncAggExecutionNode extends QueryNodeBase {
             firstHaving = false;
           }
           queryToReplace.addHavingByAnd(ac.getColumn());
-        } else if (ac.getAliasName().startsWith(ORDER_BY_ALIAS)) {
-          OrderbyAttribute attribute = queryToReplace.getOrderby().get(orderByIndex++);
-          attribute.setAttribute(ac.getColumn());
         }
         if (ac.getAliasName().startsWith(HAVING_CONDITION_ALIAS)
             || ac.getAliasName().startsWith(ORDER_BY_ALIAS)
@@ -623,23 +502,5 @@ public class SelectAsyncAggExecutionNode extends QueryNodeBase {
       query.addGroupby(group);
     }
     return new ImmutablePair<>(query, aggContents);
-  }
-
-  public static String getHavingConditionAlias() {
-    return HAVING_CONDITION_ALIAS;
-  }
-
-  public static String getGroupByAlias() {
-    return GROUP_BY_ALIAS;
-  }
-
-  public static String getOrderByAlias() {
-    return ORDER_BY_ALIAS;
-  }
-
-  void copyFields(AsyncAggExecutionNode from, AsyncAggExecutionNode to) {
-    //    to.scrambleMeta = from.scrambleMeta;
-    //    to.nonaggColumns = from.nonaggColumns;
-    //    to.aggColumns = from.aggColumns;
   }
 }

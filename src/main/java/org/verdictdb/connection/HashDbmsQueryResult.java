@@ -1,11 +1,11 @@
 package org.verdictdb.connection;
 
 import com.google.common.collect.TreeMultiset;
-import org.apache.spark.sql.catalyst.expressions.Alias;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.commons.AttributeValueRetrievalHelper;
 import org.verdictdb.core.querying.ola.SelectAsyncAggExecutionNode;
 import org.verdictdb.core.sqlobject.*;
-
 import java.math.BigDecimal;
 import java.util.*;
 
@@ -16,13 +16,16 @@ public class HashDbmsQueryResult extends AttributeValueRetrievalHelper implement
 
   // key is the non-aggregate column, value is also HashMap,
   // where the key is the tier value and the value is aggregate columns.
+  // This object stores the results from SelectAggExecutionNode (scaled using ScaleFactor)
   private HashMap<List<Object>, HashMap<List<Integer>, List<Double>>> results = new HashMap<>();
 
-  private TreeMultiset<List<Object>> rows;
+  // key is the order-by column, and value is the columns of original selectQuery
+  // User fetch data from this object.
+  private TreeMultiset<Pair<List<Object>, List<Object>>> rows;
 
   private List<Object> currentRow;
 
-  private Iterator<List<Object>> rowIterator;
+  private Iterator<Pair<List<Object>, List<Object>>> rowIterator;
 
   private int cursor = -1;
 
@@ -44,7 +47,12 @@ public class HashDbmsQueryResult extends AttributeValueRetrievalHelper implement
 
   public HashDbmsQueryResult(SelectAsyncAggExecutionNode node) {
     if (node.getSelectQuery().getLimit().isPresent()) {
-      limit = (Integer) ((ConstantColumn) node.getSelectQuery().getLimit().get()).getValue();
+      ConstantColumn lim = (ConstantColumn) node.getSelectQuery().getLimit().get();
+      if (lim.getValue() instanceof String) {
+        limit = Integer.valueOf((String) lim.getValue());
+      } else {
+        limit = (Integer) lim.getValue();
+      }
     }
   }
 
@@ -56,6 +64,17 @@ public class HashDbmsQueryResult extends AttributeValueRetrievalHelper implement
     this.tierColumnIndex = tierColumnIdx;
   }
 
+  /**
+   * Once SelectAsyncAggExecutionNode receives a token from SelectAggExecutionNode, it will return call this method
+   * to integrate the DbmsQueryResult. It will update itself given scaleFactor. It will do
+   * 1. Initialize aggColumnName, nonAggColumnName if not initialized.
+   * 2. Use given scaleFactor, first sum up different tier columns of same aggregates and multiply with scale factors.
+   * 3. Given the selectQuery of SelectAggExecutionNode, calculate columns by replacing SelectItem with its corresponding values.
+   * 4. todo: Generate MetaData if not generated.
+   * @param result
+   * @param scaleFactor
+   * @param node
+   */
   public void addDbmsQueryResult(DbmsQueryResult result, HashMap<List<Integer>, Double> scaleFactor, SelectAsyncAggExecutionNode node) {
     HashMap<List<Object>, List<Double>> resultsAfterSumUpTier = new HashMap<>();
 
@@ -67,26 +86,23 @@ public class HashDbmsQueryResult extends AttributeValueRetrievalHelper implement
         if (isAggregate.get(i) != 0) {
           aggColumnName.add(result.getColumnName(i));
           isAggregateMaxMin.add(isAggregate.get(i));
-        } else if (!tierColumnIndex.contains(i)) {
+        } else if (!tierColumnIndex.contains(i) && !result.getColumnName(i).startsWith("verdictdb_")) {
           nonAggColumnName.add(result.getColumnName(i));
         }
       }
     }
 
     // update rows
-    List<Integer> sortedColumnIndex = new ArrayList<>();
     List<Boolean> isSortedAsc = new ArrayList<>();
-    for (int i = 0; i < result.getColumnCount(); i++) {
-      if (result.getColumnName(i).matches("verdictdb_order_by[0-9]+$")) {
-        if (node.getSelectQuery().getOrderby().get(sortedColumnIndex.size()).getOrder().equals("asc")) {
-          isSortedAsc.add(true);
-        } else {
-          isSortedAsc.add(false);
-        }
-        sortedColumnIndex.add(i);
+    for (OrderbyAttribute orderby:node.getSelectQuery().getOrderby()) {
+      if (orderby.getOrder().equals("asc")) {
+        isSortedAsc.add(true);
+      } else {
+        isSortedAsc.add(false);
       }
     }
-    rows = TreeMultiset.create(new HashMapComparator(sortedColumnIndex, isSortedAsc));
+
+    rows = TreeMultiset.create(new HashMapComparator(isSortedAsc));
 
     // append new dbmsQueryResult
     while (result.next()) {
@@ -108,7 +124,7 @@ public class HashDbmsQueryResult extends AttributeValueRetrievalHelper implement
           } else {
             aggregate.add((double) val);
           }
-        } else if (!tierColumnIndex.contains(i)) {
+        } else if (!tierColumnIndex.contains(i) && !result.getColumnName(i).startsWith("verdictdb_")) {
           nonAggregate.add(result.getValue(i));
         }
       }
@@ -162,17 +178,34 @@ public class HashDbmsQueryResult extends AttributeValueRetrievalHelper implement
     // get estimated result
     for (Map.Entry<List<Object>, List<Double>> entry : resultsAfterSumUpTier.entrySet()) {
       List<Object> row = new ArrayList<>();
+      List<Object> orderbyColumn = new ArrayList<>();
       for (int i = 0; i < node.getSelectQuery().getSelectList().size(); i++) {
         AliasedColumn sel = (AliasedColumn) node.getSelectQuery().getSelectList().get(i);
+        Object value;
         if (nonAggColumnName.contains(sel.getAliasName())) {
           // non aggregate
-          row.add(entry.getKey().get(nonAggColumnName.indexOf(sel.getAliasName())));
+          value = entry.getKey().get(nonAggColumnName.indexOf(sel.getAliasName()));
+          row.add(value);
         } else {
           // aggregate
-          row.add(calculateAggregateValue(sel.getColumn(), entry));
+          value = calculateAggregateValue(sel.getColumn(), entry);
+          row.add(value);
+        }
+        for (OrderbyAttribute orderby:node.getSelectQuery().getOrderby()) {
+          if (orderby.getAttribute() instanceof AliasReference) {
+            if (sel.getAliasName().equals(((AliasReference) orderby.getAttribute()).getAliasName())) {
+              orderbyColumn.add(value);
+              break;
+            } else if (orderby.getAttribute() instanceof UnnamedColumn){
+              if (sel.getColumn().equals(orderby.getAttribute())) {
+                orderbyColumn.add(value);
+                break;
+              }
+            }
+          }
         }
       }
-      rows.add(row);
+      rows.add(new ImmutablePair<>(orderbyColumn, row));
     }
     rowIterator = rows.iterator();
 
@@ -189,6 +222,14 @@ public class HashDbmsQueryResult extends AttributeValueRetrievalHelper implement
     }
   }
 
+  /**
+   * This function will recursively calculate the value of columns given the selectItem.
+   * Basically, it will replace all Constant Column and BaseColumn using the value from entry.
+   * For ColumnOp, it will do the operation given the opType.
+   * @param sel
+   * @param entry
+   * @return
+   */
   private double calculateAggregateValue(SelectItem sel, Map.Entry<List<Object>, List<Double>> entry) {
     if (sel instanceof ColumnOp) {
       ColumnOp columnOp = (ColumnOp) sel;
@@ -257,9 +298,9 @@ public class HashDbmsQueryResult extends AttributeValueRetrievalHelper implement
   @Override
   public boolean next() {
     if (rowIterator.hasNext()) {
-      currentRow = rowIterator.next();
+      currentRow = rowIterator.next().getRight();
       cursor++;
-      if (limit != null && cursor > limit) {
+      if (limit != null && cursor >= limit) {
         return false;
       } else {
         return true;
@@ -287,15 +328,14 @@ public class HashDbmsQueryResult extends AttributeValueRetrievalHelper implement
 
   }
 
-
-  class HashMapComparator implements Comparator<List<Object>> {
-
-    List<Integer> sortedColumnIndex;
+  /**
+   * Comparator Class to sort the rows.
+   */
+  class HashMapComparator implements Comparator<Pair<List<Object>, List<Object>>> {
 
     List<Boolean> isSortedAsc;
 
-    public HashMapComparator(List<Integer> sortedColumnIndex, List<Boolean> isSortedAsc) {
-      this.sortedColumnIndex = sortedColumnIndex;
+    public HashMapComparator(List<Boolean> isSortedAsc) {
       this.isSortedAsc = isSortedAsc;
     }
 
@@ -315,11 +355,19 @@ public class HashDbmsQueryResult extends AttributeValueRetrievalHelper implement
       return isAsc ? v1.compareTo(v2) : v2.compareTo(v1);
     }
 
+    private int compareDate(Date v1, Date v2, Boolean isAsc) {
+      return isAsc ? v1.compareTo(v2) : v2.compareTo(v1);
+    }
+
+    private int compareBigDecimal(BigDecimal v1, BigDecimal v2, Boolean isAsc) {
+      return isAsc ? v1.compareTo(v2) : v2.compareTo(v1);
+    }
+
     @Override
-    public int compare(List<Object> o1, List<Object> o2) {
-      for (int i = 0; i < sortedColumnIndex.size(); i++) {
-        Object v1 = o1.get(i);
-        Object v2 = o2.get(i);
+    public int compare(Pair<List<Object>, List<Object>> o1, Pair<List<Object>, List<Object>> o2) {
+      for (int i = 0; i < o1.getLeft().size(); i++) {
+        Object v1 = o1.getLeft().get(i);
+        Object v2 = o2.getLeft().get(i);
         int res;
         if (v1 instanceof Long) {
           res = compareLong((Long) v1, (Long) v2, isSortedAsc.get(i));
@@ -333,6 +381,16 @@ public class HashDbmsQueryResult extends AttributeValueRetrievalHelper implement
           }
         } else if (v1 instanceof String) {
           res = compareString((String) v1, (String) v2, isSortedAsc.get(i));
+          if (res != 0) {
+            return res;
+          }
+        } else if (v1 instanceof Date) {
+          res = compareDate((Date) v1, (Date) v2, isSortedAsc.get(i));
+          if (res != 0) {
+            return res;
+          }
+        } else if (v1 instanceof BigDecimal) {
+          res = compareBigDecimal((BigDecimal) v1, (BigDecimal) v2, isSortedAsc.get(i));
           if (res != 0) {
             return res;
           }

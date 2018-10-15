@@ -91,7 +91,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
       throws VerdictDBException {
     List<AggExecutionNodeBlock> aggBlocks = identifyTopAggBlocks(scrambleMeta, root);
     AggExecutionNodeBlock selectAggBlock = identifyTopSelectAggBlock(scrambleMeta, root);
-
+/*
     // convert selectAggBlock to selectAsyncAggExecutionNode
     if (selectAggBlock!=null) {
       ExecutableNodeBase oldNode = selectAggBlock.getBlockRootNode();
@@ -108,7 +108,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
         }
       }
     }
-
+*/
     // converted nodes should be used in place of the original nodes.
     for (int i = 0; i < aggBlocks.size(); i++) {
       // this node block contains the links to those nodes belonging to this block.
@@ -129,12 +129,15 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
       }
     }
 
+    return root;
+/*
     if (selectAggBlock!=null) {
       // return SelectAsyncAggExecutionNode instead
       return root.getSources().get(0);
     } else {
       return root;
     }
+*/
   }
 
   /**
@@ -448,7 +451,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
     if (root instanceof AggExecutionNode) {
       // check if it contains at least one scrambled table.
       // Also, if it is directly under select all node, we need to convert it into SelectAsyncAggExecutionNode
-      if (doesContainScramble(root, scrambleMeta) && !(root.getSubscribers().get(0) instanceof SelectAllExecutionNode)) {
+      if (doesContainScramble(root, scrambleMeta) /*&& !(root.getSubscribers().get(0) instanceof SelectAllExecutionNode)*/) {
         AggExecutionNodeBlock block = new AggExecutionNodeBlock(root);
         aggblocks.add(block);
         return aggblocks;
