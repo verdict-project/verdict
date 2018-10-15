@@ -1,11 +1,11 @@
 package org.verdictdb.core.querying.ola;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.verdictdb.connection.DbmsQueryResult;
+import org.verdictdb.connection.HashDbmsQueryResult;
 import org.verdictdb.core.execplan.ExecutionInfoToken;
 import org.verdictdb.core.querying.*;
 import org.verdictdb.core.scrambling.ScrambleMeta;
@@ -18,10 +18,7 @@ import java.util.*;
 
 public class SelectAsyncAggExecutionNode extends QueryNodeBase {
 
-  private static final String INNER_RAW_AGG_TABLE_ALIAS = "verdictdb_internal_before_scaling";
-
-  private static final String TIER_CONSOLIDATED_TABLE_ALIAS =
-      "verdictdb_internal_tier_consolidated";
+  private static final long serialVersionUID = 70795390245860583L;
 
   private static final String HAVING_CONDITION_ALIAS = "verdictdb_having_cond";
 
@@ -29,16 +26,11 @@ public class SelectAsyncAggExecutionNode extends QueryNodeBase {
 
   private static final String ORDER_BY_ALIAS = "verdictdb_order_by";
 
-  //  private static final String SCRAMBLE_META_STORE_KEY = "scrambleMeta";
+  private DbmsQueryResult dbmsQueryResult;
 
   private ScrambleMetaSet scrambleMeta;
 
-  //  private String newTableSchemaName;
-  //
-  //  private String newTableName;
-
-  // This is the list of aggregate columns contained in the selectQuery field.
-  private List<ColumnOp> aggColumns;
+  private HashMap<List<Integer>, Double> conditionToScaleFactorMap = new HashMap<>();
 
   private Map<Integer, String> scrambledTableTierInfo;
 
@@ -48,8 +40,6 @@ public class SelectAsyncAggExecutionNode extends QueryNodeBase {
    * sum(value)].
    */
   HashMap<String, UnnamedColumn> aggContents = new HashMap<>();
-
-  int tableNum = 1;
 
   private SelectAsyncAggExecutionNode(IdCreator idCreator) {
     super(idCreator, null);
@@ -69,7 +59,7 @@ public class SelectAsyncAggExecutionNode extends QueryNodeBase {
    * @return
    */
 
-  public static AsyncAggExecutionNode create(
+  public static SelectAsyncAggExecutionNode create(
       IdCreator idCreator,
       List<SelectAggExecutionNode> selectAggs,
       ScrambleMetaSet meta,
@@ -87,10 +77,9 @@ public class SelectAsyncAggExecutionNode extends QueryNodeBase {
     // creates a base query that contain placeholders
     AggMeta sourceAggMeta = selectAggs.get(0).getAggMeta();
     List<SelectItem> sourceSelectList = selectAggs.get(0).getSelectQuery().getSelectList();
-    Triple<List<ColumnOp>, SqlConvertible, Map<Integer, String>> aggColumnsAndQuery =
+    Triple<List<ColumnOp>, List<SelectItem>, Map<Integer, String>> aggColumnsAndQuery =
         createBaseQueryForReplacement(sourceAggMeta, sourceSelectList, meta);
-    node.aggColumns = aggColumnsAndQuery.getLeft();
-    SelectQuery subquery = (SelectQuery) aggColumnsAndQuery.getMiddle();
+    SelectQuery subquery = SelectQuery.create(aggColumnsAndQuery.getMiddle(), new BaseTable("dummy"));
     Pair<SelectQuery, HashMap<String, UnnamedColumn>> pair =
         sumUpTierGroup(subquery, sourceAggMeta);
     node.selectQuery = pair.getLeft();
@@ -101,39 +90,7 @@ public class SelectAsyncAggExecutionNode extends QueryNodeBase {
     // add (1) order-by, (2) limit, (3) having clauses to the select query
     QueryNodeBase aggRoot = (QueryNodeBase) aggNodeBlock.getBlockRootNode();
     SelectQuery originalAggQuery = aggRoot.getSelectQuery();
-
-    //    int orderByCount = 0;
-    //    for (OrderbyAttribute orderBy : originalAggQuery.getOrderby()) {
-    //      String aliasName = ORDER_BY_ALIAS + (orderByCount++);
-    //      //      if (orderBy.getAttribute() instanceof AliasedColumn) {
-    //      //        aliasName = ((AliasedColumn) orderBy.getAttribute()).getAliasName();
-    //      //      } else if (orderBy.getAttribute() instanceof AliasReference) {
-    //      //        aliasName = ((AliasReference) orderBy.getAttribute()).getAliasName();
-    //      //      } else {
-    //      //        // TODO
-    //      //        return null;
-    //      //      }
-    //      BaseColumn col = new BaseColumn(TIER_CONSOLIDATED_TABLE_ALIAS, aliasName);
-    //      node.selectQuery.addOrderby(
-    //          new OrderbyAttribute(col, orderBy.getOrder(), orderBy.getNullsOrder()));
-    //    }
-
     node.selectQuery.addOrderby(originalAggQuery.getOrderby());
-
-    //    int orderByCount = 0;
-    //    for (SelectItem item : node.selectQuery.getSelectList()) {
-    //      if (item instanceof AliasedColumn) {
-    //        AliasedColumn ac = (AliasedColumn) item;
-    //        if (ac.getAliasName().startsWith(AsyncAggExecutionNode.getOrderByAlias())) {
-    //          OrderbyAttribute attr = originalAggQuery.getOrderby().get(orderByCount);
-    //          BaseColumn col = new BaseColumn(TIER_CONSOLIDATED_TABLE_ALIAS, ac.getAliasName());
-    //          node.selectQuery.addOrderby(
-    //              new OrderbyAttribute(col, attr.getOrder(), attr.getNullsOrder()));
-    //          ++orderByCount;
-    //        }
-    //      }
-    //    }
-
     if (originalAggQuery.getLimit().isPresent()) {
       node.selectQuery.addLimit(originalAggQuery.getLimit().get());
     }
@@ -141,45 +98,78 @@ public class SelectAsyncAggExecutionNode extends QueryNodeBase {
       node.selectQuery.addHavingByAnd(originalAggQuery.getHaving().get());
     }
 
+    node.selectQuery = node.replaceWithOriginalSelectList(node.selectQuery, sourceAggMeta);
+
+    // set up HashdbmsQueryResult
+    node.dbmsQueryResult = new HashDbmsQueryResult(node);
+    List<Integer> isAggregate = new ArrayList<Integer>();
+    for (SelectItem sel:sourceSelectList) {
+      if (sel instanceof AliasedColumn && ((AliasedColumn) sel).getAliasName().matches("agg[0-9]+$")) {
+        ColumnOp columnOp = (ColumnOp) ((AliasedColumn) sel).getColumn();
+        if (columnOp.getOpType().equals("max")) {
+          isAggregate.add(2);
+        } else if (columnOp.getOpType().equals("min")) {
+          isAggregate.add(3);
+        } else {
+          isAggregate.add(1);
+        }
+      } else {
+        isAggregate.add(0);
+      }
+    }
+    ((HashDbmsQueryResult) node.dbmsQueryResult).setIsAggregate(isAggregate);
+    List<Integer> tierColumnIndex = new ArrayList<>();
+    for (String colName:node.scrambledTableTierInfo.values()) {
+      for (SelectItem sel:sourceSelectList) {
+        if (sel instanceof AliasedColumn && ((AliasedColumn) sel).getAliasName().equals(colName)) {
+          tierColumnIndex.add(sourceSelectList.indexOf(sel));
+        }
+      }
+    }
+    ((HashDbmsQueryResult) node.dbmsQueryResult).setTierInfo(tierColumnIndex);
+
     return node;
   }
 
   @Override
   public SqlConvertible createQuery(List<ExecutionInfoToken> tokens) throws VerdictDBException {
-    //    super.createQuery(tokens);
-
-    //    System.out.println("Starts the processing of AsyncAggNode.");
-    //    System.out.println(selectQuery);
-
     ExecutionInfoToken token = tokens.get(0);
     AggMeta sourceAggMeta = (AggMeta) token.getValue("aggMeta");
 
-    // First, calculate the scale factor and use it to replace the scale factor placeholder
-    List<Pair<UnnamedColumn, Double>> conditionToScaleFactor =
-        composeScaleFactorForTierCombinations(sourceAggMeta, INNER_RAW_AGG_TABLE_ALIAS);
-
-    // update the agg column scaling factor
-    List<UnnamedColumn> scalingOperands = new ArrayList<>();
-    for (Pair<UnnamedColumn, Double> condToScale : conditionToScaleFactor) {
-      UnnamedColumn cond = condToScale.getKey();
-      double scale = condToScale.getValue();
-      scalingOperands.add(cond);
-      scalingOperands.add(ConstantColumn.valueOf(scale));
-    }
-    scalingOperands.add(ConstantColumn.valueOf(1.0)); // default scaling factor is always 1.0
-    ColumnOp scalingColumn = ColumnOp.casewhen(scalingOperands);
-    for (ColumnOp aggcol : aggColumns) {
-      aggcol.setOperand(0, scalingColumn);
+    // Update scale factor
+    List<Pair<UnnamedColumn, Double>> conditionToScaleFactor = composeScaleFactorForTierCombinations(sourceAggMeta);
+    for (Pair<UnnamedColumn, Double> pair:conditionToScaleFactor) {
+      List<Integer> tierCondition = convertTierConditionColToList((ColumnOp)pair.getLeft());
+      if (!conditionToScaleFactorMap.containsKey(tierCondition)) {
+        conditionToScaleFactorMap.put(tierCondition, pair.getRight());
+      } else {
+        double scale = conditionToScaleFactorMap.get(tierCondition);
+        conditionToScaleFactorMap.put(tierCondition, 1.0/(1.0/scale + 1.0/pair.getRight()));
+      }
     }
 
 
+    // update dbmsQueryResult
+    ((HashDbmsQueryResult)dbmsQueryResult).addDbmsQueryResult((DbmsQueryResult) token.getValue("queryResult"), conditionToScaleFactorMap, this);
+    return null;
+  }
 
-    selectQuery = replaceWithOriginalSelectList(selectQuery, sourceAggMeta);
+  @Override
+  public ExecutionInfoToken createToken(DbmsQueryResult result) {
+    ExecutionInfoToken token = super.createToken(result);
+    token.setKeyValue("queryResult", dbmsQueryResult);
+    return token;
+  }
 
-    //    System.out.println("Finished composing a query in AsyncAggNode.");
-    //    System.out.println(selectQuery);
-
-    return super.createQuery(tokens);
+  private List<Integer> convertTierConditionColToList(ColumnOp condition) {
+    List<Integer> condList = new ArrayList<>();
+    if (condition.getOpType().equals("equal")) {
+      condList.add((Integer) ((ConstantColumn)condition.getOperand(1)).getValue());
+    } else if (condition.getOpType().equals("and")) {
+      condList.addAll(convertTierConditionColToList((ColumnOp) condition.getOperand(0)));
+      condList.addAll(convertTierConditionColToList((ColumnOp) condition.getOperand(1)));
+    }
+    return condList;
   }
 
   /**
@@ -192,7 +182,7 @@ public class SelectAsyncAggExecutionNode extends QueryNodeBase {
    *     to cond1, cond2, etc.; the scaling factors correspond to scale1, scale2, etc.
    */
   private List<Pair<UnnamedColumn, Double>> composeScaleFactorForTierCombinations(
-      AggMeta sourceAggMeta, String sourceTableAlias) {
+      AggMeta sourceAggMeta) {
     List<Pair<UnnamedColumn, Double>> scalingFactorPerTier = new ArrayList<>();
 
     Map<TierCombination, Double> scaleFactors = sourceAggMeta.computeScaleFactors();
@@ -213,12 +203,12 @@ public class SelectAsyncAggExecutionNode extends QueryNodeBase {
 
         UnnamedColumn part =
             ColumnOp.equal(
-                new BaseColumn(sourceTableAlias, aliasName), ConstantColumn.valueOf(tier));
+                new BaseColumn("", aliasName), ConstantColumn.valueOf(tier));
 
         if (tierCombinationCondition == null) {
           tierCombinationCondition = part;
         } else {
-          tierCombinationCondition = ColumnOp.and(tierCombinationCondition, part);
+          tierCombinationCondition = ColumnOp.and(part, tierCombinationCondition);
         }
       }
 
@@ -242,11 +232,6 @@ public class SelectAsyncAggExecutionNode extends QueryNodeBase {
     return null;
   }
 
-  @Override
-  public ExecutionInfoToken createToken(DbmsQueryResult result) {
-    ExecutionInfoToken token = super.createToken(result);
-    return token;
-  }
 
   public ScrambleMetaSet getScrambleMeta() {
     //    return (ScrambleMetaSet) retrieveStoredObjectThreadSafely(SCRAMBLE_META_STORE_KEY);
@@ -264,11 +249,10 @@ public class SelectAsyncAggExecutionNode extends QueryNodeBase {
    *     scrambled tables they cover and what aggregates are being computed.
    * @return Key: aggregate column list
    */
-  private static Triple<List<ColumnOp>, SqlConvertible, Map<Integer, String>>
+  private static Triple<List<ColumnOp>, List<SelectItem>, Map<Integer, String>>
   createBaseQueryForReplacement(
       AggMeta sourceAggMeta,
       List<SelectItem> sourceSelectList,
-      BaseTable placeholderTable,
       ScrambleMetaSet metaSet) {
 
     Map<Integer, String> multipleTierTableTierInfo = new HashMap<>();
@@ -287,11 +271,12 @@ public class SelectAsyncAggExecutionNode extends QueryNodeBase {
         AliasedColumn aliasedColumn = (AliasedColumn) selectItem;
         int index = newSelectList.indexOf(selectItem);
         UnnamedColumn col = aliasedColumn.getColumn();
+
         if (sourceAggMeta.getAggAlias().contains(aliasedColumn.getAliasName())) {
           ColumnOp aggColumn =
               ColumnOp.multiply(
                   ConstantColumn.valueOf(1.0),
-                  new BaseColumn(INNER_RAW_AGG_TABLE_ALIAS, aliasedColumn.getAliasName()));
+                  new BaseColumn("", aliasedColumn.getAliasName()));
           aggColumnlist.add(aggColumn);
           newSelectList.set(index, new AliasedColumn(aggColumn, aliasedColumn.getAliasName()));
         } else if (sourceAggMeta
@@ -301,7 +286,7 @@ public class SelectAsyncAggExecutionNode extends QueryNodeBase {
           newSelectList.set(
               index,
               new AliasedColumn(
-                  new BaseColumn(INNER_RAW_AGG_TABLE_ALIAS, aliasedColumn.getAliasName()),
+                  new BaseColumn("", aliasedColumn.getAliasName()),
                   aliasedColumn.getAliasName()));
         } else {
           // Looking for tier column
@@ -326,16 +311,13 @@ public class SelectAsyncAggExecutionNode extends QueryNodeBase {
           newSelectList.set(
               index,
               new AliasedColumn(
-                  new BaseColumn(INNER_RAW_AGG_TABLE_ALIAS, aliasedColumn.getAliasName()),
+                  new BaseColumn("", aliasedColumn.getAliasName()),
                   aliasedColumn.getAliasName()));
         }
       }
     }
 
-    // Setup from table
-    SelectQuery query = SelectQuery.create(newSelectList, placeholderTable);
-
-    return Triple.of(aggColumnlist, (SqlConvertible) query, multipleTierTableTierInfo);
+    return Triple.of(aggColumnlist, newSelectList, multipleTierTableTierInfo);
   }
 
   /**
@@ -451,25 +433,6 @@ public class SelectAsyncAggExecutionNode extends QueryNodeBase {
     }
   }
 
-  private UnnamedColumn generateCaseCondition(
-      List<Integer> tierlist, Map<Integer, String> multipleTierTableTierInfo) {
-
-    com.google.common.base.Optional<ColumnOp> col = com.google.common.base.Optional.absent();
-    for (Map.Entry<Integer, String> entry : multipleTierTableTierInfo.entrySet()) {
-      BaseColumn tierColumn = new BaseColumn(INNER_RAW_AGG_TABLE_ALIAS, entry.getValue());
-      ColumnOp equation =
-          new ColumnOp(
-              "equal",
-              Arrays.asList(tierColumn, ConstantColumn.valueOf(tierlist.get(entry.getKey()))));
-      if (col.isPresent()) {
-        col = com.google.common.base.Optional.of(new ColumnOp("and", Arrays.<UnnamedColumn>asList(equation, col.get())));
-      } else {
-        col = Optional.of(equation);
-      }
-    }
-    return col.get();
-  }
-
   private SelectItem replaceColumnWithAggMeta(SelectItem sel, AggMeta aggMeta) {
 
     Map<SelectItem, List<ColumnOp>> aggColumn = aggMeta.getAggColumn();
@@ -542,7 +505,7 @@ public class SelectAsyncAggExecutionNode extends QueryNodeBase {
       //      } else {
       ((AliasedColumn) sel)
           .setColumn(
-              new BaseColumn(TIER_CONSOLIDATED_TABLE_ALIAS, ((AliasedColumn) sel).getAliasName()));
+              new BaseColumn("", ((AliasedColumn) sel).getAliasName()));
       ((AliasedColumn) sel).setAliasName(((AliasedColumn) sel).getAliasName());
       //      }
     }
@@ -558,18 +521,6 @@ public class SelectAsyncAggExecutionNode extends QueryNodeBase {
   private SelectQuery replaceWithOriginalSelectList(SelectQuery queryToReplace, AggMeta aggMeta) {
     List<SelectItem> originalSelectList = aggMeta.getOriginalSelectList();
     List<SelectItem> newSelectList = new ArrayList<>();
-    Map<SelectItem, List<ColumnOp>> aggColumn = aggMeta.getAggColumn();
-    /*  HashMap<String, UnnamedColumn> aggContents = new HashMap<>();
-    for (SelectItem sel : queryToReplace.getSelectList()) {
-      // this column is a basic aggregate column
-      if (sel instanceof AliasedColumn
-          && aggMeta.getAggAlias().contains(((AliasedColumn) sel).getAliasName())) {
-        aggContents.put(((AliasedColumn) sel).getAliasName(), ((AliasedColumn) sel).getColumn());
-      } else if (sel instanceof AliasedColumn
-          && aggMeta.getMaxminAggAlias().keySet().contains(((AliasedColumn) sel).getAliasName())) {
-        aggContents.put(((AliasedColumn) sel).getAliasName(), ((AliasedColumn) sel).getColumn());
-      }
-    }*/
 
     boolean firstHaving = true;
     int orderByIndex = 0;
@@ -597,7 +548,6 @@ public class SelectAsyncAggExecutionNode extends QueryNodeBase {
       newSelectList.add(item);
     }
     queryToReplace.clearSelectList();
-    //    queryToReplace.getSelectList().addAll(originalSelectList);
     queryToReplace.getSelectList().addAll(newSelectList);
     return queryToReplace;
   }
@@ -625,14 +575,14 @@ public class SelectAsyncAggExecutionNode extends QueryNodeBase {
           UnnamedColumn col =
               ColumnOp.sum(
                   new BaseColumn(
-                      TIER_CONSOLIDATED_TABLE_ALIAS, ((AliasedColumn) sel).getAliasName()));
+                      "", ((AliasedColumn) sel).getAliasName()));
           newSelectlist.add(new AliasedColumn(col, ((AliasedColumn) sel).getAliasName()));
           aggContents.put(((AliasedColumn) sel).getAliasName(), col);
           String alias = ((AliasedColumn) sel).getAliasName();
 
           // Add the item to group-by if it is group-by column
           if (alias.startsWith(GROUP_BY_ALIAS)) {
-            UnnamedColumn newcol = new BaseColumn(TIER_CONSOLIDATED_TABLE_ALIAS, alias);
+            UnnamedColumn newcol = new BaseColumn("", alias);
             groupby.add(newcol);
           }
         }
@@ -647,14 +597,14 @@ public class SelectAsyncAggExecutionNode extends QueryNodeBase {
               new ColumnOp(
                   opType,
                   new BaseColumn(
-                      TIER_CONSOLIDATED_TABLE_ALIAS, ((AliasedColumn) sel).getAliasName()));
+                      "", ((AliasedColumn) sel).getAliasName()));
           newSelectlist.add(new AliasedColumn(col, ((AliasedColumn) sel).getAliasName()));
           aggContents.put(((AliasedColumn) sel).getAliasName(), col);
         } else {
           // if it is not a tier column, we need to put it in the group by list
           if (!tierColumnAliases.contains(((AliasedColumn) sel).getAliasName())) {
             UnnamedColumn newcol =
-                new BaseColumn(TIER_CONSOLIDATED_TABLE_ALIAS, ((AliasedColumn) sel).getAliasName());
+                new BaseColumn("", ((AliasedColumn) sel).getAliasName());
             groupby.add(newcol);
             AliasedColumn ac = (AliasedColumn) sel;
             if (ac.getAliasName().startsWith(AsyncAggExecutionNode.getHavingConditionAlias())
@@ -667,7 +617,7 @@ public class SelectAsyncAggExecutionNode extends QueryNodeBase {
         }
       }
     }
-    subquery.setAliasName(TIER_CONSOLIDATED_TABLE_ALIAS);
+    subquery.setAliasName("");
     SelectQuery query = SelectQuery.create(newSelectlist, subquery);
     for (GroupingAttribute group : groupby) {
       query.addGroupby(group);
