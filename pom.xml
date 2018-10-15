@@ -250,12 +250,6 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.facebook.presto</groupId>
-            <artifactId>presto-jdbc</artifactId>
-            <version>0.212</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>com.klarna</groupId>
             <artifactId>hiverunner</artifactId>
             <version>3.2.1</version>
@@ -299,6 +293,36 @@
     </dependencies>
 
     <profiles>
+        <profile>
+            <id>jdk7</id>
+            <activation>
+                <jdk>1.7</jdk>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <excludedGroups>org.verdictdb.PrestoTests</excludedGroups>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>jdk8</id>
+            <activation>
+                <jdk>1.8</jdk>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>com.facebook.presto</groupId>
+                    <artifactId>presto-jdbc</artifactId>
+                    <version>0.212</version>
+                    <scope>test</scope>
+                </dependency>
+            </dependencies>
+        </profile>
         <profile>
             <id>JDK7-setting</id>
             <activation>
