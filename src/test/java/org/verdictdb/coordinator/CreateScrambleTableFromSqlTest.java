@@ -40,8 +40,8 @@ import static org.junit.Assert.assertTrue;
 @RunWith(Parameterized.class)
 public class CreateScrambleTableFromSqlTest {
 
-  //  private static final String[] targetDatabases = {"mysql", "impala", "redshift", "postgresql"};
-  private static final String[] targetDatabases = {"impala"};
+  private static final String[] targetDatabases = {"mysql", "impala", "redshift", "postgresql"};
+  //  private static final String[] targetDatabases = {"impala"};
 
   private static Map<String, Pair<Connection, Connection>> connections = new HashMap<>();
 
