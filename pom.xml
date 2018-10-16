@@ -303,7 +303,7 @@
                     <plugin>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
-                            <excludedGroups>org.verdictdb.PrestoTests</excludedGroups>
+                            <excludedGroups>org.verdictdb.category.PrestoTests</excludedGroups>
                         </configuration>
                     </plugin>
                 </plugins>

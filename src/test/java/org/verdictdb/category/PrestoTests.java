@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-package org.verdictdb;
+package org.verdictdb.category;
 
 /** Created by Dong Young Yoon on 10/15/18. */
 public interface PrestoTests {}
