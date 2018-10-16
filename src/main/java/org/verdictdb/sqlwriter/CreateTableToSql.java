@@ -16,11 +16,7 @@
 
 package org.verdictdb.sqlwriter;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
-
+import com.google.common.base.Joiner;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.core.sqlobject.AsteriskColumn;
@@ -36,10 +32,15 @@ import org.verdictdb.exception.VerdictDBTypeException;
 import org.verdictdb.sqlsyntax.HiveSyntax;
 import org.verdictdb.sqlsyntax.ImpalaSyntax;
 import org.verdictdb.sqlsyntax.PostgresqlSyntax;
+import org.verdictdb.sqlsyntax.PrestoHiveSyntax;
+import org.verdictdb.sqlsyntax.PrestoSyntax;
 import org.verdictdb.sqlsyntax.SparkSyntax;
 import org.verdictdb.sqlsyntax.SqlSyntax;
 
-import com.google.common.base.Joiner;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class CreateTableToSql {
 
@@ -52,7 +53,7 @@ public class CreateTableToSql {
   public String toSql(CreateTableQuery query) throws VerdictDBException {
     VerdictDBLogger logger = VerdictDBLogger.getLogger(this.getClass());
     logger.debug("Converting the following sql object to string: " + query);
-    
+
     String sql;
     if (query instanceof CreateTableAsSelectQuery) {
       sql = createAsSelectQueryToSql((CreateTableAsSelectQuery) query);
@@ -162,8 +163,9 @@ public class CreateTableToSql {
 
     // partitions
     sql.append(" ");
-    sql.append(syntax.getPartitionByInCreateTable(
-        query.getPartitionColumns(), Arrays.<Integer>asList(query.getBlockCount())));
+    sql.append(
+        syntax.getPartitionByInCreateTable(
+            query.getPartitionColumns(), Arrays.<Integer>asList(query.getBlockCount())));
     sql.append(" (");
 
     // only single column for partition
@@ -220,10 +222,14 @@ public class CreateTableToSql {
     sql.append(".");
     sql.append(quoteName(tableName));
     sql.append(" ");
-    
+
     // parquet format for Spark
     if (syntax instanceof SparkSyntax) {
       sql.append("using parquet ");
+    }
+
+    if (syntax instanceof PrestoSyntax) {
+      sql.append("WITH (");
     }
 
     // partitions
@@ -233,10 +239,18 @@ public class CreateTableToSql {
               query.getPartitionColumns(), query.getPartitionCounts()));
       sql.append(" ");
     }
-    
+
     // parquet format
     if (syntax instanceof HiveSyntax || syntax instanceof ImpalaSyntax) {
       sql.append("stored as parquet ");
+    }
+
+    if (syntax instanceof PrestoHiveSyntax) {
+      sql.append("format = 'orc'");
+    }
+
+    if (syntax instanceof PrestoSyntax) {
+      sql.append(") ");
     }
 
     // select
