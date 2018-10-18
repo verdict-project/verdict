@@ -16,13 +16,7 @@
 
 package org.verdictdb.core.scrambling;
 
-import static org.verdictdb.core.scrambling.ScramblingNode.computeConditionalProbabilityDistribution;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-
+import com.google.common.base.Optional;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.commons.DataTypeConverter;
 import org.verdictdb.commons.VerdictDBLogger;
@@ -50,7 +44,12 @@ import org.verdictdb.core.sqlobject.UnnamedColumn;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBValueException;
 
-import com.google.common.base.Optional;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
+import static org.verdictdb.core.scrambling.ScramblingNode.computeConditionalProbabilityDistribution;
 
 /**
  * Policy: 1. Tier 0: tuples containing outlier values. 2. Tier 1: tuples containing rare groups 3.
@@ -96,11 +95,14 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
   public static final String RIGHT_TABLE_SOURCE_ALIAS_NAME = "t2";
 
   private int totalNumberOfblocks = -1;
-  
-  private static VerdictDBLogger log = VerdictDBLogger.getLogger(FastConvergeScramblingMethod.class);
+
+  private static VerdictDBLogger log =
+      VerdictDBLogger.getLogger(FastConvergeScramblingMethod.class);
+
+  private static final int DEFAULT_MAX_BLOCK_COUNT = 100;
 
   public FastConvergeScramblingMethod(long blockSize, String scratchpadSchemaName) {
-    super(blockSize);
+    super(blockSize, DEFAULT_MAX_BLOCK_COUNT, 1.0);
     this.scratchpadSchemaName = scratchpadSchemaName;
   }
 
@@ -162,7 +164,7 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
 
       LargeGroupSizeNode ls = new LargeGroupSizeNode(primaryColumnName.get());
       ll.registerSubscriber(ls.getSubscriptionTicket());
-//      ls.subscribeTo(ll, 0);
+      //      ls.subscribeTo(ll, 0);
 
       statisticsNodes.add(ll);
       statisticsNodes.add(ls);
@@ -170,13 +172,13 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
 
     return statisticsNodes;
   }
-  
+
   static UnnamedColumn createOutlierTuplePredicate(
       DbmsQueryResult percentileAndCountResult, String sourceTableAlias) {
     boolean printLog = false;
     return createOutlierTuplePredicate(percentileAndCountResult, sourceTableAlias, printLog);
   }
-  
+
   static UnnamedColumn createOutlierTuplePredicate(
       DbmsQueryResult percentileAndCountResult, String sourceTableAlias, boolean printLog) {
     UnnamedColumn outlierPredicate = null;
@@ -196,11 +198,13 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
         double columnStddev = percentileAndCountResult.getDouble(i + 1);
         double lowCriteria = columnAverage - columnStddev * OUTLIER_STDDEV_MULTIPLIER;
         double highCriteria = columnAverage + columnStddev * OUTLIER_STDDEV_MULTIPLIER;
-        
+
         if (printLog) {
-          log.info(String.format("In column %s, the values outside (%.2f,%.2f) "
-              + "will be prioritized in future query processing.",
-              columnName, lowCriteria, highCriteria));
+          log.info(
+              String.format(
+                  "In column %s, the values outside (%.2f,%.2f) "
+                      + "will be prioritized in future query processing.",
+                  columnName, lowCriteria, highCriteria));
         }
 
         UnnamedColumn newOrPredicate =
@@ -285,7 +289,7 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
     populateTier1CumulProbDist(metaData);
     populateTier2CumulProbDist(metaData);
   }
-  
+
   private long calcuteEvenBlockSize(int totalNumberOfblocks, long tableSize) {
     return (long) Math.round((float) tableSize / (float) totalNumberOfblocks);
   }
@@ -544,6 +548,11 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
   @Override
   public int getTierCount() {
     return 3;
+  }
+
+  @Override
+  public double getRelativeSize() {
+    return relativeSize;
   }
 }
 
@@ -820,7 +829,7 @@ class LargeGroupSizeNode extends QueryNodeWithPlaceHolders {
   private static final long serialVersionUID = -7863166573727173728L;
 
   private String primaryColumnName;
-  
+
   // When this node subscribes to the downstream nodes, this information must be used.
   private SubscriptionTicket subscriptionTicket;
 
@@ -829,12 +838,12 @@ class LargeGroupSizeNode extends QueryNodeWithPlaceHolders {
   public LargeGroupSizeNode(String primaryColumnName) {
     super(-1, null);
     this.primaryColumnName = primaryColumnName;
-  
+
     // create a selectQuery for this node
     String tableSourceAlias = "t";
     String aliasName = LARGE_GROUP_SIZE_SUM_ALIAS;
     String groupSizeAlias = LargeGroupListNode.LARGE_GROUP_SIZE_COLUMN_ALIAS;
-    
+
     Pair<BaseTable, SubscriptionTicket> placeholder = createPlaceHolderTable(tableSourceAlias);
     BaseTable baseTable = placeholder.getLeft();
     selectQuery =
@@ -844,7 +853,7 @@ class LargeGroupSizeNode extends QueryNodeWithPlaceHolders {
             baseTable);
     subscriptionTicket = placeholder.getRight();
   }
-  
+
   public SubscriptionTicket getSubscriptionTicket() {
     return subscriptionTicket;
   }
@@ -858,18 +867,20 @@ class LargeGroupSizeNode extends QueryNodeWithPlaceHolders {
    */
   @Override
   public SqlConvertible createQuery(List<ExecutionInfoToken> tokens) throws VerdictDBException {
-  
-//    // Note: this node already has been subscribed; thus, we don't need an explicit subscription.
-//    Pair<BaseTable, SubscriptionTicket> placeholder = createPlaceHolderTable(tableSourceAlias);
-//    BaseTable baseTable = placeholder.getLeft();
-//    selectQuery =
-//        SelectQuery.create(
-//            new AliasedColumn(
-//                ColumnOp.sum(new BaseColumn(tableSourceAlias, groupSizeAlias)), aliasName),
-//            baseTable);
-//    subscriptionTicket = placeholder.getRight();
 
-    super.createQuery(tokens);    // placeholder replacements performed here
+    //    // Note: this node already has been subscribed; thus, we don't need an explicit
+    // subscription.
+    //    Pair<BaseTable, SubscriptionTicket> placeholder =
+    // createPlaceHolderTable(tableSourceAlias);
+    //    BaseTable baseTable = placeholder.getLeft();
+    //    selectQuery =
+    //        SelectQuery.create(
+    //            new AliasedColumn(
+    //                ColumnOp.sum(new BaseColumn(tableSourceAlias, groupSizeAlias)), aliasName),
+    //            baseTable);
+    //    subscriptionTicket = placeholder.getRight();
+
+    super.createQuery(tokens); // placeholder replacements performed here
     return selectQuery;
   }
 

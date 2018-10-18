@@ -16,13 +16,13 @@
 
 package org.verdictdb.core.sqlobject;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Represents a create table query.
@@ -35,12 +35,14 @@ public class CreateTableAsSelectQuery extends CreateTableQuery {
 
   private static final long serialVersionUID = -4077488589201481833L;
 
+  protected CreateTableQuery originalQuery;
+
   protected SelectQuery select;
 
   protected List<String> partitionColumns = new ArrayList<>();
-  
+
   // the number of blocks for each partitioning column
-  protected List<Integer> partitionCounts = new ArrayList<>();    
+  protected List<Integer> partitionCounts = new ArrayList<>();
 
   protected boolean overwrite = false;
 
@@ -51,6 +53,7 @@ public class CreateTableAsSelectQuery extends CreateTableQuery {
   }
 
   public CreateTableAsSelectQuery(CreateScrambledTableQuery query) {
+    this.originalQuery = query;
     this.schemaName = query.schemaName;
     this.tableName = query.tableName;
     this.partitionColumns.addAll(query.partitionColumns);
@@ -63,7 +66,7 @@ public class CreateTableAsSelectQuery extends CreateTableQuery {
   public void addPartitionColumn(String column) {
     partitionColumns.add(column);
   }
-  
+
   public void addPartitionCount(int count) {
     partitionCounts.add(count);
   }
@@ -75,7 +78,7 @@ public class CreateTableAsSelectQuery extends CreateTableQuery {
   public List<String> getPartitionColumns() {
     return partitionColumns;
   }
-  
+
   public List<Integer> getPartitionCounts() {
     return partitionCounts;
   }
@@ -86,6 +89,10 @@ public class CreateTableAsSelectQuery extends CreateTableQuery {
 
   public void setOverwrite(boolean overwrite) {
     this.overwrite = overwrite;
+  }
+
+  public CreateTableQuery getOriginalQuery() {
+    return originalQuery;
   }
 
   @Override

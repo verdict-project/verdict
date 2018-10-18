@@ -124,7 +124,8 @@ public class RedshiftScrambleManipulationTest {
     vc.createStatement()
         .execute(
             String.format(
-                "CREATE SCRAMBLE %s.orders_scramble2 FROM %s.orders", SCHEMA_NAME, SCHEMA_NAME));
+                "CREATE SCRAMBLE %s.orders_scramble2 FROM %s.orders SIZE 0.1 BLOCKSIZE 50",
+                SCHEMA_NAME, SCHEMA_NAME));
     vc.createStatement()
         .execute(
             String.format(
@@ -137,6 +138,18 @@ public class RedshiftScrambleManipulationTest {
       assertEquals(rs.getString(2), "orders");
       assertEquals(rs.getString(3), SCHEMA_NAME);
       assertTrue(rs.getString(4).startsWith("orders_scramble"));
+    }
+
+    ResultSet rs1 =
+        conn.createStatement()
+            .executeQuery(String.format("SELECT COUNT(*) FROM %s.orders_scramble1", SCHEMA_NAME));
+    ResultSet rs2 =
+        conn.createStatement()
+            .executeQuery(String.format("SELECT COUNT(*) FROM %s.orders_scramble2", SCHEMA_NAME));
+
+    if (rs1.next() && rs2.next()) {
+      assertEquals(rs1.getLong(1), 258);
+      assertTrue(rs2.getLong(1) < 100);
     }
   }
 
