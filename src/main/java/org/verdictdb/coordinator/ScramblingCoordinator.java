@@ -41,6 +41,25 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+// When scrambling, UniformScramblindMethod determines blockSize, blockCount and actualBlockCount
+// as follows:
+
+// 1. blockCount = ceil(tableRowCount / blockSize)
+//
+// 2. IF blockCount > maxScrambleTableBlockCount THEN
+//       blockCount = maxScrambleTableBlockCount
+//       blockSize = tableRowCount / blockCount
+//
+// 3. actualBlockCount = blockCount
+//
+// 4. IF relativeSize < 1.0 THEN: actualBlockCount = blockCount * relativeSize
+//
+// Then it will create a scramble table using a query like the following:
+//
+// CREATE TABLE scrmabledTable AS
+// SELECT * FROM ( SELECT *, rand() * blockCount as verdictdbblock FROM originalTable) t
+// WHERE verdictdbblock < actualBlockCount
+//
 public class ScramblingCoordinator {
 
   private final Set<String> scramblingMethods =
@@ -342,7 +361,6 @@ public class ScramblingCoordinator {
     }
 
     // compose scramble meta
-    // calculate block statistics (necessary to perform this before scrambling)
     String tierColumn = effectiveOptions.get("tierColumnName");
     int tierCount = scramblingMethod.getTierCount();
     Map<Integer, List<Double>> cumulativeDistribution = new HashMap<>();
@@ -351,7 +369,7 @@ public class ScramblingCoordinator {
       cumulativeDistribution.put(i, dist);
     }
     String blockColumn = effectiveOptions.get("blockColumnName");
-    int blockCount = scramblingMethod.getBlockCount();
+    int blockCount = scramblingMethod.getActualBlockCount();
 
     ScrambleMeta meta =
         new ScrambleMeta(

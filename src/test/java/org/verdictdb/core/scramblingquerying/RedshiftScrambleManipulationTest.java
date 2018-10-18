@@ -116,6 +116,30 @@ public class RedshiftScrambleManipulationTest {
   }
 
   @Test
+  public void partialScramblesTest() throws SQLException {
+    vc.createStatement()
+        .execute(
+            String.format(
+                "CREATE SCRAMBLE %s.customer_scramble FROM %s.customer SIZE 0.5 BLOCKSIZE 100",
+                SCHEMA_NAME, SCHEMA_NAME));
+    ResultSet rs1 =
+        conn.createStatement()
+            .executeQuery(String.format("SELECT SUM(c_acctbal) FROM %s.customer", SCHEMA_NAME));
+
+    ResultSet rs2 =
+        vc.createStatement()
+            .executeQuery(String.format("SELECT SUM(c_acctbal) FROM %s.customer", SCHEMA_NAME));
+
+    if (rs1.next() && rs2.next()) {
+      long expected = rs1.getLong(1);
+      long actual = rs2.getLong(1);
+      System.out.println(expected + " : " + actual);
+      assertTrue(expected * 0.5 < actual);
+      assertTrue(actual < expected * 1.5);
+    }
+  }
+
+  @Test
   public void ShowScramblesTest() throws SQLException {
     vc.createStatement()
         .execute(
@@ -148,6 +172,7 @@ public class RedshiftScrambleManipulationTest {
             .executeQuery(String.format("SELECT COUNT(*) FROM %s.orders_scramble2", SCHEMA_NAME));
 
     if (rs1.next() && rs2.next()) {
+      System.out.println(rs1.getLong(1) + " : " + rs2.getLong(1));
       assertEquals(rs1.getLong(1), 258);
       assertTrue(rs2.getLong(1) < 100);
     }

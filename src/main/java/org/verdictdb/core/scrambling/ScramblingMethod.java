@@ -38,6 +38,8 @@ public interface ScramblingMethod {
   // Stage 3 methods
   public int getBlockCount();
 
+  public int getActualBlockCount(); // stores 'actual block count' out of all 'block count'
+
   public int getTierCount();
 
   public double getRelativeSize();

@@ -263,14 +263,13 @@ public class CreateTableToSql {
     if (query.getOriginalQuery() != null
         && query.getOriginalQuery() instanceof CreateScrambledTableQuery) {
       CreateScrambledTableQuery q = (CreateScrambledTableQuery) query.getOriginalQuery();
-      double relativeSize = q.getRelativeSize();
-      if (relativeSize < 1.0) {
-        int maxBlockCount = (int) Math.ceil((double) q.getBlockCount() * relativeSize);
-        if (maxBlockCount == 0) maxBlockCount = 1;
+      int blockCount = q.getBlockCount();
+      int actualBlockCount = q.getActualBlockCount();
+      if (actualBlockCount < blockCount) {
         sql.append("SELECT * FROM (");
         sql.append(selectSql);
         sql.append(") tmp ");
-        sql.append(String.format("WHERE %s < %d", q.getBlockColumnName(), maxBlockCount));
+        sql.append(String.format("WHERE %s < %d", q.getBlockColumnName(), actualBlockCount));
       } else {
         sql.append(selectSql);
       }

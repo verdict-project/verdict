@@ -124,7 +124,7 @@ public class CreateScrambledTableNode extends QueryNodeWithPlaceHolders {
             blockColumnName,
             selectQuery,
             method.getBlockCount(),
-            method.getRelativeSize(),
+            method.getActualBlockCount(),
             columnMeta,
             createIfNotExists);
     for (String col : partitionColumns) {

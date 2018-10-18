@@ -43,6 +43,8 @@ public class UniformScramblingMethod extends ScramblingMethodBase {
 
   private int totalNumberOfblocks = -1;
 
+  private int actualNumberOfBlocks = -1;
+
   public UniformScramblingMethod(long blockSize, int maxBlockCount, double relativeSize) {
     super(blockSize, maxBlockCount, relativeSize);
   }
@@ -70,8 +72,7 @@ public class UniformScramblingMethod extends ScramblingMethodBase {
     return Arrays.asList();
   }
 
-  @Override
-  public List<Double> getCumulativeProbabilityDistributionForTier(
+  private List<Double> calculateBlockCountsAndCumulativeProbabilityDistForTier(
       Map<String, Object> metaData, int tier) {
 
     DbmsQueryResult tableSizeResult =
@@ -85,14 +86,28 @@ public class UniformScramblingMethod extends ScramblingMethodBase {
       blockSize = tableSize / totalNumberOfblocks;
     }
 
+    actualNumberOfBlocks = totalNumberOfblocks;
+
+    if (relativeSize < 1.0) {
+      actualNumberOfBlocks = (int) Math.ceil(totalNumberOfblocks * relativeSize);
+      if (actualNumberOfBlocks == 0) actualNumberOfBlocks = 1;
+    }
+
     List<Double> prob = new ArrayList<>();
-    for (int i = 0; i < totalNumberOfblocks; i++) {
+    for (int i = 0; i < actualNumberOfBlocks; i++) {
       prob.add((i + 1) / (double) totalNumberOfblocks);
     }
 
     storeCumulativeProbabilityDistribution(tier, prob);
 
     return prob;
+  }
+
+  @Override
+  public List<Double> getCumulativeProbabilityDistributionForTier(
+      Map<String, Object> metaData, int tier) {
+
+    return calculateBlockCountsAndCumulativeProbabilityDistForTier(metaData, tier);
   }
 
   @Override
@@ -109,16 +124,8 @@ public class UniformScramblingMethod extends ScramblingMethodBase {
 
   @Override
   public UnnamedColumn getBlockExprForTier(int tier, Map<String, Object> metaData) {
-    DbmsQueryResult tableSizeResult =
-        (DbmsQueryResult) metaData.get(TableSizeCountNode.class.getSimpleName());
-    tableSizeResult.next();
-    long tableSize = tableSizeResult.getLong(TableSizeCountNode.TOTAL_COUNT_ALIAS_NAME);
-    totalNumberOfblocks = (int) Math.ceil(tableSize / (float) blockSize);
 
-    if (totalNumberOfblocks > maxBlockCount) {
-      totalNumberOfblocks = maxBlockCount;
-      blockSize = tableSize / totalNumberOfblocks;
-    }
+    calculateBlockCountsAndCumulativeProbabilityDistForTier(metaData, tier);
 
     UnnamedColumn blockForTierExpr =
         ColumnOp.cast(
@@ -126,19 +133,17 @@ public class UniformScramblingMethod extends ScramblingMethodBase {
                 ColumnOp.multiply(ColumnOp.rand(), ConstantColumn.valueOf(totalNumberOfblocks))),
             ConstantColumn.valueOf("int"));
 
-    // store the cumulative probability
-    List<Double> prob = new ArrayList<>();
-    for (int i = 0; i < totalNumberOfblocks; i++) {
-      prob.add((i + 1) / (double) totalNumberOfblocks);
-    }
-    storeCumulativeProbabilityDistribution(tier, prob);
-
     return blockForTierExpr;
   }
 
   @Override
   public int getBlockCount() {
     return totalNumberOfblocks;
+  }
+
+  @Override
+  public int getActualBlockCount() {
+    return actualNumberOfBlocks;
   }
 
   @Override

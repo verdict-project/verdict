@@ -52,7 +52,7 @@ public class CreateScrambledTableQuery extends CreateTableQuery {
 
   protected int blockCount = 1;
 
-  protected double relativeSize = 1.0;
+  protected int actualBlockCount = 1;
 
   public CreateScrambledTableQuery(
       String originalSchemaName,
@@ -63,7 +63,7 @@ public class CreateScrambledTableQuery extends CreateTableQuery {
       String blockColumnName,
       SelectQuery select,
       int blockCount,
-      double relativeSize,
+      int actualBlockCount,
       List<Pair<String, String>> columnMeta,
       boolean createIfNotExists) {
     this.originalSchemaName = originalSchemaName;
@@ -74,7 +74,7 @@ public class CreateScrambledTableQuery extends CreateTableQuery {
     this.blockColumnName = blockColumnName;
     this.select = select;
     this.blockCount = blockCount;
-    this.relativeSize = relativeSize;
+    this.actualBlockCount = actualBlockCount;
     this.columnMeta = columnMeta;
     this.overwrite = createIfNotExists;
   }
@@ -127,8 +127,8 @@ public class CreateScrambledTableQuery extends CreateTableQuery {
     return columnMeta;
   }
 
-  public double getRelativeSize() {
-    return relativeSize;
+  public int getActualBlockCount() {
+    return actualBlockCount;
   }
 
   @Override

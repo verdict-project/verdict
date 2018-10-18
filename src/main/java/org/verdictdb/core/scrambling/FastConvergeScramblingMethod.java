@@ -546,6 +546,11 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
   }
 
   @Override
+  public int getActualBlockCount() {
+    return totalNumberOfblocks;
+  }
+
+  @Override
   public int getTierCount() {
     return 3;
   }
