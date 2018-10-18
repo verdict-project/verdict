@@ -204,10 +204,8 @@ public class RedshiftScrambleManipulationTest {
     int rowCount = 0;
     while (rs.next()) {
       assertEquals(SCHEMA_NAME, rs.getString(1));
-      assertEquals("orders", rs.getString(2));
       assertEquals(SCHEMA_NAME, rs.getString(3));
       String scrambleName = rs.getString(4);
-      assertTrue(scrambleName.startsWith("orders_scramble"));
       if (scrambleName.equals("orders_scramble4") && rowCount == 0) {
         assertEquals("DELETED", rs.getString(6));
       }
@@ -246,7 +244,6 @@ public class RedshiftScrambleManipulationTest {
     int rowCount = 0;
     while (rs.next()) {
       assertEquals(SCHEMA_NAME, rs.getString(1));
-      assertEquals("orders", rs.getString(2));
       assertEquals(SCHEMA_NAME, rs.getString(3));
       String scrambleName = rs.getString(4);
       assertTrue(scrambleName.startsWith("orders_scramble"));
