@@ -260,9 +260,6 @@ public class CreateTableToSql {
     SelectQueryToSql selectWriter = new SelectQueryToSql(syntax);
     String selectSql = selectWriter.toSql(select);
 
-    sql.append("SELECT * FROM (");
-    sql.append(selectSql);
-    sql.append(") tmp ");
     if (query.getOriginalQuery() != null
         && query.getOriginalQuery() instanceof CreateScrambledTableQuery) {
       CreateScrambledTableQuery q = (CreateScrambledTableQuery) query.getOriginalQuery();
@@ -270,8 +267,15 @@ public class CreateTableToSql {
       if (relativeSize < 1.0) {
         int maxBlockCount = (int) Math.ceil((double) q.getBlockCount() * relativeSize);
         if (maxBlockCount == 0) maxBlockCount = 1;
+        sql.append("SELECT * FROM (");
+        sql.append(selectSql);
+        sql.append(") tmp ");
         sql.append(String.format("WHERE %s < %d", q.getBlockColumnName(), maxBlockCount));
+      } else {
+        sql.append(selectSql);
       }
+    } else {
+      sql.append(selectSql);
     }
 
     return sql.toString();
