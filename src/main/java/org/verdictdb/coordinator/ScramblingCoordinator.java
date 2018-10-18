@@ -88,7 +88,7 @@ public class ScramblingCoordinator {
     this.scratchpadSchema = Optional.fromNullable(scratchpadSchema);
     this.scrambleSchema = Optional.fromNullable(scrambleSchema);
     if (blockSize != null) {
-      options.put("scrambleTableBlockSize", String.valueOf(blockSize));
+      options.put("minScrambleTableBlockSize", String.valueOf(blockSize));
     }
   }
 
