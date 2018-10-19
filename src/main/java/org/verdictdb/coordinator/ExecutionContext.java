@@ -205,11 +205,11 @@ public class ExecutionContext {
               options.getVerdictTempSchemaName(),
               scrambleQuery.getBlockSize());
 
-      // Specifying size/ratio of scrambled table is not supported.
-      //      if (scrambleQuery.getSize() != 1.0) {
-      //        throw new VerdictDBTypeException(
-      //            String.format("Scramble size of %f not supported.", scrambleQuery.getSize()));
-      //      }
+      if (scrambleQuery.getSize() <= 0 || scrambleQuery.getSize() > 1) {
+        throw new VerdictDBTypeException(
+            String.format(
+                "Scramble size is %f. It must be between 0.0 and 1.0.", scrambleQuery.getSize()));
+      }
 
       // store this to our own metadata db.
       ScrambleMeta meta = scrambler.scramble(scrambleQuery);

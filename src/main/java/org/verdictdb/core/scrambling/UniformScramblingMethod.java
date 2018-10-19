@@ -16,6 +16,7 @@
 
 package org.verdictdb.core.scrambling;
 
+import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.core.execplan.ExecutionInfoToken;
 import org.verdictdb.core.querying.ExecutableNodeBase;
@@ -44,6 +45,8 @@ public class UniformScramblingMethod extends ScramblingMethodBase {
   private int totalNumberOfblocks = -1;
 
   private int actualNumberOfBlocks = -1;
+
+  private static final long EFFECTIVE_TABLE_SIZE_THRESHOLD = 100000;
 
   public UniformScramblingMethod(long blockSize, int maxBlockCount, double relativeSize) {
     super(blockSize, maxBlockCount, relativeSize);
@@ -79,19 +82,20 @@ public class UniformScramblingMethod extends ScramblingMethodBase {
         (DbmsQueryResult) metaData.get(TableSizeCountNode.class.getSimpleName());
     tableSizeResult.next();
     long tableSize = tableSizeResult.getLong(TableSizeCountNode.TOTAL_COUNT_ALIAS_NAME);
+    long effectiveRowCount =
+        (relativeSize < 1) ? (long) Math.ceil(tableSize * relativeSize) : tableSize;
+    if (effectiveRowCount < EFFECTIVE_TABLE_SIZE_THRESHOLD) {
+      VerdictDBLogger.getLogger(UniformScramblingMethod.class)
+          .warn(
+              String.format(
+                  "The total size of the scramble table will have %d rows, "
+                      + "which may be too small for accurate approximation",
+                  effectiveRowCount));
+    }
+    actualNumberOfBlocks =
+        (int) Math.min(maxBlockCount, Math.ceil(effectiveRowCount / (double) blockSize));
+    blockSize = effectiveRowCount / actualNumberOfBlocks;
     totalNumberOfblocks = (int) Math.ceil(tableSize / (float) blockSize);
-
-    if (totalNumberOfblocks > maxBlockCount) {
-      totalNumberOfblocks = maxBlockCount;
-      blockSize = tableSize / totalNumberOfblocks;
-    }
-
-    actualNumberOfBlocks = totalNumberOfblocks;
-
-    if (relativeSize < 1.0) {
-      actualNumberOfBlocks = (int) Math.ceil(totalNumberOfblocks * relativeSize);
-      if (actualNumberOfBlocks == 0) actualNumberOfBlocks = 1;
-    }
 
     List<Double> prob = new ArrayList<>();
     for (int i = 0; i < actualNumberOfBlocks; i++) {
