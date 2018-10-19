@@ -92,6 +92,8 @@ public class QueryResultAccuracyEstimatorFromDifference extends QueryResultAccur
         for (Object v : aggregatedValues) {
           int idx = aggregatedValues.indexOf(v);
           double newValue, oldValue;
+          // if v is Integer type or Double type, it is safe to case to double
+          // Otherwise, if v is BigDecimal type, it needs to be convert to double 
           if (v instanceof BigDecimal) {
             newValue = ((BigDecimal) v).doubleValue();
             oldValue = ((BigDecimal) prevAggregatedValues.get(idx)).doubleValue();
