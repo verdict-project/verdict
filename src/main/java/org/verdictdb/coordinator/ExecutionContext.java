@@ -150,15 +150,16 @@ public class ExecutionContext {
           VerdictSingleResult rs = stream.next();
           accEst.add(rs);
           if (accEst.isLastResultAccurate()) {
-            stream.close();
-            return rs; // also do abort the query execution
+            return rs;
           }
         }
         // return the last result otherwise
-        stream.close();
         return accEst.getAnswers().get(accEst.getAnswerCount()-1);
       } catch (RuntimeException e) {
         throw e;
+      } finally {
+        stream.close();
+        abort();
       }
     }
   }

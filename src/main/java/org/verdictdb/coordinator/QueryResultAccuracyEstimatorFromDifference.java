@@ -46,12 +46,6 @@ public class QueryResultAccuracyEstimatorFromDifference extends QueryResultAccur
       return false;
     } else {
       log.debug("Break condition has reached.");
-      log.debug("Aborts an ExecutionContext: " + this);
-      if (runningCoordinator != null) {
-        Coordinator c = runningCoordinator;
-        runningCoordinator = null;
-        c.abort();
-      }
       return true;
     }
   }
