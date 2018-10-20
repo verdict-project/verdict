@@ -88,7 +88,7 @@ public class UniformScramblingMethod extends ScramblingMethodBase {
       VerdictDBLogger.getLogger(UniformScramblingMethod.class)
           .warn(
               String.format(
-                  "The total size of the scramble table will have %d rows, "
+                  "The scramble table will have %d rows, "
                       + "which may be too small for accurate approximation",
                   effectiveRowCount));
     }
