@@ -44,17 +44,13 @@ import java.util.Set;
 // When scrambling, UniformScramblindMethod determines blockSize, blockCount and actualBlockCount
 // as follows:
 
-// 1. blockCount = ceil(tableRowCount / blockSize)
+// 1. scrambleTableSize = ceil(tableRowCount / relativeSize)
 //
-// 2. IF blockCount > maxScrambleTableBlockCount THEN
-//       blockCount = maxScrambleTableBlockCount
-//       blockSize = tableRowCount / blockCount
+// 2. blockCount = ceil(tableRowCount / blockSize)
 //
-// 3. actualBlockCount = blockCount
+// 3. actualBlockCount = min(maxScrambleBlockCount, scrambleTableSize / blockSize)
 //
-// 4. IF relativeSize < 1.0 THEN: actualBlockCount = blockCount * relativeSize
-//
-// Then it will create a scramble table using a query like the following:
+// 4. blockSize = scrambleTableSize / actualBlockCount
 //
 // CREATE TABLE scrmabledTable AS
 // SELECT * FROM ( SELECT *, rand() * blockCount as verdictdbblock FROM originalTable) t
