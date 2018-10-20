@@ -84,11 +84,11 @@ public class UniformScramblingMethod extends ScramblingMethodBase {
     long tableSize = tableSizeResult.getLong(TableSizeCountNode.TOTAL_COUNT_ALIAS_NAME);
     long effectiveRowCount =
         (relativeSize < 1) ? (long) Math.ceil(tableSize * relativeSize) : tableSize;
-    if (effectiveRowCount < EFFECTIVE_TABLE_SIZE_THRESHOLD) {
+    if (relativeSize < 1 && effectiveRowCount < EFFECTIVE_TABLE_SIZE_THRESHOLD) {
       VerdictDBLogger.getLogger(UniformScramblingMethod.class)
           .warn(
               String.format(
-                  "The scramble table will have %d rows, "
+                  "The reduced scramble table will have %d rows, "
                       + "which may be too small for accurate approximation",
                   effectiveRowCount));
     }
