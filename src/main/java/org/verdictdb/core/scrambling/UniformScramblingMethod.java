@@ -94,8 +94,14 @@ public class UniformScramblingMethod extends ScramblingMethodBase {
     }
     actualNumberOfBlocks =
         (int) Math.min(maxBlockCount, Math.ceil(effectiveRowCount / (double) blockSize));
-    blockSize = effectiveRowCount / actualNumberOfBlocks;
-    totalNumberOfblocks = (int) Math.ceil(tableSize / (float) blockSize);
+
+    // This guards the case when table is empty.
+    if (actualNumberOfBlocks == 0) actualNumberOfBlocks = 1;
+
+    blockSize = (long) Math.ceil(effectiveRowCount / (double) actualNumberOfBlocks);
+
+    if (blockSize == 0) blockSize = 1; // just a sanity check
+    totalNumberOfblocks = (int) Math.ceil(tableSize / (double) blockSize);
 
     List<Double> prob = new ArrayList<>();
     for (int i = 0; i < actualNumberOfBlocks; i++) {

@@ -211,6 +211,11 @@ public class ExecutionContext {
                 "Scramble size is %f. It must be between 0.0 and 1.0.", scrambleQuery.getSize()));
       }
 
+      if (scrambleQuery.getBlockSize() == 0) {
+        throw new VerdictDBTypeException(
+            String.format("A scramble block size should be greater than zero."));
+      }
+
       // store this to our own metadata db.
       ScrambleMeta meta = scrambler.scramble(scrambleQuery);
 
