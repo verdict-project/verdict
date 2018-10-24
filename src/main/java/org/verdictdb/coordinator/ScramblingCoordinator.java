@@ -44,7 +44,7 @@ import java.util.Set;
 // When scrambling, UniformScramblindMethod determines blockSize, blockCount and actualBlockCount
 // as follows:
 
-// 1. scrambleTableSize = ceil(tableRowCount / relativeSize)
+// 1. scrambleTableSize = ceil(tableRowCount * relativeSize)
 //
 // 2. blockCount = ceil(tableRowCount / blockSize)
 //
