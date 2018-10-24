@@ -332,6 +332,7 @@ public class ScrambleMetaStore extends VerdictMetaStore {
       DbmsQueryResult result = conn.execute(sql);
 
       Set<Pair<BaseTable, BaseTable>> deletedSet = new HashSet<>();
+      Set<Pair<BaseTable, BaseTable>> addedSet = new HashSet<>();
 
       while (result.next()) {
         String originalSchema = result.getString(0);
@@ -349,8 +350,13 @@ public class ScrambleMetaStore extends VerdictMetaStore {
         if (deletedSet.contains(pair)) {
           continue;
         }
+        if (addedSet.contains(pair)) {
+          continue;
+        }
         ScrambleMeta meta = ScrambleMeta.fromJsonString(jsonString);
         retrieved.addScrambleMeta(meta);
+
+        addedSet.add(pair);
       }
     } catch (VerdictDBException e) {
       e.printStackTrace();

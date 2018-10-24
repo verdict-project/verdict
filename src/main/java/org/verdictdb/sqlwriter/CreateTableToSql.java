@@ -33,7 +33,6 @@ import org.verdictdb.sqlsyntax.HiveSyntax;
 import org.verdictdb.sqlsyntax.ImpalaSyntax;
 import org.verdictdb.sqlsyntax.PostgresqlSyntax;
 import org.verdictdb.sqlsyntax.PrestoHiveSyntax;
-import org.verdictdb.sqlsyntax.PrestoSyntax;
 import org.verdictdb.sqlsyntax.SparkSyntax;
 import org.verdictdb.sqlsyntax.SqlSyntax;
 
@@ -228,29 +227,30 @@ public class CreateTableToSql {
       sql.append("using parquet ");
     }
 
-    if (syntax instanceof PrestoSyntax) {
+    if (syntax instanceof PrestoHiveSyntax) {
       sql.append("WITH (");
-    }
-
-    // partitions
-    if (syntax.doesSupportTablePartitioning() && query.getPartitionColumns().size() > 0) {
-      sql.append(
-          syntax.getPartitionByInCreateTable(
-              query.getPartitionColumns(), query.getPartitionCounts()));
-      sql.append(" ");
+      sql.append("format = 'orc'");
+      if (syntax.doesSupportTablePartitioning() && query.getPartitionColumns().size() > 0) {
+        sql.append(", ");
+        sql.append(
+            syntax.getPartitionByInCreateTable(
+                query.getPartitionColumns(), query.getPartitionCounts()));
+        sql.append(" ");
+      }
+      sql.append(") ");
+    } else {
+      // partitions
+      if (syntax.doesSupportTablePartitioning() && query.getPartitionColumns().size() > 0) {
+        sql.append(
+            syntax.getPartitionByInCreateTable(
+                query.getPartitionColumns(), query.getPartitionCounts()));
+        sql.append(" ");
+      }
     }
 
     // parquet format
     if (syntax instanceof HiveSyntax || syntax instanceof ImpalaSyntax) {
       sql.append("stored as parquet ");
-    }
-
-    if (syntax instanceof PrestoHiveSyntax) {
-      sql.append("format = 'orc'");
-    }
-
-    if (syntax instanceof PrestoSyntax) {
-      sql.append(") ");
     }
 
     // select
@@ -259,7 +259,23 @@ public class CreateTableToSql {
     }
     SelectQueryToSql selectWriter = new SelectQueryToSql(syntax);
     String selectSql = selectWriter.toSql(select);
-    sql.append(selectSql);
+
+    if (query.getOriginalQuery() != null
+        && query.getOriginalQuery() instanceof CreateScrambledTableQuery) {
+      CreateScrambledTableQuery q = (CreateScrambledTableQuery) query.getOriginalQuery();
+      int blockCount = q.getBlockCount();
+      int actualBlockCount = q.getActualBlockCount();
+      if (actualBlockCount < blockCount) {
+        sql.append("SELECT * FROM (");
+        sql.append(selectSql);
+        sql.append(") tmp ");
+        sql.append(String.format("WHERE %s < %d", q.getBlockColumnName(), actualBlockCount));
+      } else {
+        sql.append(selectSql);
+      }
+    } else {
+      sql.append(selectSql);
+    }
 
     return sql.toString();
   }

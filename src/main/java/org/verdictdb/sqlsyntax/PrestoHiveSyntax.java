@@ -16,5 +16,26 @@
 
 package org.verdictdb.sqlsyntax;
 
+import com.google.common.base.Joiner;
+
+import java.util.ArrayList;
+import java.util.List;
+
 /** Created by Dong Young Yoon on 10/12/18. */
-public class PrestoHiveSyntax extends PrestoSyntax {}
+public class PrestoHiveSyntax extends PrestoSyntax {
+  @Override
+  public boolean doesSupportTablePartitioning() {
+    return true;
+  }
+
+  @Override
+  public String getPartitionByInCreateTable(
+      List<String> partitionColumns, List<Integer> partitionCounts) {
+    List<String> quotedColumns = new ArrayList<>();
+    for (String column : partitionColumns) {
+      quotedColumns.add("'" + column + "'");
+    }
+
+    return "partitioned_by = ARRAY[" + Joiner.on(",").join(quotedColumns) + "]";
+  }
+}

@@ -16,12 +16,12 @@
 
 package org.verdictdb.core.scrambling;
 
-import java.util.List;
-import java.util.Map;
-
 import org.verdictdb.core.querying.ExecutableNodeBase;
 import org.verdictdb.core.sqlobject.AbstractRelation;
 import org.verdictdb.core.sqlobject.UnnamedColumn;
+
+import java.util.List;
+import java.util.Map;
 
 public interface ScramblingMethod {
 
@@ -38,7 +38,11 @@ public interface ScramblingMethod {
   // Stage 3 methods
   public int getBlockCount();
 
+  public int getActualBlockCount(); // stores 'actual block count' out of all 'block count'
+
   public int getTierCount();
+
+  public double getRelativeSize();
 
   public List<Double> getStoredCumulativeProbabilityDistributionForTier(int tier);
 
