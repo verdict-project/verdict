@@ -4,15 +4,40 @@ import com.google.common.collect.TreeMultiset;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.commons.AttributeValueRetrievalHelper;
+import org.verdictdb.commons.DataTypeConverter;
 import org.verdictdb.core.querying.ola.SelectAsyncAggExecutionNode;
 import org.verdictdb.core.sqlobject.*;
+import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.sqlsyntax.H2Syntax;
+import org.verdictdb.sqlwriter.SelectQueryToSql;
+
 import java.math.BigDecimal;
+import java.sql.*;
 import java.util.*;
+import java.util.Date;
 
 
-public class HashDbmsQueryResult extends AttributeValueRetrievalHelper implements DbmsQueryResult {
+public class InMemoryAggregate extends AttributeValueRetrievalHelper implements DbmsQueryResult {
 
   private static final long serialVersionUID = 2576550919489091L;
+
+  private static final String DB_CONNECTION = "jdbc:h2:mem:verdictdb;DB_CLOSE_DELAY=-1";
+
+  private static final String selectAsyncAggTable = "VERDICTDB_SELECTASYNCAGG";
+
+  private static long selectAsyncAggTableID = 0;
+
+  private static SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new H2Syntax());
+
+  static Connection conn;
+
+  static {
+    try {
+      conn = DriverManager.getConnection(DB_CONNECTION, "", "");
+    } catch (SQLException e) {
+      e.printStackTrace();
+    }
+  }
 
   // key is the non-aggregate column, value is also HashMap,
   // where the key is the tier value and the value is aggregate columns.
@@ -45,13 +70,118 @@ public class HashDbmsQueryResult extends AttributeValueRetrievalHelper implement
 
   private Integer limit;
 
-  public HashDbmsQueryResult(SelectAsyncAggExecutionNode node) {
+  public InMemoryAggregate(SelectAsyncAggExecutionNode node) {
     if (node.getSelectQuery().getLimit().isPresent()) {
       ConstantColumn lim = (ConstantColumn) node.getSelectQuery().getLimit().get();
       if (lim.getValue() instanceof String) {
         limit = Integer.valueOf((String) lim.getValue());
       } else {
         limit = (Integer) lim.getValue();
+      }
+    }
+  }
+
+  public static void createTable(DbmsQueryResult dbmsQueryResult, String tableName) throws SQLException {
+    StringBuilder columnNames = new StringBuilder();
+    StringBuilder fieldNames = new StringBuilder();
+    StringBuilder bindVariables = new StringBuilder();
+    for (int i = 0; i < dbmsQueryResult.getColumnCount(); i++) {
+      if (i > 0) {
+        columnNames.append(", ");
+        fieldNames.append(", ");
+        bindVariables.append(", ");
+      }
+      fieldNames.append(dbmsQueryResult.getColumnName(i));
+      fieldNames.append(" ");
+      fieldNames.append(DataTypeConverter.typeName(dbmsQueryResult.getColumnType(i)));
+      columnNames.append(dbmsQueryResult.getColumnName(i));
+      bindVariables.append('?');
+    }
+    // create table
+    String createSql = "CREATE TABLE IF NOT EXISTS " + tableName + " (" + fieldNames + ")";
+    conn.createStatement().execute(createSql);
+
+    // insert values
+    String sql = "INSERT INTO " + tableName + " ("
+        + columnNames
+        + ") VALUES ("
+        + bindVariables
+        + ")";
+    PreparedStatement statement = conn.prepareStatement(sql);
+    while (dbmsQueryResult.next()) {
+      for (int i = 1; i <= dbmsQueryResult.getColumnCount(); i++)
+        statement.setObject(i, dbmsQueryResult.getValue(i - 1));
+      statement.addBatch();
+    }
+    statement.executeBatch();
+  }
+
+  public static DbmsQueryResult executeQuery(SelectQuery query) throws VerdictDBException, SQLException {
+    String sql = selectQueryToSql.toSql(query).toUpperCase();
+    ResultSet rs = conn.createStatement().executeQuery(sql);
+    return new JdbcQueryResult(rs);
+  }
+
+  public static String combine(String combineTableName, String targetTableName, SelectQuery dependentQuery)
+      throws SQLException, VerdictDBException {
+    String tableName = selectAsyncAggTable + selectAsyncAggTableID++;
+
+    // check targetTable exists
+    if (targetTableName.equals("")) {
+      // if not just let it be the copy of combineTable
+      conn.createStatement().execute(
+          String.format("CREATE TABLE %s AS SELECT * FROM %s", tableName, combineTableName));
+    } else {
+      // if exists, combine two tables using the logic of AggCombinerExecutionNode
+      List<GroupingAttribute> groupList = new ArrayList<>();
+      SelectQuery copy = dependentQuery.deepcopy();
+      for (SelectItem sel : copy.getSelectList()) {
+        if (sel instanceof AliasedColumn) {
+          UnnamedColumn col = ((AliasedColumn) sel).getColumn();
+          resetSchemaAndTableForCombine(col);
+          String alias = ((AliasedColumn) sel).getAliasName().toUpperCase();
+          ((AliasedColumn) sel).setAliasName(alias);
+          if (col.isAggregateColumn()) {
+            ((AliasedColumn) sel).setColumn(new ColumnOp("sum", new BaseColumn(alias)));
+          } else {
+            ((AliasedColumn) sel).setColumn(new BaseColumn(alias));
+            groupList.add(((AliasedColumn) sel).getColumn());
+          }
+        }
+      }
+      SelectQuery left = SelectQuery.create(new AsteriskColumn(),
+          new BaseTable("PUBLIC", targetTableName));
+      SelectQuery right = SelectQuery.create(new AsteriskColumn(),
+          new BaseTable("PUBLIC", combineTableName));
+      AbstractRelation setOperation = new SetOperationRelation(left, right, SetOperationRelation.SetOpType.unionAll);
+      copy.clearFilter();
+      copy.setFromList(Arrays.asList(setOperation));
+      copy.clearGroupby();
+      copy.addGroupby(groupList);
+      String sql = selectQueryToSql.toSql(copy);
+      conn.createStatement().execute(
+          String.format("CREATE TABLE %s AS %s", tableName, sql));
+    }
+
+    return tableName;
+  }
+
+  private static void resetSchemaAndTableForCombine(UnnamedColumn column) {
+    List<UnnamedColumn> columns = new ArrayList<>();
+    columns.add(column);
+    while (!columns.isEmpty()) {
+      UnnamedColumn col = columns.get(0);
+      columns.remove(0);
+      if (col instanceof ColumnOp) {
+
+      }
+      if (col instanceof BaseColumn) {
+        ((BaseColumn) col).setSchemaName("");
+        ((BaseColumn) col).setTableName("UNIONTABLE");
+        ((BaseColumn) col).setTableSourceAlias("");
+        ((BaseColumn) col).setColumnName(((BaseColumn) col).getColumnName().toUpperCase());
+      } else if (col instanceof ColumnOp) {
+        columns.addAll(((ColumnOp) col).getOperands());
       }
     }
   }
@@ -71,6 +201,7 @@ public class HashDbmsQueryResult extends AttributeValueRetrievalHelper implement
    * 2. Use given scaleFactor, first sum up different tier columns of same aggregates and multiply with scale factors.
    * 3. Given the selectQuery of SelectAggExecutionNode, calculate columns by replacing SelectItem with its corresponding values.
    * 4. todo: Generate MetaData if not generated.
+   *
    * @param result
    * @param scaleFactor
    * @param node
@@ -94,7 +225,7 @@ public class HashDbmsQueryResult extends AttributeValueRetrievalHelper implement
 
     // update rows
     List<Boolean> isSortedAsc = new ArrayList<>();
-    for (OrderbyAttribute orderby:node.getSelectQuery().getOrderby()) {
+    for (OrderbyAttribute orderby : node.getSelectQuery().getOrderby()) {
       if (orderby.getOrder().equals("asc")) {
         isSortedAsc.add(true);
       } else {
@@ -191,12 +322,12 @@ public class HashDbmsQueryResult extends AttributeValueRetrievalHelper implement
           value = calculateAggregateValue(sel.getColumn(), entry);
           row.add(value);
         }
-        for (OrderbyAttribute orderby:node.getSelectQuery().getOrderby()) {
+        for (OrderbyAttribute orderby : node.getSelectQuery().getOrderby()) {
           if (orderby.getAttribute() instanceof AliasReference) {
             if (sel.getAliasName().equals(((AliasReference) orderby.getAttribute()).getAliasName())) {
               orderbyColumn.add(value);
               break;
-            } else if (orderby.getAttribute() instanceof UnnamedColumn){
+            } else if (orderby.getAttribute() instanceof UnnamedColumn) {
               if (sel.getColumn().equals(orderby.getAttribute())) {
                 orderbyColumn.add(value);
                 break;
@@ -210,9 +341,9 @@ public class HashDbmsQueryResult extends AttributeValueRetrievalHelper implement
     rowIterator = rows.iterator();
 
     // set up meta data
-    if (columnName==null) {
+    if (columnName == null) {
       columnName = new ArrayList<>();
-      for (SelectItem sel:node.getSelectQuery().getSelectList()) {
+      for (SelectItem sel : node.getSelectQuery().getSelectList()) {
         if (sel instanceof AliasedColumn) {
           columnName.add(((AliasedColumn) sel).getAliasName());
         } else {
@@ -226,6 +357,7 @@ public class HashDbmsQueryResult extends AttributeValueRetrievalHelper implement
    * This function will recursively calculate the value of columns given the selectItem.
    * Basically, it will replace all Constant Column and BaseColumn using the value from entry.
    * For ColumnOp, it will do the operation given the opType.
+   *
    * @param sel
    * @param entry
    * @return

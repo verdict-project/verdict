@@ -68,27 +68,27 @@ public class AsyncAggExecutionNode extends ProjectionNode {
 
   private static final long serialVersionUID = -1829554239432075523L;
 
-  private static final String INNER_RAW_AGG_TABLE_ALIAS = "verdictdb_internal_before_scaling";
+  static final String INNER_RAW_AGG_TABLE_ALIAS = "verdictdb_internal_before_scaling";
 
-  private static final String TIER_CONSOLIDATED_TABLE_ALIAS =
+  static final String TIER_CONSOLIDATED_TABLE_ALIAS =
       "verdictdb_internal_tier_consolidated";
 
-  private static final String HAVING_CONDITION_ALIAS = "verdictdb_having_cond";
+  static final String HAVING_CONDITION_ALIAS = "verdictdb_having_cond";
 
-  private static final String GROUP_BY_ALIAS = "verdictdb_group_by";
+  static final String GROUP_BY_ALIAS = "verdictdb_group_by";
 
-  private static final String ORDER_BY_ALIAS = "verdictdb_order_by";
+  static final String ORDER_BY_ALIAS = "verdictdb_order_by";
 
   //  private static final String SCRAMBLE_META_STORE_KEY = "scrambleMeta";
 
-  private ScrambleMetaSet scrambleMeta;
+  ScrambleMetaSet scrambleMeta;
 
   //  private String newTableSchemaName;
   //
   //  private String newTableName;
 
   // This is the list of aggregate columns contained in the selectQuery field.
-  private List<ColumnOp> aggColumns;
+  List<ColumnOp> aggColumns;
 
   private Map<Integer, String> scrambledTableTierInfo;
 
@@ -101,7 +101,7 @@ public class AsyncAggExecutionNode extends ProjectionNode {
 
   int tableNum = 1;
 
-  private AsyncAggExecutionNode(IdCreator idCreator) {
+  AsyncAggExecutionNode(IdCreator idCreator) {
     super(idCreator, null);
   }
 
@@ -278,7 +278,7 @@ public class AsyncAggExecutionNode extends ProjectionNode {
    * @return Map of a filtering condition to the scaling factor; the filtering conditions correspond
    *     to cond1, cond2, etc.; the scaling factors correspond to scale1, scale2, etc.
    */
-  private List<Pair<UnnamedColumn, Double>> composeScaleFactorForTierCombinations(
+   List<Pair<UnnamedColumn, Double>> composeScaleFactorForTierCombinations(
       AggMeta sourceAggMeta, String sourceTableAlias) {
     List<Pair<UnnamedColumn, Double>> scalingFactorPerTier = new ArrayList<>();
 
@@ -351,7 +351,7 @@ public class AsyncAggExecutionNode extends ProjectionNode {
    *     scrambled tables they cover and what aggregates are being computed.
    * @return Key: aggregate column list
    */
-  private static Triple<List<ColumnOp>, SqlConvertible, Map<Integer, String>>
+  static Triple<List<ColumnOp>, SqlConvertible, Map<Integer, String>>
       createBaseQueryForReplacement(
           AggMeta sourceAggMeta,
           List<SelectItem> sourceSelectList,
@@ -572,7 +572,7 @@ public class AsyncAggExecutionNode extends ProjectionNode {
     return col.get();
   }
 
-  private SelectItem replaceColumnWithAggMeta(SelectItem sel, AggMeta aggMeta) {
+  SelectItem replaceColumnWithAggMeta(SelectItem sel, AggMeta aggMeta) {
 
     Map<SelectItem, List<ColumnOp>> aggColumn = aggMeta.getAggColumn();
     // Case 1: aggregate column
@@ -657,7 +657,7 @@ public class AsyncAggExecutionNode extends ProjectionNode {
    * @param queryToReplace, aggMeta
    * @return replaced original select list
    */
-  private SelectQuery replaceWithOriginalSelectList(SelectQuery queryToReplace, AggMeta aggMeta) {
+  SelectQuery replaceWithOriginalSelectList(SelectQuery queryToReplace, AggMeta aggMeta) {
     List<SelectItem> originalSelectList = aggMeta.getOriginalSelectList();
     List<SelectItem> newSelectList = new ArrayList<>();
     Map<SelectItem, List<ColumnOp>> aggColumn = aggMeta.getAggColumn();
@@ -711,7 +711,7 @@ public class AsyncAggExecutionNode extends ProjectionNode {
    * @return select a pair that key is the query that sum all the tier results and value is the
    *     aggContents that record the aggregation column alias and the column itself
    */
-  private static Pair<SelectQuery, HashMap<String, UnnamedColumn>> sumUpTierGroup(
+  static Pair<SelectQuery, HashMap<String, UnnamedColumn>> sumUpTierGroup(
       SelectQuery subquery, AggMeta sourceAggMeta) {
 
     List<String> aggAlias = sourceAggMeta.getAggAlias();
