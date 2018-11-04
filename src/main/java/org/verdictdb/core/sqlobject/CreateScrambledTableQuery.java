@@ -16,14 +16,14 @@
 
 package org.verdictdb.core.sqlobject;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.apache.commons.lang3.tuple.Pair;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Example: CRAETE TABLE test1 PARTITION OF test FOR VALUES IN (1);
@@ -52,6 +52,8 @@ public class CreateScrambledTableQuery extends CreateTableQuery {
 
   protected int blockCount = 1;
 
+  protected int actualBlockCount = 1;
+
   public CreateScrambledTableQuery(
       String originalSchemaName,
       String originalTableName,
@@ -61,6 +63,7 @@ public class CreateScrambledTableQuery extends CreateTableQuery {
       String blockColumnName,
       SelectQuery select,
       int blockCount,
+      int actualBlockCount,
       List<Pair<String, String>> columnMeta,
       boolean createIfNotExists) {
     this.originalSchemaName = originalSchemaName;
@@ -71,6 +74,7 @@ public class CreateScrambledTableQuery extends CreateTableQuery {
     this.blockColumnName = blockColumnName;
     this.select = select;
     this.blockCount = blockCount;
+    this.actualBlockCount = actualBlockCount;
     this.columnMeta = columnMeta;
     this.overwrite = createIfNotExists;
   }
@@ -121,6 +125,10 @@ public class CreateScrambledTableQuery extends CreateTableQuery {
 
   public List<Pair<String, String>> getColumnMeta() {
     return columnMeta;
+  }
+
+  public int getActualBlockCount() {
+    return actualBlockCount;
   }
 
   @Override

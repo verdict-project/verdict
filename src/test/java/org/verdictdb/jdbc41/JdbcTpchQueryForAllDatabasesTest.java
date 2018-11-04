@@ -15,7 +15,11 @@ import org.verdictdb.exception.VerdictDBException;
 
 import java.io.File;
 import java.io.IOException;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -129,7 +133,7 @@ public class JdbcTpchQueryForAllDatabasesTest {
     setupMysql();
     setupImpala();
     setupRedshift();
-    
+
     // TODO: Add below databases too
     //    setupPostgresql();
   }
@@ -164,7 +168,7 @@ public class JdbcTpchQueryForAllDatabasesTest {
       }
       // query 4, 13, 16, 21 contains count distinct
       for (int query = 1; query <= queryCount; ++query) {
-        if (query!=13 && query!=21) {
+        if (query != 13 && query != 21) {
           params.add(new Object[] {database, String.valueOf(query)});
         }
       }
@@ -297,6 +301,8 @@ public class JdbcTpchQueryForAllDatabasesTest {
       ResultSet vcRs = vcStmt.executeQuery(sql);
 
       int columnCount = jdbcRs.getMetaData().getColumnCount();
+      int columnCount2 = vcRs.getMetaData().getColumnCount();
+      assertEquals(columnCount, columnCount2);
       boolean jdbcNext = jdbcRs.next();
       boolean vcNext = vcRs.next();
       while (jdbcNext && vcNext) {

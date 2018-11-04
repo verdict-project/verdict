@@ -1,14 +1,5 @@
 package org.verdictdb.core.scrambling;
 
-import static org.junit.Assert.assertEquals;
-
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.HashMap;
-import java.util.Map;
-
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -19,6 +10,15 @@ import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.core.execplan.ExecutablePlanRunner;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sqlsyntax.PostgresqlSyntax;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.junit.Assert.assertEquals;
 
 public class PostgresUniformScramblingPlanTest {
 
@@ -44,13 +44,14 @@ public class PostgresUniformScramblingPlanTest {
   @BeforeClass
   public static void setupDatabase() throws SQLException {
     String postgresConnectionString =
-            String.format("jdbc:postgresql://%s/%s", POSTGRES_HOST, POSTGRES_DATABASE);
+        String.format("jdbc:postgresql://%s/%s", POSTGRES_HOST, POSTGRES_DATABASE);
     conn = DriverManager.getConnection(postgresConnectionString, POSTGRES_USER, POSTGRES_PASSWORD);
 
     conn.createStatement().execute("create schema if not exists oldschema");
     conn.createStatement().execute("create schema if not exists newschema");
     conn.createStatement().execute("drop table if exists oldschema.oldtable");
-    conn.createStatement().execute("create table if not exists oldschema.oldtable (id smallint, title text)");
+    conn.createStatement()
+        .execute("create table if not exists oldschema.oldtable (id smallint, title text)");
   }
 
   @AfterClass
@@ -70,18 +71,20 @@ public class PostgresUniformScramblingPlanTest {
     String oldSchemaName = "oldschema";
     String oldTableName = "oldtable";
     int blockSize = 3;
-    ScramblingMethod method = new UniformScramblingMethod(blockSize);
+    int maxBlockCount = 100;
+    ScramblingMethod method = new UniformScramblingMethod(blockSize, maxBlockCount);
     Map<String, String> options = new HashMap<>();
     options.put("tierColumnName", "tiercolumn");
     options.put("blockColumnName", "blockcolumn");
 
-    conn.createStatement().execute(
-        String.format("drop table if exists %s.%s", newSchemaName, newTableName));
-    ScramblingPlan plan = ScramblingPlan.create(
-        newSchemaName, newTableName,
-        oldSchemaName, oldTableName,
-        method, options);
-//    System.out.println(plan.getReportingNode());
+    conn.createStatement()
+        .execute(String.format("drop table if exists %s.%s", newSchemaName, newTableName));
+    ScramblingPlan plan =
+        ScramblingPlan.create(
+            newSchemaName, newTableName,
+            oldSchemaName, oldTableName,
+            method, options);
+    //    System.out.println(plan.getReportingNode());
 
     DbmsConnection dbmsConn = JdbcConnection.create(conn);
     ExecutablePlanRunner.runTillEnd(dbmsConn, plan);
@@ -91,8 +94,11 @@ public class PostgresUniformScramblingPlanTest {
   public void testUniformScramblingPlanNonEmptyTable() throws VerdictDBException, SQLException {
     int numRow = 10;
     for (int i = 0; i < numRow; i++) {
-      conn.createStatement().execute(String.format("insert into oldschema.oldtable values (%d, '%s')",
-              i, RandomStringUtils.randomAlphanumeric(4)));
+      conn.createStatement()
+          .execute(
+              String.format(
+                  "insert into oldschema.oldtable values (%d, '%s')",
+                  i, RandomStringUtils.randomAlphanumeric(4)));
     }
 
     String newSchemaName = "newschema";
@@ -106,26 +112,33 @@ public class PostgresUniformScramblingPlanTest {
     options.put("blockColumnName", "blockcolumn");
     options.put("blockCount", "3"); // dongyoungy: This is currently not supported.
 
-    conn.createStatement().execute(
-        String.format("drop table if exists %s.%s", newSchemaName, newTableName));
-    ScramblingPlan plan = ScramblingPlan.create(
-        newSchemaName, newTableName,
-        oldSchemaName, oldTableName,
-        method, options);
-//    System.out.println(plan.getReportingNode());
+    conn.createStatement()
+        .execute(String.format("drop table if exists %s.%s", newSchemaName, newTableName));
+    ScramblingPlan plan =
+        ScramblingPlan.create(
+            newSchemaName, newTableName,
+            oldSchemaName, oldTableName,
+            method, options);
+    //    System.out.println(plan.getReportingNode());
 
     DbmsConnection dbmsConn = JdbcConnection.create(conn);
     ExecutablePlanRunner.runTillEnd(dbmsConn, plan);
 
     int blockCount = method.getBlockCount();
 
-    DbmsQueryResult result = dbmsConn.execute(String.format("select * from %s.%s", newSchemaName, newTableName));
+    DbmsQueryResult result =
+        dbmsConn.execute(String.format("select * from %s.%s", newSchemaName, newTableName));
     result.printContent();
 
     int partitionRowTotal = 0;
     for (int i = 0; i < blockCount; ++i) {
-      DbmsQueryResult r = dbmsConn.execute(String.format("select count(*) from %s.%s" + PostgresqlSyntax.CHILD_PARTITION_TABLE_SUFFIX,
-          newSchemaName, newTableName, i));
+      DbmsQueryResult r =
+          dbmsConn.execute(
+              String.format(
+                  "select count(*) from %s.%s" + PostgresqlSyntax.CHILD_PARTITION_TABLE_SUFFIX,
+                  newSchemaName,
+                  newTableName,
+                  i));
       if (r.next()) {
         partitionRowTotal += r.getInt(0);
       }
@@ -135,5 +148,4 @@ public class PostgresUniformScramblingPlanTest {
 
     conn.createStatement().execute("delete from oldschema.oldtable");
   }
-
 }

@@ -60,15 +60,15 @@ jobs:
           keys:
             - verdict-dependencies-{{ checksum "pom.xml" }}
             # fallback to using the latest cache if no exact match is found
-            # - v1-dependencies-
-      #- run: mvn install:install-file -Dfile=src/test/resources/jars/ImpalaJDBC41-2.6.3.jar -DgroupId=com.cloudera -DartifactId=impala-jdbc41 -Dversion=2.6.3 -Dpackaging=jar
+            - verdict-dependencies-
+      - run: mvn install:install-file -Dfile=src/test/resources/jars/ImpalaJDBC41-2.6.3.jar -DgroupId=com.cloudera -DartifactId=impala-jdbc41 -Dversion=2.6.3 -Dpackaging=jar
       # - run: mvn dependency:go-offline
       # Setup necessary test data
       - run: git clone git@github.com:verdictdb/verdictdb-private-resources.git
       # Now build and test
       - run:
           name: Run unit tests
-          command: mvn -B test 2> /dev/null
+          command: mvn -P jdk7 -B test 2> /dev/null
           no_output_timeout: 30m
       # Collect test metadata
       - run:
@@ -140,7 +140,7 @@ jobs:
       # Now build and test
       - run:
           name: Run unit tests
-          command: mvn -B cobertura:cobertura 2> /dev/null
+          command: mvn -P jdk8 -B cobertura:cobertura 2> /dev/null
           no_output_timeout: 30m
       # Upload codecov
       #- run: mvn -DskipTests cobertura:cobertura
@@ -182,9 +182,10 @@ jobs:
       - restore_cache:
           keys:
             - verdict-dependencies-{{ checksum "pom.xml" }}
+            - verdict-dependencies-
             # fallback to using the latest cache if no exact match is found
             # - v1-dependencies-
-      #- run: mvn install:install-file -Dfile=src/test/resources/jars/ImpalaJDBC41-2.6.3.jar -DgroupId=com.cloudera -DartifactId=impala-jdbc41 -Dversion=2.6.3 -Dpackaging=jar
+      - run: mvn install:install-file -Dfile=src/test/resources/jars/ImpalaJDBC41-2.6.3.jar -DgroupId=com.cloudera -DartifactId=impala-jdbc41 -Dversion=2.6.3 -Dpackaging=jar
       # - run: mvn dependency:go-offline
 
       # Setup necessary test data
@@ -192,7 +193,7 @@ jobs:
       # Now build and test
       - run:
           name: Run unit tests
-          command: mvn -B test 2> /dev/null
+          command: mvn -P jdk8 -B test 2> /dev/null
           no_output_timeout: 30m
 
       # Check the JDBC service file correctness
@@ -248,7 +249,7 @@ jobs:
             - verdict-dependencies-{{ checksum "pom.xml" }}
             # fallback to using the latest cache if no exact match is found
             # - v1-dependencies-
-      #- run: mvn install:install-file -Dfile=src/test/resources/jars/ImpalaJDBC41-2.6.3.jar -DgroupId=com.cloudera -DartifactId=impala-jdbc41 -Dversion=2.6.3 -Dpackaging=jar
+            #- run: mvn install:install-file -Dfile=src/test/resources/jars/ImpalaJDBC41-2.6.3.jar -DgroupId=com.cloudera -DartifactId=impala-jdbc41 -Dversion=2.6.3 -Dpackaging=jar
       # - run: mvn dependency:go-offline
       # Setup necessary test data
       - run: git clone git@github.com:verdictdb/verdictdb-private-resources.git

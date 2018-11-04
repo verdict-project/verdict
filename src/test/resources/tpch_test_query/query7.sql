@@ -11,8 +11,8 @@ from (
         l_extendedprice * (1 - l_discount) as volume
     from
         supplier,
-        lineitem_scrambled,
-        orders_scrambled,
+        lineitem,
+        orders,
         customer,
         nation n1,
         nation n2

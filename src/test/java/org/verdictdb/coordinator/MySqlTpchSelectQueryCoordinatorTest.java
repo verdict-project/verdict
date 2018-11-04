@@ -1,14 +1,7 @@
 package org.verdictdb.coordinator;
 
-import static org.junit.Assert.assertEquals;
-
-import java.io.File;
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-
+import com.google.common.base.Charsets;
+import com.google.common.io.Files;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -27,8 +20,14 @@ import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sqlsyntax.MysqlSyntax;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
+import java.io.File;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * Test cases are from
@@ -75,6 +74,7 @@ public class MySqlTpchSelectQueryCoordinatorTest {
     conn =
         DatabaseConnectionHelpers.setupMySql(
             mysqlConnectionString, MYSQL_UESR, MYSQL_PASSWORD, MYSQL_DATABASE);
+    conn.setCatalog(MYSQL_DATABASE);
     stmt = conn.createStatement();
     stmt.execute(String.format("use `%s`", MYSQL_DATABASE));
     DbmsConnection dbmsConn = JdbcConnection.create(conn);

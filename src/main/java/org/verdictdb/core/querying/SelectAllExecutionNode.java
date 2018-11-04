@@ -16,6 +16,7 @@
 
 package org.verdictdb.core.querying;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -32,6 +33,12 @@ import org.verdictdb.exception.VerdictDBValueException;
 public class SelectAllExecutionNode extends QueryNodeWithPlaceHolders {
 
   private static final long serialVersionUID = -4794780058649322912L;
+
+  private List<Boolean> isAggregate = new ArrayList<>();
+
+  public void setAggregateColumn(List<Boolean> isAggregate) {
+    this.isAggregate = isAggregate;
+  }
 
   public SelectAllExecutionNode(IdCreator idCreator, SelectQuery query) {
     super(idCreator, query);
@@ -77,6 +84,7 @@ public class SelectAllExecutionNode extends QueryNodeWithPlaceHolders {
   @Override
   public ExecutionInfoToken createToken(DbmsQueryResult result) {
     ExecutionInfoToken token = new ExecutionInfoToken();
+    result.getMetaData().isAggregate = isAggregate;
     token.setKeyValue("queryResult", result);
     return token;
   }

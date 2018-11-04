@@ -2,7 +2,7 @@ select
     o_orderpriority,
     count(*) as order_count
 from
-    orders_scrambled join lineitem_scrambled
+    orders join lineitem
         on l_orderkey = o_orderkey
 where
     o_orderdate >= date '1992-12-01'

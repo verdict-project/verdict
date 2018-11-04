@@ -1,15 +1,8 @@
 package org.verdictdb.commons;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-
+import com.google.common.base.Charsets;
+import com.google.common.base.Joiner;
+import com.google.common.io.Files;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.spark.sql.SparkSession;
 import org.postgresql.copy.CopyManager;
@@ -22,9 +15,17 @@ import org.verdictdb.sqlsyntax.ImpalaSyntax;
 import org.verdictdb.sqlsyntax.PostgresqlSyntax;
 import org.verdictdb.sqlsyntax.RedshiftSyntax;
 
-import com.google.common.base.Charsets;
-import com.google.common.base.Joiner;
-import com.google.common.io.Files;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 
 public class DatabaseConnectionHelpers {
 
@@ -562,6 +563,183 @@ public class DatabaseConnectionHelpers {
     loadRedshiftData(schema, "partsupp", dbmsConn);
     loadRedshiftData(schema, "orders", dbmsConn);
     loadRedshiftData(schema, "lineitem", dbmsConn);
+    return conn;
+  }
+
+  static void loadPrestoData(String schema, String table, Connection conn)
+      throws IOException, VerdictDBDbmsException, SQLException {
+    String concat = "";
+    File file =
+        new File(String.format("src/test/resources/tpch_test_data/%s/%s.tbl", table, table));
+    ResultSet rs =
+        conn.createStatement().executeQuery(String.format("DESCRIBE %s.%s", schema, table));
+    List<Boolean> quotedNeeded = new ArrayList<>();
+    List<Boolean> isDate = new ArrayList<>();
+    while (rs.next()) {
+      String columnType = rs.getString(2).toLowerCase();
+      if (columnType.equals("integer")
+          || columnType.equals("numeric")
+          || columnType.contains("double")
+          || columnType.contains("decimal")
+          || columnType.contains("bigint")) {
+        quotedNeeded.add(false);
+      } else quotedNeeded.add(true);
+      if (columnType.contains("date")) {
+        isDate.add(true);
+      } else isDate.add(false);
+    }
+
+    String content = Files.toString(file, Charsets.UTF_8);
+    for (String row : content.split("\n")) {
+      String[] values = row.split("\\|");
+      row = "";
+      for (int i = 0; i < values.length - 1; i++) {
+        if (quotedNeeded.get(i)) {
+          row = row + (isDate.get(i) ? "date " : "") + getQuoted(values[i]) + ",";
+        } else {
+          row = row + values[i] + ",";
+        }
+      }
+      for (int i = 0; i < quotedNeeded.size() - values.length + 1; ++i) {
+        if (i < quotedNeeded.size() - values.length) {
+          row = row + "'',";
+        } else {
+          row = row + "''";
+        }
+      }
+      if (concat.equals("")) {
+        concat = concat + "(" + row + ")";
+      } else concat = concat + "," + "(" + row + ")";
+    }
+    conn.createStatement()
+        .execute(String.format("insert into \"%s\".\"%s\" values %s", schema, table, concat));
+  }
+
+  public static Connection setupPresto(
+      String connectionString, String user, String password, String schema)
+      throws VerdictDBDbmsException, SQLException, IOException {
+
+    Connection conn = DriverManager.getConnection(connectionString, user, password);
+
+    Statement stmt = conn.createStatement();
+    stmt.execute(String.format("CREATE SCHEMA IF NOT EXISTS \"%s\"", schema));
+    ResultSet rs =
+        conn.createStatement().executeQuery(String.format("SHOW TABLES IN \"%s\"", schema));
+    while (rs.next()) {
+      conn.createStatement().execute(String.format("DROP TABLE IF EXISTS %s", rs.getString(1)));
+    }
+
+    // Create tables
+    stmt.execute(
+        String.format(
+            "CREATE TABLE  IF NOT EXISTS \"%s\".\"nation\" ("
+                + "  \"n_nationkey\"  INT, "
+                + "  \"n_name\"       CHAR(25), "
+                + "  \"n_regionkey\"  INT, "
+                + "  \"n_comment\"    VARCHAR(152), "
+                + "  \"n_dummy\"      VARCHAR(10)) ",
+            schema));
+    stmt.execute(
+        String.format(
+            "CREATE TABLE  IF NOT EXISTS \"%s\".\"region\"  ("
+                + "  \"r_regionkey\"  INT, "
+                + "  \"r_name\"       CHAR(25), "
+                + "  \"r_comment\"    VARCHAR(152), "
+                + "  \"r_dummy\"      VARCHAR(10)) ",
+            schema));
+    stmt.execute(
+        String.format(
+            "CREATE TABLE  IF NOT EXISTS \"%s\".\"part\"  ( \"p_partkey\"     INT, "
+                + "  \"p_name\"        VARCHAR(55), "
+                + "  \"p_mfgr\"        CHAR(25), "
+                + "  \"p_brand\"       CHAR(10), "
+                + "  \"p_type\"        VARCHAR(25), "
+                + "  \"p_size\"        INT, "
+                + "  \"p_container\"   CHAR(10), "
+                + "  \"p_retailprice\" DECIMAL(15,2) , "
+                + "  \"p_comment\"     VARCHAR(23) , "
+                + "  \"p_dummy\"       VARCHAR(10)) ",
+            schema));
+    stmt.execute(
+        String.format(
+            "CREATE TABLE  IF NOT EXISTS \"%s\".\"supplier\" ( "
+                + "  \"s_suppkey\"     INT , "
+                + "  \"s_name\"        CHAR(25) , "
+                + "  \"s_address\"     VARCHAR(40) , "
+                + "  \"s_nationkey\"   INT , "
+                + "  \"s_phone\"       CHAR(15) , "
+                + "  \"s_acctbal\"     DECIMAL(15,2) , "
+                + "  \"s_comment\"     VARCHAR(101), "
+                + "  \"s_dummy\" varchar(10)) ",
+            schema));
+    stmt.execute(
+        String.format(
+            "CREATE TABLE  IF NOT EXISTS \"%s\".\"partsupp\" ( "
+                + "  \"ps_partkey\"     INT , "
+                + "  \"ps_suppkey\"     INT , "
+                + "  \"ps_availqty\"    INT , "
+                + "  \"ps_supplycost\"  DECIMAL(15,2)  , "
+                + "  \"ps_comment\"     VARCHAR(199), "
+                + "  \"ps_dummy\"       VARCHAR(10)) ",
+            schema));
+    stmt.execute(
+        String.format(
+            "CREATE TABLE  IF NOT EXISTS \"%s\".\"customer\" ("
+                + "  \"c_custkey\"     INT , "
+                + "  \"c_name\"        VARCHAR(25) , "
+                + "  \"c_address\"     VARCHAR(40) , "
+                + "  \"c_nationkey\"   INT , "
+                + "  \"c_phone\"       CHAR(15) , "
+                + "  \"c_acctbal\"     DECIMAL(15,2)   , "
+                + "  \"c_mktsegment\"  CHAR(10) , "
+                + "  \"c_comment\"     VARCHAR(117), "
+                + "  \"c_dummy\"       VARCHAR(10)) ",
+            schema));
+    stmt.execute(
+        String.format(
+            "CREATE TABLE IF NOT EXISTS  \"%s\".\"orders\"  ( "
+                + "  \"o_orderkey\"       INT , "
+                + "  \"o_custkey\"        INT , "
+                + "  \"o_orderstatus\"    CHAR(1) , "
+                + "  \"o_totalprice\"     DECIMAL(15,2) , "
+                + "  \"o_orderdate\"      DATE , "
+                + "  \"o_orderpriority\"  CHAR(15) , "
+                + "  \"o_clerk\"          CHAR(15) , "
+                + "  \"o_shippriority\"   INT , "
+                + "  \"o_comment\"        VARCHAR(79), "
+                + "  \"o_dummy\" varchar(10)) ",
+            schema));
+    stmt.execute(
+        String.format(
+            "CREATE TABLE IF NOT EXISTS \"%s\".\"lineitem\" ("
+                + "  \"l_orderkey\"    INT , "
+                + "  \"l_partkey\"     INT , "
+                + "  \"l_suppkey\"     INT , "
+                + "  \"l_linenumber\"  INT , "
+                + "  \"l_quantity\"    DECIMAL(15,2) , "
+                + "  \"l_extendedprice\"  DECIMAL(15,2) , "
+                + "  \"l_discount\"    DECIMAL(15,2) , "
+                + "  \"l_tax\"         DECIMAL(15,2) , "
+                + "  \"l_returnflag\"  CHAR(1) , "
+                + "  \"l_linestatus\"  CHAR(1) , "
+                + "  \"l_shipdate\"    DATE , "
+                + "  \"l_commitdate\"  DATE , "
+                + "  \"l_receiptdate\" DATE , "
+                + "  \"l_shipinstruct\" CHAR(25) , "
+                + "  \"l_shipmode\"     CHAR(10) , "
+                + "  \"l_comment\"      VARCHAR(44), "
+                + "  \"l_dummy\" varchar(10))",
+            schema));
+
+    // load data use insert
+    loadPrestoData(schema, "nation", conn);
+    loadPrestoData(schema, "region", conn);
+    loadPrestoData(schema, "part", conn);
+    loadPrestoData(schema, "supplier", conn);
+    loadPrestoData(schema, "customer", conn);
+    loadPrestoData(schema, "partsupp", conn);
+    loadPrestoData(schema, "orders", conn);
+    loadPrestoData(schema, "lineitem", conn);
     return conn;
   }
 

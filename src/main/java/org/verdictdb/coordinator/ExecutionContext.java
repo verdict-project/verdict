@@ -80,8 +80,8 @@ public class ExecutionContext {
   }
 
   /**
-   * @param conn DbmsConnection
-   * @param contextId parent's context id
+   * @param conn         DbmsConnection
+   * @param contextId    parent's context id
    * @param serialNumber serial number of this ExecutionContext
    * @param options
    */
@@ -130,29 +130,36 @@ public class ExecutionContext {
     } else {
       QueryType queryType = identifyQueryType(query);
       if ((queryType != QueryType.select
-              && queryType != QueryType.show_databases
-              && queryType != QueryType.show_tables
-              && queryType != QueryType.describe_table
-              && queryType != QueryType.show_scrambles)
+          && queryType != QueryType.show_databases
+          && queryType != QueryType.show_tables
+          && queryType != QueryType.describe_table
+          && queryType != QueryType.show_scrambles)
           && getResult) {
         throw new VerdictDBException(
             "Can not issue data manipulation statements with executeQuery().");
       }
 
       VerdictResultStream stream = streamsql(query);
+
       if (stream == null) {
         return null;
       }
-
+      QueryResultAccuracyEstimator accEst = new QueryResultAccuracyEstimatorFromDifference(runningCoordinator);
       try {
-        VerdictSingleResult result = stream.next();
-        return result;
+        while (stream.hasNext()) {
+          VerdictSingleResult rs = stream.next();
+          accEst.add(rs);
+          if (accEst.isLastResultAccurate()) {
+            return rs;
+          }
+        }
+        // return the last result otherwise
+        return accEst.getAnswers().get(accEst.getAnswerCount()-1);
       } catch (RuntimeException e) {
         throw e;
       } finally {
         stream.close();
         abort();
-        //        abortInParallel(stream);
       }
     }
   }
@@ -185,12 +192,17 @@ public class ExecutionContext {
       log.debug("Query type: select");
       ScrambleMetaSet metaset = metaStore.retrieve();
       SelectQueryCoordinator coordinator = new SelectQueryCoordinator(conn, metaset, options);
-      runningCoordinator = coordinator;
+      runningCoordinator = null;
 
       ExecutionResultReader reader = coordinator.process(query, queryContext);
+      if (coordinator.getLastQuery() != null) {
+        // this means there are scrambles for the query so that
+        // we need to abort the coordinator at the end.
+        runningCoordinator = coordinator;
+      }
       VerdictResultStream stream = new VerdictResultStreamFromExecutionResultReader(reader, this);
-      return stream;
 
+      return stream;
     } else if (queryType.equals(QueryType.scrambling)) {
       log.debug("Query type: scrambling");
       CreateScrambleQuery scrambleQuery = generateScrambleQuery(query);
@@ -201,10 +213,15 @@ public class ExecutionContext {
               options.getVerdictTempSchemaName(),
               scrambleQuery.getBlockSize());
 
-      // Specifying size/ratio of scrambled table is not supported.
-      if (scrambleQuery.getSize() != 1.0) {
+      if (scrambleQuery.getSize() <= 0 || scrambleQuery.getSize() > 1) {
         throw new VerdictDBTypeException(
-            String.format("Scramble size of %f not supported.", scrambleQuery.getSize()));
+            String.format(
+                "Scramble size is %f. It must be between 0.0 and 1.0.", scrambleQuery.getSize()));
+      }
+
+      if (scrambleQuery.getBlockSize() == 0) {
+        throw new VerdictDBTypeException(
+            String.format("A scramble block size should be greater than zero."));
       }
 
       // store this to our own metadata db.
@@ -255,7 +272,7 @@ public class ExecutionContext {
 
     } else if (queryType.equals(QueryType.describe_table)) {
       log.debug("Query type: describe_table");
-      VerdictResultStream stream = generateDesribeTableResultFromQuery(query);
+      VerdictResultStream stream = generateDescribeTableResultFromQuery(query);
       return stream;
 
     } else {
@@ -356,7 +373,7 @@ public class ExecutionContext {
     return new VerdictResultStreamFromSingleResult(result);
   }
 
-  private VerdictResultStream generateDesribeTableResultFromQuery(String query)
+  private VerdictResultStream generateDescribeTableResultFromQuery(String query)
       throws VerdictDBException {
     VerdictSQLParser parser = NonValidatingSQLParser.parserOf(query);
     VerdictSQLParserBaseVisitor<Pair<String, String>> visitor =
@@ -389,7 +406,7 @@ public class ExecutionContext {
     return new VerdictResultStreamFromSingleResult(result);
   }
 
-  private void updateDefaultSchemaFromQuery(String query) {
+  private void updateDefaultSchemaFromQuery(String query) throws VerdictDBDbmsException {
     VerdictSQLParser parser = NonValidatingSQLParser.parserOf(query);
     String schema = parser.use_statement().database.getText();
     conn.setDefaultSchema(schema);
@@ -515,6 +532,9 @@ public class ExecutionContext {
         };
 
     QueryType type = visitor.visit(parser.verdict_statement());
+    if (type == null) {
+      type = QueryType.unknown;
+    }
     return type;
   }
 }

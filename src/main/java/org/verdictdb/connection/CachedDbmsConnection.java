@@ -16,14 +16,14 @@
 
 package org.verdictdb.connection;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.sqlsyntax.SqlSyntax;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 /**
  * Offers the same functionality as DbmsConnection; however, returns cached metadata whenever
@@ -40,7 +40,7 @@ public class CachedDbmsConnection extends DbmsConnection implements MetaDataProv
   }
 
   public CachedDbmsConnection(DbmsConnection conn) {
-//    super(conn);
+    //    super(conn);
     this.originalConn = conn;
   }
 
@@ -53,7 +53,7 @@ public class CachedDbmsConnection extends DbmsConnection implements MetaDataProv
   public SqlSyntax getSyntax() {
     return originalConn.getSyntax();
   }
-  
+
   @Override
   public void abort() {
     originalConn.abort();
@@ -69,7 +69,7 @@ public class CachedDbmsConnection extends DbmsConnection implements MetaDataProv
   }
 
   @Override
-  public DbmsConnection copy() {
+  public DbmsConnection copy() throws VerdictDBDbmsException {
     CachedDbmsConnection newConn = new CachedDbmsConnection(originalConn.copy());
     return newConn;
   }
@@ -144,7 +144,7 @@ public class CachedDbmsConnection extends DbmsConnection implements MetaDataProv
     return schema;
   }
 
-  public void setDefaultSchema(String schema) {
+  public void setDefaultSchema(String schema) throws VerdictDBDbmsException {
     originalConn.setDefaultSchema(schema);
   }
 }

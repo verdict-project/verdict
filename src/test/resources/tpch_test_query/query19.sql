@@ -1,7 +1,7 @@
 select
     sum(l_extendedprice* (1 - l_discount)) as revenue
 from
-    lineitem_scrambled,
+    lineitem,
     part
 where
     ( p_partkey = l_partkey

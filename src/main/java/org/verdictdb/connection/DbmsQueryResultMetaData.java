@@ -38,5 +38,8 @@ public class DbmsQueryResultMetaData implements Serializable {
 
   public List<String> columnClassName = new ArrayList<>();
 
+  public List<Boolean> isAggregate = new ArrayList<>();
+
   public DbmsQueryResultMetaData() {}
+
 }

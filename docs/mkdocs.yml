@@ -9,11 +9,7 @@ nav:
   - Getting Started:
     - Quickstart: getting_started/quickstart.md
     - Download / Install: getting_started/install.md
-    - Connecting to Data Sources: getting_started/connection.md
-    - VerdictDB JDBC Properties: getting_started/properties.md
-    - Creating Scrambles: getting_started/scrambling.md
-    - Simple Querying: getting_started/querying.md
-    - Stream Querying: getting_started/streaming.md
+    - What's More: getting_started/whatsmore.md
     # - Result Structure: getting_started/results.md
   - How it works:
     - Basics: how_it_works/basics.md
@@ -29,9 +25,15 @@ nav:
       - Apache Spark: tutorial/examples/spark.md
     - ML-based Analytics: tutorial/advanced.md
   - Reference:
-    - Query Syntax:
-      - Scrambling: reference/scrambling_syntax.md
-      - Select Query: reference/query_syntax.md
+    - Connecting to Data Sources: reference/connection.md
+    - VerdictDB JDBC Properties: reference/properties.md
+    - Simple Querying: reference/querying.md
+    - Scrambles:
+      - What is a Scramble?: reference/what_is_scramble.md
+      - Creating/Viewing Scrambles: reference/scrambling.md
+      - Dropping Scrambles: reference/drop_scrambling.md
+    - Select Query Syntax: reference/query_syntax.md
+    - Stream Querying: reference/streaming.md
     - Javadoc: reference/javadoc.md
   #   - VerdictDB Queries: reference/supported_queries.md
 
@@ -63,7 +65,7 @@ plugins:
 
 extra:
   verdictdb:
-    version: 0.5.5
+    version: 0.5.6
 
 
 # Extensions

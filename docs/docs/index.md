@@ -10,21 +10,31 @@ VerdictDB is a thin, platform-independent, interactive analytics library that wo
 1. Getting Started
     - [Quickstart](/getting_started/quickstart)
     - [Install / Download](/getting_started/install)
-    - [Connecting to Databases](/getting_started/connection)
-    - [Scrambling](/getting_started/scrambling)
-    - [Traditional Querying](/getting_started/querying)
-    - [Stream Querying](/getting_started/streaming)
+    - [What's More](/getting_started/whatsmore)
 1. How VerdictDB works
     - [Basics](/how_it_works/basics)
     - [Architecture](/how_it_works/architecture)
     - [Query Processing](/how_it_works/query_processing)
 1. Tutorial
-    - [Setting up MySQL database](/tutorial/mysql)
+    - Setting up databases
+        - [MySQL](/tutorial/setup/mysql)
+        - [Apache Spark](/tutorial/setup/spark)
     - [Setting up TPC-H data](/tutorial/tpch)
-    - [An example Java application](/tutorial/example)
+    - Example Applications
+        - [MySQL](/tutorial/example/mysql)
+        - [Apache Spark](/tutorial/example/spark)
     - [ML-based Analytics](/tutorial/advanced)
 1. Reference
-    - [Query Syntax](/reference/query_syntax)
+    - [Connecting to Data Sources](/reference/connection)
+    - [VerdictDB JDBC Propertires](/reference/properties)
+    - [Simple Querying](/reference/querying)
+    - Scrambles
+        - [What is a Scramble?](/reference/what_is_scramble)
+        - [Creating/Viewing Scrambles](/reference/scrambling)
+        - [Dropping Scrambles](/reference/drop_scrambling)
+    - [Select Query Syntax](/reference/query_syntax)
+    - [Stream Querying](/reference/streaming)
+    - [Javadoc](/reference/javadoc)
 
 
 

@@ -22,12 +22,18 @@ import java.util.Map;
 
 public abstract class ScramblingMethodBase implements ScramblingMethod {
 
-  protected final long blockSize;
+  protected long blockSize;
+
+  protected final int maxBlockCount;
+
+  protected final double relativeSize; // size relative to original table (0.0 ~ 1.0)
 
   private final Map<Integer, List<Double>> storedProbDist = new HashMap<>();
 
-  public ScramblingMethodBase(long blockSize) {
+  public ScramblingMethodBase(long blockSize, int maxBlockCount, double relativeSize) {
     this.blockSize = blockSize;
+    this.maxBlockCount = maxBlockCount;
+    this.relativeSize = relativeSize;
   }
 
   long getBlockSize() {
