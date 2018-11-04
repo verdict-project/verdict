@@ -122,6 +122,10 @@ public class DatabaseConnectionHelpers {
     spark.conf().set("spark.sql.parquet.mergeSchema", "true");
     spark.conf().set("spark.sql.parquet.binaryAsString", "true");
     spark.conf().set("spark.sql.crossJoin.enabled", "true");
+    spark.conf().set("spark.driver.extraClassPath", "/home/joezhong/.m2/repository/com/h2database/h2/1.4.190/h2-1.4.190.jar");
+    spark.conf().set("spark.executor.extraClassPath", "/home/joezhong/.m2/repository/com/h2database/h2/1.4.190/h2-1.4.190.jar");
+
+
     // create schema
     spark.sql(String.format("DROP SCHEMA IF EXISTS `%s` CASCADE", schema));
     spark.sql(String.format("CREATE SCHEMA IF NOT EXISTS `%s`", schema));

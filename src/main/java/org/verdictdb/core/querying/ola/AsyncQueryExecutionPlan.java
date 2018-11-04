@@ -116,7 +116,9 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
     }
 
     if (convertToSelectAsyncAgg) {
-      return root.getSources().get(0);
+      SelectAsyncAggExecutionNode newRoot = (SelectAsyncAggExecutionNode) root.getSources().get(0);
+      root.cancelSubscriptionTo(newRoot);
+      return newRoot;
     } else {
       return root;
     }

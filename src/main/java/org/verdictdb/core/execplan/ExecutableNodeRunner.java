@@ -31,6 +31,7 @@ import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.connection.SparkConnection;
 import org.verdictdb.core.querying.ExecutableNodeBase;
 import org.verdictdb.core.querying.ola.AsyncAggExecutionNode;
+import org.verdictdb.core.querying.ola.SelectAsyncAggExecutionNode;
 import org.verdictdb.core.querying.simplifier.ConsolidatedExecutionNode;
 import org.verdictdb.core.sqlobject.SqlConvertible;
 import org.verdictdb.exception.VerdictDBDbmsException;
@@ -194,9 +195,10 @@ public class ExecutableNodeRunner implements Runnable {
   private void runDependents() {
     if (doesThisNodeContainAsyncAggExecutionNode()) {
       int maxNumberOfRunningNode = 10;
-      if ((conn instanceof SparkConnection) ||
-          (conn instanceof CachedDbmsConnection && 
-              ((CachedDbmsConnection) conn).getOriginalConnection() instanceof SparkConnection)) {
+      if (((conn instanceof SparkConnection) ||
+          (conn instanceof CachedDbmsConnection
+              && ((CachedDbmsConnection) conn).getOriginalConnection() instanceof SparkConnection))
+              && !(node instanceof SelectAsyncAggExecutionNode)) {
         // Since abort() does not work for Spark (or I don't know how to do so), we issue query
         // one by one.
         maxNumberOfRunningNode = 1;

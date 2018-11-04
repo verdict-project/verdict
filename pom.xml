@@ -211,12 +211,17 @@
             <artifactId>opencsv</artifactId>
             <version>4.0</version>
         </dependency>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <version>1.4.190</version>
+        </dependency>
 
         <!--  Test Support -->
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
-            <version>1.4.197</version>
+            <version>1.4.190</version>
             <scope>test</scope>
         </dependency>
         <dependency>

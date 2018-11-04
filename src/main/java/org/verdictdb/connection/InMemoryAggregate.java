@@ -33,8 +33,11 @@ public class InMemoryAggregate extends AttributeValueRetrievalHelper implements 
 
   static {
     try {
+      Class.forName("org.h2.Driver");
       conn = DriverManager.getConnection(DB_CONNECTION, "", "");
     } catch (SQLException e) {
+      e.printStackTrace();
+    } catch (ClassNotFoundException e) {
       e.printStackTrace();
     }
   }
