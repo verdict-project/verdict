@@ -1,5 +1,8 @@
 package org.verdictdb.connection;
 
+import static java.sql.Types.CHAR;
+import static java.sql.Types.VARCHAR;
+
 import com.google.common.collect.TreeMultiset;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -96,7 +99,12 @@ public class InMemoryAggregate extends AttributeValueRetrievalHelper implements 
       }
       fieldNames.append(dbmsQueryResult.getColumnName(i));
       fieldNames.append(" ");
-      fieldNames.append(DataTypeConverter.typeName(dbmsQueryResult.getColumnType(i)));
+      // char -> varchar in case this type is an array of char
+      int columnType = dbmsQueryResult.getColumnType(i);
+      if (columnType==CHAR) {
+        columnType=VARCHAR;
+      }
+      fieldNames.append(DataTypeConverter.typeName(columnType));
       columnNames.append(dbmsQueryResult.getColumnName(i));
       bindVariables.append('?');
     }
