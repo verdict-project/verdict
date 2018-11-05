@@ -153,7 +153,13 @@ public class InMemoryAggregate extends AttributeValueRetrievalHelper implements 
           String alias = ((AliasedColumn) sel).getAliasName().toUpperCase();
           ((AliasedColumn) sel).setAliasName(alias);
           if (col.isAggregateColumn()) {
-            ((AliasedColumn) sel).setColumn(new ColumnOp("sum", new BaseColumn(alias)));
+            if (col instanceof ColumnOp && ((ColumnOp) col).getOpType().equals("max")) {
+              ((AliasedColumn) sel).setColumn(new ColumnOp("max", new BaseColumn(alias)));
+            } else if (col instanceof ColumnOp && ((ColumnOp) col).getOpType().equals("min")) {
+              ((AliasedColumn) sel).setColumn(new ColumnOp("min", new BaseColumn(alias)));
+            } else {
+              ((AliasedColumn) sel).setColumn(new ColumnOp("sum", new BaseColumn(alias)));
+            }
           } else {
             ((AliasedColumn) sel).setColumn(new BaseColumn(alias));
             groupList.add(((AliasedColumn) sel).getColumn());
