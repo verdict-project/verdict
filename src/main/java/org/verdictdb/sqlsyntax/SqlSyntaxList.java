@@ -29,6 +29,7 @@ public class SqlSyntaxList {
     nameToSyntax.put("Impala", new ImpalaSyntax());
     nameToSyntax.put("H2", new H2Syntax());
     nameToSyntax.put("Hive", new HiveSyntax());
+    nameToSyntax.put("Presto", new PrestoHiveSyntax()); // uses Hive only for now.
     nameToSyntax.put("MySQL", new MysqlSyntax());
     nameToSyntax.put("PostgreSQL", new PostgresqlSyntax());
     nameToSyntax.put("Redshift", new RedshiftSyntax());
@@ -43,6 +44,10 @@ public class SqlSyntaxList {
   public static SqlSyntax getSyntaxFromConnectionString(String connectionString) {
     String dbName = connectionString.split(":")[1];
     SqlSyntax syntax = SqlSyntaxList.getSyntaxFor(dbName);
+    if (syntax == null) {
+      dbName = connectionString.split(":")[0];
+      syntax = SqlSyntaxList.getSyntaxFor(dbName);
+    }
     return syntax;
   }
 }

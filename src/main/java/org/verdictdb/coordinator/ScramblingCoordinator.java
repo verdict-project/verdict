@@ -16,14 +16,7 @@
 
 package org.verdictdb.coordinator;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-
+import com.google.common.base.Optional;
 import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.connection.CachedDbmsConnection;
 import org.verdictdb.connection.ConcurrentJdbcConnection;
@@ -40,8 +33,29 @@ import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBValueException;
 import org.verdictdb.sqlwriter.QueryToSql;
 
-import com.google.common.base.Optional;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
+// When scrambling, UniformScramblindMethod determines blockSize, blockCount and actualBlockCount
+// as follows:
+
+// 1. scrambleTableSize = ceil(tableRowCount * relativeSize)
+//
+// 2. blockCount = ceil(tableRowCount / blockSize)
+//
+// 3. actualBlockCount = min(maxScrambleBlockCount, scrambleTableSize / blockSize)
+//
+// 4. blockSize = scrambleTableSize / actualBlockCount
+//
+// CREATE TABLE scrmabledTable AS
+// SELECT * FROM ( SELECT *, rand() * blockCount as verdictdbblock FROM originalTable) t
+// WHERE verdictdbblock < actualBlockCount
+//
 public class ScramblingCoordinator {
 
   private final Set<String> scramblingMethods =
@@ -56,8 +70,9 @@ public class ScramblingCoordinator {
           put("tierColumnName", "verdictdbtier");
           put("blockColumnName", "verdictdbblock");
           put("scrambleTableSuffix", "_scrambled");
-          put("scrambleTableBlockSize", "1e6");
+          put("minScrambleTableBlockSize", "1e6");
           put("createIfNotExists", "false");
+          put("maxScrambleTableBlockCount", "100");
         }
       };
 
@@ -88,7 +103,7 @@ public class ScramblingCoordinator {
     this.scratchpadSchema = Optional.fromNullable(scratchpadSchema);
     this.scrambleSchema = Optional.fromNullable(scrambleSchema);
     if (blockSize != null) {
-      options.put("scrambleTableBlockSize", String.valueOf(blockSize));
+      options.put("minScrambleTableBlockSize", String.valueOf(blockSize));
     }
   }
 
@@ -150,6 +165,7 @@ public class ScramblingCoordinator {
             newTable,
             methodName,
             primaryColumn,
+            1.0,
             customOptions);
     return meta;
   }
@@ -162,7 +178,9 @@ public class ScramblingCoordinator {
     String newTable = query.getNewTable();
     String methodName = query.getMethod();
     String primaryColumn = null;
+    double relativeSize = query.getSize();
     Map<String, String> customOptions = new HashMap<>(options);
+    customOptions.put("minScrambleTableBlockSize", Long.toString(query.getBlockSize()));
 
     ScrambleMeta meta =
         scramble(
@@ -172,6 +190,7 @@ public class ScramblingCoordinator {
             newTable,
             methodName,
             primaryColumn,
+            relativeSize,
             customOptions);
 
     return meta;
@@ -254,6 +273,29 @@ public class ScramblingCoordinator {
       String primaryColumn,
       Map<String, String> customOptions)
       throws VerdictDBException {
+    ScrambleMeta meta =
+        scramble(
+            originalSchema,
+            originalTable,
+            newSchema,
+            newTable,
+            methodName,
+            primaryColumn,
+            1.0,
+            customOptions);
+    return meta;
+  }
+
+  public ScrambleMeta scramble(
+      String originalSchema,
+      String originalTable,
+      String newSchema,
+      String newTable,
+      String methodName,
+      String primaryColumn,
+      double relativeSize,
+      Map<String, String> customOptions)
+      throws VerdictDBException {
 
     // sanity check
     if (!scramblingMethods.contains(methodName.toLowerCase())) {
@@ -278,10 +320,12 @@ public class ScramblingCoordinator {
     }
 
     // determine scrambling method
-    long blockSize = Double.valueOf(effectiveOptions.get("scrambleTableBlockSize")).longValue();
+    long blockSize = Double.valueOf(effectiveOptions.get("minScrambleTableBlockSize")).longValue();
+    int maxBlockCount =
+        Double.valueOf(effectiveOptions.get("maxScrambleTableBlockCount")).intValue();
     ScramblingMethod scramblingMethod;
     if (methodName.equalsIgnoreCase("uniform")) {
-      scramblingMethod = new UniformScramblingMethod(blockSize);
+      scramblingMethod = new UniformScramblingMethod(blockSize, maxBlockCount, relativeSize);
     } else if (methodName.equalsIgnoreCase("FastConverge") && primaryColumn == null) {
       scramblingMethod = new FastConvergeScramblingMethod(blockSize, scratchpadSchema.get());
     } else if (methodName.equalsIgnoreCase("FastConverge") && primaryColumn != null) {
@@ -306,21 +350,22 @@ public class ScramblingCoordinator {
     if (conn instanceof ConcurrentJdbcConnection) {
       ((ConcurrentJdbcConnection) conn).reinitiateConnection();
     } else if (conn instanceof CachedDbmsConnection
-        && ((CachedDbmsConnection) conn).getOriginalConnection() instanceof ConcurrentJdbcConnection) {
-      ((ConcurrentJdbcConnection) ((CachedDbmsConnection) conn).getOriginalConnection()).reinitiateConnection();
+        && ((CachedDbmsConnection) conn).getOriginalConnection()
+            instanceof ConcurrentJdbcConnection) {
+      ((ConcurrentJdbcConnection) ((CachedDbmsConnection) conn).getOriginalConnection())
+          .reinitiateConnection();
     }
 
     // compose scramble meta
-    String blockColumn = effectiveOptions.get("blockColumnName");
-    int blockCount = scramblingMethod.getBlockCount();
     String tierColumn = effectiveOptions.get("tierColumnName");
     int tierCount = scramblingMethod.getTierCount();
-
     Map<Integer, List<Double>> cumulativeDistribution = new HashMap<>();
     for (int i = 0; i < tierCount; i++) {
       List<Double> dist = scramblingMethod.getStoredCumulativeProbabilityDistributionForTier(i);
       cumulativeDistribution.put(i, dist);
     }
+    String blockColumn = effectiveOptions.get("blockColumnName");
+    int blockCount = scramblingMethod.getActualBlockCount();
 
     ScrambleMeta meta =
         new ScrambleMeta(
