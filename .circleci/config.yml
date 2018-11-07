@@ -256,7 +256,7 @@ jobs:
       # Now build and test
       - run:
           name: Run unit tests
-          command: mvn test -Dtest=SparkTpchSelectQueryCoordinatorTest 2> /dev/null
+          command: mvn test -P jdk8 -Dtest=SparkTpchSelectQueryCoordinatorTest 2> /dev/null
           no_output_timeout: 30m
       # - run: mvn test -Dtest=RedshiftTpchSelectQueryCoordinatorTest 2> /dev/null
       # - run: mvn test -Dtest=ImpalaTpchSelectQueryCoordinatorTest 2> /dev/null
@@ -314,11 +314,11 @@ jobs:
       # Now build and test
       - run:
           name: Run Redshift unit tests
-          command: mvn test -Dtest=RedshiftTpchSelectQueryCoordinatorTest 2> /dev/null
+          command: mvn test -P jdk8 -Dtest=RedshiftTpchSelectQueryCoordinatorTest 2> /dev/null
           no_output_timeout: 30m
       - run:
           name: Run Impala unit tests
-          command: mvn test -Dtest=ImpalaTpchSelectQueryCoordinatorTest 2> /dev/null
+          command: mvn test -P jdk8 -Dtest=ImpalaTpchSelectQueryCoordinatorTest 2> /dev/null
           no_output_timeout: 30m
       - run:
           name: Save test results
