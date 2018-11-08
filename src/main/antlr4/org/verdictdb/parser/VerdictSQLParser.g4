@@ -77,7 +77,7 @@ scrambling_method_name
     ;
     
 on_columns
-    : ON column_name (',' column_name)*
+    : ON column_name (',' column_name)
     ;
 
 drop_scramble_statement
@@ -383,7 +383,8 @@ predicate
     | expression NOT? IN '(' (subquery | expression_list) ')'               # in_predicate
     | expression NOT? (LIKE | RLIKE) expression (ESCAPE expression)?                  # like_predicate
     | expression IS null_notnull                                            # is_predicate
-    | predicate_function                                               # func_predicate
+    | unary_predicate_function                                               # unary_func_predicate
+    | binary_predicate_function                                               # binary_func_predicate
     ;
 
 query_expression
@@ -596,7 +597,8 @@ expression_function
     | binary_function
     | ternary_function
     | nary_function
-    | predicate_function
+    | unary_predicate_function
+    | binary_predicate_function
     | timestamp_function
     | dateadd_function
     | extract_time_function
@@ -631,14 +633,16 @@ nary_function
 	: function_name=(CONCAT | CONCAT_WS | COALESCE | FIELD | GREATEST | LEAST | WIDTH_BUCKET | BTRIM | FORMAT
 	| REGEXP_MATCHES | REGEXP_REPLACE | REGEXP_SPLIT_TO_ARRAY | REGEXP_SPLIT_TO_TABLE | LTRIM | RTRIM | TO_ASCII
 	| MAKE_TIMESTAMP | MAKE_TIMESTAMPTZ | TS_HEADLINE | TS_RANK | TS_RANK_CD | UNNEST | XMLCONCAT | XMLELEMENT
-	| XMLFOREST | JSON_BUILD_ARRAY | JSON_BUILD_OBJECT | JSONB_SET | JSONB_INSERT | UNNEST)
+	| XMLFOREST | JSON_BUILD_ARRAY | JSON_BUILD_OBJECT | JSONB_SET | JSONB_INSERT | UNNEST
+	| GREAT_CIRCLE_DISTANCE | BING_TILES_AROUND)
 		'(' expression (',' expression)* ')'
     ;
 
 ternary_function
     : function_name=(IF | CONV | SUBSTR | HASH | RPAD | SUBSTRING | LPAD | MID | REPLACE | SUBSTRING_INDEX | MAKETIME | IF
     | CONVERT | SPLIT_PART | TRANSLATE | MAKE_DATE | MAKE_TIME | SETWEIGHT | TS_REWRITE | TSQUERY_PHRASE | XMLROOT
-    | XPATH | XPATH_EXISTS | ARRAY_REPLACE | ARRAY_TO_STRING | STRING_TO_ARRAY | LOCATE )
+    | XPATH | XPATH_EXISTS | ARRAY_REPLACE | ARRAY_TO_STRING | STRING_TO_ARRAY | LOCATE
+    | BING_TILE | BING_TILE_AT | BING_TILES_AROUND)
       '(' expression ',' expression ',' expression ')'
     ;
 
@@ -655,7 +659,11 @@ binary_function
     | ARRAY_APPEND | ARRAY_CAT | ARRAY_LENGTH | ARRAY_LOWER | ARRAY_POSITION | ARRAY_POSITIONS | ARRAY_PREPEND
     | ARRAY_REMOVE | ARRAY_TO_STRING | ARRAY_UPPER | STRING_TO_ARRAY | RANGE_MERGE | CORR | COVAR_POP | COVAR_SAMP
     | REGR_AVGX | REGR_AVGY | REGR_COUNT | REGR_INTERCEPT | REGR_R2 | REGR_SLOPE | REGR_SXX | REGR_SXY | REGR_SYY | SUBSTR
-    | STDDEV_POP | VARIANCE | VAR_POP | VAR_SAMP | INT4LARGER | SUBSTRING)
+    | STDDEV_POP | VARIANCE | VAR_POP | VAR_SAMP | INT4LARGER | SUBSTRING
+    | ST_POINT | ST_CONTAINS | ST_CROSSES | ST_DISJOINT
+    | ST_EQUALS | ST_INTERSECTS | ST_OVERLAPS | ST_RELATE | ST_TOUCHES | ST_WITHIN | ST_BUFFER | ST_DIFFERENCE
+    | ST_INTERSECTION | ST_SYMDIFFERENCE | ST_UNION | ST_DISTANCE | ST_GEOMETRYN | ST_INTERIORRINGN | ST_POINTN
+    | SIMPLIFY_GEOMETRY | LINE_LOCATE_POINT | GEOMETRY_TO_BING_TILES)
       '(' expression ',' expression ')'
     ;
 
@@ -676,7 +684,14 @@ unary_function
      | JSON_ARRAY_ELEMENTS | JSON_ARRAY_ELEMENTS_TEXT | JSON_TYPEOF | JSON_TO_RECORD | JSON_TO_RECORDSET | JSON_STRIP_NULLS
      | JSONB_PRETTY | CURRVAL | NEXTVAL | ARRAY_NDIMS | ARRAY_DIMS | CARDINALITY | ISEMPTY | LOWER_INC | UPPER_INC
      | LOWER_INF | UPPER_INF | ARRAY_AGG | BIT_AND | BIT_OR | BOOL_AND | BOOL_OR | EVERY | JSON_AGG | JSONB_AGG
-     | JSON_OBJECT_AGG | JSONB_OBJECT_AGG | STRING_AGG)
+     | JSON_OBJECT_AGG | JSONB_OBJECT_AGG | STRING_AGG
+     | ST_ASBINARY | ST_ASTEXT | ST_GEOMETRYFROMTEXT | ST_GEOMFROMBINARY
+     | ST_LINEFROMTEXT | ST_LINESTRING | ST_MULTIPOINT | ST_POLYGON | GEOMETRY_UNION | ST_BOUNDARY | ST_ENVELOPE | ST_ENVELOPEASPTS
+     | ST_EXTERIORRING | ST_AREA | ST_CENTROID | ST_CONVEXHULL | ST_DIMENSION | ST_GEOMETRYTYPE | ST_ISCLOSED | ST_ISEMPTY
+     | ST_ISSIMPLE | ST_ISRING | ST_ISVALID | ST_LENGTH | ST_XMAX | ST_YMAX | ST_XMIN | ST_YMIN | ST_STARTPOINT
+     | ST_ENDPOINT | ST_X | ST_Y | ST_INTERIORRINGS | ST_NUMGEOMETRIES | ST_GEOMETRIES | ST_NUMPOINTS | ST_NUMINTERIORRING
+     | GEOMETRY_INVALID_REASON | CONVEX_HULL_AGG | GEOMETRY_UNION_AGG | BING_TILE | BING_TILE_COORDINATES | BING_TILE_POLYGON
+     | BING_TILE_QUADKEY | BING_TILE_ZOOM_LEVEL)
       '(' expression ')'
     | function_name=CAST '(' cast_as_expression ')'
     ;
@@ -689,8 +704,15 @@ dateadd_function
 	: function_name=DATEADD '(' time_unit ',' expression ',' expression ')'
 	;
 
-predicate_function
-    : NOT? function_name = ISNULL '(' expression ')'
+unary_predicate_function
+    : NOT? function_name = (ISNULL | ST_ISCLOSED | ST_ISEMPTY | ST_ISRING | ST_ISVALID)
+      '(' expression ')'
+    ;
+
+binary_predicate_function
+    : NOT? function_name = (ST_CONTAINS | ST_CROSSES | ST_DISJOINT | ST_EQUALS | ST_INTERSECTS
+    | ST_OVERLAPS | ST_RELATE | ST_TOUCHES | ST_WITHIN)
+      '(' expression ',' expression ')'
     ;
 
 noparam_function
