@@ -4,8 +4,8 @@ import os
 import pyverdict
 import prestodb
 
-test_schema = 'pyverdict_datatype_test_schema'
-test_table = 'pyverdict_datatype_test_table'
+test_schema = 'pyverdict_presto_datatype_test_schema'
+test_table = 'pyverdict_presto_datatype_test_table'
 
 
 def test_data_types():
