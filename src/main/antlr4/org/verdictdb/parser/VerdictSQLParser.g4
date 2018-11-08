@@ -77,7 +77,7 @@ scrambling_method_name
     ;
     
 on_columns
-    : ON column_name (',' column_name)
+    : ON column_name (',' column_name)*
     ;
 
 drop_scramble_statement
