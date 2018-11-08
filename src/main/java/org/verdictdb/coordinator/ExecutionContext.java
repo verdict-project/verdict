@@ -80,8 +80,8 @@ public class ExecutionContext {
   }
 
   /**
-   * @param conn DbmsConnection
-   * @param contextId parent's context id
+   * @param conn         DbmsConnection
+   * @param contextId    parent's context id
    * @param serialNumber serial number of this ExecutionContext
    * @param options
    */
@@ -130,29 +130,36 @@ public class ExecutionContext {
     } else {
       QueryType queryType = identifyQueryType(query);
       if ((queryType != QueryType.select
-              && queryType != QueryType.show_databases
-              && queryType != QueryType.show_tables
-              && queryType != QueryType.describe_table
-              && queryType != QueryType.show_scrambles)
+          && queryType != QueryType.show_databases
+          && queryType != QueryType.show_tables
+          && queryType != QueryType.describe_table
+          && queryType != QueryType.show_scrambles)
           && getResult) {
         throw new VerdictDBException(
             "Can not issue data manipulation statements with executeQuery().");
       }
 
       VerdictResultStream stream = streamsql(query);
+
       if (stream == null) {
         return null;
       }
-
+      QueryResultAccuracyEstimator accEst = new QueryResultAccuracyEstimatorFromDifference(runningCoordinator);
       try {
-        VerdictSingleResult result = stream.next();
-        return result;
+        while (stream.hasNext()) {
+          VerdictSingleResult rs = stream.next();
+          accEst.add(rs);
+          if (accEst.isLastResultAccurate()) {
+            return rs;
+          }
+        }
+        // return the last result otherwise
+        return accEst.getAnswers().get(accEst.getAnswerCount()-1);
       } catch (RuntimeException e) {
         throw e;
       } finally {
         stream.close();
         abort();
-        //        abortInParallel(stream);
       }
     }
   }
@@ -194,6 +201,7 @@ public class ExecutionContext {
         runningCoordinator = coordinator;
       }
       VerdictResultStream stream = new VerdictResultStreamFromExecutionResultReader(reader, this);
+
       return stream;
     } else if (queryType.equals(QueryType.scrambling)) {
       log.debug("Query type: scrambling");

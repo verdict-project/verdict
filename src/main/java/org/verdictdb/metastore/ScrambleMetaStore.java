@@ -331,8 +331,8 @@ public class ScrambleMetaStore extends VerdictMetaStore {
       String sql = QueryToSql.convert(conn.getSyntax(), query);
       DbmsQueryResult result = conn.execute(sql);
 
-      Set<Pair<BaseTable, BaseTable>> deletedSet = new HashSet<>();
-      Set<Pair<BaseTable, BaseTable>> addedSet = new HashSet<>();
+      Set<Pair<String, String>> deletedSet = new HashSet<>();
+      Set<Pair<String, String>> addedSet = new HashSet<>();
 
       while (result.next()) {
         String originalSchema = result.getString(0);
@@ -341,7 +341,7 @@ public class ScrambleMetaStore extends VerdictMetaStore {
         String scrambleTable = result.getString(3);
         BaseTable original = new BaseTable(originalSchema, originalTable);
         BaseTable scramble = new BaseTable(scrambleSchema, scrambleTable);
-        Pair<BaseTable, BaseTable> pair = ImmutablePair.of(original, scramble);
+        Pair<String, String> pair = ImmutablePair.of(scrambleSchema, scrambleTable);
         String jsonString = result.getString(5);
         if (jsonString.toUpperCase().equals(DELETED)) {
           deletedSet.add(pair);

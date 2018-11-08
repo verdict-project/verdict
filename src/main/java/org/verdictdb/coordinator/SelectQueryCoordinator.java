@@ -237,6 +237,7 @@ public class SelectQueryCoordinator implements Coordinator {
     }
   }
 
+
   private SelectQuery standardizeQuery(String query) throws VerdictDBException {
     // parse the query
     RelationStandardizer.resetItemID();
