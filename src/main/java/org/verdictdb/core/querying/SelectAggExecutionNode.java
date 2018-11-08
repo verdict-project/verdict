@@ -14,6 +14,16 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
+/**
+ *
+ * When the outer query is an aggregation query that contains scramble tables,
+ * SelectAggExecutionNode will created as the source of SelectAsyncAggExecutionNode.
+ * When SelectAggExecutionNode is executed, it will create a temporary table in
+ * H2 database that stores the results of subquery.
+ *
+ * @author Shucheng Zhong
+ *
+ */
 public class SelectAggExecutionNode extends AggExecutionNode {
 
   private static final long serialVersionUID = 47947858649322912L;

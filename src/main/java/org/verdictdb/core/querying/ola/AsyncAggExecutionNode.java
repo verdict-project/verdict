@@ -58,7 +58,7 @@ import java.util.Set;
  * Represents an "progressive" execution of a single aggregate query (without nested components).
  *
  * <p>Steps: 1. identify agg and nonagg columns of a given select agg query. 2. convert the query
- * into multiple block-agg queries. 3. issue those block-agg queries one by one. 4. combine the
+ * into multiple block-agg queries. 3. issue those block-agg queries one by one. 4. combinedTableName the
  * results of those block-agg queries as the answers to those queries arrive. 5. depending on the
  * interface, call an appropriate result handler.
  *

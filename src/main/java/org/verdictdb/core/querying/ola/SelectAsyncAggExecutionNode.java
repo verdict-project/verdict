@@ -12,12 +12,21 @@ import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.core.sqlobject.*;
 import org.verdictdb.exception.VerdictDBException;
-import org.verdictdb.sqlsyntax.H2Syntax;
-import org.verdictdb.sqlwriter.SelectQueryToSql;
-
 import java.sql.SQLException;
 import java.util.*;
 
+
+/**
+ *
+ * An selectAsyncAggExecutionNode will be created when the outer query is an aggregation query
+ * that contains the scramble table. Instead of creating AsyncAggExecutionNode,
+ * selectAggExecutionNode will be created. The sources of selectAggExecutionNode are
+ * selectAggExecutionNode, which will create temporary table in H2 database. Then,
+ * selectAsyncAggExecutionNode will use the results from H2 database to calculate the query result.
+ *
+ * @author Shucheng Zhong
+ *
+ */
 public class SelectAsyncAggExecutionNode extends AsyncAggExecutionNode {
 
   private static final long serialVersionUID = 70795390245860583L;
@@ -26,9 +35,9 @@ public class SelectAsyncAggExecutionNode extends AsyncAggExecutionNode {
 
   private String selectAsyncAggTableName = "";
 
-  // The key is the values of every tier columns and the value is the scale factor.
-  // For instance, if we get condition {(tier1=0) and (tier2=1) -> 10.0}
-  // from composeScaleFactorForTierCombinations() method, this map will add {[0, 1] -> 10.0} to itself.
+  // The key of this map is a list of tier numbers (e.g., [1, 2]),
+  // and the value of this map is the corresponding scale factor (e.g., 10.0);
+  // that is, an entry of this map could be [1, 2] -> 10.0
   private HashMap<List<Integer>, Double> conditionToScaleFactorMap = new HashMap<>();
 
   private Map<Integer, String> scrambledTableTierInfo;
@@ -52,7 +61,6 @@ public class SelectAsyncAggExecutionNode extends AsyncAggExecutionNode {
    * @param aggNodeBlock
    * @return
    */
-
   public static SelectAsyncAggExecutionNode create(
       IdCreator idCreator,
       List<ExecutableNodeBase> selectAggs,
@@ -146,7 +154,7 @@ public class SelectAsyncAggExecutionNode extends AsyncAggExecutionNode {
         token.setKeyValue("aggMeta", aggMeta);
       }
       try {
-        selectAsyncAggTableName = InMemoryAggregate.combine(table, selectAsyncAggTableName, dependentQuery);
+        selectAsyncAggTableName = InMemoryAggregate.combinedTableName(table, selectAsyncAggTableName, dependentQuery);
         token.setKeyValue("tableName", selectAsyncAggTableName);
         SelectQuery query = ((CreateTableAsSelectQuery) super.createQuery(tokens)).getSelect();
         dbmsQueryResult = InMemoryAggregate.executeQuery(query);
