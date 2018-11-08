@@ -122,9 +122,9 @@ def setup_sandbox():
     cur.close()
 
     # create verdict connection
-    thispath = os.path.dirname(os.path.realpath(__file__))
-    mysql_jar = os.path.join(thispath, 'lib', 'mysql-connector-java-5.1.46.jar')
-    verdict_conn = verdict_connect(url, port, user, password, mysql_jar)
+    # thispath = os.path.dirname(os.path.realpath(__file__))
+    # mysql_jar = os.path.join(thispath, 'lib', 'mysql-connector-java-5.1.46.jar')
+    verdict_conn = verdict_connect(url, port, user, password)
 
     return (mysql_conn, verdict_conn)
 
@@ -136,10 +136,10 @@ def tear_down(mysql_conn):
     mysql_conn.close()
 
 
-def verdict_connect(host, port, usr, pwd, class_path):
+def verdict_connect(host, port, usr, pwd):
     connection_string = \
         'jdbc:mysql://{:s}:{:d}?user={:s}&password={:s}'.format(host, port, usr, pwd)
-    return pyverdict.VerdictContext(connection_string, class_path)
+    return pyverdict.VerdictContext(connection_string)
 
 
 def mysql_connect(host, port, usr, pwd):

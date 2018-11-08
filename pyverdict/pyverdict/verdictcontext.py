@@ -1,6 +1,7 @@
 import os
 import pkg_resources
 from . import verdictresult
+from .verdictexception import *
 from py4j.java_gateway import JavaGateway
 from time import sleep
 
@@ -16,7 +17,7 @@ class VerdictContext:
                           to a jar file.
     """
 
-    def __init__(self, url, extra_class_path):
+    def __init__(self, url, extra_class_path=None):
         self._gateway = self._get_gateway(extra_class_path)
         self._context = self._get_context(self._gateway, url)
 
@@ -40,18 +41,37 @@ class VerdictContext:
         """
         Returns str class path including the one for verdict jar path
         """
+        lib_jar_path = self._get_lib_jars_path()
         verdict_jar_path = self._get_verdict_jar_path()
-        str_class_path = None
+
+        if not os.path.isfile(verdict_jar_path):
+            raise VerdictException("VerdictDB's jar file is not found.")
+
+        str_class_path = '{}:{}'.format(lib_jar_path, verdict_jar_path)
+
+        if extra_class_path is None:
+            pass
         if isinstance(extra_class_path, str):
-            str_class_path = '{}:{}'.format(extra_class_path, verdict_jar_path)
+            str_class_path = '{}:{}'.format(extra_class_path, lib_jar_path)
         elif isinstance(extra_class_path, list):
             extra_class_path_str = ':'.join(extra_class_path)
-            str_class_path = '{}:{}'.format(extra_class_path_str, verdict_jar_path)
+            str_class_path = '{}:{}'.format(extra_class_path_str, lib_jar_path)
+
         return str_class_path
+
+    def _get_lib_jars_path(self):
+        root_dir = os.path.dirname(os.path.abspath(__file__))
+        lib_dir = os.path.join(root_dir, 'lib')
+        full_paths = []
+        for filename in os.listdir(lib_dir):
+            if filename[-3:] == 'jar':
+                full_path = os.path.join(lib_dir, filename)
+                full_paths.append(full_path)
+        return ':'.join(full_paths)
 
     def _get_verdict_jar_path(self):
         root_dir = os.path.dirname(os.path.abspath(__file__))
-        lib_dir = os.path.join(root_dir, 'lib')
+        lib_dir = os.path.join(root_dir, 'verdict_jar')
         version = self._get_version();
         verdict_jar_file = 'verdictdb-core-{}-jar-with-dependencies.jar'.format(version)
         verdict_jar_path = os.path.join(lib_dir, verdict_jar_file)

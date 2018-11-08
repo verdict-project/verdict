@@ -1,0 +1,3 @@
+
+class VerdictException(Exception):
+    pass

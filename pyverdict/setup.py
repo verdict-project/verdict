@@ -25,7 +25,7 @@ def get_verdict_jar(lib_dir):
 
 
 root_dir = os.path.dirname(os.path.abspath(__file__))
-lib_dir = os.path.join(root_dir, 'pyverdict', 'lib')
+lib_dir = os.path.join(root_dir, 'pyverdict', 'verdict_jar')
 
 # if the directory does not exist, we create the directory, build a jar file, and copy the jar file
 # to the lib directory.
@@ -48,7 +48,7 @@ setuptools.setup(
     author_email='mozafari@umich.edu, pyongjoo@umich.edu',
     license='Apache License, Version 2.0',
     packages=setuptools.find_packages(),
-    package_data={'pyverdict': ['lib/*.jar']},
+    package_data={'pyverdict': ['lib/*.jar', 'verdict_jar/*.jar']},
     include_package_data=True,
     install_requires=[
         'py4j >= 0.10.7',
