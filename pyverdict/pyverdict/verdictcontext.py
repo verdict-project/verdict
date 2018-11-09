@@ -1,6 +1,7 @@
 import os
 import pkg_resources
 from . import verdictresult
+from . import verdictcommon
 from .verdictexception import *
 from py4j.java_gateway import JavaGateway
 from time import sleep
@@ -90,13 +91,13 @@ class VerdictContext:
     def _get_verdict_jar_path(self):
         root_dir = os.path.dirname(os.path.abspath(__file__))
         lib_dir = os.path.join(root_dir, 'verdict_jar')
-        version = self._get_version();
+        version = self._get_verdictdb_version();
         verdict_jar_file = 'verdictdb-core-{}-jar-with-dependencies.jar'.format(version)
         verdict_jar_path = os.path.join(lib_dir, verdict_jar_file)
         return verdict_jar_path
 
-    def _get_version(self):
-        return pkg_resources.require("pyverdict")[0].version
+    def _get_verdictdb_version(self):
+        return verdictcommon.get_verdictdb_version()
 
     def _get_context(self, gateway, url):
         return gateway.jvm.org.verdictdb.VerdictContext.fromConnectionString(url)

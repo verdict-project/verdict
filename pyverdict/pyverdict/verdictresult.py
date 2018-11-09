@@ -31,6 +31,9 @@ class SingleResultSet:
         self._rows = rows
         self.rowcount = len(rows)
 
+    def column_names(self):
+        return self._heading
+
     def rows(self):
         return self._rows
 

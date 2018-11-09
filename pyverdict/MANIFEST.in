@@ -1,0 +1,4 @@
+exclude pyverdict/*
+exclude tests/*
+include pyverdict/*.py
+include pyverdict/metadata.json

@@ -1,8 +1,11 @@
+import json
 import setuptools
 import os
 import re
 import subprocess
 from build_lib import build_and_copy
+
+pyverdict_version = '0.1.2.2'
 
 
 def get_verdict_jar(lib_dir):
@@ -23,7 +26,6 @@ def get_verdict_jar(lib_dir):
             return (libfile, version)
     return (None, None)
 
-
 root_dir = os.path.dirname(os.path.abspath(__file__))
 lib_dir = os.path.join(root_dir, 'pyverdict', 'verdict_jar')
 
@@ -32,16 +34,28 @@ lib_dir = os.path.join(root_dir, 'pyverdict', 'verdict_jar')
 if not os.path.exists(lib_dir):
     build_and_copy(root_dir, lib_dir)
 
-(verdict_jar_file, version) = get_verdict_jar(lib_dir)
-if version is None:
+(verdict_jar_file, verdictdb_version) = get_verdict_jar(lib_dir)
+if verdictdb_version is None:
     build_and_copy(root_dir, lib_dir)
-    (verdict_jar_file, version) = get_verdict_jar(lib_dir)
+    (verdict_jar_file, verdictdb_version) = get_verdict_jar(lib_dir)
 
-# print('PyVerdict version: ' + version)
 
+# creates a metadata file
+metadata_filename = os.path.join(root_dir, 'pyverdict', 'metadata.json')
+metadata_file = open(metadata_filename, 'w')
+json.dump(
+    {
+        '__version__': pyverdict_version,
+        '__verdictdb_version__': verdictdb_version
+    },
+    metadata_file)
+metadata_file.close()
+
+
+# the standard setup script
 setuptools.setup(
     name='pyverdict',
-    version=version,
+    version=pyverdict_version,
     description='Python interface for VerdictDB',
     url='http://verdictdb.org',
     author='Barzan Mozafari, Yongjoo Park',
@@ -54,4 +68,4 @@ setuptools.setup(
         'py4j >= 0.10.7',
         'numpy >= 1.9'
     ]
- )
+)
