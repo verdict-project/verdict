@@ -133,7 +133,7 @@ class SingleResultSet:
             index: zero-based index of the column to read
             col_type: column type in str
         """
-        type_to_read_in_str_for_mysql = set(['date', 'timestamp', 'time'])
+        type_to_read_in_str_for_mysql = set(['date', 'timestamp', 'time', 'bigint'])
 
         if col_type in type_to_read_in_str_for_mysql:
             value_str = resultset.getString(index)
@@ -148,6 +148,8 @@ class SingleResultSet:
             elif col_type == 'time':
                 t = datetime.strptime(value_str, "%H:%M:%S")
                 return timedelta(hours=t.hour, minutes=t.minute, seconds=t.second)
+            elif col_type == 'bigint':
+                return int(value_str)
             else:
                 return None         # not supposed to reach here
         # if col_type == 'bit':

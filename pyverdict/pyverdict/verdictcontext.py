@@ -24,7 +24,11 @@ class VerdictContext:
         self._url = url
 
     def sql(self, query):
-        return verdictresult.SingleResultSet(self._context.sql(query), self)
+        java_resultset = self._context.sql(query)
+        if java_resultset is None:
+            return None
+        else:
+            return verdictresult.SingleResultSet(java_resultset, self)
 
     def get_dbtype(self):
         return self._dbtype.lower()

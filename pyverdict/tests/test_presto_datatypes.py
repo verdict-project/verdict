@@ -1,10 +1,10 @@
-
 from datetime import datetime, date
 import os
 import pyverdict
 import prestodb
+import uuid
 
-test_schema = 'pyverdict_presto_datatype_test_schema'
+test_schema = 'pyverdict_presto_datatype_test_schema' + str(uuid.uuid4())[:3]
 test_table = 'pyverdict_presto_datatype_test_table'
 
 
