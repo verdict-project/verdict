@@ -5,13 +5,14 @@ import prestodb
 import uuid
 
 test_schema = 'pyverdict_presto_datatype_test_schema' + str(uuid.uuid4())[:3]
-test_table = 'pyverdict_presto_datatype_test_table'
+test_table = 'test_table'
 
 
 def test_data_types():
     (presto_conn, verdict_conn) = setup_sandbox()
 
-    result = verdict_conn.sql('select * from {}.{} order by tinyintCol'.format(test_schema, test_table))
+    result = verdict_conn.sql(
+        'select * from {}.{} order by tinyintCol'.format(test_schema, test_table))
     types = result.types()
     rows = result.rows()
     print(types)
@@ -30,24 +31,25 @@ def test_data_types():
         expected_row = expected_rows[i]
         actual_row = rows[i]
         for j in range(len(expected_row)):
-            compare_value(expected_row[j], actual_row[j])
-
+            compare_value(expected_row[j], actual_row[j], types[j])
     tear_down(presto_conn)
 
-
-def compare_value(expected, actual):
-    if isinstance(expected, bytes):
-        if isinstance(actual, bytes):
-            assert expected == actual
-        else:
-            assert int.from_bytes(expected, byteorder='big') == actual
-    elif isinstance(expected, int) and isinstance(actual, date):
-        # due to the limitation of the underlying MySQL JDBC driver, both year(2) and year(4) are
-        # returned as the 'date' type; thus, we check the equality in this hacky way.
-        assert expected % 100 == actual.year % 100
+def compare_value(expected, actual, coltype):
+    if coltype == 'decimal' and expected is not None:
+        assert float(expected) == actual
     else:
         assert expected == actual
-
+    # if isinstance(expected, bytes):
+    #     if isinstance(actual, bytes):
+    #         assert expected == actual
+    #     else:
+    #         assert int.from_bytes(expected, byteorder='big') == actual
+    # elif isinstance(expected, int) and isinstance(actual, date):
+    #     # due to the limitation of the underlying MySQL JDBC driver, both year(2) and year(4) are
+    #     # returned as the 'date' type; thus, we check the equality in this hacky way.
+    #     assert expected % 100 == actual.year % 100
+    # else:
+    #     assert expected == actual
 
 def setup_sandbox():
     '''
@@ -70,13 +72,10 @@ def setup_sandbox():
     cur = presto_conn.cursor()
     cur.execute("DROP TABLE IF EXISTS {}.{}".format(test_schema, test_table))
     cur.fetchall()
-
     cur.execute('DROP SCHEMA IF EXISTS {}'.format(test_schema))
     cur.fetchall()
-
     cur.execute('CREATE SCHEMA IF NOT EXISTS ' + test_schema)
     cur.fetchall()
-
     cur.execute("""
         CREATE TABLE IF NOT EXISTS {}.{} (
           tinyintCol          TINYINT,
@@ -125,9 +124,7 @@ def setup_sandbox():
     # thispath = os.path.dirname(os.path.realpath(__file__))
     # mysql_jar = os.path.join(thispath, 'lib', 'mysql-connector-java-5.1.46.jar')
     verdict_conn = verdict_connect(host, port, catalog, user)
-
     return (presto_conn, verdict_conn)
-
 
 def tear_down(presto_conn):
     cur = presto_conn.cursor()
@@ -136,12 +133,10 @@ def tear_down(presto_conn):
     cur.execute('DROP SCHEMA IF EXISTS {}'.format(test_schema))
     cur.fetchall()
 
-
 def verdict_connect(host, port, catalog, usr):
     connection_string = \
         'jdbc:presto://{:s}:{:d}/{:s}?user={:s}'.format(host, port, catalog, usr)
     return pyverdict.VerdictContext(connection_string)
-
 
 def presto_connect(host, port, usr, catalog):
     return prestodb.dbapi.connect(

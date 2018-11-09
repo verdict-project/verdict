@@ -1,36 +1,48 @@
 from datetime import datetime, date
 import os
 import pyverdict
-import pymysql
+import prestodb
 import uuid
 
-test_schema = 'pyverdict_mysql_simple_query_test_schema' + str(uuid.uuid4())[:3]
+test_schema = 'pyverdict_presto_simple_query_test_schema' + str(uuid.uuid4())[:3]
 test_table = 'test_table'
 test_scramble = 'test_scramble'
 
-mysql_conn = None
+presto_conn = None
 verdict_conn = None
 
 
 def setup_module(module):
-    global mysql_conn, verdict_conn
+    global presto_conn, verdict_conn
 
-    host = 'localhost'
-    port = 3306
-    user = 'root'
+    hostport = os.environ['VERDICTDB_TEST_PRESTO_HOST']
+    host, port = hostport.split(':')
+    port = int(port)
+    catalog = os.environ['VERDICTDB_TEST_PRESTO_CATALOG']
+    user = os.environ['VERDICTDB_TEST_PRESTO_USER']
     password = ''
 
-    # setup regular mysql_conn
-    mysql_conn = pymysql.connect(host=host, port=port, user=user, passwd=password, autocommit=True)
+    # setup regular presto_conn
+    presto_conn = prestodb.dbapi.connect(
+        host=host, port=port, user=user, catalog=catalog)
 
     # create table and populate data
-    cur = mysql_conn.cursor()
-    cur.execute('DROP SCHEMA IF EXISTS ' + test_schema)
+    cur = presto_conn.cursor()
+    cur.execute("DROP TABLE IF EXISTS {}.{}".format(test_schema, test_table))
+    cur.fetchall()
+    cur.execute("DROP TABLE IF EXISTS {}.{}".format(test_schema, test_scramble))
+    cur.fetchall()
+    cur.execute('DROP SCHEMA IF EXISTS {}'.format(test_schema))
+    cur.fetchall()
     cur.execute('CREATE SCHEMA IF NOT EXISTS ' + test_schema)
+    cur.fetchall()
+
     cur.execute("""
         CREATE TABLE IF NOT EXISTS {}.{} (
-          intCol              INT(4)
+          intCol              INTEGER
         )""".format(test_schema, test_table))
+    cur.fetchall()
+
     sql = 'insert into {}.{} values'.format(test_schema, test_table)
     for i in range(1000):
         if i == 0:
@@ -39,21 +51,24 @@ def setup_module(module):
             sql = sql + ', '
         sql = sql + '({:d})'.format(i)
     cur.execute(sql)
-    cur.close()
+    cur.fetchall()
 
     # setup verdict_conn
     connection_string = \
-        'jdbc:mysql://{:s}:{:d}?user={:s}&password={:s}'.format(host, port, user, password)
+        'jdbc:presto://{:s}:{:d}/{:s}?user={:s}'.format(host, port, catalog, user)
     verdict_conn = pyverdict.VerdictContext(connection_string)
     verdict_conn.sql('CREATE SCRAMBLE {}.{} FROM {}.{} BLOCKSIZE 100'
         .format(test_schema, test_scramble, test_schema, test_table))
 
 
 def teardown_module(module):
-    cur = mysql_conn.cursor()
-    cur.execute('DROP SCHEMA IF EXISTS ' + test_schema)
-    cur.close()
-    mysql_conn.close()
+    cur = presto_conn.cursor()
+    cur.execute("DROP TABLE IF EXISTS {}.{}".format(test_schema, test_table))
+    cur.fetchall()
+    cur.execute("DROP TABLE IF EXISTS {}.{}".format(test_schema, test_scramble))
+    cur.fetchall()
+    cur.execute('DROP SCHEMA IF EXISTS {}'.format(test_schema))
+    cur.fetchall()
 
 
 class TestClass:
@@ -88,16 +103,16 @@ class TestClass:
         print('result: ' + str(rows))
         # print([type(x) for x in rows[0]])
 
-        cur = mysql_conn.cursor()
+        cur = presto_conn.cursor()
         cur.execute(regular_sql)
         expected_rows = cur.fetchall()
-        print('mysql query: ' + str(regular_sql))
+        print('presto query: ' + str(regular_sql))
         print('result: ' + str(expected_rows))
-        cur.close()
 
         # Now test
         assert len(expected_rows) == len(rows)
         assert len(expected_rows) == result.rowcount
+
         for i in range(len(expected_rows)):
             expected_row = expected_rows[i]
             actual_row = rows[i]
@@ -106,12 +121,13 @@ class TestClass:
 
     def compare_approximate_query_result(self, sql):
         result = verdict_conn.sql(sql)
+        types = result.types()
         rows = result.rows()
-
-        cur = mysql_conn.cursor()
+        print('approx answer: ' + str(types))
+        print('approx results: ' + str(rows))
+        cur = presto_conn.cursor()
         cur.execute(sql)
         expected_rows = cur.fetchall()
-        cur.close()
 
         # Now test
         assert len(expected_rows) == len(rows)
@@ -127,19 +143,10 @@ class TestClass:
         self.compare_query_result(verdict_sql, sql)
 
     def compare_value(self, expected, actual):
-        if isinstance(expected, bytes):
-            if isinstance(actual, bytes):
-                assert expected == actual
-            else:
-                assert int.from_bytes(expected, byteorder='big') == actual
-        elif isinstance(expected, int) and isinstance(actual, date):
-            # due to the limitation of the underlying MySQL JDBC driver, both year(2) and year(4) are
-            # returned as the 'date' type; thus, we check the equality in this hacky way.
-            assert expected % 100 == actual.year % 100
-        else:
-            assert expected == actual
+        assert expected == actual
 
     def approximate_compare_value(self, expected, actual):
+        assert expected is not None
         assert actual is not None
         assert expected * 1.2 >= actual
         assert expected * 0.8 <= actual

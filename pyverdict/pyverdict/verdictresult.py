@@ -71,7 +71,7 @@ class SingleResultSet:
                 return None
 
             if col_type == 'decimal':
-                return value_str
+                return float(value_str)
             elif col_type == 'date':
                 return value_str
             elif col_type == 'timestamp':

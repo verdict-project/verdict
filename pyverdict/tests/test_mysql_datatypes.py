@@ -5,7 +5,7 @@ import pymysql
 import uuid
 
 test_schema = 'pyverdict_mysql_datatype_test_schema' + str(uuid.uuid4())[:3]
-test_table = 'pyverdict_mysql_datatype_test_table'
+test_table = 'test_table'
 
 def test_data_types():
     (mysql_conn, verdict_conn) = setup_sandbox()
