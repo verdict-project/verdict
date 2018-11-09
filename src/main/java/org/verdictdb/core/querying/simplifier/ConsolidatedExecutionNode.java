@@ -234,11 +234,13 @@ public class ConsolidatedExecutionNode extends QueryNodeWithPlaceHolders {
     // DbmsQueryResultMetaData should be false for all columns.
     if (token.containsKey("queryResult")) {
       DbmsQueryResult queryResult = (DbmsQueryResult) token.getValue("queryResult");
-      List<Boolean> isAggregate = new ArrayList<>();
-      for (int i=0;i<queryResult.getColumnCount();i++) {
-        isAggregate.add(false);
+      if (queryResult.getColumnCount() != queryResult.getMetaData().isAggregate.size()) {
+        List<Boolean> isAggregate = new ArrayList<>();
+        for (int i=0;i<queryResult.getColumnCount();i++) {
+          isAggregate.add(false);
+        }
+        queryResult.getMetaData().isAggregate = isAggregate;
       }
-      queryResult.getMetaData().isAggregate = isAggregate;
     }
     return token;
   }
