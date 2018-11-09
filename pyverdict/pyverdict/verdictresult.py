@@ -61,7 +61,18 @@ class SingleResultSet:
     def _read_value_presto(self, resultset, index, col_type):
         """
         Type conversion rule (Presto):
-        'Decimal' => str,
+        'tinyint'    => int
+        'boolean'    => int
+        'smallint'   => int
+        'integer'    => int
+        'bigint'     => int
+        'decimal'    => float
+        'real'       => float
+        'double'     => float
+        'date'       => str
+        'timestamp'  => str
+        'char'       => str
+        'varchar'    => str
         """
         type_to_read_in_str_for_presto = set(['decimal', 'date', 'timestamp'])
 

@@ -17,6 +17,7 @@ def test_data_types():
     rows = result.rows()
     print(types)
     print(rows)
+    print([[type(x) for x in row] for row in rows])
 
     cur = presto_conn.cursor()
     cur.execute('select * from {}.{} order by tinyintCol'.format(test_schema, test_table))
@@ -39,17 +40,6 @@ def compare_value(expected, actual, coltype):
         assert float(expected) == actual
     else:
         assert expected == actual
-    # if isinstance(expected, bytes):
-    #     if isinstance(actual, bytes):
-    #         assert expected == actual
-    #     else:
-    #         assert int.from_bytes(expected, byteorder='big') == actual
-    # elif isinstance(expected, int) and isinstance(actual, date):
-    #     # due to the limitation of the underlying MySQL JDBC driver, both year(2) and year(4) are
-    #     # returned as the 'date' type; thus, we check the equality in this hacky way.
-    #     assert expected % 100 == actual.year % 100
-    # else:
-    #     assert expected == actual
 
 def setup_sandbox():
     '''

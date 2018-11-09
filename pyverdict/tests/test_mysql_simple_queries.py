@@ -140,6 +140,7 @@ class TestClass:
             assert expected == actual
 
     def approximate_compare_value(self, expected, actual):
+        assert expected is not None
         assert actual is not None
         assert expected * 1.2 >= actual
         assert expected * 0.8 <= actual
