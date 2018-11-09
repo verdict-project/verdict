@@ -20,9 +20,23 @@ class VerdictContext:
     def __init__(self, url, extra_class_path=None):
         self._gateway = self._get_gateway(extra_class_path)
         self._context = self._get_context(self._gateway, url)
+        self._dbtype = self._get_dbtype(url)
+        self._url = url
 
     def sql(self, query):
-        return verdictresult.SingleResultSet(self._context.sql(query))
+        return verdictresult.SingleResultSet(self._context.sql(query), self)
+
+    def get_dbtype(self):
+        return self._dbtype.lower()
+
+    def _get_dbtype(self, url):
+        tokenized_url = url.split(':')
+        if tokenized_url[0] != 'jdbc':
+            raise VerdictException('The url must start with \'jdbc\'')
+        if len(tokenized_url) < 2:
+            raise VerdictException(
+                'This url does not seem to have valid connection information: ' + url)
+        return tokenized_url[1]
 
     def _get_gateway(self, extra_class_path):
         """

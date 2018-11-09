@@ -11,25 +11,26 @@ test_table = 'pyverdict_presto_datatype_test_table'
 def test_data_types():
     (presto_conn, verdict_conn) = setup_sandbox()
 
-    # result = verdict_conn.sql('select * from {}.{}'.format(test_schema, test_table))
-    # types = result.types()
-    # rows = result.rows()
-    # print(rows)
+    result = verdict_conn.sql('select * from {}.{} order by tinyintCol'.format(test_schema, test_table))
+    types = result.types()
+    rows = result.rows()
+    print(types)
+    print(rows)
 
     cur = presto_conn.cursor()
-    cur.execute('select * from {}.{}'.format(test_schema, test_table))
+    cur.execute('select * from {}.{} order by tinyintCol'.format(test_schema, test_table))
     expected_rows = cur.fetchall()
     print(expected_rows)
 
     # Now test
-    # assert len(expected_rows) == len(rows)
-    # assert len(expected_rows) == result.rowcount
-    #
-    # for i in range(len(expected_rows)):
-    #     expected_row = expected_rows[i]
-    #     actual_row = rows[i]
-    #     for j in range(len(expected_row)):
-    #         compare_value(expected_row[j], actual_row[j])
+    assert len(expected_rows) == len(rows)
+    assert len(expected_rows) == result.rowcount
+
+    for i in range(len(expected_rows)):
+        expected_row = expected_rows[i]
+        actual_row = rows[i]
+        for j in range(len(expected_row)):
+            compare_value(expected_row[j], actual_row[j])
 
     tear_down(presto_conn)
 
@@ -49,6 +50,14 @@ def compare_value(expected, actual):
 
 
 def setup_sandbox():
+    '''
+    We test the data types defined here: https://prestodb.io/docs/current/language/types.html
+    except for JSON, INTERVAL, ARRAY, MAP, ROW, IPADDRESS
+
+    Note:
+    1. "time with time zone" is not supported: "Unsupported Hive type: time with time zone"
+    2. "timestamp with time zone" is not supported: Unsupported Hive type: timestamp with time zone
+    '''
     hostport = os.environ['VERDICTDB_TEST_PRESTO_HOST']
     host, port = hostport.split(':')
     port = int(port)
@@ -59,6 +68,9 @@ def setup_sandbox():
     # create table and populate data
     presto_conn = presto_connect(host, port, user, catalog)
     cur = presto_conn.cursor()
+    cur.execute("DROP TABLE IF EXISTS {}.{}".format(test_schema, test_table))
+    cur.fetchall()
+
     cur.execute('DROP SCHEMA IF EXISTS {}'.format(test_schema))
     cur.fetchall()
 
@@ -67,28 +79,47 @@ def setup_sandbox():
 
     cur.execute("""
         CREATE TABLE IF NOT EXISTS {}.{} (
-          intCol              INT
+          tinyintCol          TINYINT,
+          boolCol             BOOLEAN,
+          smallintCol         SMALLINT,
+          integerCol          INTEGER,
+          bigintCol           BIGINT,
+          decimalCol          DECIMAL(4,2),
+          realCol             REAL,
+          doubleCol           DOUBLE,
+          dateCol             DATE,
+          timestampCol        TIMESTAMP,
+          charCol             CHAR(4),
+          varcharCol          VARCHAR(4)
         )""".format(test_schema, test_table)
         )
     cur.fetchall()
-    # cur.execute("""
-    #     INSERT INTO {}.{} VALUES (
-    #       1, 2, 1, 1, 1, 1, 1, 1,
-    #       1.0, 1.0, 1.0, 1.0, 1.0,
-    #       '2018-12-31', '2018-12-31 01:00:00', '2018-12-31 00:00:01', '10:59:59',
-    #       18, 2018, 'abc', 'abc', '10', '10',
-    #       '10', 'a', '10', 'abc', '1110', 'abc', '1110', 'abc', '1', '2'
-    #     )""".format(test_schema, test_table)
-    #     )
-    # cur.execute("""
-    #     INSERT INTO {}.{} VALUES (
-    #         NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-    #         NULL, NULL, NULL, NULL, NULL,
-    #         NULL, NULL, NULL, NULL,
-    #         NULL, NULL, NULL, NULL, NULL, NULL,
-    #         NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
-    #     )""".format(test_schema, test_table)
-    #     )
+
+    cur.execute("""
+        INSERT INTO {}.{} VALUES (
+          cast(1 as tinyint), true,
+          cast(2 as smallint),
+          cast(3 as integer),
+          cast(4 as bigint),
+          cast(5.0 as decimal(4,2)),
+          cast(1.0 as real),
+          cast(1.0 as double),
+          cast('2018-12-31' as date),
+          cast('2018-12-31 00:00:01' as timestamp),
+          cast('ab' as char(4)),
+          cast('abcd' as varchar(4))
+        )""".format(test_schema, test_table)
+        )
+    cur.fetchall()
+
+    cur.execute("""
+        INSERT INTO {}.{} VALUES (
+            NULL, NULL, NULL, NULL, NULL,
+            NULL, NULL, NULL, NULL, NULL,
+            NULL, NULL
+        )""".format(test_schema, test_table)
+        )
+    cur.fetchall()
 
     # create verdict connection
     # thispath = os.path.dirname(os.path.realpath(__file__))

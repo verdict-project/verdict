@@ -9,50 +9,7 @@ class SingleResultSet:
 
     The data retrieval roughly follows PEP 249:
     https://www.python.org/dev/peps/pep-0249/#type-objects-and-constructors
-
-    Due to the reliance on the underlying JDBC library, we cannot always distinguish the exact
-    type of the underlying data; we can only set the type according to the type indentifier as
-    indicated by the JDBC library itself. For example, MySQL's library does not distinguish bit and
-    boolean by passing -7 for both types while their actual meanings are different and they are
-    separate types defined in java.sql.Types.
-
-    Type conversion rule (MySQL):
-    'bit'                     => boolean,   # due to MySQL driver bug ('bit' is treated as boolean)
-    'tinyint'                 => int,
-    'bool'                    => boolean,
-    'smallint'                => int,
-    'medimumInteger'          => int,
-    'int'                     => int,
-    'integer                  => int,
-    'bigint'                  => int,
-    'decimal'                 => decimal.Decimal,
-    'dec'                     => decimal.Decimal,
-    'real'                    => float,
-    'double'                  => float,
-    'doubleprecision'         => float,
-    'date'      => JavaObject => datetime.date,
-    'datetime'  => JavaObject => datetime.datetime,
-    'timestamp' => JavaObject => datetime.datetime,
-    'time'      => JavaObject => datetime.timedelta,
-    'year(2)'   => JavaObject => datetime.date,
-    'year(4)'   => JavaObject => datetime.date,
-    'char'                    => str,
-    'varchar'                 => str,
-    'binary'                  => bytes,
-    'varbinary'               => bytes,
-    'tinyblob'                => bytes,
-    'tinytext'                => str,
-    'blob'                    => bytes,
-    'text'                    => str,
-    'mediumBlob'              => bytes,
-    'medimumText'             => str,
-    'longBlob'                => bytes,
-    'longText'                => str,
-    'enumCol'                 => str,
-    'setCol'                  => str
     """
-
-    type_to_read_in_str = set(['date', 'timestamp', 'time'])
 
     python_type_to_numpy_type = {
         bool: np.bool_,
@@ -65,7 +22,8 @@ class SingleResultSet:
         timedelta: np.timedelta64
     }
 
-    def __init__(self, resultset):
+    def __init__(self, resultset, verdict_context):
+        self._verdict_context = verdict_context
         (heading, column_inttypes, column_types, rows) = self._read_all(resultset)
         self._heading = heading
         self._column_inttypes = column_inttypes
@@ -92,7 +50,80 @@ class SingleResultSet:
         return None
 
     def _read_value(self, resultset, index, col_type):
+        dbtype = self._verdict_context.get_dbtype()
+        if dbtype == 'mysql':
+            return self._read_value_mysql(resultset, index, col_type)
+        elif dbtype == 'presto':
+            return self._read_value_presto(resultset, index, col_type)
+        else:
+            raise NotImplementedError
+
+    def _read_value_presto(self, resultset, index, col_type):
+        """
+        Type conversion rule (Presto):
+        'Decimal' => str,
+        """
+        type_to_read_in_str_for_presto = set(['decimal', 'date', 'timestamp'])
+
+        if col_type in type_to_read_in_str_for_presto:
+            value_str = resultset.getString(index)
+            if value_str is None:
+                return None
+
+            if col_type == 'decimal':
+                return value_str
+            elif col_type == 'date':
+                return value_str
+            elif col_type == 'timestamp':
+                return value_str[:17] + '%06.3f'%float(value_str[18:])
+            else:
+                return None     # not supposed to reach here
+
+        return resultset.getValue(index)
+
+    def _read_value_mysql(self, resultset, index, col_type):
         """Reads the value in a type-sensitive way
+
+        Due to the reliance on the underlying JDBC library, we cannot always distinguish the exact
+        type of the underlying data; we can only set the type according to the type indentifier as
+        indicated by the JDBC library itself. For example, MySQL's library does not distinguish bit and
+        boolean by passing -7 for both types while their actual meanings are different and they are
+        separate types defined in java.sql.Types.
+
+        Type conversion rule (MySQL):
+        'bit'                     => boolean,   # due to MySQL driver bug ('bit' is treated as boolean)
+        'tinyint'                 => int,
+        'bool'                    => boolean,
+        'smallint'                => int,
+        'medimumInteger'          => int,
+        'int'                     => int,
+        'integer                  => int,
+        'bigint'                  => int,
+        'decimal'                 => decimal.Decimal,
+        'dec'                     => decimal.Decimal,
+        'real'                    => float,
+        'double'                  => float,
+        'doubleprecision'         => float,
+        'date'      => JavaObject => datetime.date,
+        'datetime'  => JavaObject => datetime.datetime,
+        'timestamp' => JavaObject => datetime.datetime,
+        'time'      => JavaObject => datetime.timedelta,
+        'year(2)'   => JavaObject => datetime.date,
+        'year(4)'   => JavaObject => datetime.date,
+        'char'                    => str,
+        'varchar'                 => str,
+        'binary'                  => bytes,
+        'varbinary'               => bytes,
+        'tinyblob'                => bytes,
+        'tinytext'                => str,
+        'blob'                    => bytes,
+        'text'                    => str,
+        'mediumBlob'              => bytes,
+        'medimumText'             => str,
+        'longBlob'                => bytes,
+        'longText'                => str,
+        'enumCol'                 => str,
+        'setCol'                  => str
 
         Time-related Java objects are read as py4j.JavaObject by default. To avoid this, we read
         them as str and convert to an appropriate python object.
@@ -102,7 +133,9 @@ class SingleResultSet:
             index: zero-based index of the column to read
             col_type: column type in str
         """
-        if col_type in SingleResultSet.type_to_read_in_str:
+        type_to_read_in_str_for_mysql = set(['date', 'timestamp', 'time'])
+
+        if col_type in type_to_read_in_str_for_mysql:
             value_str = resultset.getString(index)
             if value_str is None:
                 return None
