@@ -229,6 +229,17 @@ public class ConsolidatedExecutionNode extends QueryNodeWithPlaceHolders {
   public ExecutionInfoToken createToken(DbmsQueryResult result) {
     // pass the information from the internal parent node
     ExecutionInfoToken token = parentNode.createToken(result);
+    // Addition check that the query is a query contains Asterisk column that without asyncAggExecutionNode.
+    // For instance, query like 'select * from lineitem'. In that case, the isAggregate field of
+    // DbmsQueryResultMetaData should be false for all columns.
+    if (token.containsKey("queryResult")) {
+      DbmsQueryResult queryResult = (DbmsQueryResult) token.getValue("queryResult");
+      List<Boolean> isAggregate = new ArrayList<>();
+      for (int i=0;i<queryResult.getColumnCount();i++) {
+        isAggregate.add(false);
+      }
+      queryResult.getMetaData().isAggregate = isAggregate;
+    }
     return token;
   }
 
