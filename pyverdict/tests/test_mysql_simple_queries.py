@@ -147,5 +147,6 @@ def compare_value(expected, actual):
 
 
 def approximate_compare_value(expected, actual):
-    assert expected * 1.1 >= actual
-    assert expected * 0.9 <= actual
+    assert actual is not None
+    assert expected * 1.2 >= actual
+    assert expected * 0.8 <= actual
