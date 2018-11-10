@@ -361,8 +361,8 @@ jobs:
           keys:
           - verdict-dependencies-{{ checksum "pom.xml" }}
       - run: pwd; ls;
-      - run: cd pyverdict; python setup.py install; pip install pytest PyMySQL presto-python-client;
-      # - run: pwd; ls; cd pyverdict; pwd; ls;
+      - run: cd pyverdict; pip install pytest PyMySQL presto-python-client; python setup.py install;
+      # - run: cd pyverdict; pwd; ls;
       - run: cd pyverdict; pytest;
       - save_cache:
           paths:
