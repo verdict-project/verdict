@@ -32,6 +32,3 @@ def build_and_copy(root_dir, lib_dir):
     subprocess.check_call(['rm', '-rf', os.path.join(lib_dir, '*verdictdb*.jar')])
     subprocess.check_call(['cp', os.path.join('target', jar_name), lib_dir])
     os.chdir(root_dir)
-
-if __name__ == "__main__":
-    build_and_copy()

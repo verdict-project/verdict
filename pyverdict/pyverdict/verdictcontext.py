@@ -13,6 +13,7 @@ class VerdictContext:
     The path to the jdbc drivers must be specified to use them.
 
     Args:
+        url: jdbc connection string
         extra_class_path: The extra classpath used in addition to verdictdb's jar file. This arg
                           can either be a single str or a list of str; each str is an absolute path
                           to a jar file.
@@ -23,6 +24,23 @@ class VerdictContext:
         self._context = self._get_context(self._gateway, url)
         self._dbtype = self._get_dbtype(url)
         self._url = url
+
+    @classmethod
+    def newMySqlContext(cls, host, user, password, port=3306):
+        connection_string = \
+            'jdbc:mysql://{:s}:{:d}?user={:s}&password={:s}'.format(host, port, user, password)
+        return cls(connection_string)
+
+    @classmethod
+    def newPrestoContext(cls, host, catalog, user, password=None, port=8081):
+        if password is None:
+            connection_string = \
+                'jdbc:presto://{:s}:{:d}/{:s}?user={:s}'.format(host, port, catalog, user)
+        else:
+            connection_string = \
+                'jdbc:presto://{:s}:{:d}/{:s}?user={:s}&password={:s}'.format(
+                    host, port, catalog, user, password)
+        return cls(connection_string)
 
     def sql(self, query):
         java_resultset = self._context.sql(query)
