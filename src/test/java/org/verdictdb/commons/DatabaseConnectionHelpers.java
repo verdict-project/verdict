@@ -13,6 +13,8 @@ import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.sqlsyntax.ImpalaSyntax;
 import org.verdictdb.sqlsyntax.PostgresqlSyntax;
+import org.verdictdb.sqlsyntax.PrestoHiveSyntax;
+import org.verdictdb.sqlsyntax.PrestoSyntax;
 import org.verdictdb.sqlsyntax.RedshiftSyntax;
 
 import java.io.File;
@@ -1331,10 +1333,77 @@ public class DatabaseConnectionHelpers {
 
     return conn;
   }
+  
+  public static Connection setupPrestoForDataTypeTest(
+      String connectionString, String user, String password, String schema, String table) 
+          throws SQLException, VerdictDBDbmsException{
+    Connection conn = DriverManager.getConnection(connectionString, user, password);
+    DbmsConnection dbmsConn = new JdbcConnection(conn, new PrestoHiveSyntax());
+    
+    dbmsConn.execute(String.format("CREATE SCHEMA IF NOT EXISTS \"%s\"", schema));
+    dbmsConn.execute(String.format("DROP TABLE IF EXISTS \"%s\".\"%s\"", schema, table));
+    
+    dbmsConn.execute(
+        String.format(
+            "CREATE TABLE \"%s\".\"%s\" ("
+                + "tinyintCol          TINYINT,"
+                + "boolCol             BOOLEAN,"
+                + "smallintCol         SMALLINT,"
+                + "integerCol          INTEGER,"
+                + "bigintCol           BIGINT,"
+                + "decimalCol          DECIMAL(4,2),"
+                + "realCol             REAL,"
+                + "doubleCol           DOUBLE,"
+                + "dateCol             DATE,"
+                + "timestampCol        TIMESTAMP,"
+                + "charCol             CHAR(4),"
+                + "varcharCol          VARCHAR(4))",
+        schema, table));
+    
+    List<String> insertDataList = new ArrayList<>();
+    insertDataList.add("cast(1 as tinyint)");   // tinyint
+    insertDataList.add("true");                 // boolean
+    insertDataList.add("cast(2 as smallint)");  // smallint
+    insertDataList.add("cast(3 as integer)");   // integer
+    insertDataList.add("cast(4 as bigint)");    // bigint
+    insertDataList.add("cast(5.0 as decimal(4,2))");  // decimal
+    insertDataList.add("cast(1.0 as real)");          // real
+    insertDataList.add("cast(1.0 as double)");        // double
+    insertDataList.add("cast('2018-12-31' as date)"); // date
+    insertDataList.add("cast('2018-12-31 00:00:01' as timestamp)"); // timestamp
+    insertDataList.add("cast('ab' as char(4))");      // char
+    insertDataList.add("cast('abcd' as varchar(4))"); // varchar
+
+    dbmsConn.execute(
+        String.format(
+            "INSERT INTO \"%s\".\"%s\" VALUES (%s)",
+            schema, table, Joiner.on(",").join(insertDataList)));
+
+    List<String> insertNullDataList = new ArrayList<>();
+    insertNullDataList.add("NULL"); // tinyint
+    insertNullDataList.add("NULL"); // boolean
+    insertNullDataList.add("NULL"); // smallint
+    insertNullDataList.add("NULL"); // integer
+    insertNullDataList.add("NULL"); // bigint
+    insertNullDataList.add("NULL"); // decimal
+    insertNullDataList.add("NULL"); // real
+    insertNullDataList.add("NULL"); // double
+    insertNullDataList.add("NULL"); // date
+    insertNullDataList.add("NULL"); // timestamp
+    insertNullDataList.add("NULL"); // char
+    insertNullDataList.add("NULL"); // varchar
+
+    dbmsConn.execute(
+        String.format(
+            "INSERT INTO \"%s\".\"%s\" VALUES (%s)",
+            schema, table, Joiner.on(",").join(insertNullDataList)));
+
+    return conn;
+  }
 
   public static Connection setupImpalaForDataTypeTest(
       String connectionString, String user, String password, String schema, String table)
-      throws SQLException, VerdictDBDbmsException {
+          throws SQLException, VerdictDBDbmsException {
     Connection conn = DriverManager.getConnection(connectionString, user, password);
     DbmsConnection dbmsConn = new JdbcConnection(conn, new ImpalaSyntax());
 
