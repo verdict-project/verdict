@@ -40,7 +40,6 @@ class VerdictContext:
             connection_string = \
                 'jdbc:presto://{:s}:{:d}/{:s}?user={:s}&password={:s}'.format(
                     host, port, catalog, user, password)
-        # print(connection_string)
         return cls(connection_string)
 
     def sql(self, query):
