@@ -80,14 +80,14 @@ public class AsyncAggScaleResultMultiTierTest {
     String mysqlConnectionString =
         String.format("jdbc:mysql://%s?autoReconnect=true&useSSL=false", MYSQL_HOST);
     conn = DriverManager.getConnection(mysqlConnectionString, MYSQL_UESR, MYSQL_PASSWORD);
-    
+
     stmt = conn.createStatement();
     stmt.execute(String.format("DROP SCHEMA IF EXISTS `%s`", originalSchema));
     stmt.execute(String.format("CREATE SCHEMA IF NOT EXISTS `%s`", originalSchema));
     stmt.executeUpdate(String.format("CREATE TABLE `%s`.`%s` (`value` float, `verdictdbtier` int, `verdictdbaggblock` int)", originalSchema, originalTable));
     for (int i = 0; i < 15; i++) {
       stmt.executeUpdate(String.format("INSERT INTO `%s`.`%s` (`value`, `verdictdbtier`, `verdictdbaggblock`) VALUES (%f, %s, %s)",
-          originalSchema, originalTable, (float)1, i%3==0?0:1, i/3));
+          originalSchema, originalTable, (float) 1, i % 3 == 0 ? 0 : 1, i / 3));
     }
 
     UniformScrambler scrambler =
@@ -100,7 +100,7 @@ public class AsyncAggScaleResultMultiTierTest {
     tablemeta.setCumulativeDistributionForTier(distribution);
     scrambledTable = tablemeta.getTableName();
     meta.addScrambleMeta(tablemeta);
-    
+
     // create scrambled table
 //    DbmsConnection dbmsConn = JdbcConnection.create(conn);
 //    String scrambleSchema = MYSQL_DATABASE;
@@ -133,7 +133,7 @@ public class AsyncAggScaleResultMultiTierTest {
   }
 
   @Test
-  public void simpleAggTest1() throws VerdictDBException,SQLException {
+  public void simpleAggTest1() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select avg(value) from originalTable";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
@@ -147,13 +147,14 @@ public class AsyncAggScaleResultMultiTierTest {
     Dimension d1 = new Dimension("originalSchema", "originalTable", 0, 0);
     assertEquals(
         new HyperTableCube(Arrays.asList(d1)),
-        ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getAggMeta().getCubes().get(0));
-    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMetaSet(meta);
+        ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0)).getAggMeta().getCubes().get(0));
+    ((AsyncAggExecutionNode) queryExecutionPlan.getRoot()).setScrambleMetaSet(meta);
 
 
     JdbcConnection jdbcConnection = new JdbcConnection(conn, new MysqlSyntax());
     jdbcConnection.setOutputDebugMessage(true);
 //    ExecutablePlanRunner.runTillEnd(jdbcConnection, queryExecutionPlan);
+
 
     ExecutionResultReader reader = ExecutablePlanRunner.getResultReader(jdbcConnection, queryExecutionPlan);
     int resultReturnedCnt = 0;
@@ -161,13 +162,15 @@ public class AsyncAggScaleResultMultiTierTest {
       DbmsQueryResult dbmsQueryResult = reader.next();
       dbmsQueryResult.next();
       resultReturnedCnt++;
-      assertEquals(1.0, (double)dbmsQueryResult.getValue(0), 1e-6);
+      if (resultReturnedCnt == 5) {
+        assertEquals(1.0, (double) dbmsQueryResult.getValue(0), 1e-6);
+      }
     }
     assertEquals(5, resultReturnedCnt);
   }
 
   @Test
-  public void simpleAggTest2() throws VerdictDBException,SQLException {
+  public void simpleAggTest2() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select count(value) from originalTable";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
@@ -181,8 +184,8 @@ public class AsyncAggScaleResultMultiTierTest {
     Dimension d1 = new Dimension("originalSchema", "originalTable", 0, 0);
     assertEquals(
         new HyperTableCube(Arrays.asList(d1)),
-        ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getAggMeta().getCubes().get(0));
-    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMetaSet(meta);
+        ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0)).getAggMeta().getCubes().get(0));
+    ((AsyncAggExecutionNode) queryExecutionPlan.getRoot()).setScrambleMetaSet(meta);
 
 
     JdbcConnection jdbcConnection = new JdbcConnection(conn, new MysqlSyntax());
@@ -194,13 +197,15 @@ public class AsyncAggScaleResultMultiTierTest {
       DbmsQueryResult dbmsQueryResult = reader.next();
       dbmsQueryResult.next();
       resultReturnedCnt++;
-      assertEquals(15, ((BigDecimal)dbmsQueryResult.getValue(0)).longValue());
+      if (resultReturnedCnt == 5) {
+        assertEquals(15, ((BigDecimal) dbmsQueryResult.getValue(0)).longValue());
+      }
     }
     assertEquals(5, resultReturnedCnt);
   }
 
   @Test
-  public void simpleAggTest3() throws VerdictDBException,SQLException {
+  public void simpleAggTest3() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select sum(value) from originalTable";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
@@ -214,8 +219,8 @@ public class AsyncAggScaleResultMultiTierTest {
     Dimension d1 = new Dimension("originalSchema", "originalTable", 0, 0);
     assertEquals(
         new HyperTableCube(Arrays.asList(d1)),
-        ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getAggMeta().getCubes().get(0));
-    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMetaSet(meta);
+        ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0)).getAggMeta().getCubes().get(0));
+    ((AsyncAggExecutionNode) queryExecutionPlan.getRoot()).setScrambleMetaSet(meta);
 
 
     JdbcConnection jdbcConnection = new JdbcConnection(conn, new MysqlSyntax());
@@ -227,13 +232,15 @@ public class AsyncAggScaleResultMultiTierTest {
       DbmsQueryResult dbmsQueryResult = reader.next();
       dbmsQueryResult.next();
       resultReturnedCnt++;
-      assertEquals(15, (double)dbmsQueryResult.getValue(0), 1e-6);
+      if (resultReturnedCnt==5) {
+        assertEquals(15, (double) dbmsQueryResult.getValue(0), 1e-6);
+      }
     }
     assertEquals(5, resultReturnedCnt);
   }
 
   @Test
-  public void simpleAggTest4() throws VerdictDBException,SQLException {
+  public void simpleAggTest4() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select count(value), sum(value) from originalTable";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
@@ -247,8 +254,8 @@ public class AsyncAggScaleResultMultiTierTest {
     Dimension d1 = new Dimension("originalSchema", "originalTable", 0, 0);
     assertEquals(
         new HyperTableCube(Arrays.asList(d1)),
-        ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getAggMeta().getCubes().get(0));
-    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMetaSet(meta);
+        ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0)).getAggMeta().getCubes().get(0));
+    ((AsyncAggExecutionNode) queryExecutionPlan.getRoot()).setScrambleMetaSet(meta);
 
 
     JdbcConnection jdbcConnection = new JdbcConnection(conn, new MysqlSyntax());
@@ -260,14 +267,16 @@ public class AsyncAggScaleResultMultiTierTest {
       DbmsQueryResult dbmsQueryResult = reader.next();
       dbmsQueryResult.next();
       resultReturnedCnt++;
-      assertEquals(15, ((BigDecimal)dbmsQueryResult.getValue(0)).longValue());
-      assertEquals(15, (double)dbmsQueryResult.getValue(1), 1e-6);
+      if (resultReturnedCnt==5) {
+        assertEquals(15, ((BigDecimal) dbmsQueryResult.getValue(0)).longValue());
+        assertEquals(15, (double) dbmsQueryResult.getValue(1), 1e-6);
+      }
     }
     assertEquals(5, resultReturnedCnt);
   }
 
   @Test
-  public void simpleAggTest5() throws VerdictDBException,SQLException {
+  public void simpleAggTest5() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select count(value), avg(value) from originalTable";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
@@ -281,8 +290,8 @@ public class AsyncAggScaleResultMultiTierTest {
     Dimension d1 = new Dimension("originalSchema", "originalTable", 0, 0);
     assertEquals(
         new HyperTableCube(Arrays.asList(d1)),
-        ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getAggMeta().getCubes().get(0));
-    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMetaSet(meta);
+        ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0)).getAggMeta().getCubes().get(0));
+    ((AsyncAggExecutionNode) queryExecutionPlan.getRoot()).setScrambleMetaSet(meta);
 
 
     JdbcConnection jdbcConnection = new JdbcConnection(conn, new MysqlSyntax());
@@ -294,14 +303,16 @@ public class AsyncAggScaleResultMultiTierTest {
       DbmsQueryResult dbmsQueryResult = reader.next();
       dbmsQueryResult.next();
       resultReturnedCnt++;
-      assertEquals(15, ((BigDecimal)dbmsQueryResult.getValue(0)).longValue());
-      assertEquals(1.0, (double)dbmsQueryResult.getValue(1), 1e-6);
+      if (resultReturnedCnt==5) {
+        assertEquals(15, ((BigDecimal) dbmsQueryResult.getValue(0)).longValue());
+        assertEquals(1.0, (double) dbmsQueryResult.getValue(1), 1e-6);
+      }
     }
     assertEquals(5, resultReturnedCnt);
   }
 
   @Test
-  public void simpleAggTest6() throws VerdictDBException,SQLException {
+  public void simpleAggTest6() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select sum(value), avg(value) from originalTable";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
@@ -315,8 +326,8 @@ public class AsyncAggScaleResultMultiTierTest {
     Dimension d1 = new Dimension("originalSchema", "originalTable", 0, 0);
     assertEquals(
         new HyperTableCube(Arrays.asList(d1)),
-        ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getAggMeta().getCubes().get(0));
-    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMetaSet(meta);
+        ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0)).getAggMeta().getCubes().get(0));
+    ((AsyncAggExecutionNode) queryExecutionPlan.getRoot()).setScrambleMetaSet(meta);
 
 
     JdbcConnection jdbcConnection = new JdbcConnection(conn, new MysqlSyntax());
@@ -328,14 +339,16 @@ public class AsyncAggScaleResultMultiTierTest {
       DbmsQueryResult dbmsQueryResult = reader.next();
       dbmsQueryResult.next();
       resultReturnedCnt++;
-      assertEquals(15, (double)dbmsQueryResult.getValue(0), 1e-6);
-      assertEquals(1.0, (double)dbmsQueryResult.getValue(1), 1e-6);
+      if (resultReturnedCnt==5) {
+        assertEquals(15, (double) dbmsQueryResult.getValue(0), 1e-6);
+        assertEquals(1.0, (double) dbmsQueryResult.getValue(1), 1e-6);
+      }
     }
     assertEquals(5, resultReturnedCnt);
   }
 
   @Test
-  public void maxAggTest() throws VerdictDBException,SQLException {
+  public void maxAggTest() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select max(value) from originalTable";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
@@ -349,8 +362,8 @@ public class AsyncAggScaleResultMultiTierTest {
     Dimension d1 = new Dimension("originalSchema", "originalTable", 0, 0);
     assertEquals(
         new HyperTableCube(Arrays.asList(d1)),
-        ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getAggMeta().getCubes().get(0));
-    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMetaSet(meta);
+        ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0)).getAggMeta().getCubes().get(0));
+    ((AsyncAggExecutionNode) queryExecutionPlan.getRoot()).setScrambleMetaSet(meta);
 
 
     JdbcConnection jdbcConnection = new JdbcConnection(conn, new MysqlSyntax());
@@ -368,7 +381,7 @@ public class AsyncAggScaleResultMultiTierTest {
   }
 
   @Test
-  public void minAggTest() throws VerdictDBException,SQLException {
+  public void minAggTest() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select min(value) from originalTable";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
@@ -382,8 +395,8 @@ public class AsyncAggScaleResultMultiTierTest {
     Dimension d1 = new Dimension("originalSchema", "originalTable", 0, 0);
     assertEquals(
         new HyperTableCube(Arrays.asList(d1)),
-        ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0).getExecutableNodeBaseDependents().get(0)).getAggMeta().getCubes().get(0));
-    ((AsyncAggExecutionNode)queryExecutionPlan.getRoot().getExecutableNodeBaseDependents().get(0)).setScrambleMetaSet(meta);
+        ((AggExecutionNode) queryExecutionPlan.getRootNode().getExecutableNodeBaseDependents().get(0)).getAggMeta().getCubes().get(0));
+    ((AsyncAggExecutionNode) queryExecutionPlan.getRoot()).setScrambleMetaSet(meta);
 
 
     JdbcConnection jdbcConnection = new JdbcConnection(conn, new MysqlSyntax());
