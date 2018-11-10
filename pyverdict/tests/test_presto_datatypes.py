@@ -94,7 +94,7 @@ def setup_sandbox():
           cast(1.0 as real),
           cast(1.0 as double),
           cast('2018-12-31' as date),
-          cast('2018-12-31 00:00:01' as timestamp),
+          timestamp '2018-12-31 00:00:01',
           cast('ab' as char(4)),
           cast('abcd' as varchar(4))
         )""".format(test_schema, test_table)
