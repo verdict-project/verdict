@@ -41,7 +41,7 @@ public class JdbcQueryDataTypeForAllDatabasesTest {
   private String database;
 
   private static final String[] targetDatabases = 
-      {"mysql", "impala", "redshift", "postgresql", "presto"};
+      {"mysql", "impala", "redshift", "postgresql"};
 
   public JdbcQueryDataTypeForAllDatabasesTest(String database) {
     this.database = database;
@@ -95,15 +95,6 @@ public class JdbcQueryDataTypeForAllDatabasesTest {
 
   private static final String POSTGRES_PASSWORD = "";
   
-  // presto
-  private static final String PRESTO_USER;
-  
-  private static final String PRESTO_HOST;
-  
-  private static final String PRESTO_CATALOG;
-  
-  private static final String PRESTO_PASSWORD = "";
-
   private static final String VERDICT_META_SCHEMA =
       "verdictdbmetaschema_" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
 
@@ -126,12 +117,6 @@ public class JdbcQueryDataTypeForAllDatabasesTest {
     REDSHIFT_USER = System.getenv("VERDICTDB_TEST_REDSHIFT_USER");
     REDSHIFT_PASSWORD = System.getenv("VERDICTDB_TEST_REDSHIFT_PASSWORD");
   }
-  
-  static {
-    PRESTO_HOST = System.getenv("VERDICTDB_TEST_PRESTO_HOST");
-    PRESTO_CATALOG = System.getenv("VERDICTDB_TEST_PRESTO_CATALOG");
-    PRESTO_USER = System.getenv("VERDICTDB_TEST_PRESTO_USER");
-  }
 
   private static final String SCHEMA_NAME =
       "data_type_test" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
@@ -147,7 +132,6 @@ public class JdbcQueryDataTypeForAllDatabasesTest {
     setupPostgresql();
     setupRedshift();
     setupImpala();
-    setupPresto();
   }
 
   @AfterClass
@@ -156,7 +140,6 @@ public class JdbcQueryDataTypeForAllDatabasesTest {
     tearDownPostgresql();
     tearDownRedshift();
     tearDownImpala();
-    tearDownPresto();
   }
 
   @Parameterized.Parameters(name = "{0}")
@@ -288,71 +271,6 @@ public class JdbcQueryDataTypeForAllDatabasesTest {
         String.format("DROP SCHEMA IF EXISTS \"%s\" CASCADE", options.getVerdictTempSchemaName()));
     conn.close();
   }
-  
-  private static void setupPresto() throws SQLException, VerdictDBException {
-    String connectionString =
-        String.format("jdbc:presto://%s/%s", PRESTO_HOST, PRESTO_CATALOG);
-    Connection conn =
-        DatabaseConnectionHelpers.setupPrestoForDataTypeTest(
-            connectionString, PRESTO_USER, PRESTO_PASSWORD, SCHEMA_NAME, TABLE_NAME);
-    VerdictConnection vc =
-        new VerdictConnection(connectionString, PRESTO_USER, PRESTO_PASSWORD, options);
-    conn.createStatement()
-        .execute(
-            String.format("CREATE SCHEMA IF NOT EXISTS %s", options.getVerdictTempSchemaName()));
-    conn.createStatement()
-        .execute(
-            String.format("CREATE SCHEMA IF NOT EXISTS %s", options.getVerdictMetaSchemaName()));
-    connMap.put("presto", conn);
-    vcMap.put("presto", vc);
-    schemaMap.put("presto", "");
-  }
-  
-  private static void tearDownPresto() throws SQLException {
-    Connection conn = connMap.get("presto");
-    Statement stmt = conn.createStatement();
-    
-    dropPrestoTablesInSchema(conn, SCHEMA_NAME);
-    stmt.execute(String.format("DROP SCHEMA IF EXISTS \"%s\"", SCHEMA_NAME));
-    
-    dropPrestoTablesInSchema(conn, options.getVerdictMetaSchemaName());
-    stmt.execute(
-        String.format("DROP SCHEMA IF EXISTS \"%s\"", options.getVerdictMetaSchemaName()));
-    
-    dropPrestoTablesInSchema(conn, options.getVerdictTempSchemaName());
-    stmt.execute(
-        String.format("DROP SCHEMA IF EXISTS \"%s\"", options.getVerdictTempSchemaName()));
-    conn.close();
-  }
-  
-  private static void dropPrestoTablesInSchema(Connection conn, String schema_name) 
-      throws SQLException {
-    Statement stmt = conn.createStatement();
-    List<String> tables = getPrestoTablesInSchema(conn, schema_name);
-    for (String table_name : tables) {
-      stmt.execute(String.format("drop table \"%s\".\"%s\"", schema_name, table_name));
-    }
-    stmt.close();
-  }
-  
-  private static List<String> getPrestoTablesInSchema(Connection conn, String schema_name) 
-      throws SQLException {
-    List<String> tables = new ArrayList<>();
-    Statement stmt = conn.createStatement();
-    try {
-      ResultSet result = stmt.executeQuery(String.format("show tables in \"%s\"", schema_name));
-      while(result.next()) {
-        tables.add(result.getString(1));
-      }
-      result.close();
-    } catch (SQLException e) {
-      
-    } finally {
-      stmt.close();
-    }
-    
-    return tables;
-  }
 
   @Test
   public void testDataType() throws SQLException, VerdictDBException {
@@ -371,11 +289,6 @@ public class JdbcQueryDataTypeForAllDatabasesTest {
         sql =
             String.format(
                 "SELECT * FROM \"%s\".\"%s\" ORDER BY bigintcol", SCHEMA_NAME, TABLE_NAME);
-        break;
-      case "presto":
-        sql = 
-            String.format(
-                "SELECT * FROM \"%s\".\"%s\" ORDER BY tinyintCol", SCHEMA_NAME, TABLE_NAME);
         break;
       default:
         fail(String.format("Database '%s' not supported.", database));
