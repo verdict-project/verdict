@@ -5,7 +5,7 @@ import re
 import subprocess
 from build_lib import build_and_copy
 
-pyverdict_version = '0.1.2.2'
+pyverdict_version = '0.1.2.3'
 
 
 def get_verdict_jar(lib_dir):

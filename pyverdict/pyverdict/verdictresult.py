@@ -81,6 +81,7 @@ class SingleResultSet:
 
         if col_type in type_to_read_in_str_for_presto:
             value_str = resultset.getString(index)
+            print(value_str)
             if value_str is None:
                 return None
 

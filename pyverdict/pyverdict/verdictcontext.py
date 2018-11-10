@@ -8,7 +8,8 @@ from time import sleep
 
 
 class VerdictContext:
-    """The main Python interface to VerdictDB Java core.
+    """
+    The main Python interface to VerdictDB Java core.
 
     The path to the jdbc drivers must be specified to use them.
 
