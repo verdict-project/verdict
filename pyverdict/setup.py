@@ -66,6 +66,7 @@ setuptools.setup(
     include_package_data=True,
     install_requires=[
         'py4j >= 0.10.7',
-        'numpy >= 1.9'
+        'numpy >= 1.9',
+        'pandas >= 0.23'
     ]
 )
