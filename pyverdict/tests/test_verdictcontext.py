@@ -10,7 +10,7 @@ def test_presto_factory_method():
     user = os.environ['VERDICTDB_TEST_PRESTO_USER']
     password = ''
 
-    verdict = VerdictContext.newPrestoContext(host, catalog, user, port=port)
+    verdict = VerdictContext.new_presto_context(host, catalog, user, port=port)
     result = verdict.sql('show schemas')
 
 
@@ -20,5 +20,5 @@ def test_mysql_factory_method():
     user = 'root'
     password = ''
 
-    verdict = VerdictContext.newMySqlContext(host, user, password)
+    verdict = VerdictContext.new_mysql_context(host, user, password)
     result = verdict.sql('show schemas')

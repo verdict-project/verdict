@@ -27,13 +27,13 @@ class VerdictContext:
         self._url = url
 
     @classmethod
-    def newMySqlContext(cls, host, user, password, port=3306):
+    def new_mysql_context(cls, host, user, password, port=3306):
         connection_string = \
             'jdbc:mysql://{:s}:{:d}?user={:s}&password={:s}'.format(host, port, user, password)
         return cls(connection_string)
 
     @classmethod
-    def newPrestoContext(cls, host, catalog, user, password=None, port=8081):
+    def new_presto_context(cls, host, catalog, user, password=None, port=8081):
         if password is None:
             connection_string = \
                 'jdbc:presto://{:s}:{:d}/{:s}?user={:s}'.format(host, port, catalog, user)
