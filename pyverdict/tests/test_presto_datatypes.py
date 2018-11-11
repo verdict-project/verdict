@@ -1,4 +1,4 @@
-from datetime import datetime, date
+from datetime import datetime, date, timezone
 import os
 import pyverdict
 import prestodb
@@ -38,6 +38,15 @@ def test_data_types():
 def compare_value(expected, actual, coltype):
     if coltype == 'decimal' and expected is not None:
         assert float(expected) == actual
+    elif coltype == "timestamp" and expected is not None:
+        # Presto's official Python driver follows the server's time zone while
+        # JDBC driver follows the client's time zone.
+        # To reconcile this, we change the Python driver's value to the client
+        # time zone. We assume that the server is using 'UTC'.
+        parsed = datetime.strptime(expected, "%Y-%m-%d %H:%M:%S.%f")
+        local = parsed.replace(tzinfo=timezone.utc).astimezone(tz=None)
+        expected = local.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+        assert expected == actual
     else:
         assert expected == actual
 
@@ -68,35 +77,35 @@ def setup_sandbox():
     cur.fetchall()
     cur.execute("""
         CREATE TABLE IF NOT EXISTS {}.{} (
-          tinyintCol          TINYINT,
-          boolCol             BOOLEAN,
-          smallintCol         SMALLINT,
-          integerCol          INTEGER,
-          bigintCol           BIGINT,
-          decimalCol          DECIMAL(4,2),
-          realCol             REAL,
-          doubleCol           DOUBLE,
-          dateCol             DATE,
-          timestampCol        TIMESTAMP,
-          charCol             CHAR(4),
-          varcharCol          VARCHAR(4)
+            tinyintCol          TINYINT,
+            boolCol             BOOLEAN,
+            smallintCol         SMALLINT,
+            integerCol          INTEGER,
+            bigintCol           BIGINT,
+            decimalCol          DECIMAL(4,2),
+            realCol             REAL,
+            doubleCol           DOUBLE,
+            dateCol             DATE,
+            timestampCol        TIMESTAMP,
+            charCol             CHAR(4),
+            varcharCol          VARCHAR(4)
         )""".format(test_schema, test_table)
         )
     cur.fetchall()
 
     cur.execute("""
         INSERT INTO {}.{} VALUES (
-          cast(1 as tinyint), true,
-          cast(2 as smallint),
-          cast(3 as integer),
-          cast(4 as bigint),
-          cast(5.0 as decimal(4,2)),
-          cast(1.0 as real),
-          cast(1.0 as double),
-          cast('2018-12-31' as date),
-          timestamp '2018-12-31 00:00:01',
-          cast('ab' as char(4)),
-          cast('abcd' as varchar(4))
+            cast(1 as tinyint), true,
+            cast(2 as smallint),
+            cast(3 as integer),
+            cast(4 as bigint),
+            cast(5.0 as decimal(4,2)),
+            cast(1.0 as real),
+            cast(1.0 as double),
+            cast('2018-12-31' as date),
+            timestamp '2018-12-31 00:00:01',
+            cast('ab' as char(4)),
+            cast('abcd' as varchar(4))
         )""".format(test_schema, test_table)
         )
     cur.fetchall()

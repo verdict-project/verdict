@@ -1,4 +1,4 @@
-from datetime import datetime, date
+from datetime import datetime, date, timezone
 import os
 import pyverdict
 import prestodb
@@ -117,7 +117,8 @@ class TestClass:
             expected_row = expected_rows[i]
             actual_row = rows[i]
             for j in range(len(expected_row)):
-                self.compare_value(expected_row[j], actual_row[j])
+                coltype = types[j]
+                self.compare_value(expected_row[j], actual_row[j], coltype)
 
     def compare_approximate_query_result(self, sql):
         result = verdict_conn.sql(sql)
@@ -142,8 +143,18 @@ class TestClass:
         verdict_sql = 'bypass ' + sql
         self.compare_query_result(verdict_sql, sql)
 
-    def compare_value(self, expected, actual):
-        assert expected == actual
+    def compare_value(self, expected, actual, coltype):
+        if coltype == "timestamp":
+            # Presto's official Python driver follows the server's time zone while
+            # JDBC driver follows the client's time zone.
+            # To reconcile this, we change the Python driver's value to the client
+            # time zone. We assume that the server is using 'UTC'.
+            parsed = datetime.strptime(expected, "%Y-%m-%d %H:%M:%S.%f")
+            local = parsed.replace(tzinfo=timezone.utc).astimezone(tz=None)
+            expected = local.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+            assert expected == actual
+        else:
+            assert expected == actual
 
     def approximate_compare_value(self, expected, actual):
         assert expected is not None
