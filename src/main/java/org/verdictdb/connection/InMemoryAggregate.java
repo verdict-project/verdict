@@ -13,6 +13,7 @@ import java.sql.PreparedStatement;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.sql.DriverManager;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -63,7 +64,9 @@ public class InMemoryAggregate {
     }
     // create table
     String createSql = "CREATE TABLE IF NOT EXISTS " + tableName + " (" + fieldNames + ")";
-    conn.createStatement().execute(createSql);
+    Statement stmt = conn.createStatement();
+    stmt.execute(createSql);
+    stmt.close();
 
     // insert values
     String sql = "INSERT INTO " + tableName + " ("
@@ -79,6 +82,7 @@ public class InMemoryAggregate {
       statement.addBatch();
     }
     statement.executeBatch();
+    statement.close();
   }
 
   public static DbmsQueryResult executeQuery(SelectQuery query) throws VerdictDBException, SQLException {

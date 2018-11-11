@@ -41,7 +41,6 @@ class SingleResultSet:
         self._verdict_context = verdict_context
         # (heading, column_inttypes, column_types, rows) = self._read_all(resultset)
         self._heading = heading
-        # self._column_inttypes = column_inttypes
         self._column_types = column_types
         self._rows = rows
         self.rowcount = len(rows)
@@ -70,8 +69,8 @@ class SingleResultSet:
     def types(self):
         return self._column_types
 
-    def typeJavaInt(self):
-        return self._column_inttypes
+    # def type_java_int(self):
+    #     return self._column_inttypes
 
     def to_df(self):
         """

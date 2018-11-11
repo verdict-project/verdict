@@ -26,7 +26,7 @@ test_table = 'test_table'
 def test_data_types():
     (presto_conn, verdict_conn) = setup_sandbox()
 
-    result = verdict_conn.sql(
+    result = verdict_conn.sql_raw_result(
         'select * from {}.{} order by tinyintCol'.format(test_schema, test_table))
     types = result.types()
     rows = result.rows()

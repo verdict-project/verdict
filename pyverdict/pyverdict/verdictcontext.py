@@ -59,9 +59,12 @@ class VerdictContext:
         return cls(connection_string)
 
     def sql(self, query):
-        return self._sql_raw_result(query).to_df()
+        return self.sql_raw_result(query).to_df()
 
-    def _sql_raw_result(self, query):
+    def sql_raw_result(self, query):
+        '''
+        Development API
+        '''
         java_resultset = self._context.sql(query)
         if java_resultset is None:
             msg = 'processed'

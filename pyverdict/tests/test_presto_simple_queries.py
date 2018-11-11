@@ -99,7 +99,7 @@ class TestClass:
     def test_verdict_block_count(self):
         sql = """select min(verdictdbblock), max(verdictdbblock)
             from {}.{}""".format(test_schema, test_scramble)
-        result = verdict_conn.sql(sql)
+        result = verdict_conn.sql_raw_result(sql)
         types = result.types()
         # rows = [[x.toString() for x in row] for row in result.rows()]
         rows = result.rows()
@@ -109,7 +109,7 @@ class TestClass:
         assert 9 == rows[0][1]
 
     def compare_query_result(self, verdict_sql, regular_sql):
-        result = verdict_conn.sql(verdict_sql)
+        result = verdict_conn.sql_raw_result(verdict_sql)
         types = result.types()
         rows = result.rows()
         # print(int_types)
@@ -136,7 +136,7 @@ class TestClass:
                 self.compare_value(expected_row[j], actual_row[j], coltype)
 
     def compare_approximate_query_result(self, sql):
-        result = verdict_conn.sql(sql)
+        result = verdict_conn.sql_raw_result(sql)
         types = result.types()
         rows = result.rows()
         print('approx answer: ' + str(types))

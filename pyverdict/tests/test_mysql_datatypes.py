@@ -25,8 +25,7 @@ test_table = 'test_table'
 def test_data_types():
     (mysql_conn, verdict_conn) = setup_sandbox()
 
-    result = verdict_conn.sql('select * from {}.{}'.format(test_schema, test_table))
-    int_types = result.typeJavaInt()
+    result = verdict_conn.sql_raw_result('select * from {}.{}'.format(test_schema, test_table))
     types = result.types()
     rows = result.rows()
     # print(int_types)

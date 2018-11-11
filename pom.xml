@@ -211,14 +211,13 @@
             <artifactId>opencsv</artifactId>
             <version>4.0</version>
         </dependency>
-
-        <!--  Test Support -->
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
             <version>1.4.197</version>
-            <scope>test</scope>
         </dependency>
+
+        <!--  Test Support -->
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
