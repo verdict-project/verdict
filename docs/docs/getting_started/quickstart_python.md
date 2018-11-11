@@ -23,6 +23,8 @@ pip install pyverdict --upgrade
 
 ## Connect
 
+Suppose MySQL is set as described on [this page](/tutorial/setup/mysql/).
+
 ```python
 import pyverdict
 verdict = pyverdict.mysql_context('localhost', 'root', '')

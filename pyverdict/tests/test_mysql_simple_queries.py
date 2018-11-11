@@ -47,7 +47,7 @@ def setup_module(module):
           intCol              INT(4)
         )""".format(test_schema, test_table))
     sql = 'insert into {}.{} values'.format(test_schema, test_table)
-    for i in range(1000):
+    for i in range(2000):
         if i == 0:
             sql = sql + ' '
         else:
@@ -60,7 +60,7 @@ def setup_module(module):
     connection_string = \
         'jdbc:mysql://{:s}:{:d}?user={:s}&password={:s}'.format(host, port, user, password)
     verdict_conn = pyverdict.VerdictContext(connection_string)
-    verdict_conn.sql('CREATE SCRAMBLE {}.{} FROM {}.{} BLOCKSIZE 100'
+    verdict_conn.sql('CREATE SCRAMBLE {}.{} FROM {}.{} BLOCKSIZE 200'
         .format(test_schema, test_scramble, test_schema, test_table))
 
 
