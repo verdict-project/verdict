@@ -1,6 +1,6 @@
 import os
 import pkg_resources
-from . import verdictresult
+from .verdictresult import SingleResultSet
 from . import verdictcommon
 from .verdictexception import *
 from py4j.java_gateway import JavaGateway
@@ -44,11 +44,15 @@ class VerdictContext:
         return cls(connection_string)
 
     def sql(self, query):
+        return self._sql_raw_result(query).to_df()
+
+    def _sql_raw_result(self, query):
         java_resultset = self._context.sql(query)
         if java_resultset is None:
-            return None
+            msg = 'processed'
+            return SingleResultSet.status_result(msg, self)
         else:
-            return verdictresult.SingleResultSet(java_resultset, self)
+            return SingleResultSet.from_java_resultset(java_resultset, self)
 
     def get_dbtype(self):
         return self._dbtype.lower()

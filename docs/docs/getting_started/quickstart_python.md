@@ -25,7 +25,7 @@ pip install pyverdict --upgrade
 
 ```python
 import pyverdict
-verdict = pyverdict.mysql_connection('localhost', 'root', '')
-verdict.sql('show schemas')
+verdict = pyverdict.mysql_context('localhost', 'root', '')
+verdict.sql('show schemas')     # this returns pandas DataFrame containing schema names
 ```
 

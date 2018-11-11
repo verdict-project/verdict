@@ -1,7 +1,7 @@
-
 from datetime import date, datetime, timedelta
 import decimal
 import numpy as np
+import pandas as pd
 
 
 class SingleResultSet:
@@ -22,14 +22,26 @@ class SingleResultSet:
         timedelta: np.timedelta64
     }
 
-    def __init__(self, resultset, verdict_context):
+    def __init__(self, heading, column_types, rows, verdict_context):
         self._verdict_context = verdict_context
-        (heading, column_inttypes, column_types, rows) = self._read_all(resultset)
+        # (heading, column_inttypes, column_types, rows) = self._read_all(resultset)
         self._heading = heading
-        self._column_inttypes = column_inttypes
+        # self._column_inttypes = column_inttypes
         self._column_types = column_types
         self._rows = rows
         self.rowcount = len(rows)
+
+    @classmethod
+    def from_java_resultset(cls, resultset, verdict_context):
+        (heading, column_inttypes, column_types, rows) = cls._read_all(resultset, verdict_context)
+        return cls(heading, column_types, rows, verdict_context)
+
+    @classmethod
+    def status_result(cls, status_msg, verdict_context):
+        heading = ['status']
+        column_types = ['string']
+        rows = [[status_msg]]
+        return cls(heading, column_types, rows, verdict_context)
 
     def column_names(self):
         return self._heading
@@ -48,20 +60,24 @@ class SingleResultSet:
 
     def to_df(self):
         """
-        Converts to a numpy array.
+        Converts to a pandas DataFrame.
         """
-        return None
+        rows = self.rows()
+        columns = self.column_names()
+        return pd.DataFrame(np.array(rows), columns=columns)
 
-    def _read_value(self, resultset, index, col_type):
-        dbtype = self._verdict_context.get_dbtype()
+    @classmethod
+    def _read_value(cls, resultset, index, col_type, verdict_context):
+        dbtype = verdict_context.get_dbtype()
         if dbtype == 'mysql':
-            return self._read_value_mysql(resultset, index, col_type)
+            return cls._read_value_mysql(resultset, index, col_type)
         elif dbtype == 'presto':
-            return self._read_value_presto(resultset, index, col_type)
+            return cls._read_value_presto(resultset, index, col_type)
         else:
             raise NotImplementedError
 
-    def _read_value_presto(self, resultset, index, col_type):
+    @classmethod
+    def _read_value_presto(cls, resultset, index, col_type):
         """
         Type conversion rule (Presto):
         'tinyint'    => int
@@ -96,7 +112,8 @@ class SingleResultSet:
 
         return resultset.getValue(index)
 
-    def _read_value_mysql(self, resultset, index, col_type):
+    @classmethod
+    def _read_value_mysql(cls, resultset, index, col_type):
         """Reads the value in a type-sensitive way
 
         Due to the reliance on the underlying JDBC library, we cannot always distinguish the exact
@@ -173,7 +190,8 @@ class SingleResultSet:
         else:
             return resultset.getValue(index)
 
-    def _read_all(self, resultset):
+    @classmethod
+    def _read_all(cls, resultset, verdict_context):
         column_count = resultset.getColumnCount()
         heading = []          # column heading
         column_inttypes = []  # column types in java.sql.Types
@@ -188,7 +206,7 @@ class SingleResultSet:
         while (resultset.next()):
             row = []
             for i in range(column_count):
-                row.append(self._read_value(resultset, i, column_types[i]))
+                row.append(cls._read_value(resultset, i, column_types[i], verdict_context))
             rows.append(row)
 
         return (heading, column_inttypes, column_types, rows)

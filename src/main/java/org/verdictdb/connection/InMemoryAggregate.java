@@ -54,8 +54,8 @@ public class InMemoryAggregate {
       fieldNames.append(" ");
       // char -> varchar in case this type is an array of char
       int columnType = dbmsQueryResult.getColumnType(i);
-      if (columnType==CHAR) {
-        columnType=VARCHAR;
+      if (columnType == CHAR) {
+        columnType = VARCHAR;
       }
       fieldNames.append(DataTypeConverter.typeName(columnType));
       columnNames.append(dbmsQueryResult.getColumnName(i));
@@ -73,8 +73,9 @@ public class InMemoryAggregate {
         + ")";
     PreparedStatement statement = conn.prepareStatement(sql);
     while (dbmsQueryResult.next()) {
-      for (int i = 1; i <= dbmsQueryResult.getColumnCount(); i++)
+      for (int i = 1; i <= dbmsQueryResult.getColumnCount(); i++) {
         statement.setObject(i, dbmsQueryResult.getValue(i - 1));
+      }
       statement.addBatch();
     }
     statement.executeBatch();

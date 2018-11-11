@@ -64,7 +64,7 @@ public class SelectAggExecutionNode extends AggExecutionNode {
     // insert value to in memory database.
     String tableName;
     synchronized (SelectAggExecutionNode.class) {
-      tableName = inMemoryTableName+selectAggID;
+      tableName = inMemoryTableName + selectAggID;
       selectAggID++;
     }
     try {
