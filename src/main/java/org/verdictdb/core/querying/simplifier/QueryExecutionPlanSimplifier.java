@@ -70,7 +70,7 @@ public class QueryExecutionPlanSimplifier {
     originalPlan.setRootNode(newParent);
     
     // next, simplify the sources
-    // A triple below is (grandParent, parent); a consolidation may combine the parent 
+    // A triple below is (grandParent, parent); a consolidation may combinedTableName the parent
     // and the child, which is set as the new child of the grandParent.
     List<Pair<ExecutableNodeBase, ExecutableNodeBase>> parentSourceList =
         new LinkedList<>();

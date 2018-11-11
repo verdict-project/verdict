@@ -53,7 +53,7 @@ import org.verdictdb.exception.VerdictDBValueException;
  */
 public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
 
-  private static final long serialVersionUID = -1670795390245860583L;
+  private static final long serialVersionUID = 4728212257672L;
 
   private int aggColumnIdentiferNum = 0;
 
@@ -90,6 +90,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
   ExecutableNodeBase makeAsyncronousAggIfAvailable(ExecutableNodeBase root)
       throws VerdictDBException {
     List<AggExecutionNodeBlock> aggBlocks = identifyTopAggBlocks(scrambleMeta, root);
+    boolean convertToSelectAsyncAgg = false;
 
     // converted nodes should be used in place of the original nodes.
     for (int i = 0; i < aggBlocks.size(); i++) {
@@ -98,6 +99,9 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
 
       ExecutableNodeBase oldNode = nodeBlock.getBlockRootNode();
       ExecutableNodeBase newNode = convertToProgressiveAgg(scrambleMeta, nodeBlock);
+      if (newNode instanceof SelectAsyncAggExecutionNode) {
+        convertToSelectAsyncAgg = true;
+      }
 
       List<ExecutableNodeBase> parents = oldNode.getExecutableNodeBaseParents();
       for (ExecutableNodeBase parent : parents) {
@@ -111,7 +115,13 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
       }
     }
 
-    return root;
+    if (convertToSelectAsyncAgg) {
+      SelectAsyncAggExecutionNode newRoot = (SelectAsyncAggExecutionNode) root.getSources().get(0);
+      root.cancelSubscriptionTo(newRoot);
+      return newRoot;
+    } else {
+      return root;
+    }
   }
 
   /**
@@ -131,13 +141,13 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
   public ExecutableNodeBase convertToProgressiveAgg(
       ScrambleMetaSet scrambleMeta, AggExecutionNodeBlock aggNodeBlock)
       throws VerdictDBValueException {
+    boolean convertToSelectAsyncAgg = false;
 
     List<ExecutableNodeBase> blockNodes = aggNodeBlock.getNodesInBlock();
 
     List<ExecutableNodeBase> individualAggNodes = new ArrayList<>();
     List<ExecutableNodeBase> combiners = new ArrayList<>();
     List<AggExecutionNodeBlock> aggblocks = new ArrayList<>();
-    //    ScrambleMeta scrambleMeta = idCreator.getScrambleMeta();
 
     // First, plan how to perform block aggregation
     // filtering predicates that must inserted into different scrambled tables are identified.
@@ -152,89 +162,159 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
     OlaAggregationPlan aggPlan = new OlaAggregationPlan(scrambleMeta, scrambles);
     List<Pair<ExecutableNodeBase, ExecutableNodeBase>> oldSubscriptionInformation =
         new ArrayList<>();
+    ExecutableNodeBase newRoot;
 
-    // Second, according to the plan, create individual nodes that perform aggregations.
-    for (int i = 0; i < aggPlan.totalBlockAggCount(); i++) {
-
-      // copy and remove the dependency to its parents
-      oldSubscriptionInformation.clear();
-      AggExecutionNodeBlock copy =
-          aggNodeBlock.deepcopyExcludingDependentAggregates(oldSubscriptionInformation);
-      AggExecutionNode aggroot = (AggExecutionNode) copy.getBlockRootNode();
-      for (ExecutableNodeBase parent : aggroot.getExecutableNodeBaseParents()) {
-        parent.cancelSubscriptionTo(aggroot); // not sure if this is required, but do anyway
-      }
-      aggroot.cancelSubscriptionsFromAllSubscribers(); // subscription will be reconstructed later.
-
-      // Add extra predicates to restrain each aggregation to particular parts of base tables.
-      List<Pair<ExecutableNodeBase, Triple<String, String, String>>> scrambledNodeAndTableName =
-          identifyScrambledNodes(scrambleMeta, copy.getNodesInBlock());
-
-      // Assign hyper table cube to the block
-      aggroot.getAggMeta().setCubes(Arrays.asList(aggPlan.cubes.get(i)));
-
-      // rewrite the select list of the individual aggregate nodes to add tier columns
-      resetTierColumnAliasGeneration();
-      addTierColumnsRecursively(copy, aggroot, new HashSet<ExecutableNode>());
-
-      // Insert predicates into individual aggregation nodes
-      for (Pair<ExecutableNodeBase, Triple<String, String, String>> a : scrambledNodeAndTableName) {
-        ExecutableNodeBase scrambledNode = a.getLeft();
-        String schemaName = a.getRight().getLeft();
-        String tableName = a.getRight().getMiddle();
-        String aliasName = a.getRight().getRight();
-        Pair<Integer, Integer> span = aggPlan.getAggBlockSpanForTable(schemaName, tableName, i);
-        String aggblockColumn = scrambleMeta.getAggregationBlockColumn(schemaName, tableName);
-        SelectQuery q = ((QueryNodeBase) scrambledNode).getSelectQuery();
-        //        String aliasName = findAliasFor(schemaName, tableName, q.getFromList());
-        if (aliasName == null) {
-          throw new VerdictDBValueException(
-              String.format(
-                  "The alias name for the table (%s, %s) is not found.", schemaName, tableName));
+    // This check the condition to convert to SelectAsyncAggExecutionNode. The node will be converted
+    // only if it is the outer query.
+    // For instance, query as follow will be converted:
+    //    SELECT SUM(price) from [Scramble Table]
+    // However, if it is not outer aggregate, AsyncAggExecutionNode will be created instead. For instance,
+    //    SELECT p FROM (SELECT SUM(price) as p from [Scramble Table])
+    if (aggNodeBlock.getBlockRootNode().getSubscribers().size() == 1 &&
+        aggNodeBlock.getBlockRootNode().getSubscribers().get(0) instanceof SelectAllExecutionNode) {
+      // Convert to SelectAsyncAggExecutionNode
+      // Second, according to the plan, create individual nodes that perform aggregations.
+      for (int i = 0; i < aggPlan.totalBlockAggCount(); i++) {
+        // copy and remove the dependency to its parents
+        oldSubscriptionInformation.clear();
+        AggExecutionNodeBlock copy =
+            aggNodeBlock.deepcopyExcludingDependentAggregates(oldSubscriptionInformation);
+        AggExecutionNode aggroot = (AggExecutionNode) copy.getBlockRootNode();
+        for (ExecutableNodeBase parent : aggroot.getExecutableNodeBaseParents()) {
+          parent.cancelSubscriptionTo(aggroot); // not sure if this is required, but do anyway
         }
+        aggroot.cancelSubscriptionsFromAllSubscribers(); // subscription will be reconstructed later.
 
-        int left = span.getLeft();
-        int right = span.getRight();
-        if (left == right) {
-          q.addFilterByAnd(
-              ColumnOp.equal(
-                  new BaseColumn(aliasName, aggblockColumn), ConstantColumn.valueOf(left)));
+        // Add extra predicates to restrain each aggregation to particular parts of base tables.
+        List<Pair<ExecutableNodeBase, Triple<String, String, String>>> scrambledNodeAndTableName =
+            identifyScrambledNodes(scrambleMeta, copy.getNodesInBlock());
+
+        // Assign hyper table cube to the block
+        aggroot.getAggMeta().setCubes(Arrays.asList(aggPlan.cubes.get(i)));
+
+        // rewrite the select list of the individual aggregate nodes to add tier columns
+        resetTierColumnAliasGeneration();
+        addTierColumnsRecursively(copy, aggroot, new HashSet<ExecutableNode>());
+
+        // Insert predicates into individual aggregation nodes
+        for (Pair<ExecutableNodeBase, Triple<String, String, String>> a : scrambledNodeAndTableName) {
+          ExecutableNodeBase scrambledNode = a.getLeft();
+          String schemaName = a.getRight().getLeft();
+          String tableName = a.getRight().getMiddle();
+          String aliasName = a.getRight().getRight();
+          Pair<Integer, Integer> span = aggPlan.getAggBlockSpanForTable(schemaName, tableName, i);
+          String aggblockColumn = scrambleMeta.getAggregationBlockColumn(schemaName, tableName);
+          SelectQuery q = ((QueryNodeBase) scrambledNode).getSelectQuery();
+          //        String aliasName = findAliasFor(schemaName, tableName, q.getFromList());
+          if (aliasName == null) {
+            throw new VerdictDBValueException(
+                String.format(
+                    "The alias name for the table (%s, %s) is not found.", schemaName, tableName));
+          }
+
+          int left = span.getLeft();
+          int right = span.getRight();
+          if (left == right) {
+            q.addFilterByAnd(
+                ColumnOp.equal(
+                    new BaseColumn(aliasName, aggblockColumn), ConstantColumn.valueOf(left)));
+          } else {
+            q.addFilterByAnd(
+                ColumnOp.greaterequal(
+                    new BaseColumn(aliasName, aggblockColumn), ConstantColumn.valueOf(left)));
+            q.addFilterByAnd(
+                ColumnOp.lessequal(
+                    new BaseColumn(aliasName, aggblockColumn), ConstantColumn.valueOf(right)));
+          }
+        }
+        individualAggNodes.add(SelectAggExecutionNode.create(aggroot));
+      }
+
+      // Re-link the subscription relationship for the new AsyncAggNode
+      newRoot = SelectAsyncAggExecutionNode.create(idCreator, individualAggNodes, scrambleMeta, aggNodeBlock);
+    } else {
+      // Otherwise, create AsyncAggExeuctionNode instead.
+      // Second, according to the plan, create individual nodes that perform aggregations.
+      for (int i = 0; i < aggPlan.totalBlockAggCount(); i++) {
+
+        // copy and remove the dependency to its parents
+        oldSubscriptionInformation.clear();
+        AggExecutionNodeBlock copy =
+            aggNodeBlock.deepcopyExcludingDependentAggregates(oldSubscriptionInformation);
+        AggExecutionNode aggroot = (AggExecutionNode) copy.getBlockRootNode();
+        for (ExecutableNodeBase parent : aggroot.getExecutableNodeBaseParents()) {
+          parent.cancelSubscriptionTo(aggroot); // not sure if this is required, but do anyway
+        }
+        aggroot.cancelSubscriptionsFromAllSubscribers(); // subscription will be reconstructed later.
+
+        // Add extra predicates to restrain each aggregation to particular parts of base tables.
+        List<Pair<ExecutableNodeBase, Triple<String, String, String>>> scrambledNodeAndTableName =
+            identifyScrambledNodes(scrambleMeta, copy.getNodesInBlock());
+
+        // Assign hyper table cube to the block
+        aggroot.getAggMeta().setCubes(Arrays.asList(aggPlan.cubes.get(i)));
+
+        // rewrite the select list of the individual aggregate nodes to add tier columns
+        resetTierColumnAliasGeneration();
+        addTierColumnsRecursively(copy, aggroot, new HashSet<ExecutableNode>());
+
+        // Insert predicates into individual aggregation nodes
+        for (Pair<ExecutableNodeBase, Triple<String, String, String>> a : scrambledNodeAndTableName) {
+          ExecutableNodeBase scrambledNode = a.getLeft();
+          String schemaName = a.getRight().getLeft();
+          String tableName = a.getRight().getMiddle();
+          String aliasName = a.getRight().getRight();
+          Pair<Integer, Integer> span = aggPlan.getAggBlockSpanForTable(schemaName, tableName, i);
+          String aggblockColumn = scrambleMeta.getAggregationBlockColumn(schemaName, tableName);
+          SelectQuery q = ((QueryNodeBase) scrambledNode).getSelectQuery();
+          //        String aliasName = findAliasFor(schemaName, tableName, q.getFromList());
+          if (aliasName == null) {
+            throw new VerdictDBValueException(
+                String.format(
+                    "The alias name for the table (%s, %s) is not found.", schemaName, tableName));
+          }
+
+          int left = span.getLeft();
+          int right = span.getRight();
+          if (left == right) {
+            q.addFilterByAnd(
+                ColumnOp.equal(
+                    new BaseColumn(aliasName, aggblockColumn), ConstantColumn.valueOf(left)));
+          } else {
+            q.addFilterByAnd(
+                ColumnOp.greaterequal(
+                    new BaseColumn(aliasName, aggblockColumn), ConstantColumn.valueOf(left)));
+            q.addFilterByAnd(
+                ColumnOp.lessequal(
+                    new BaseColumn(aliasName, aggblockColumn), ConstantColumn.valueOf(right)));
+          }
+        }
+        individualAggNodes.add(aggroot);
+        aggblocks.add(copy);
+      }
+
+      // Third, stack combiners
+      // clear existing broadcasting queues of individual agg nodes
+      for (ExecutableNodeBase n : individualAggNodes) {
+        n.cancelSubscriptionsFromAllSubscribers();
+      }
+      for (int i = 1; i < aggPlan.totalBlockAggCount(); i++) {
+        AggCombinerExecutionNode combiner;
+        if (i == 1) {
+          combiner =
+              AggCombinerExecutionNode.create(
+                  idCreator, individualAggNodes.get(0), individualAggNodes.get(1));
         } else {
-          q.addFilterByAnd(
-              ColumnOp.greaterequal(
-                  new BaseColumn(aliasName, aggblockColumn), ConstantColumn.valueOf(left)));
-          q.addFilterByAnd(
-              ColumnOp.lessequal(
-                  new BaseColumn(aliasName, aggblockColumn), ConstantColumn.valueOf(right)));
+          combiner =
+              AggCombinerExecutionNode.create(
+                  idCreator, combiners.get(i - 2), individualAggNodes.get(i));
         }
+        combiners.add(combiner);
       }
 
-      individualAggNodes.add(aggroot);
-      aggblocks.add(copy);
+      // Fourth, re-link the subscription relationship for the new AsyncAggNode
+      newRoot = AsyncAggExecutionNode.create(idCreator, aggblocks, combiners, scrambleMeta, aggNodeBlock);
     }
-
-    // Third, stack combiners
-    // clear existing broadcasting queues of individual agg nodes
-    for (ExecutableNodeBase n : individualAggNodes) {
-      n.cancelSubscriptionsFromAllSubscribers();
-    }
-    for (int i = 1; i < aggPlan.totalBlockAggCount(); i++) {
-      AggCombinerExecutionNode combiner;
-      if (i == 1) {
-        combiner =
-            AggCombinerExecutionNode.create(
-                idCreator, individualAggNodes.get(0), individualAggNodes.get(1));
-      } else {
-        combiner =
-            AggCombinerExecutionNode.create(
-                idCreator, combiners.get(i - 2), individualAggNodes.get(i));
-      }
-      combiners.add(combiner);
-    }
-
-    // Fourth, re-link the subscription relationship for the new AsyncAggNode
-    ExecutableNodeBase newRoot =
-        AsyncAggExecutionNode.create(idCreator, aggblocks, combiners, scrambleMeta, aggNodeBlock);
 
     // Finally remove the old subscription information: old copied node -> still used old node
     for (Pair<ExecutableNodeBase, ExecutableNodeBase> parentToSource : oldSubscriptionInformation) {
@@ -320,6 +400,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
 
     if (root instanceof AggExecutionNode) {
       // check if it contains at least one scrambled table.
+      // Also, if it is directly under select all node, we need to convert it into SelectAsyncAggExecutionNode
       if (doesContainScramble(root, scrambleMeta)) {
         AggExecutionNodeBlock block = new AggExecutionNodeBlock(root);
         aggblocks.add(block);
@@ -634,9 +715,9 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
                     .containsKey(
                         new ImmutablePair<>("count", (UnnamedColumn) (new AsteriskColumn())))
                     && (col.getOperands().isEmpty()
-                      || col.getOperand() instanceof AsteriskColumn
-                      || col.getOperand() instanceof ConstantColumn
-                      || col.getOperand() instanceof BaseColumn)) {
+                    || col.getOperand() instanceof AsteriskColumn
+                    || col.getOperand() instanceof ConstantColumn
+                    || col.getOperand() instanceof BaseColumn)) {
                   ColumnOp col1 = new ColumnOp(col.getOpType());
                   newSelectlist.add(new AliasedColumn(col1, newAlias));
                   meta.getAggColumnAggAliasPair()

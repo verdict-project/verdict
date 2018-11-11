@@ -135,7 +135,8 @@ public class ExecutionContextTest {
         ++tempCount;
       }
     }
-    assertTrue(0 < tempCount);
+    // no temp table created
+    assertTrue(0 == tempCount);
     exec.terminate();
   }
 

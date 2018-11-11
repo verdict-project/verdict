@@ -87,10 +87,14 @@ public class ConcurrentJdbcConnection extends DbmsConnection {
   }
 
   public JdbcConnection getNextConnection() {
-    JdbcConnection c = connections.get(nextConnectionIndex);
-    nextConnectionIndex++;
-    if (nextConnectionIndex >= connections.size()) {
-      nextConnectionIndex = 0;
+    JdbcConnection c;
+    // prevent multiple thread increase index at same time
+    synchronized (this) {
+      c = connections.get(nextConnectionIndex);
+      nextConnectionIndex++;
+      if (nextConnectionIndex >= connections.size()) {
+        nextConnectionIndex = 0;
+      }
     }
     return c;
   }

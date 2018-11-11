@@ -23,6 +23,7 @@ import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.connection.SparkConnection;
 import org.verdictdb.core.querying.ExecutableNodeBase;
 import org.verdictdb.core.querying.ola.AsyncAggExecutionNode;
+import org.verdictdb.core.querying.ola.SelectAsyncAggExecutionNode;
 import org.verdictdb.core.querying.simplifier.ConsolidatedExecutionNode;
 import org.verdictdb.core.sqlobject.SqlConvertible;
 import org.verdictdb.exception.VerdictDBDbmsException;
@@ -48,20 +49,16 @@ public class ExecutableNodeRunner implements Runnable {
 
   int dependentCount;
 
-  //  private boolean isAborted = false;
+//  private boolean isAborted = false;
 
   /**
    * initiated: node is created but has not started running running: currently running aborted: node
    * running cancelled while running cancelled: nod running cancelled before running completed: node
    * running successfully finished
    */
-  enum NodeRunningStatus {
-    initiated,
-    running,
-    aborted,
-    cancelled,
-    completed,
-    failed;
+  enum NodeRunningStatus
+  {
+      initiated, running, aborted, cancelled, completed, failed;
   }
 
   private NodeRunningStatus status = NodeRunningStatus.initiated;
@@ -145,7 +142,7 @@ public class ExecutableNodeRunner implements Runnable {
 
   public boolean runThisAndDependents() {
     // first run all children on separate threads
-    // this function may be called again when run() is triggered upon a completion of one of
+    // this function may be called again when run() is triggered upon a completion of one of 
     // child nodes. Therefore, runChildren() is responsible for ensuring the same node does not
     // run again.
     runDependents();
@@ -190,51 +187,51 @@ public class ExecutableNodeRunner implements Runnable {
   }
 
   private void runDependents() {
-    if (doesThisNodeContainAsyncAggExecutionNode()) {
-      int maxNumberOfRunningNode = 10;
-      if ((conn instanceof SparkConnection)
-          || (conn instanceof CachedDbmsConnection
-              && ((CachedDbmsConnection) conn).getOriginalConnection()
-                  instanceof SparkConnection)) {
-        // Since abort() does not work for Spark (or I don't know how to do so), we issue query
-        // one by one.
-        maxNumberOfRunningNode = 1;
-      }
-
-      int currentlyRunningOrCompleteNodeCount = childRunners.size();
-
-      // check the number of currently running nodes
-      int runningChildCount = 0;
-      for (ExecutableNodeRunner r : childRunners) {
-        if (r.getStatus() == NodeRunningStatus.running) {
-          runningChildCount++;
+    synchronized (this) {
+      if (doesThisNodeContainAsyncAggExecutionNode()) {
+        int maxNumberOfRunningNode = 10;
+        if (((conn instanceof SparkConnection) ||
+            (conn instanceof CachedDbmsConnection
+                && ((CachedDbmsConnection) conn).getOriginalConnection() instanceof SparkConnection))
+            && !(node instanceof SelectAsyncAggExecutionNode)) {
+          // Since abort() does not work for Spark (or I don't know how to do so), we issue query
+          // one by one.
+          maxNumberOfRunningNode = 1;
         }
-      }
 
-      // maintain the number of running nodes to a certain number
-      List<ExecutableNodeBase> childNodes = ((ExecutableNodeBase) node).getSources();
-      int moreToRun =
-          Math.min(
-              maxNumberOfRunningNode - runningChildCount,
-              ((ExecutableNodeBase) node).getSourceCount() - currentlyRunningOrCompleteNodeCount);
-      for (int i = currentlyRunningOrCompleteNodeCount;
-          i < currentlyRunningOrCompleteNodeCount + moreToRun;
-          i++) {
-        ExecutableNodeBase child = childNodes.get(i);
+        int currentlyRunningOrCompleteNodeCount = childRunners.size();
 
-        ExecutableNodeRunner runner = child.getRegisteredRunner();
-        boolean started = runner.runThisAndDependents();
-        if (started) {
-          childRunners.add(runner);
+        // check the number of currently running nodes
+        int runningChildCount = 0;
+        for (ExecutableNodeRunner r : childRunners) {
+          if (r.getStatus() == NodeRunningStatus.running) {
+            runningChildCount++;
+          }
         }
-      }
-    } else {
-      // by default, run every child
-      for (ExecutableNodeBase child : ((ExecutableNodeBase) node).getSources()) {
-        ExecutableNodeRunner runner = child.getRegisteredRunner();
-        boolean started = runner.runThisAndDependents();
-        if (started) {
-          childRunners.add(runner);
+
+        // maintain the number of running nodes to a certain number
+        List<ExecutableNodeBase> childNodes = ((ExecutableNodeBase) node).getSources();
+        int moreToRun = Math.min(
+            maxNumberOfRunningNode - runningChildCount,
+            ((ExecutableNodeBase) node).getSourceCount() - currentlyRunningOrCompleteNodeCount);
+        for (int i = currentlyRunningOrCompleteNodeCount;
+             i < currentlyRunningOrCompleteNodeCount + moreToRun; i++) {
+          ExecutableNodeBase child = childNodes.get(i);
+
+          ExecutableNodeRunner runner = child.getRegisteredRunner();
+          boolean started = runner.runThisAndDependents();
+          if (started) {
+            childRunners.add(runner);
+          }
+        }
+      } else {
+        // by default, run every child
+        for (ExecutableNodeBase child : ((ExecutableNodeBase) node).getSources()) {
+          ExecutableNodeRunner runner = child.getRegisteredRunner();
+          boolean started = runner.runThisAndDependents();
+          if (started) {
+            childRunners.add(runner);
+          }
         }
       }
     }
