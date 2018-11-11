@@ -53,6 +53,10 @@ public abstract class SqlSyntax {
   public abstract int getTableNameColumnIndex();
 
   public abstract String randFunction();
+  
+  // This hash function is supposed to provide good randomization quality. That is,
+  // when an arbitrary set of elements are hashed, the distribution should be even.
+  public abstract String hashFunction();
 
   public abstract boolean isAsRequiredBeforeSelectInCreateTable();
 

@@ -122,4 +122,9 @@ public class SqliteSyntax extends SqlSyntax {
     }
     return true;
   }
+
+  @Override
+  public String hashFunction() {
+    return null;
+  }
 }
