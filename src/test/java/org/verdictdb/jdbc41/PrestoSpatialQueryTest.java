@@ -117,13 +117,15 @@ public class PrestoSpatialQueryTest {
         String.format("jdbc:presto://%s/%s/default", PRESTO_HOST, PRESTO_CATALOG);
     String verdictConnectionString =
         String.format(
-            "jdbc:verdict:presto://%s/%s/default&verdictdbtempschema=%s",
+            "jdbc:verdict:presto://%s/%s/default;loglevel=debug",
             PRESTO_HOST, PRESTO_CATALOG, SCHEMA_NAME);
     conn = DriverManager.getConnection(connectionString, PRESTO_USER, PRESTO_PASSWORD);
     vc = DriverManager.getConnection(verdictConnectionString, PRESTO_USER, PRESTO_PASSWORD);
     conn.createStatement()
         .execute(
             String.format("CREATE SCHEMA IF NOT EXISTS %s", options.getVerdictTempSchemaName()));
+
+    conn.createStatement().execute(String.format("CREATE SCHEMA IF NOT EXISTS %s", SCHEMA_NAME));
 
     conn.createStatement()
         .execute(
