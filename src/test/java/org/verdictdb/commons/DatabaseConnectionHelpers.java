@@ -125,6 +125,7 @@ public class DatabaseConnectionHelpers {
     spark.conf().set("spark.sql.parquet.mergeSchema", "true");
     spark.conf().set("spark.sql.parquet.binaryAsString", "true");
     spark.conf().set("spark.sql.crossJoin.enabled", "true");
+
     // create schema
     spark.sql(String.format("DROP SCHEMA IF EXISTS `%s` CASCADE", schema));
     spark.sql(String.format("CREATE SCHEMA IF NOT EXISTS `%s`", schema));

@@ -308,14 +308,10 @@ public class TpchAsyncExecutionPlanTest {
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
     //    queryExecutionPlan.getRootNode().print();
 
-    assertEquals(1, queryExecutionPlan.root.getExecutableNodeBaseDependents().size());
+    assertEquals(3, queryExecutionPlan.root.getExecutableNodeBaseDependents().size());
     assertEquals(
         aggBlockCount,
-        queryExecutionPlan
-            .root
-            .getExecutableNodeBaseDependent(0)
-            .getExecutableNodeBaseDependents()
-            .size());
+        queryExecutionPlan.root.getExecutableNodeBaseDependents().size());
 
     BaseTable base = new BaseTable("tpch", "lineitem_scrambled", "vt1");
     List<UnnamedColumn> operand1 =
@@ -431,11 +427,7 @@ public class TpchAsyncExecutionPlanTest {
     //    queryExecutionPlan.getRootNode().print();
     assertEquals(
         5,
-        queryExecutionPlan
-            .root
-            .getExecutableNodeBaseDependent(0)
-            .getExecutableNodeBaseDependents()
-            .size());
+        queryExecutionPlan.root.getExecutableNodeBaseDependents().size());
 
     AbstractRelation customer = new BaseTable("tpch", "customer", "vt1");
     AbstractRelation orders = new BaseTable("tpch", "orders_scrambled", "vt2");
@@ -558,11 +550,7 @@ public class TpchAsyncExecutionPlanTest {
     //    queryExecutionPlan.getRootNode().print();
     assertEquals(
         5,
-        queryExecutionPlan
-            .root
-            .getExecutableNodeBaseDependent(0)
-            .getExecutableNodeBaseDependents()
-            .size());
+        queryExecutionPlan.root.getExecutableNodeBaseDependents().size());
 
     AbstractRelation orders = new BaseTable("tpch", "orders", "vt1");
     SelectQuery expected =
@@ -631,7 +619,7 @@ public class TpchAsyncExecutionPlanTest {
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
     //    queryExecutionPlan.getRootNode().print();
     assertEquals(
-        5, queryExecutionPlan.root.getExecutableNodeBaseDependent(0).getDependentNodeCount());
+        5,queryExecutionPlan.root.getExecutableNodeBaseDependents().size());
 
     AbstractRelation customer = new BaseTable("tpch", "customer", "vt1");
     AbstractRelation orders = new BaseTable("tpch", "orders_scrambled", "vt2");
@@ -770,7 +758,7 @@ public class TpchAsyncExecutionPlanTest {
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
     //    queryExecutionPlan.getRootNode().print();
     assertEquals(
-        3, queryExecutionPlan.root.getExecutableNodeBaseDependent(0).getDependentNodeCount());
+        3,queryExecutionPlan.root.getExecutableNodeBaseDependents().size());
 
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem_scrambled", "vt1");
     SelectQuery expected =
@@ -895,14 +883,15 @@ public class TpchAsyncExecutionPlanTest {
     // queryExecutionPlan.getRootNode().print();
 
     assertEquals(
-        5, queryExecutionPlan.root.getExecutableNodeBaseDependent(0).getDependentNodeCount());
+        5, queryExecutionPlan.root.getExecutableNodeBaseDependents().size());
+    /*
     assertEquals(
         1,
         queryExecutionPlan
             .root
             .getExecutableNodeBaseDependent(0)
             .getExecutableNodeBaseDependent(0)
-            .getDependentNodeCount());
+            .getDependentNodeCount());*/
     AbstractRelation supplier = new BaseTable("tpch", "supplier", "vt1");
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem_scrambled", "vt2");
     AbstractRelation orders = new BaseTable("tpch", "orders_scrambled", "vt3");
@@ -1106,7 +1095,7 @@ public class TpchAsyncExecutionPlanTest {
     //    queryExecutionPlan.getRootNode().print();
 
     assertEquals(
-        5, queryExecutionPlan.root.getExecutableNodeBaseDependent(0).getDependentNodeCount());
+        5, queryExecutionPlan.root.getExecutableNodeBaseDependents().size());
 
     AbstractRelation part = new BaseTable("tpch", "part", "vt1");
     AbstractRelation supplier = new BaseTable("tpch", "supplier", "vt2");
@@ -1297,7 +1286,7 @@ public class TpchAsyncExecutionPlanTest {
     //    queryExecutionPlan.getRootNode().print();
 
     assertEquals(
-        5, queryExecutionPlan.root.getExecutableNodeBaseDependent(0).getDependentNodeCount());
+        5, queryExecutionPlan.root.getExecutableNodeBaseDependents().size());
 
     AbstractRelation part = new BaseTable("tpch", "part", "vt1");
     AbstractRelation supplier = new BaseTable("tpch", "supplier", "vt2");
@@ -1474,7 +1463,7 @@ public class TpchAsyncExecutionPlanTest {
     //    queryExecutionPlan.getRootNode().print();
 
     assertEquals(
-        5, queryExecutionPlan.root.getExecutableNodeBaseDependent(0).getDependentNodeCount());
+        5, queryExecutionPlan.root.getExecutableNodeBaseDependents().size());
 
     AbstractRelation customer = new BaseTable("tpch", "customer", "vt1");
     AbstractRelation orders = new BaseTable("tpch", "orders_scrambled", "vt2");
@@ -1788,7 +1777,7 @@ public class TpchAsyncExecutionPlanTest {
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
     //    queryExecutionPlan.getRootNode().print();
     assertEquals(
-        3, queryExecutionPlan.root.getExecutableNodeBaseDependent(0).getDependentNodeCount());
+        3, queryExecutionPlan.root.getExecutableNodeBaseDependents().size());
 
     BaseTable customer = new BaseTable("tpch", "customer", "vt1");
     BaseTable orders = new BaseTable("tpch", "orders_scrambled", "vt2");
@@ -1870,7 +1859,7 @@ public class TpchAsyncExecutionPlanTest {
     //    queryExecutionPlan.getRootNode().print();
 
     assertEquals(
-        3, queryExecutionPlan.root.getExecutableNodeBaseDependent(0).getDependentNodeCount());
+        3, queryExecutionPlan.root.getExecutableNodeBaseDependents().size());
 
     AbstractRelation lineitem = new BaseTable("tpch", "lineitem_scrambled", "vt1");
     AbstractRelation part = new BaseTable("tpch", "part", "vt2");
@@ -1989,7 +1978,7 @@ public class TpchAsyncExecutionPlanTest {
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
     //    queryExecutionPlan.getRootNode().print();
     assertEquals(
-        3, queryExecutionPlan.root.getExecutableNodeBaseDependent(0).getDependentNodeCount());
+        3, queryExecutionPlan.root.getExecutableNodeBaseDependents().size());
 
     // assertEquals(
     //    expected,
@@ -2046,7 +2035,7 @@ public class TpchAsyncExecutionPlanTest {
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
 
     assertEquals(
-        3, queryExecutionPlan.root.getExecutableNodeBaseDependent(0).getDependentNodeCount());
+        3, queryExecutionPlan.root.getExecutableNodeBaseDependents().size());
 
     JoinTable join =
         JoinTable.create(
@@ -2145,8 +2134,9 @@ public class TpchAsyncExecutionPlanTest {
     queryExecutionPlan = AsyncQueryExecutionPlan.create(queryExecutionPlan);
     //    queryExecutionPlan.getRootNode().print();
     assertEquals(
-        5, queryExecutionPlan.root.getExecutableNodeBaseDependent(0).getDependentNodeCount());
+        5, queryExecutionPlan.root.getExecutableNodeBaseDependents().size());
 
+    /*
     assertEquals(
         true,
         queryExecutionPlan.root.getExecutableNodeBaseDependent(0) instanceof AsyncAggExecutionNode);
@@ -2167,6 +2157,7 @@ public class TpchAsyncExecutionPlanTest {
             .getExecutableNodeBaseDependent(0)
             .getSubscribers()
             .size());
+            */
 
     SelectQuery expected =
         SelectQuery.create(
@@ -2753,7 +2744,9 @@ public class TpchAsyncExecutionPlanTest {
     // queryExecutionPlan.getRootNode().print();
 
     assertEquals(
-        5, queryExecutionPlan.root.getExecutableNodeBaseDependent(0).getDependentNodeCount());
+        5, queryExecutionPlan.root.getExecutableNodeBaseDependents().size());
+
+    /*
     assertEquals(
         1,
         queryExecutionPlan
@@ -2778,6 +2771,7 @@ public class TpchAsyncExecutionPlanTest {
             .getExecutableNodeBaseDependent(0)
             .getExecutableNodeBaseDependent(0)
             .getDependentNodeCount());
+            */
 
     stmt.execute("create schema if not exists \"verdictdb_temp\";");
     ExecutablePlanRunner.runTillEnd(new JdbcConnection(conn, new H2Syntax()), queryExecutionPlan);
