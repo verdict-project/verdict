@@ -314,8 +314,7 @@ public class JdbcCommonQueryForAllDatabasesTest {
   public void runShowTablesInEmptySchemaTest() throws SQLException {
     Assume.assumeTrue(database.equalsIgnoreCase("mysql"));
     String sql =
-        String.format(
-            "SHOW TABLES IN this_schema_does_not_exist", options.getVerdictTempSchemaName());
+        String.format("SHOW TABLES IN this_schema_is_empty", options.getVerdictTempSchemaName());
 
     Statement jdbcStmt = connMap.get(database).createStatement();
     Statement vcStmt = vcMap.get(database).createStatement();
