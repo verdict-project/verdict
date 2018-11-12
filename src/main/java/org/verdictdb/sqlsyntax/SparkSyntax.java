@@ -156,8 +156,8 @@ public class SparkSyntax extends SqlSyntax {
   @Override
   public String hashFunction(String column) {
     String func = String.format(
-        "(conv(substr(md5(cast(%s%s%s as string)), 1, 8), 16, 10) % %d) / %d",
-        getQuoteString(), column, getQuoteString(), hashPrecision, hashPrecision);
+        "(conv(substr(md5(cast(%s as string)), 1, 8), 16, 10) %% %d) / %d",
+        column, hashPrecision, hashPrecision);
     return func;
   }
 }

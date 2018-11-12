@@ -93,11 +93,13 @@ public class SelectQueryToSql {
     if (column instanceof BaseColumn) {
       BaseColumn base = (BaseColumn) column;
       if (base.getTableSourceAlias() == null) {
-        return base.getColumnName();
+        return quoteName(base.getColumnName());
       }
       if (base.getTableSourceAlias().equals("")) {
         return quoteName(base.getColumnName());
-      } else return base.getTableSourceAlias() + "." + quoteName(base.getColumnName());
+      } else {
+        return base.getTableSourceAlias() + "." + quoteName(base.getColumnName());
+      }
     } else if (column instanceof ConstantColumn) {
       return ((ConstantColumn) column).getValue().toString();
     } else if (column instanceof AsteriskColumn) {

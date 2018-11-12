@@ -17,7 +17,6 @@ import java.util.*;
 
 
 /**
- *
  * An selectAsyncAggExecutionNode will be created when the outer query is an aggregation query
  * that contains the scramble table. Instead of creating AsyncAggExecutionNode,
  * selectAggExecutionNode will be created. The sources of selectAggExecutionNode are

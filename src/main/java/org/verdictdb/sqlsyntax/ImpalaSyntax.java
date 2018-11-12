@@ -169,8 +169,8 @@ public class ImpalaSyntax extends SqlSyntax {
   @Override
   public String hashFunction(String column) {
     String f = String.format(
-        "pmod(fnv_hash(%s%s%s), %d) / %d",
-        getQuoteString(), column, getQuoteString(), hashPrecision, hashPrecision);
+        "pmod(fnv_hash(%s), %d) / %d",
+        column, hashPrecision, hashPrecision);
     return f;
   }
 }

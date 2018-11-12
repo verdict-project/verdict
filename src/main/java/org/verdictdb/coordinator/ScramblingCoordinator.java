@@ -232,10 +232,11 @@ public class ScramblingCoordinator {
       Map<String, String> customOptions)
       throws VerdictDBException {
 
-    // sanity check
-    if (!scramblingMethods.contains(methodName.toLowerCase())) {
-      throw new VerdictDBValueException("Not supported scrambling method: " + methodName);
-    }
+    // this check is now performed by ScramblingQuery
+//    // sanity check
+//    if (!scramblingMethods.contains(methodName.toLowerCase())) {
+//      throw new VerdictDBValueException("Not supported scrambling method: " + methodName);
+//    }
 
     // create a schema if not exists
     if (!conn.getSchemas().contains(newSchema)) {

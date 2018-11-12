@@ -16,7 +16,6 @@
 
 package org.verdictdb.core.sqlobject;
 
-import org.verdictdb.exception.VerdictDBTypeException;
 import org.verdictdb.exception.VerdictDBValueException;
 
 public class CreateScrambleQuery extends CreateTableQuery {

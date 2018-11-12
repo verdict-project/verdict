@@ -60,6 +60,8 @@ public abstract class SqlSyntax {
    * This hash function is supposed to provide good randomization quality. That is,
    * when an arbitrary set of elements are hashed, the distribution should be even.
    * 
+   * It is important to note that the argument is already quoted column names or values.
+   * 
    * @param column The column name
    * @param upper_bound The upper bound
    * @return Hashed integer

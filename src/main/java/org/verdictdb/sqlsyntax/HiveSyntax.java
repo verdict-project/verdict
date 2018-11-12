@@ -162,8 +162,8 @@ public class HiveSyntax extends SqlSyntax {
   @Override
   public String hashFunction(String column) {
     String f = String.format(
-        "(conv(substr(md5(%s%s%s), 1, 8), 16, 10) % %d) / %d",
-        getQuoteString(), column, getQuoteString(), hashPrecision, hashPrecision);
+        "(conv(substr(md5(%s), 1, 8), 16, 10) %% %d) / %d",
+        column, hashPrecision, hashPrecision);
     return f;
   }
 }
