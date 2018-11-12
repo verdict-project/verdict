@@ -1,19 +1,17 @@
 package org.verdictdb.coordinator;
 
+import com.google.common.base.Optional;
+import com.rits.cloning.Cloner;
+import org.verdictdb.VerdictSingleResult;
+import org.verdictdb.commons.DataTypeConverter;
+import org.verdictdb.connection.DbmsQueryResultMetaData;
+
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.verdictdb.VerdictSingleResult;
-import org.verdictdb.commons.DataTypeConverter;
-import org.verdictdb.connection.DbmsQueryResultMetaData;
-
-import com.google.common.base.Optional;
-import com.rits.cloning.Cloner;
-
-public class VerdictSingleResultFromListData
-    extends VerdictSingleResult {
+public class VerdictSingleResultFromListData extends VerdictSingleResult {
 
   private Optional<List<List<Object>>> result;
 
@@ -24,7 +22,7 @@ public class VerdictSingleResultFromListData
 
   int cursor = -1;
 
-  public VerdictSingleResultFromListData(){}
+  public VerdictSingleResultFromListData() {}
 
   public VerdictSingleResultFromListData(List<String> header, List<List<Object>> result) {
     super();
@@ -32,12 +30,13 @@ public class VerdictSingleResultFromListData
       this.result = Optional.absent();
     } else {
       fieldsName = header;
-      List<List<Object>>  copied = copyResult(result);
+      List<List<Object>> copied = copyResult(result);
       this.result = Optional.of(copied);
     }
   }
 
-  public VerdictSingleResultFromListData(List<String> header, List<List<Object>>  result, boolean asIs) {
+  public VerdictSingleResultFromListData(
+      List<String> header, List<List<Object>> result, boolean asIs) {
     // If result contains objects that cannot be serialized (e.g., BLOB, CLOB in H2),
     // it is just copied as-is (i.e., shallow copy) as opposed to deep copy.
     super();
@@ -48,7 +47,7 @@ public class VerdictSingleResultFromListData
         this.result = Optional.of(result);
       } else {
         fieldsName = header;
-        List<List<Object>>  copied = copyResult(result);
+        List<List<Object>> copied = copyResult(result);
         this.result = Optional.of(copied);
       }
     }
@@ -62,9 +61,8 @@ public class VerdictSingleResultFromListData
     return !result.isPresent();
   }
 
-
-  private static List<List<Object>>  copyResult(List<List<Object>>  result) {
-    List<List<Object>>  copied = new Cloner().deepClone(result);
+  private static List<List<Object>> copyResult(List<List<Object>> result) {
+    List<List<Object>> copied = new Cloner().deepClone(result);
     return copied;
   }
 
@@ -74,14 +72,13 @@ public class VerdictSingleResultFromListData
 
   @Override
   public int getColumnCount() {
-    if (result.isPresent() == false) {
+    if (result.isPresent() == false || result.get().isEmpty()) {
       return 0;
     } else {
       Object o = result.get().get(0);
       if (o instanceof List) {
         return ((List) o).size();
-      }
-      else return 1;
+      } else return 1;
     }
   }
 
@@ -101,11 +98,9 @@ public class VerdictSingleResultFromListData
       Object o = (result.get().get(0)).get(index);
       if (o instanceof String) {
         return DataTypeConverter.typeInt("varchar");
-      }
-      else if (o instanceof Integer) {
+      } else if (o instanceof Integer) {
         return DataTypeConverter.typeInt("int");
-      }
-      else {
+      } else {
         return Types.JAVA_OBJECT;
       }
     }
@@ -157,17 +152,19 @@ public class VerdictSingleResultFromListData
     cursor = -1;
   }
 
-  public static VerdictSingleResultFromListData createWithSingleColumn(List<String> header, List<Object> result) {
-    VerdictSingleResultFromListData singleResultFromListData = new VerdictSingleResultFromListData();
+  public static VerdictSingleResultFromListData createWithSingleColumn(
+      List<String> header, List<Object> result) {
+    VerdictSingleResultFromListData singleResultFromListData =
+        new VerdictSingleResultFromListData();
     if (result == null) {
       singleResultFromListData.result = Optional.absent();
     } else {
       List<List<Object>> rows = new ArrayList<>();
-      for (Object o:result) {
+      for (Object o : result) {
         rows.add(Arrays.asList(o));
       }
       singleResultFromListData.fieldsName = header;
-      List<List<Object>>  copied = copyResult(rows);
+      List<List<Object>> copied = copyResult(rows);
       singleResultFromListData.result = Optional.of(copied);
     }
     return singleResultFromListData;
