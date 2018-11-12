@@ -241,10 +241,6 @@ public class JdbcCommonQueryForAllDatabasesTest {
     conn.createStatement()
         .execute(
             String.format("CREATE SCHEMA IF NOT EXISTS %s", options.getVerdictTempSchemaName()));
-    conn.createStatement()
-        .execute(
-            String.format(
-                "CREATE SCHEMA IF NOT EXISTS test123", options.getVerdictTempSchemaName()));
     return conn;
   }
 
@@ -324,11 +320,15 @@ public class JdbcCommonQueryForAllDatabasesTest {
     Statement jdbcStmt = connMap.get(database).createStatement();
     Statement vcStmt = vcMap.get(database).createStatement();
 
+    jdbcStmt.execute(String.format("DROP SCHEMA IF EXISTS this_schema_is_empty"));
+    jdbcStmt.execute(String.format("CREATE SCHEMA IF NOT EXISTS this_schema_is_empty"));
+
     ResultSet jdbcRs = jdbcStmt.executeQuery(sql);
     ResultSet vcRs = vcStmt.executeQuery(sql);
     while (jdbcRs.next() && vcRs.next()) {
       assertEquals(jdbcRs.getObject(1), vcRs.getObject(1));
     }
+    jdbcStmt.execute(String.format("DROP SCHEMA IF EXISTS this_schema_is_empty"));
   }
 
   @Test
