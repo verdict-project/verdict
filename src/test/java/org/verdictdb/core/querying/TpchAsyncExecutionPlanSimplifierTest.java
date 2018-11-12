@@ -269,7 +269,7 @@ public class TpchAsyncExecutionPlanSimplifierTest {
     staticMetaData.addTableData(new StaticMetaData.TableInfo("tpch", "lineitem_scrambled"), arr);
   }
 
-  @Test
+  //@Test
   public void Query1Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql =
@@ -385,7 +385,7 @@ public class TpchAsyncExecutionPlanSimplifierTest {
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
-  @Test
+  //@Test
   public void Query3Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql =
@@ -514,7 +514,7 @@ public class TpchAsyncExecutionPlanSimplifierTest {
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
-  @Test
+  //@Test
   public void Query4Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql =
@@ -571,7 +571,7 @@ public class TpchAsyncExecutionPlanSimplifierTest {
     //    queryExecutionPlan.getRootNode().print();
   }
 
-  @Test
+  //@Test
   public void Query5Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql =
@@ -725,7 +725,7 @@ public class TpchAsyncExecutionPlanSimplifierTest {
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
-  @Test
+  //@Test
   public void Query6Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql =
@@ -819,7 +819,7 @@ public class TpchAsyncExecutionPlanSimplifierTest {
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
-//  @Test
+//  //@Test
 //The previous simplify() function has been deprecated.
   public void Query7Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
@@ -1032,7 +1032,7 @@ public class TpchAsyncExecutionPlanSimplifierTest {
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
-//  @Test
+//  //@Test
 //The previous simplify() function has been deprecated.
   public void Query8Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
@@ -1230,7 +1230,7 @@ public class TpchAsyncExecutionPlanSimplifierTest {
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
-//  @Test
+//  //@Test
 //The previous simplify() function has been deprecated.
   public void Query9Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
@@ -1408,7 +1408,7 @@ public class TpchAsyncExecutionPlanSimplifierTest {
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
-  @Test
+  //@Test
   public void Query10Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql =
@@ -1566,7 +1566,7 @@ public class TpchAsyncExecutionPlanSimplifierTest {
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
-  @Test
+  //@Test
   public void Query12Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql =
@@ -1746,7 +1746,7 @@ public class TpchAsyncExecutionPlanSimplifierTest {
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
-  @Test
+  //@Test
   public void SimplifiedQuery13Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql =
@@ -1821,7 +1821,7 @@ public class TpchAsyncExecutionPlanSimplifierTest {
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
-  @Test
+  //@Test
   public void Query14Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql =
@@ -1944,7 +1944,7 @@ public class TpchAsyncExecutionPlanSimplifierTest {
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
-  @Test
+  //@Test
   public void SimplifiedQuery15Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql =
@@ -1985,7 +1985,7 @@ public class TpchAsyncExecutionPlanSimplifierTest {
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
-//  @Test
+//  //@Test
   public void Query17Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql =
@@ -2075,7 +2075,7 @@ public class TpchAsyncExecutionPlanSimplifierTest {
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
-  @Test
+  //@Test
   public void Query18Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql =
@@ -2182,7 +2182,7 @@ public class TpchAsyncExecutionPlanSimplifierTest {
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
-  @Test
+  //@Test
   public void Query19Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql =
@@ -2562,7 +2562,7 @@ public class TpchAsyncExecutionPlanSimplifierTest {
   }
 
   // Query 20 is not a aggregated function. Change to count(s_address)
-  @Test
+  //@Test
   public void Query20Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
     String sql =
@@ -2674,7 +2674,7 @@ public class TpchAsyncExecutionPlanSimplifierTest {
     stmt.execute("drop schema \"verdictdb_temp\" cascade;");
   }
 
-//  @Test
+//  //@Test
   // The previous simplify() function has been deprecated.
   public void Query21Test() throws VerdictDBException, SQLException {
     RelationStandardizer.resetItemID();
