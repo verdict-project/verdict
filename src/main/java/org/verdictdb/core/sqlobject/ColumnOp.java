@@ -57,6 +57,7 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
    *   <li>cast
    *   <li>percentile
    *   <li>mod
+   *   <li>hash: returns a value between 0 and 1
    * </ol>
    *
    * <p>Comparison:
@@ -98,13 +99,13 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
   }
 
   public ColumnOp(String opType, UnnamedColumn operand) {
-    this.operands = Arrays.asList(operand);
     this.opType = opType;
+    this.operands = Arrays.asList(operand);
   }
 
   public ColumnOp(String opType, List<UnnamedColumn> operands) {
-    this.operands = operands;
     this.opType = opType;
+    this.operands = operands;
   }
 
   public UnnamedColumn getOperand() {
@@ -315,6 +316,10 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
 
   public static ColumnOp rand() {
     return new ColumnOp("rand");
+  }
+  
+  public static ColumnOp hash(UnnamedColumn column) {
+    return new ColumnOp("hash", column);
   }
 
   public static ColumnOp floor(UnnamedColumn column) {

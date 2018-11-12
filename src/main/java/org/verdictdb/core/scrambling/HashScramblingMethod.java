@@ -1,37 +1,22 @@
-/*
- *    Copyright 2018 University of Michigan
- *
- *    Licensed under the Apache License, Version 2.0 (the "License");
- *    you may not use this file except in compliance with the License.
- *    You may obtain a copy of the License at
- *
- *        http://www.apache.org/licenses/LICENSE-2.0
- *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
- */
-
 package org.verdictdb.core.scrambling;
-
-import org.verdictdb.commons.VerdictDBLogger;
-import org.verdictdb.connection.DbmsQueryResult;
-import org.verdictdb.core.querying.ExecutableNodeBase;
-import org.verdictdb.core.sqlobject.AbstractRelation;
-import org.verdictdb.core.sqlobject.BaseTable;
-import org.verdictdb.core.sqlobject.ColumnOp;
-import org.verdictdb.core.sqlobject.ConstantColumn;
-import org.verdictdb.core.sqlobject.UnnamedColumn;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-public class UniformScramblingMethod extends ScramblingMethodBase {
+import org.verdictdb.commons.VerdictDBLogger;
+import org.verdictdb.connection.DbmsQueryResult;
+import org.verdictdb.core.querying.ExecutableNodeBase;
+import org.verdictdb.core.sqlobject.AbstractRelation;
+import org.verdictdb.core.sqlobject.BaseColumn;
+import org.verdictdb.core.sqlobject.BaseTable;
+import org.verdictdb.core.sqlobject.ColumnOp;
+import org.verdictdb.core.sqlobject.ConstantColumn;
+import org.verdictdb.core.sqlobject.UnnamedColumn;
 
+public class HashScramblingMethod extends ScramblingMethodBase {
+  
   private final String MAIN_TABLE_SOURCE_ALIAS = "t";
 
   private int totalNumberOfblocks = -1;
@@ -39,17 +24,13 @@ public class UniformScramblingMethod extends ScramblingMethodBase {
   private int actualNumberOfBlocks = -1;
 
   private static final long EFFECTIVE_TABLE_SIZE_THRESHOLD = 100000;
+  
+  private String hashColumnName;
 
-  public UniformScramblingMethod(long blockSize, int maxBlockCount, double relativeSize) {
+  public HashScramblingMethod(
+      long blockSize, int maxBlockCount, double relativeSize, String hashColumnName) {
     super(blockSize, maxBlockCount, relativeSize);
-  }
-
-  public UniformScramblingMethod(long blockSize, int maxBlockCount) {
-    super(blockSize, maxBlockCount, 1.0);
-  }
-
-  public UniformScramblingMethod(long blockSize) {
-    super(blockSize, 100, 1.0);
+    this.hashColumnName = hashColumnName;
   }
 
   @Override
@@ -63,10 +44,36 @@ public class UniformScramblingMethod extends ScramblingMethodBase {
   }
 
   @Override
+  public int getBlockCount() {
+    return totalNumberOfblocks;
+  }
+
+  @Override
+  public int getActualBlockCount() {
+    return actualNumberOfBlocks;
+  }
+
+  @Override
+  public int getTierCount() {
+    return 1;
+  }
+
+  @Override
+  public double getRelativeSize() {
+    return relativeSize;
+  }
+
+  @Override
   public List<UnnamedColumn> getTierExpressions(Map<String, Object> metaData) {
     return Arrays.asList();
   }
 
+  @Override
+  public List<Double> getCumulativeProbabilityDistributionForTier(
+      Map<String, Object> metaData, int tier) {
+    return calculateBlockCountsAndCumulativeProbabilityDistForTier(metaData, tier);
+  }
+  
   private List<Double> calculateBlockCountsAndCumulativeProbabilityDistForTier(
       Map<String, Object> metaData, int tier) {
 
@@ -95,7 +102,7 @@ public class UniformScramblingMethod extends ScramblingMethodBase {
     if (blockSize == 0) blockSize = 1; // just a sanity check
     
     // including the ones that will be thrown away due to relative size < 1.0
-    totalNumberOfblocks = (int) Math.ceil(tableSize / (double) blockSize);
+    totalNumberOfblocks = (int) Math.ceil(tableSize / (double) blockSize);    
 
     List<Double> prob = new ArrayList<>();
     for (int i = 0; i < actualNumberOfBlocks; i++) {
@@ -105,12 +112,6 @@ public class UniformScramblingMethod extends ScramblingMethodBase {
     storeCumulativeProbabilityDistribution(tier, prob);
 
     return prob;
-  }
-
-  @Override
-  public List<Double> getCumulativeProbabilityDistributionForTier(
-      Map<String, Object> metaData, int tier) {
-    return calculateBlockCountsAndCumulativeProbabilityDistForTier(metaData, tier);
   }
 
   @Override
@@ -127,35 +128,19 @@ public class UniformScramblingMethod extends ScramblingMethodBase {
 
   @Override
   public UnnamedColumn getBlockExprForTier(int tier, Map<String, Object> metaData) {
-
+    
     calculateBlockCountsAndCumulativeProbabilityDistForTier(metaData, tier);
+    BaseColumn hashColumn = new BaseColumn(MAIN_TABLE_SOURCE_ALIAS, hashColumnName);
 
     UnnamedColumn blockForTierExpr =
         ColumnOp.cast(
             ColumnOp.floor(
-                ColumnOp.multiply(ColumnOp.rand(), ConstantColumn.valueOf(totalNumberOfblocks))),
+                ColumnOp.multiply(
+                    ColumnOp.hash(hashColumn), 
+                    ConstantColumn.valueOf(totalNumberOfblocks))),
             ConstantColumn.valueOf("int"));
 
     return blockForTierExpr;
   }
 
-  @Override
-  public int getBlockCount() {
-    return totalNumberOfblocks;
-  }
-
-  @Override
-  public int getActualBlockCount() {
-    return actualNumberOfBlocks;
-  }
-
-  @Override
-  public int getTierCount() {
-    return 1;
-  }
-
-  @Override
-  public double getRelativeSize() {
-    return relativeSize;
-  }
 }

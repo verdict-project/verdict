@@ -16,6 +16,9 @@
 
 package org.verdictdb.core.sqlobject;
 
+import org.verdictdb.exception.VerdictDBTypeException;
+import org.verdictdb.exception.VerdictDBValueException;
+
 public class CreateScrambleQuery extends CreateTableQuery {
 
   private static final long serialVersionUID = -6363349381526760468L;
@@ -28,6 +31,13 @@ public class CreateScrambleQuery extends CreateTableQuery {
 
   private String originalTable;
 
+  /**
+   * One of the following:
+   * <ol>
+   * <li>1. uniform</li>
+   * <li>2. hash</li>
+   * </ol>
+   */
   private String method;
 
   /**
@@ -38,7 +48,12 @@ public class CreateScrambleQuery extends CreateTableQuery {
   /**
    * the number of tuples for each block
    */
-  private long blocksize;   
+  private long blocksize;
+  
+  /**
+   * The column (if present) used for hashed sampling.
+   */
+  private String hashColumnName = null;
 
   public CreateScrambleQuery() {}
 
@@ -49,7 +64,8 @@ public class CreateScrambleQuery extends CreateTableQuery {
       String originalTable,
       String method,
       double size,
-      long blocksize) {
+      long blocksize,
+      String hashColumnName) {
     super();
     this.newSchema = newSchema;
     this.newTable = newTable;
@@ -58,6 +74,45 @@ public class CreateScrambleQuery extends CreateTableQuery {
     this.method = method;
     this.size = size;
     this.blocksize = blocksize;
+    this.hashColumnName = hashColumnName;
+  }
+  
+  /**
+   * Checks if the field values are proper.
+   * 
+   * @return True if this query is logically valid.
+   */
+  public void checkIfSupported() throws VerdictDBValueException {
+    if (method.equalsIgnoreCase("uniform") 
+        || method.equalsIgnoreCase("hash") 
+        || method.equalsIgnoreCase("FastConverge")) {
+    } else {
+      throw new VerdictDBValueException(
+          String.format("The scrambling method is set to %s."
+          + "The scrambling method must be either uniform or hash.",
+          method));
+    }
+    
+    if (method.equals("hash") && hashColumnName != null) {
+    } else {
+      throw new VerdictDBValueException(
+          "The hash column is null."
+          + "If the scrambling method is hash, "
+          + "hash column name must be present.");
+    }
+    
+    if (size <= 0 || size > 1) {
+      throw new VerdictDBValueException(
+          String.format(
+              "Scramble size is %f. It must be between 0.0 and 1.0.", size));
+    }
+
+    if (blocksize == 0) {
+      throw new VerdictDBValueException(
+          String.format(
+              "The scramble block size is set to 0."
+              + "A scramble block size should be greater than zero."));
+    }
   }
 
   public String getNewSchema() {
@@ -87,6 +142,10 @@ public class CreateScrambleQuery extends CreateTableQuery {
   public long getBlockSize() {
     return blocksize;
   }
+  
+  public String getHashColumnName() {
+    return hashColumnName;
+  }
 
   public void setNewSchema(String newSchema) {
     this.newSchema = newSchema;
@@ -111,4 +170,9 @@ public class CreateScrambleQuery extends CreateTableQuery {
   public void setSize(double size) {
     this.size = size;
   }
+  
+  public void setHashColumnName(String hashColumnName) {
+    this.hashColumnName = hashColumnName;
+  }
+  
 }

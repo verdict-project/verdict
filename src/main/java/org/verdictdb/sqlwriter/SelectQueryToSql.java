@@ -46,7 +46,8 @@ public class SelectQueryToSql {
           "is_not_null",
           "is_null",
           "rand",
-          "floor");
+          "floor",
+          "hash");
 
   public SelectQueryToSql(SqlSyntax syntax) {
     this.syntax = syntax;
@@ -101,7 +102,9 @@ public class SelectQueryToSql {
       return ((ConstantColumn) column).getValue().toString();
     } else if (column instanceof AsteriskColumn) {
       return "*";
-    } else if (column instanceof ColumnOp) {
+    } 
+    
+    else if (column instanceof ColumnOp) {
       ColumnOp columnOp = (ColumnOp) column;
       if (columnOp.getOpType().equals("avg")) {
         return "avg(" + unnamedColumnToSqlPart(columnOp.getOperand()) + ")";
@@ -294,6 +297,8 @@ public class SelectQueryToSql {
         }
       } else if (columnOp.getOpType().equals("rand")) {
         return syntax.randFunction();
+      } else if (columnOp.getOpType().equals("hash")) {
+        return syntax.hashFunction(withParentheses(columnOp.getOperand()));
       } else if (columnOp.getOpType().equals("cast")) {
         // MySQL cast as int should be replaced by cast as unsigned
         if (syntax instanceof MysqlSyntax

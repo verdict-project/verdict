@@ -226,10 +226,10 @@ public class RedshiftSyntax extends SqlSyntax {
    * Note that the stddev of rand() is sqrt(0.01 * 0.99) = 0.09949874371.
    */
   @Override
-  public String hashFunction(String column, int upper_bound) {
+  public String hashFunction(String column) {
     String f = String.format(
-        "cast(strtol(substring(md5(cast(%s%s%s as varchar)), 0, 8), 16) % %d as integer)",
-        getQuoteString(), column, getQuoteString(), upper_bound);
+        "(strtol(substring(md5(cast(%s%s%s as varchar)), 0, 8), 16) % %d) / %d",
+        getQuoteString(), column, getQuoteString(), hashPrecision, hashPrecision);
     return f;
   }
 }

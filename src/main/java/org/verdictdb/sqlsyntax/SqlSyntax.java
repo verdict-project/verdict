@@ -55,7 +55,7 @@ public abstract class SqlSyntax {
   public abstract String randFunction();
   
   /**
-   * Returns a hash value between 0 (inclusive) and upper_bound (exclusive).
+   * Returns a hash value between 0 (inclusive) and 1 (exclusive).
    * 
    * This hash function is supposed to provide good randomization quality. That is,
    * when an arbitrary set of elements are hashed, the distribution should be even.
@@ -64,7 +64,10 @@ public abstract class SqlSyntax {
    * @param upper_bound The upper bound
    * @return Hashed integer
    */
-  public abstract String hashFunction(String column, int upper_bound);
+  public abstract String hashFunction(String column);
+  
+  // this indicates 0.00001 precision
+  final protected int hashPrecision = 100000;
 
   public abstract boolean isAsRequiredBeforeSelectInCreateTable();
 

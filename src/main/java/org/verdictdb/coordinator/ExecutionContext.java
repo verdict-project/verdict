@@ -164,6 +164,7 @@ public class ExecutionContext {
     }
   }
 
+  // not used for now due to instability (i.e., often fails to achieve the goal).
   private void abortInParallel(VerdictResultStream stream) {
     Thread task = new Thread(new ConcurrentAborter(stream));
     task.start();
@@ -201,11 +202,13 @@ public class ExecutionContext {
         runningCoordinator = coordinator;
       }
       VerdictResultStream stream = new VerdictResultStreamFromExecutionResultReader(reader, this);
-
       return stream;
+      
     } else if (queryType.equals(QueryType.scrambling)) {
       log.debug("Query type: scrambling");
       CreateScrambleQuery scrambleQuery = generateScrambleQuery(query);
+      scrambleQuery.checkIfSupported();   // checks the validity; throws an exception if not.
+      
       ScramblingCoordinator scrambler =
           new ScramblingCoordinator(
               conn,
@@ -213,18 +216,7 @@ public class ExecutionContext {
               options.getVerdictTempSchemaName(),
               scrambleQuery.getBlockSize());
 
-      if (scrambleQuery.getSize() <= 0 || scrambleQuery.getSize() > 1) {
-        throw new VerdictDBTypeException(
-            String.format(
-                "Scramble size is %f. It must be between 0.0 and 1.0.", scrambleQuery.getSize()));
-      }
-
-      if (scrambleQuery.getBlockSize() == 0) {
-        throw new VerdictDBTypeException(
-            String.format("A scramble block size should be greater than zero."));
-      }
-
-      // store this to our own metadata db.
+      // store this metadata to our own metadata db.
       ScrambleMeta meta = scrambler.scramble(scrambleQuery);
 
       // Add metadata to metastore
@@ -239,16 +231,16 @@ public class ExecutionContext {
       ScrambleMetaStore metaStore = new ScrambleMetaStore(conn, options);
       Pair<BaseTable, BaseTable> tablePair = getTablePairForDropScramble(query);
       metaStore.dropScrambleTable(tablePair.getLeft(), tablePair.getRight());
-
       return null;
+      
     } else if (queryType.equals(QueryType.drop_all_scrambles)) {
       log.debug("Query type: drop_all_scrambles");
 
       ScrambleMetaStore metaStore = new ScrambleMetaStore(conn, options);
       BaseTable table = getTableForDropAllScramble(query);
       metaStore.dropAllScrambleTable(table);
-
       return null;
+      
     } else if (queryType.equals(QueryType.show_scrambles)) {
       log.debug("Query type: show_scrambles");
 
@@ -314,8 +306,13 @@ public class ExecutionContext {
         };
     return visitor.visit(parser.drop_all_scrambles_statement());
   }
+  
+  private String stripQuote(String expr) {
+    return expr.replace("\"", "").replace("`", "").replace("'", "");
+  }
 
   private CreateScrambleQuery generateScrambleQuery(String query) {
+    
     VerdictSQLParser parser = NonValidatingSQLParser.parserOf(query);
     VerdictSQLParserBaseVisitor<CreateScrambleQuery> visitor =
         new VerdictSQLParserBaseVisitor<CreateScrambleQuery>() {
@@ -328,15 +325,16 @@ public class ExecutionContext {
             String method =
                 (ctx.scrambling_method_name() == null)
                     ? "uniform"
-                    : ctx.scrambling_method_name()
-                        .getText()
-                        .replace("'", "")
-                        .replace("\"", "")
-                        .replace("`", ""); // remove all types of 'quotes'
+                    : stripQuote(ctx.scrambling_method_name().getText());
+//                        .getText()
+//                        .replace("'", "")
+//                        .replace("\"", "")
+//                        .replace("`", ""); // remove all types of 'quotes'
             double percent =
                 (ctx.percent == null) ? 1.0 : Double.parseDouble(ctx.percent.getText());
             long blocksize =
                 (ctx.blocksize == null) ? (long) 1e6 : Long.parseLong(ctx.blocksize.getText());
+            String hashColumnName = stripQuote(ctx.hash_column.getText());
 
             CreateScrambleQuery query =
                 new CreateScrambleQuery(
@@ -346,7 +344,8 @@ public class ExecutionContext {
                     originalTable.getTableName(),
                     method,
                     percent,
-                    blocksize);
+                    blocksize,
+                    hashColumnName);
             if (ctx.IF() != null) query.setIfNotExists(true);
             return query;
           }

@@ -160,8 +160,10 @@ public class HiveSyntax extends SqlSyntax {
    * Note that the stddev of rand() is sqrt(0.01 * 0.99) = 0.09949874371.
    */
   @Override
-  public String hashFunction(String column, int upper_bound) {
-    // TODO Auto-generated method stub
-    return null;
+  public String hashFunction(String column) {
+    String f = String.format(
+        "(conv(substr(md5(%s%s%s), 1, 8), 16, 10) % %d) / %d",
+        getQuoteString(), column, getQuoteString(), hashPrecision, hashPrecision);
+    return f;
   }
 }

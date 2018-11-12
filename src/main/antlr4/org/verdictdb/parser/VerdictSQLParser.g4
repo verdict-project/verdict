@@ -70,15 +70,16 @@ create_scramble_statement
       (METHOD scrambling_method_name)? 
       (SIZE percent=FLOAT)?
       (BLOCKSIZE blocksize=DECIMAL)?
+      (HASHCOLUMN hash_column=column_name)?
     ;
 
 scrambling_method_name
     : STRING
     ;
     
-on_columns
-    : ON column_name (',' column_name)*
-    ;
+//on_columns
+//    : ON column_name (',' column_name)*
+//    ;
 
 drop_scramble_statement
     : DROP SCRAMBLE scrambled_table=table_name ON original_table=table_name

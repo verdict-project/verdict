@@ -162,10 +162,10 @@ public class PrestoSyntax extends SqlSyntax {
    * I alss tested xxhash64(); however, its std was larger (i.e., 10.243500033157268).
    */
   @Override
-  public String hashFunction(String column, int upper_bound) {
+  public String hashFunction(String column) {
     String f = String.format(
-        "from_base(substr(to_hex(md5(to_utf8(cast(%s%s%s as varchar)))), 1, 8), 16) % %d",
-        getQuoteString(), column, getQuoteString(), upper_bound);
+        "(from_base(substr(to_hex(md5(to_utf8(cast(%s%s%s as varchar)))), 1, 8), 16) % %d) / %d",
+        getQuoteString(), column, getQuoteString(), hashPrecision, hashPrecision);
     return f;
   }
 }

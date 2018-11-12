@@ -102,6 +102,7 @@ GOTO:                            G O T O;
 GRANT:                           G R A N T;
 GROUP:                           G R O U P;
 HASH:                            H A S H;
+HASHCOLUMN:                      H A S H C O L U M N;
 HAVING:                          H A V I N G;
 IDENTITY:                        I D E N T I T Y;
 IDENTITYCOL:                     I D E N T I T Y C O L;
