@@ -17,10 +17,7 @@
 package org.verdictdb.core.execplan;
 
 import org.verdictdb.commons.VerdictDBLogger;
-import org.verdictdb.connection.CachedDbmsConnection;
-import org.verdictdb.connection.DbmsConnection;
-import org.verdictdb.connection.DbmsQueryResult;
-import org.verdictdb.connection.SparkConnection;
+import org.verdictdb.connection.*;
 import org.verdictdb.core.querying.ExecutableNodeBase;
 import org.verdictdb.core.querying.ola.AsyncAggExecutionNode;
 import org.verdictdb.core.querying.ola.SelectAsyncAggExecutionNode;
@@ -134,6 +131,9 @@ public class ExecutableNodeRunner implements Runnable {
   public void abort() {
     log.trace(String.format("Aborts running this node %s", node.toString()));
     setAborted();
+    if (node instanceof SelectAsyncAggExecutionNode) {
+      InMemoryAggregate.abort();
+    }
     conn.abort();
     //    for (ExecutableNodeRunner runner : childRunners) {
     //      runner.abort();

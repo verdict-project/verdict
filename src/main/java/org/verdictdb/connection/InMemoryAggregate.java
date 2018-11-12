@@ -156,4 +156,14 @@ public class InMemoryAggregate {
     }
   }
 
+  public static void abort() {
+    try {
+      if (!conn.isClosed()) {
+        conn.close();
+      }
+    } catch (SQLException e) {
+      e.printStackTrace();
+    }
+  }
+
 }
