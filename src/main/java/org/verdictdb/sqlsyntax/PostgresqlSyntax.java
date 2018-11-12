@@ -138,4 +138,32 @@ public class PostgresqlSyntax extends SqlSyntax {
     }
     return true;
   }
+
+  /**
+   * The following query returns 9.7244874705897259 (9.72 / 100 = 0.0972):
+   * 
+   * select stddev(c)
+   * from (
+   *     select v, count(*) as c
+   *     from (
+   *         select ('x' || lpad(substr(md5(cast(value as varchar)), 1, 8), 16, '0'))::bit(64)::bigint % 100 as v
+   *         from mytable
+   *     ) t1
+   *     group by v
+   * ) t2;
+   * 
+   * where mytable contains the integers from 0 to 10000.
+   * 
+   * Note that the stddev of rand() is sqrt(0.01 * 0.99) = 0.09949874371.
+   * 
+   * PostreSQL's hex to int conversion is described at 
+   * https://stackoverflow.com/questions/8316164/convert-hex-in-text-representation-to-decimal-number
+   */
+  @Override
+  public String hashFunction(String column, int upper_bound) {
+    String f = String.format(
+        "('x' || lpad(substr(md5(cast(%s%s%s as varchar)), 1, 8), 16, '0'))::bit(64)::bigint % %d",
+        getQuoteString(), column, getQuoteString(), upper_bound);
+    return f;
+  }
 }

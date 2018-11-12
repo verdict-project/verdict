@@ -132,4 +132,32 @@ public class SparkSyntax extends SqlSyntax {
   public String getApproximateCountDistinct(String column) {
     return String.format("approx_count_distinct(%s)", column);
   }
+
+  /**
+   * The following query returns 9.707328274155676 (see 9.707328274155676 / 100 = 0.097)
+   * 
+   * spark.sql("""
+   * select stddev(c)
+   * from (
+   *   select v, count(*) as c
+   *   from (
+   *     select cast(conv(substr(md5(cast(value as string)), 1, 8), 16, 10) % 100 as integer) as v
+   *     from mytable
+   *   ) t1
+   *   group by v
+   * ) t2
+   * """).show()
+   * 
+   * where mytable contains the integers from 0 to 10000.
+   * spark> ((0 to 10000) toList).toDF.registerTempTable("mytable")
+   * 
+   * Note that the stddev of rand() is sqrt(0.01 * 0.99) = 0.09949874371.
+   */
+  @Override
+  public String hashFunction(String column, int upper_bound) {
+    String func = String.format(
+        "cast(conv(substr(md5(cast(%s%s%s as string)), 1, 8), 16, 10) % %d as integer)",
+        getQuoteString(), column, getQuoteString(), upper_bound);
+    return func;
+  }
 }
