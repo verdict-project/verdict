@@ -132,7 +132,7 @@ public class ExecutableNodeRunner implements Runnable {
     log.trace(String.format("Aborts running this node %s", node.toString()));
     setAborted();
     if (node instanceof SelectAsyncAggExecutionNode) {
-      InMemoryAggregate.abort();
+      ((SelectAsyncAggExecutionNode)node).abort();
     }
     conn.abort();
     //    for (ExecutableNodeRunner runner : childRunners) {

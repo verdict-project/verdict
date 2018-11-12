@@ -3,6 +3,7 @@ package org.verdictdb.connection;
 import static java.sql.Types.CHAR;
 import static java.sql.Types.VARCHAR;
 
+import org.apache.commons.lang3.RandomStringUtils;
 import org.verdictdb.commons.DataTypeConverter;
 import org.verdictdb.core.sqlobject.*;
 import org.verdictdb.exception.VerdictDBException;
@@ -20,27 +21,31 @@ import java.util.List;
 
 public class InMemoryAggregate {
 
-  private static final String DB_CONNECTION = "jdbc:h2:mem:verdictdb;DB_CLOSE_DELAY=-1";
-
   private static final String selectAsyncAggTable = "VERDICTDB_SELECTASYNCAGG";
 
-  private static long selectAsyncAggTableID = 0;
+  private long selectAsyncAggTableID = 0;
 
   private static SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new H2Syntax());
 
-  static Connection conn;
+  private Connection conn;
 
-  static {
+  public static InMemoryAggregate create() {
+    InMemoryAggregate inMemoryAggregate = null;
     try {
       Class.forName("org.h2.Driver");
-      conn = DriverManager.getConnection(DB_CONNECTION, "", "");
+      inMemoryAggregate = new InMemoryAggregate();
+      String H2_DATABASE =
+          "verdictdb_" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
+      String DB_CONNECTION = String.format("jdbc:h2:mem:%s;DB_CLOSE_DELAY=-1", H2_DATABASE);
+      inMemoryAggregate.conn = DriverManager.getConnection(DB_CONNECTION, "", "");
     } catch (SQLException | ClassNotFoundException e) {
       // https://stackoverflow.com/questions/2070293/why-doesnt-java-allow-to-throw-a-checked-exception-from-static-initialization-b
       throw new ExceptionInInitializerError(e);
     }
+    return inMemoryAggregate;
   }
 
-  public static void createTable(DbmsQueryResult dbmsQueryResult, String tableName) throws SQLException {
+  public void createTable(DbmsQueryResult dbmsQueryResult, String tableName) throws SQLException {
     StringBuilder columnNames = new StringBuilder();
     StringBuilder fieldNames = new StringBuilder();
     StringBuilder bindVariables = new StringBuilder();
@@ -80,13 +85,13 @@ public class InMemoryAggregate {
     statement.executeBatch();
   }
 
-  public static DbmsQueryResult executeQuery(SelectQuery query) throws VerdictDBException, SQLException {
+  public DbmsQueryResult executeQuery(SelectQuery query) throws VerdictDBException, SQLException {
     String sql = selectQueryToSql.toSql(query).toUpperCase();
     ResultSet rs = conn.createStatement().executeQuery(sql);
     return new JdbcQueryResult(rs);
   }
 
-  public static String combinedTableName(String combineTableName, String targetTableName, SelectQuery dependentQuery)
+  public String combinedTableName(String combineTableName, String targetTableName, SelectQuery dependentQuery)
       throws SQLException, VerdictDBException {
     String tableName = selectAsyncAggTable + selectAsyncAggTableID++;
 
@@ -156,7 +161,7 @@ public class InMemoryAggregate {
     }
   }
 
-  public static void abort() {
+  public void abort() {
     try {
       if (!conn.isClosed()) {
         conn.close();

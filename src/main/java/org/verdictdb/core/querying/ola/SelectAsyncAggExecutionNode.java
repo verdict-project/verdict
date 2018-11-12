@@ -44,6 +44,8 @@ public class SelectAsyncAggExecutionNode extends AsyncAggExecutionNode {
 
   private AggMeta aggMeta;
 
+  private InMemoryAggregate inMemoryAggregate = InMemoryAggregate.create();
+
   private SelectAsyncAggExecutionNode(IdCreator idCreator) {
     super(idCreator);
   }
@@ -107,6 +109,10 @@ public class SelectAsyncAggExecutionNode extends AsyncAggExecutionNode {
       node.selectQuery.addHavingByAnd(originalAggQuery.getHaving().get());
     }
 
+    // share same inMemoryAggregate object with selectAggExecutionNode
+    for (ExecutableNodeBase source:node.getSources()) {
+      ((SelectAggExecutionNode)source).setInMemoryAggregate(node.inMemoryAggregate);
+    }
     return node;
   }
 
@@ -124,10 +130,10 @@ public class SelectAsyncAggExecutionNode extends AsyncAggExecutionNode {
         token.setKeyValue("aggMeta", aggMeta);
       }
       try {
-        selectAsyncAggTableName = InMemoryAggregate.combinedTableName(table, selectAsyncAggTableName, dependentQuery);
+        selectAsyncAggTableName = inMemoryAggregate.combinedTableName(table, selectAsyncAggTableName, dependentQuery);
         token.setKeyValue("tableName", selectAsyncAggTableName);
         SelectQuery query = ((CreateTableAsSelectQuery) super.createQuery(tokens)).getSelect();
-        dbmsQueryResult = InMemoryAggregate.executeQuery(query);
+        dbmsQueryResult = inMemoryAggregate.executeQuery(query);
       } catch (SQLException e) {
         e.printStackTrace();
       }
@@ -182,4 +188,7 @@ public class SelectAsyncAggExecutionNode extends AsyncAggExecutionNode {
     this.scrambleMeta = meta;
   }
 
+  public void abort() {
+    inMemoryAggregate.abort();
+  }
 }
