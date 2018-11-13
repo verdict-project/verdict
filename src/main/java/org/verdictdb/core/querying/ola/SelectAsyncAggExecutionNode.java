@@ -1,7 +1,6 @@
 package org.verdictdb.core.querying.ola;
 
 import com.google.common.collect.ImmutableMap;
-import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.verdictdb.connection.DbmsQueryResult;
@@ -130,7 +129,7 @@ public class SelectAsyncAggExecutionNode extends AsyncAggExecutionNode {
         token.setKeyValue("aggMeta", aggMeta);
       }
       try {
-        selectAsyncAggTableName = inMemoryAggregate.combinedTableName(table, selectAsyncAggTableName, dependentQuery);
+        selectAsyncAggTableName = inMemoryAggregate.combineTables(table, selectAsyncAggTableName, dependentQuery);
         token.setKeyValue("tableName", selectAsyncAggTableName);
         SelectQuery query = ((CreateTableAsSelectQuery) super.createQuery(tokens)).getSelect();
         dbmsQueryResult = inMemoryAggregate.executeQuery(query);

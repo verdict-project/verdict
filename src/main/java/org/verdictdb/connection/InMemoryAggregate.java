@@ -4,6 +4,7 @@ import static java.sql.Types.CHAR;
 import static java.sql.Types.VARCHAR;
 
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.hadoop.fs.Stat;
 import org.verdictdb.commons.DataTypeConverter;
 import org.verdictdb.core.sqlobject.*;
 import org.verdictdb.exception.VerdictDBException;
@@ -35,9 +36,9 @@ public class InMemoryAggregate {
     try {
       Class.forName("org.h2.Driver");
       inMemoryAggregate = new InMemoryAggregate();
-      String H2_DATABASE =
+      String h2Database =
           "verdictdb_" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
-      String DB_CONNECTION = String.format("jdbc:h2:mem:%s;DB_CLOSE_DELAY=-1", H2_DATABASE);
+      String DB_CONNECTION = String.format("jdbc:h2:mem:%s;DB_CLOSE_DELAY=-1", h2Database);
       inMemoryAggregate.conn = DriverManager.getConnection(DB_CONNECTION, "", "");
     } catch (SQLException | ClassNotFoundException e) {
       // https://stackoverflow.com/questions/2070293/why-doesnt-java-allow-to-throw-a-checked-exception-from-static-initialization-b
@@ -92,21 +93,26 @@ public class InMemoryAggregate {
 
   public DbmsQueryResult executeQuery(SelectQuery query) throws VerdictDBException, SQLException {
     String sql = selectQueryToSql.toSql(query).toUpperCase();
-    ResultSet rs = conn.createStatement().executeQuery(sql);
-    return new JdbcQueryResult(rs);
+    Statement stmt = conn.createStatement();
+    ResultSet rs = stmt.executeQuery(sql);
+    DbmsQueryResult dbmsQueryResult = new JdbcQueryResult(rs);
+    stmt.close();
+    return dbmsQueryResult;
   }
 
-  public String combinedTableName(String combineTableName, String targetTableName, SelectQuery dependentQuery)
+  public String combineTables(String combinedTableName, String newAggTableName, SelectQuery dependentQuery)
       throws SQLException, VerdictDBException {
     String tableName = selectAsyncAggTable + selectAsyncAggTableID++;
 
     // check targetTable exists
-    if (targetTableName.equals("")) {
+    if (newAggTableName.equals("")) {
       // if not just let it be the copy of combineTable
-      conn.createStatement().execute(
-          String.format("CREATE TABLE %s AS SELECT * FROM %s", tableName, combineTableName));
+      Statement stmt = conn.createStatement();
+      stmt.execute(
+          String.format("CREATE TABLE %s AS SELECT * FROM %s", tableName, combinedTableName));
+      stmt.close();
     } else {
-      // if exists, combinedTableName two tables using the logic of AggCombinerExecutionNode
+      // if exists, combineTables two tables using the logic of AggCombinerExecutionNode
       List<GroupingAttribute> groupList = new ArrayList<>();
       SelectQuery copy = dependentQuery.deepcopy();
       for (SelectItem sel : copy.getSelectList()) {
@@ -130,17 +136,19 @@ public class InMemoryAggregate {
         }
       }
       SelectQuery left = SelectQuery.create(new AsteriskColumn(),
-          new BaseTable("PUBLIC", targetTableName));
+          new BaseTable("PUBLIC", newAggTableName));
       SelectQuery right = SelectQuery.create(new AsteriskColumn(),
-          new BaseTable("PUBLIC", combineTableName));
+          new BaseTable("PUBLIC", combinedTableName));
       AbstractRelation setOperation = new SetOperationRelation(left, right, SetOperationRelation.SetOpType.unionAll);
       copy.clearFilter();
       copy.setFromList(Arrays.asList(setOperation));
       copy.clearGroupby();
       copy.addGroupby(groupList);
       String sql = selectQueryToSql.toSql(copy);
-      conn.createStatement().execute(
+      Statement stmt = conn.createStatement();
+      stmt.execute(
           String.format("CREATE TABLE %s AS %s", tableName, sql));
+      stmt.close();
     }
 
     return tableName;
@@ -169,7 +177,10 @@ public class InMemoryAggregate {
   public void abort() {
     try {
       if (!conn.isClosed()) {
-        conn.close();
+        // This will close all the connection and the database.
+        Statement stmt = conn.createStatement();
+        stmt.executeQuery("SHUTDOWN");
+        stmt.close();
       }
     } catch (SQLException e) {
       e.printStackTrace();

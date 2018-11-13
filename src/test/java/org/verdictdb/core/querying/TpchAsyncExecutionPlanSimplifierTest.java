@@ -45,6 +45,11 @@ import org.verdictdb.sqlreader.RelationStandardizer;
 import org.verdictdb.sqlsyntax.H2Syntax;
 import org.verdictdb.sqlwriter.QueryToSql;
 
+/**
+ * In favor of simplify2() (instead of the legacy function simplify()),
+ * we disable these tests.
+ */
+
 public class TpchAsyncExecutionPlanSimplifierTest {
 
   static Connection conn;

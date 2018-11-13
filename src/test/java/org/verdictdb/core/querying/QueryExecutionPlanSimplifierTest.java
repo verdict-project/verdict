@@ -24,6 +24,11 @@ import org.verdictdb.exception.VerdictDBValidationException;
 import org.verdictdb.sqlreader.NonValidatingSQLParser;
 import org.verdictdb.sqlsyntax.H2Syntax;
 
+/**
+ * In favor of simplify2() (instead of the legacy function simplify()),
+ * we disable these tests.
+ */
+
 public class QueryExecutionPlanSimplifierTest {
 
   static String originalSchema = "originalschema";

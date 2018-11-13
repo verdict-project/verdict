@@ -53,9 +53,8 @@ public class ExecutableNodeRunner implements Runnable {
    * running cancelled while running cancelled: nod running cancelled before running completed: node
    * running successfully finished
    */
-  enum NodeRunningStatus
-  {
-      initiated, running, aborted, cancelled, completed, failed;
+  enum NodeRunningStatus {
+    initiated, running, aborted, cancelled, completed, failed;
   }
 
   private NodeRunningStatus status = NodeRunningStatus.initiated;
@@ -107,7 +106,9 @@ public class ExecutableNodeRunner implements Runnable {
     return status;
   }
 
-  /** Set aborted to the status of this node. */
+  /**
+   * Set aborted to the status of this node.
+   */
   public void setAborted() {
     //    isAborted = true;   // this will effectively end the loop within run().
     status = NodeRunningStatus.aborted;
@@ -127,12 +128,14 @@ public class ExecutableNodeRunner implements Runnable {
         || status == NodeRunningStatus.failed;
   }
 
-  /** Aborts this node. */
+  /**
+   * Aborts this node.
+   */
   public void abort() {
     log.trace(String.format("Aborts running this node %s", node.toString()));
     setAborted();
     if (node instanceof SelectAsyncAggExecutionNode) {
-      ((SelectAsyncAggExecutionNode)node).abort();
+      ((SelectAsyncAggExecutionNode) node).abort();
     }
     conn.abort();
     //    for (ExecutableNodeRunner runner : childRunners) {
@@ -237,7 +240,9 @@ public class ExecutableNodeRunner implements Runnable {
     }
   }
 
-  /** A single run of this method consumes all combinations of the tokens in the queue. */
+  /**
+   * A single run of this method consumes all combinations of the tokens in the queue.
+   */
   @Override
   public void run() {
     //    String nodeType = node.getClass().getSimpleName();
