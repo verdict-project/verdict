@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-package org.verdictdb.core.scramblingquerying;
+package org.verdictdb.jdbc41;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.AfterClass;
@@ -22,7 +22,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.verdictdb.category.PrestoTests;
-import org.verdictdb.commons.DatabaseConnectionHelpers;
 import org.verdictdb.commons.VerdictOption;
 import org.verdictdb.exception.VerdictDBDbmsException;
 
@@ -36,7 +35,7 @@ import static org.junit.Assert.assertEquals;
 
 /** Created by Dong Young Yoon on 8/16/18. */
 @Category(PrestoTests.class)
-public class PrestoUniformScramblingQueryTest {
+public class PrestoSpatialQueryTest {
 
   private static VerdictOption options = new VerdictOption();
 
@@ -63,9 +62,11 @@ public class PrestoUniformScramblingQueryTest {
   }
 
   private static final String SCHEMA_NAME =
-      "verdictdb_tpch_query_test_" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
+      "verdictdb_spatial_query_test_" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
 
-  public PrestoUniformScramblingQueryTest() {}
+  private static final String TABLE_NAME = "spatial_test";
+
+  public PrestoSpatialQueryTest() {}
 
   @BeforeClass
   public static void setupDatabases() throws SQLException, VerdictDBDbmsException, IOException {
@@ -116,112 +117,87 @@ public class PrestoUniformScramblingQueryTest {
         String.format("jdbc:presto://%s/%s/default", PRESTO_HOST, PRESTO_CATALOG);
     String verdictConnectionString =
         String.format(
-            "jdbc:verdict:presto://%s/%s/default&verdictdbtempschema=%s",
+            "jdbc:verdict:presto://%s/%s/default;loglevel=debug",
             PRESTO_HOST, PRESTO_CATALOG, SCHEMA_NAME);
-    conn =
-        DatabaseConnectionHelpers.setupPresto(
-            connectionString, PRESTO_USER, PRESTO_PASSWORD, SCHEMA_NAME);
+    conn = DriverManager.getConnection(connectionString, PRESTO_USER, PRESTO_PASSWORD);
     vc = DriverManager.getConnection(verdictConnectionString, PRESTO_USER, PRESTO_PASSWORD);
     conn.createStatement()
         .execute(
             String.format("CREATE SCHEMA IF NOT EXISTS %s", options.getVerdictTempSchemaName()));
+
+    conn.createStatement().execute(String.format("CREATE SCHEMA IF NOT EXISTS %s", SCHEMA_NAME));
+
+    conn.createStatement()
+        .execute(
+            String.format(
+                "CREATE TABLE IF NOT EXISTS %s.%s (x int, y int)", SCHEMA_NAME, TABLE_NAME));
+
+    conn.createStatement()
+        .execute(String.format("INSERT INTO %s.%s VALUES (1,1)", SCHEMA_NAME, TABLE_NAME));
+    conn.createStatement()
+        .execute(String.format("INSERT INTO %s.%s VALUES (2,2)", SCHEMA_NAME, TABLE_NAME));
+    conn.createStatement()
+        .execute(String.format("INSERT INTO %s.%s VALUES (3,3)", SCHEMA_NAME, TABLE_NAME));
+
     vc.createStatement()
         .execute(
             String.format(
-                "CREATE SCRAMBLE %s.orders_scramble FROM %s.orders", SCHEMA_NAME, SCHEMA_NAME));
+                "CREATE SCRAMBLE %s.spatial_scramble FROM %s.%s",
+                SCHEMA_NAME, SCHEMA_NAME, TABLE_NAME));
     return conn;
   }
 
   @Test
-  public void runSimpleAggQueryTest() throws SQLException {
-    String sql =
-        String.format(
-            "SELECT AVG(\"orders\".\"o_totalprice\") as \"avg_price\"\n"
-                + "FROM \"%s\".\"orders\" \"orders\"\n",
-            SCHEMA_NAME, SCHEMA_NAME);
+  public void runSimpleSelectSTPointTest() throws SQLException {
+    String sql = String.format("SELECT ST_POINT(1,2)", SCHEMA_NAME, TABLE_NAME);
     ResultSet rs1 = vc.createStatement().executeQuery(sql);
     ResultSet rs2 = conn.createStatement().executeQuery(sql);
     int columnCount = rs2.getMetaData().getColumnCount();
     int columnCount2 = rs1.getMetaData().getColumnCount();
     assertEquals(columnCount, columnCount2);
     while (rs1.next() && rs2.next()) {
-      assertEquals(Double.parseDouble(rs1.getString(1)), Double.parseDouble(rs2.getString(1)), 0.1);
-      System.out.println(String.format("%s : %s", rs1.getString(1), rs2.getString(1)));
+      assertEquals(rs1.getObject(1), rs2.getObject(1));
+      System.out.println(String.format("%s : %s", rs1.getObject(1), rs2.getObject(1)));
     }
     assertEquals(rs1.next(), rs2.next());
   }
 
   @Test
-  public void runQueryWithHavingTest() throws SQLException {
+  public void runSimpleSelectSTContainsTest() throws SQLException {
     String sql =
         String.format(
-            "SELECT AVG(\"orders\".\"o_totalprice\") as \"avg_price\"\n"
-                + "FROM \"%s\".\"orders\" \"orders\"\n"
-                + "GROUP BY o_orderstatus\n"
-                + "HAVING avg(\"orders\".\"o_orderkey\") > 10\n"
-                + "ORDER BY avg(o_orderkey) + min(o_orderkey) + max(o_orderkey)\n",
-            SCHEMA_NAME, SCHEMA_NAME);
+            "SELECT * FROM %s.%s WHERE "
+                + "ST_CONTAINS(ST_POLYGON('polygon ((0 0, 2 0, 2 2, 0 2, 0 0))'), ST_POINT(x,y)) "
+                + "ORDER BY x",
+            SCHEMA_NAME, TABLE_NAME);
     ResultSet rs1 = vc.createStatement().executeQuery(sql);
     ResultSet rs2 = conn.createStatement().executeQuery(sql);
     int columnCount = rs2.getMetaData().getColumnCount();
     int columnCount2 = rs1.getMetaData().getColumnCount();
-    assertEquals(columnCount, columnCount2);
+    //    assertEquals(columnCount, columnCount2);
     while (rs1.next() && rs2.next()) {
-      assertEquals(Double.parseDouble(rs1.getString(1)), Double.parseDouble(rs2.getString(1)), 0.1);
-      System.out.println(String.format("%s : %s", rs1.getString(1), rs2.getString(1)));
+      System.out.println(String.format("%s : %s", rs1.getObject(1), rs2.getObject(1)));
+      assertEquals(rs1.getObject(1), rs2.getObject(1));
     }
     assertEquals(rs1.next(), rs2.next());
   }
 
   @Test
-  public void runQueryWithHavingTest2() throws SQLException {
+  public void runSimpleSelectSTIntersectsTest() throws SQLException {
     String sql =
         String.format(
-            "SELECT o_orderpriority, COUNT(\"orders\".\"o_orderkey\") as \"cnt\"\n"
-                + "FROM \"%s\".\"orders\" \"orders\"\n"
-                + "GROUP BY o_orderpriority\n"
-                + "HAVING max(\"orders\".\"o_totalprice\") >=\n"
-                + "1000\n"
-                + "ORDER BY o_orderpriority\n",
-            SCHEMA_NAME, SCHEMA_NAME);
-    ResultSet rs2 = conn.createStatement().executeQuery(sql);
+            "SELECT * FROM %s.%s WHERE "
+                + "ST_INTERSECTS(ST_POLYGON('polygon ((0 0, 2 0, 2 2, 0 2, 0 0))'), ST_POINT(x,y)) "
+                + "ORDER BY x",
+            SCHEMA_NAME, TABLE_NAME);
     ResultSet rs1 = vc.createStatement().executeQuery(sql);
+    ResultSet rs2 = conn.createStatement().executeQuery(sql);
     int columnCount = rs2.getMetaData().getColumnCount();
     int columnCount2 = rs1.getMetaData().getColumnCount();
-    assertEquals(columnCount, columnCount2);
+    //    assertEquals(columnCount, columnCount2);
     while (rs1.next() && rs2.next()) {
-      assertEquals(rs1.getString(1), rs2.getString(1));
-      assertEquals(rs1.getInt(2), rs2.getInt(2));
-    }
-    assertEquals(rs1.next(), rs2.next());
-  }
-
-  @Test(expected = SQLException.class)
-  public void runPrestoNoCatalogTest() throws SQLException {
-    String verdictConnectionString = String.format("jdbc:verdict:presto://%s", PRESTO_HOST);
-    Connection tempConn =
-        DriverManager.getConnection(verdictConnectionString, PRESTO_USER, PRESTO_PASSWORD);
-  }
-
-  @Test(expected = SQLException.class)
-  public void runQueryWithHavingSubqueryTest() throws SQLException {
-    String sql =
-        String.format(
-            "SELECT o_orderpriority, COUNT(\"orders\".\"o_orderkey\") as \"cnt\"\n"
-                + "FROM \"%s\".\"orders\" \"orders\"\n"
-                + "GROUP BY o_orderpriority\n"
-                + "HAVING max(\"orders\".\"o_totalprice\") >=\n"
-                + "(SELECT avg(\"orders\".\"o_totalprice\") FROM \"%s\".\"orders\" \"orders\")\n"
-                + "ORDER BY o_orderpriority\n",
-            SCHEMA_NAME, SCHEMA_NAME);
-    ResultSet rs2 = conn.createStatement().executeQuery(sql);
-    ResultSet rs1 = vc.createStatement().executeQuery(sql);
-    int columnCount = rs2.getMetaData().getColumnCount();
-    int columnCount2 = rs1.getMetaData().getColumnCount();
-    assertEquals(columnCount, columnCount2);
-    while (rs1.next() && rs2.next()) {
-      assertEquals(rs1.getString(1), rs2.getString(1));
-      assertEquals(rs1.getInt(2), rs2.getInt(2));
+      System.out.println(String.format("%s : %s", rs1.getObject(1), rs2.getObject(1)));
+      assertEquals(rs1.getObject(1), rs2.getObject(1));
     }
     assertEquals(rs1.next(), rs2.next());
   }

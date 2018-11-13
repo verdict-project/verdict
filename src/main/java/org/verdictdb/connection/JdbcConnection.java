@@ -70,6 +70,19 @@ public class JdbcConnection extends DbmsConnection {
 
     JdbcConnection jdbcConn = new JdbcConnection(conn, syntax);
     //    jdbcConn.setOutputDebugMessage(true);
+
+    if (syntax instanceof PrestoSyntax) {
+      String catalog = null;
+      try {
+        catalog = jdbcConn.getConnection().getCatalog();
+      } catch (SQLException e) {
+        e.printStackTrace();
+      }
+      if (catalog == null || catalog.isEmpty()) {
+        throw new VerdictDBDbmsException("Session catalog is not set.");
+      }
+    }
+
     return jdbcConn;
   }
 
