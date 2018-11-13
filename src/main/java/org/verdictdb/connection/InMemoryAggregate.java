@@ -4,7 +4,6 @@ import static java.sql.Types.CHAR;
 import static java.sql.Types.VARCHAR;
 
 import org.apache.commons.lang3.RandomStringUtils;
-import org.apache.hadoop.fs.Stat;
 import org.verdictdb.commons.DataTypeConverter;
 import org.verdictdb.core.sqlobject.*;
 import org.verdictdb.exception.VerdictDBException;
@@ -118,7 +117,7 @@ public class InMemoryAggregate {
       for (SelectItem sel : copy.getSelectList()) {
         if (sel instanceof AliasedColumn) {
           UnnamedColumn col = ((AliasedColumn) sel).getColumn();
-          resetSchemaAndTableForCombine(col);
+          resetSchemaAndTableForCombining(col);
           String alias = ((AliasedColumn) sel).getAliasName().toUpperCase();
           ((AliasedColumn) sel).setAliasName(alias);
           if (col.isAggregateColumn()) {
@@ -154,7 +153,7 @@ public class InMemoryAggregate {
     return tableName;
   }
 
-  private static void resetSchemaAndTableForCombine(UnnamedColumn column) {
+  private static void resetSchemaAndTableForCombining(UnnamedColumn column) {
     List<UnnamedColumn> columns = new ArrayList<>();
     columns.add(column);
     while (!columns.isEmpty()) {
