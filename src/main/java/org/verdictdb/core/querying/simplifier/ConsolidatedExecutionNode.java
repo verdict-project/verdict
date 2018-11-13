@@ -252,6 +252,7 @@ public class ConsolidatedExecutionNode extends QueryNodeWithPlaceHolders {
           isAggregate.add(false);
         }
         for (int i = 0; i < queryResult.getMetaData().isAggregate.size(); i++) {
+          // If it is not asterisk column, we will find the index of the column in queryResult.
           if (!selectQueryColumnAlias.get(i).equals(asteriskAlias)) {
             int idx = 0;
             // Get the index of the alias name in the columnName field of the queryResult.
