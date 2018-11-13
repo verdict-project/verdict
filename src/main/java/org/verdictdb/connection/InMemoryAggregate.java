@@ -3,6 +3,7 @@ package org.verdictdb.connection;
 import static java.sql.Types.CHAR;
 import static java.sql.Types.VARCHAR;
 
+import org.apache.commons.lang3.RandomStringUtils;
 import org.verdictdb.commons.DataTypeConverter;
 import org.verdictdb.core.sqlobject.*;
 import org.verdictdb.exception.VerdictDBException;
@@ -21,27 +22,31 @@ import java.util.List;
 
 public class InMemoryAggregate {
 
-  private static final String DB_CONNECTION = "jdbc:h2:mem:verdictdb;DB_CLOSE_DELAY=-1";
-
   private static final String selectAsyncAggTable = "VERDICTDB_SELECTASYNCAGG";
 
-  private static long selectAsyncAggTableID = 0;
+  private long selectAsyncAggTableID = 0;
 
   private static SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new H2Syntax());
 
-  static Connection conn;
+  private Connection conn;
 
-  static {
+  public static InMemoryAggregate create() {
+    InMemoryAggregate inMemoryAggregate = null;
     try {
       Class.forName("org.h2.Driver");
-      conn = DriverManager.getConnection(DB_CONNECTION, "", "");
+      inMemoryAggregate = new InMemoryAggregate();
+      String h2Database =
+          "verdictdb_" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
+      String DB_CONNECTION = String.format("jdbc:h2:mem:%s;DB_CLOSE_DELAY=-1", h2Database);
+      inMemoryAggregate.conn = DriverManager.getConnection(DB_CONNECTION, "", "");
     } catch (SQLException | ClassNotFoundException e) {
       // https://stackoverflow.com/questions/2070293/why-doesnt-java-allow-to-throw-a-checked-exception-from-static-initialization-b
       throw new ExceptionInInitializerError(e);
     }
+    return inMemoryAggregate;
   }
 
-  public static void createTable(DbmsQueryResult dbmsQueryResult, String tableName) throws SQLException {
+  public void createTable(DbmsQueryResult dbmsQueryResult, String tableName) throws SQLException {
     StringBuilder columnNames = new StringBuilder();
     StringBuilder fieldNames = new StringBuilder();
     StringBuilder bindVariables = new StringBuilder();
@@ -85,29 +90,34 @@ public class InMemoryAggregate {
     statement.close();
   }
 
-  public static DbmsQueryResult executeQuery(SelectQuery query) throws VerdictDBException, SQLException {
+  public DbmsQueryResult executeQuery(SelectQuery query) throws VerdictDBException, SQLException {
     String sql = selectQueryToSql.toSql(query).toUpperCase();
-    ResultSet rs = conn.createStatement().executeQuery(sql);
-    return new JdbcQueryResult(rs);
+    Statement stmt = conn.createStatement();
+    ResultSet rs = stmt.executeQuery(sql);
+    DbmsQueryResult dbmsQueryResult = new JdbcQueryResult(rs);
+    stmt.close();
+    return dbmsQueryResult;
   }
 
-  public static String combinedTableName(String combineTableName, String targetTableName, SelectQuery dependentQuery)
+  public String combineTables(String combinedTableName, String newAggTableName, SelectQuery dependentQuery)
       throws SQLException, VerdictDBException {
     String tableName = selectAsyncAggTable + selectAsyncAggTableID++;
 
     // check targetTable exists
-    if (targetTableName.equals("")) {
+    if (newAggTableName.equals("")) {
       // if not just let it be the copy of combineTable
-      conn.createStatement().execute(
-          String.format("CREATE TABLE %s AS SELECT * FROM %s", tableName, combineTableName));
+      Statement stmt = conn.createStatement();
+      stmt.execute(
+          String.format("CREATE TABLE %s AS SELECT * FROM %s", tableName, combinedTableName));
+      stmt.close();
     } else {
-      // if exists, combinedTableName two tables using the logic of AggCombinerExecutionNode
+      // if exists, combineTables two tables using the logic of AggCombinerExecutionNode
       List<GroupingAttribute> groupList = new ArrayList<>();
       SelectQuery copy = dependentQuery.deepcopy();
       for (SelectItem sel : copy.getSelectList()) {
         if (sel instanceof AliasedColumn) {
           UnnamedColumn col = ((AliasedColumn) sel).getColumn();
-          resetSchemaAndTableForCombine(col);
+          resetSchemaAndTableForCombining(col);
           String alias = ((AliasedColumn) sel).getAliasName().toUpperCase();
           ((AliasedColumn) sel).setAliasName(alias);
           if (col.isAggregateColumn()) {
@@ -125,23 +135,25 @@ public class InMemoryAggregate {
         }
       }
       SelectQuery left = SelectQuery.create(new AsteriskColumn(),
-          new BaseTable("PUBLIC", targetTableName));
+          new BaseTable("PUBLIC", newAggTableName));
       SelectQuery right = SelectQuery.create(new AsteriskColumn(),
-          new BaseTable("PUBLIC", combineTableName));
+          new BaseTable("PUBLIC", combinedTableName));
       AbstractRelation setOperation = new SetOperationRelation(left, right, SetOperationRelation.SetOpType.unionAll);
       copy.clearFilter();
       copy.setFromList(Arrays.asList(setOperation));
       copy.clearGroupby();
       copy.addGroupby(groupList);
       String sql = selectQueryToSql.toSql(copy);
-      conn.createStatement().execute(
+      Statement stmt = conn.createStatement();
+      stmt.execute(
           String.format("CREATE TABLE %s AS %s", tableName, sql));
+      stmt.close();
     }
 
     return tableName;
   }
 
-  private static void resetSchemaAndTableForCombine(UnnamedColumn column) {
+  private static void resetSchemaAndTableForCombining(UnnamedColumn column) {
     List<UnnamedColumn> columns = new ArrayList<>();
     columns.add(column);
     while (!columns.isEmpty()) {
@@ -158,6 +170,19 @@ public class InMemoryAggregate {
       } else if (col instanceof ColumnOp) {
         columns.addAll(((ColumnOp) col).getOperands());
       }
+    }
+  }
+
+  public void abort() {
+    try {
+      if (!conn.isClosed()) {
+        // This will close all the connection and the database.
+        Statement stmt = conn.createStatement();
+        stmt.executeQuery("SHUTDOWN");
+        stmt.close();
+      }
+    } catch (SQLException e) {
+      e.printStackTrace();
     }
   }
 

@@ -35,6 +35,8 @@ public class SelectAggExecutionNode extends AggExecutionNode {
 
   private static final String inMemoryTableName = "VERDICTDB_SELECTAGG";
 
+  private InMemoryAggregate inMemoryAggregate;
+
   public SelectAggExecutionNode(IdCreator idCreator, SelectQuery selectQuery) {
     super(idCreator, selectQuery);
   }
@@ -71,7 +73,7 @@ public class SelectAggExecutionNode extends AggExecutionNode {
       selectAggID++;
     }
     try {
-      InMemoryAggregate.createTable(result, tableName);
+      inMemoryAggregate.createTable(result, tableName);
     } catch (SQLException e) {
       e.printStackTrace();
     }
@@ -80,4 +82,7 @@ public class SelectAggExecutionNode extends AggExecutionNode {
     return token;
   }
 
+  public void setInMemoryAggregate(InMemoryAggregate inMemoryAggregate) {
+    this.inMemoryAggregate = inMemoryAggregate;
+  }
 }

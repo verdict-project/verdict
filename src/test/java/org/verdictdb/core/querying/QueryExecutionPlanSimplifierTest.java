@@ -24,6 +24,11 @@ import org.verdictdb.exception.VerdictDBValidationException;
 import org.verdictdb.sqlreader.NonValidatingSQLParser;
 import org.verdictdb.sqlsyntax.H2Syntax;
 
+/**
+ * In favor of simplify2() (instead of the legacy function simplify()),
+ * we disable these tests.
+ */
+
 public class QueryExecutionPlanSimplifierTest {
 
   static String originalSchema = "originalschema";
@@ -67,7 +72,7 @@ public class QueryExecutionPlanSimplifierTest {
         "aggregationBlockColumn", "subsampleColumn", "tierColumn", 3);
   }
 
-  @Test
+  //@Test
   public void simpleAggregateVersion2Test() throws VerdictDBValidationException {
     String sql = "select avg(t.value) as a from originalschema.originaltable as t";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
@@ -94,7 +99,7 @@ public class QueryExecutionPlanSimplifierTest {
     //    plan.getRootNode().print();
   }
 
-  @Test
+  //@Test
   public void NestedAggregateFromVersion2Test() throws VerdictDBValidationException {
     String sql = "select avg(t.value) from (" +
         "select o.value " +
@@ -119,7 +124,7 @@ public class QueryExecutionPlanSimplifierTest {
     plan.getRootNode().print();
   }
 
-  @Test
+  //@Test
   public void NestedAggregateFilterVersion2Test() throws VerdictDBValidationException {
     String sql = "select avg(t.value) as a " +
         "from originalschema.originaltable as t " +
@@ -149,7 +154,7 @@ public class QueryExecutionPlanSimplifierTest {
     //    plan.getRootNode().print();
   }
 
-  @Test
+  //@Test
   public void JoinQueryVersion2Test() throws VerdictDBValidationException {
     String sql = "select avg(t.value) as a " +
         "from (select * from originalschema.originaltable as t0) t1 " +
@@ -178,7 +183,7 @@ public class QueryExecutionPlanSimplifierTest {
     //    plan.getRootNode().print();
   }
   
-  @Test
+  //@Test
   public void simpleAsyncAggVersion2Test() throws VerdictDBException {
     String sql = "select avg(t.value) as a from newschema.newtable as t";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
@@ -198,7 +203,7 @@ public class QueryExecutionPlanSimplifierTest {
     assertEquals(3, asyncPlan.getRootNode().getSourceCount());
   }
   
-  @Test
+  //@Test
   public void nestedAsyncAggVersion2Test() throws VerdictDBException {
     String sql = "select avg(t.value) from (" +
         "select o.value " +
@@ -224,7 +229,7 @@ public class QueryExecutionPlanSimplifierTest {
     assertEquals(ConsolidatedExecutionNode.class, firstAgg.getClass());
   }
 
-  @Test
+  //@Test
   public void simpleAggregateTest() throws VerdictDBException {
     String sql = "select avg(t.value) as a from originalschema.originaltable as t;";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
@@ -243,7 +248,7 @@ public class QueryExecutionPlanSimplifierTest {
     // queryExecutionPlan.root.execute(conn);
   }
 
-  @Test
+  //@Test
   public void NestedAggregateFromTest() throws VerdictDBException {
     String sql = "select avg(t.value) from (select o.value from originalschema.originaltable as o where o.value>5) as t;";
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
@@ -260,7 +265,7 @@ public class QueryExecutionPlanSimplifierTest {
     // queryExecutionPlan.root.execute(conn);
   }
 
-  @Test
+  //@Test
   public void NestedAggregateFilterTest() throws VerdictDBException {
     String sql = "select avg(t.value) as a from originalschema.originaltable as t where t.value > " +
         "(select avg(o.value) as avg_value from originalschema.originaltable as o);";
