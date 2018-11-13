@@ -308,6 +308,9 @@ public class ExecutionContext {
   }
   
   private String stripQuote(String expr) {
+    if (expr == null) {
+      return null;
+    }
     return expr.replace("\"", "").replace("`", "").replace("'", "");
   }
 
