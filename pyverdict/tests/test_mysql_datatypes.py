@@ -1,18 +1,31 @@
+'''
+    Copyright 2018 University of Michigan
+ 
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+'''
 from datetime import datetime, date
 import os
 import pyverdict
 import pymysql
+import uuid
 
-
-test_schema = 'pyverdict_datatype_test_schema'
-test_table = 'pyverdict_datatype_test_table'
-
+test_schema = 'pyverdict_mysql_datatype_test_schema' + str(uuid.uuid4())[:3]
+test_table = 'test_table'
 
 def test_data_types():
     (mysql_conn, verdict_conn) = setup_sandbox()
 
-    result = verdict_conn.sql('select * from {}.{}'.format(test_schema, test_table))
-    int_types = result.typeJavaInt()
+    result = verdict_conn.sql_raw_result('select * from {}.{}'.format(test_schema, test_table))
     types = result.types()
     rows = result.rows()
     # print(int_types)
@@ -122,9 +135,9 @@ def setup_sandbox():
     cur.close()
 
     # create verdict connection
-    thispath = os.path.dirname(os.path.realpath(__file__))
-    mysql_jar = os.path.join(thispath, 'lib', 'mysql-connector-java-5.1.46.jar')
-    verdict_conn = verdict_connect(url, port, user, password, mysql_jar)
+    # thispath = os.path.dirname(os.path.realpath(__file__))
+    # mysql_jar = os.path.join(thispath, 'lib', 'mysql-connector-java-5.1.46.jar')
+    verdict_conn = verdict_connect(url, port, user, password)
 
     return (mysql_conn, verdict_conn)
 
@@ -136,10 +149,10 @@ def tear_down(mysql_conn):
     mysql_conn.close()
 
 
-def verdict_connect(host, port, usr, pwd, class_path):
+def verdict_connect(host, port, usr, pwd):
     connection_string = \
         'jdbc:mysql://{:s}:{:d}?user={:s}&password={:s}'.format(host, port, usr, pwd)
-    return pyverdict.VerdictContext(connection_string, class_path)
+    return pyverdict.VerdictContext(connection_string)
 
 
 def mysql_connect(host, port, usr, pwd):

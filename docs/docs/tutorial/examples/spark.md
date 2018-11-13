@@ -39,7 +39,7 @@ Also, replace the existing dependency list with
 ```scala
 libraryDependencies ++= Seq(
   scalaTest % Test,
-  "org.verdictdb" % "verdictdb-core" % "0.5.4",
+  "org.verdictdb" % "verdictdb-core" % "0.5.5",
   "org.apache.spark" %% "spark-core" % "2.3.1" % "provided",
   "org.apache.spark" %% "spark-sql" % "2.3.1" % "provided"
 )
@@ -115,8 +115,8 @@ object Hello extends App {
 ## Package and Submit
 
 ```bash
-$ sbt package
-$ spark-submit target/scala-2.11/Hello-assembly-0.1.0-SNAPSHOT.jar
+$ sbt assembly
+$ spark-submit target/scala-2.11/Hello-assembly-0.1.0-SNAPSHOT.jar --class example.Hello
 ```
 
 This example program is available on [this public GitHub repository](https://github.com/verdictdb/verdictdb-tutorial). See the directory `verdictdb_on_spark`.

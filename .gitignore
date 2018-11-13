@@ -15,6 +15,7 @@ target/
 jars/
 *.class
 site/
+dependency-reduced-pom.xml
 
 # eclipse
 .classpath

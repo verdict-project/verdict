@@ -141,4 +141,27 @@ public class HiveSyntax extends SqlSyntax {
   public String getApproximateCountDistinct(String column) {
     return String.format("approx_count_distinct(%s)", column);
   }
+
+  /**
+   * The following query returns 9.67574286553751 (9.67 / 100 = 0.0967).
+   * 
+   * select stddev(c)
+   * from (
+   *     select v, count(*) as c
+   *     from (
+   *         select cast(conv(substr(md5(value), 1, 8), 16, 10) % 100 as int) as v
+   *         from mytable
+   *     ) t1
+   *     group by v
+   * ) t2;
+   * 
+   * where mytable contains the integers from 0 to 10000.
+   * 
+   * Note that the stddev of rand() is sqrt(0.01 * 0.99) = 0.09949874371.
+   */
+  @Override
+  public String hashFunction(String column, int upper_bound) {
+    // TODO Auto-generated method stub
+    return null;
+  }
 }

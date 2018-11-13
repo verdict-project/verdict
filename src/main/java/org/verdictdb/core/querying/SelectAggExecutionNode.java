@@ -1,6 +1,7 @@
 package org.verdictdb.core.querying;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.connection.InMemoryAggregate;
 import org.verdictdb.core.execplan.ExecutionInfoToken;
@@ -27,10 +28,14 @@ import java.util.Map;
 public class SelectAggExecutionNode extends AggExecutionNode {
 
   private static final long serialVersionUID = 47947858649322912L;
+  
+  private VerdictDBLogger log;
 
   private static long selectAggID = 0;
 
   private static final String inMemoryTableName = "VERDICTDB_SELECTAGG";
+
+  private InMemoryAggregate inMemoryAggregate;
 
   public SelectAggExecutionNode(IdCreator idCreator, SelectQuery selectQuery) {
     super(idCreator, selectQuery);
@@ -64,11 +69,11 @@ public class SelectAggExecutionNode extends AggExecutionNode {
     // insert value to in memory database.
     String tableName;
     synchronized (SelectAggExecutionNode.class) {
-      tableName = inMemoryTableName+selectAggID;
+      tableName = inMemoryTableName + selectAggID;
       selectAggID++;
     }
     try {
-      InMemoryAggregate.createTable(result, tableName);
+      inMemoryAggregate.createTable(result, tableName);
     } catch (SQLException e) {
       e.printStackTrace();
     }
@@ -77,4 +82,7 @@ public class SelectAggExecutionNode extends AggExecutionNode {
     return token;
   }
 
+  public void setInMemoryAggregate(InMemoryAggregate inMemoryAggregate) {
+    this.inMemoryAggregate = inMemoryAggregate;
+  }
 }

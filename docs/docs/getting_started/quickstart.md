@@ -1,4 +1,4 @@
-# Quickstart Guide
+# Quickstart Guide (Java)
 
 We will install VerdictDB, create a connection, and issue a simple query to VerdictDB. In this Quickstart Guide, we will use MySQL for VerdictDB's backend database. See [How to Connect](/getting_started/connection/) for the examples of connecting to other databases.
 

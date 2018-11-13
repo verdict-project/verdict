@@ -141,4 +141,31 @@ public class PrestoSyntax extends SqlSyntax {
   public String getApproximateCountDistinct(String column) {
     return String.format("approx_distinct(%s)", column);
   }
+
+  /**
+   * The following query returns 9.724487470589725 (9.72 / 100 = 0.0972):
+   * 
+   * select stddev(c)
+   * from (
+   *     select v, count(*) as c
+   *     from (
+   *         select from_base(substr(to_hex(md5(to_utf8(cast(value as varchar)))), 1, 8), 16) % 100 as v
+   *         from mytable
+   *     ) t1
+   *     group by v
+   * ) t2
+   * 
+   * where mytable contains the integers from 0 to 10000.
+   * 
+   * Note that the stddev of rand() is sqrt(0.01 * 0.99) = 0.09949874371.
+   * 
+   * I alss tested xxhash64(); however, its std was larger (i.e., 10.243500033157268).
+   */
+  @Override
+  public String hashFunction(String column, int upper_bound) {
+    String f = String.format(
+        "from_base(substr(to_hex(md5(to_utf8(cast(%s%s%s as varchar)))), 1, 8), 16) % %d",
+        getQuoteString(), column, getQuoteString(), upper_bound);
+    return f;
+  }
 }
