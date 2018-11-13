@@ -53,6 +53,18 @@ public abstract class SqlSyntax {
   public abstract int getTableNameColumnIndex();
 
   public abstract String randFunction();
+  
+  /**
+   * Returns a hash value between 0 (inclusive) and upper_bound (exclusive).
+   * 
+   * This hash function is supposed to provide good randomization quality. That is,
+   * when an arbitrary set of elements are hashed, the distribution should be even.
+   * 
+   * @param column The column name
+   * @param upper_bound The upper bound
+   * @return Hashed integer
+   */
+  public abstract String hashFunction(String column, int upper_bound);
 
   public abstract boolean isAsRequiredBeforeSelectInCreateTable();
 

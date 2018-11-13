@@ -354,20 +354,20 @@ jobs:
       # Customize the JVM maximum heap limit
       MAVEN_OPTS: -Xmx3200m
     steps:
-    - run: apt-get update; apt-get install -y git default-jdk maven
-    - checkout
-    # Set up maven dependencies
-    - restore_cache:
-        keys:
-        - verdict-dependencies-{{ checksum "pom.xml" }}
-    - run: pwd; ls;
-    - run: cd pyverdict; python setup.py install; pip install pytest PyMySQL;
-    # - run: pwd; ls; cd pyverdict; pwd; ls;
-    - run: cd pyverdict; pytest;
-    - save_cache:
-        paths:
-        - ~/.m2
-        key: verdict-dependencies-{{ checksum "pom.xml" }}
+      - run: apt-get update; apt-get install -y build-essential libkrb5-dev git default-jdk maven
+      - checkout
+      # Set up maven dependencies
+      - restore_cache:
+          keys:
+          - verdict-dependencies-{{ checksum "pom.xml" }}
+      - run: pwd; ls;
+      - run: cd pyverdict; pip install pytest PyMySQL presto-python-client; python setup.py install;
+      # - run: cd pyverdict; pwd; ls;
+      - run: cd pyverdict; pytest;
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: verdict-dependencies-{{ checksum "pom.xml" }}
 
   deploy-doc:
     docker:
