@@ -148,4 +148,29 @@ public class ImpalaSyntax extends SqlSyntax {
   public String getApproximateCountDistinct(String column) {
     return String.format("ndv(%s)", column);
   }
+
+  /**
+   * The following query returns 4.594682917363407 (4.59 / 100 = 0.0459):
+   * 
+   * select stddev(c)
+   * from (
+   *     select v, count(*) as c
+   *     from (
+   *         select pmod(fnv_hash(value), 100) as v
+   *         from mytable2
+   *     ) t1
+   *     group by v
+   * ) t2;
+   * 
+   * where mytable2 contains the integers from 0 to 10000.
+   * 
+   * Note that the stddev of rand() is sqrt(0.01 * 0.99) = 0.09949874371.
+   */
+  @Override
+  public String hashFunction(String column, int upper_bound) {
+    String f = String.format(
+        "pmod(fnv_hash(%s%s%s), 100) % %d",
+        getQuoteString(), column, getQuoteString(), upper_bound);
+    return f;
+  }
 }

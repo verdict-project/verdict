@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.RandomStringUtils;
@@ -39,7 +40,8 @@ public class JdbcQueryDataTypeForAllDatabasesTest {
 
   private String database;
 
-  private static final String[] targetDatabases = {"mysql", "impala", "redshift", "postgresql"};
+  private static final String[] targetDatabases = 
+      {"mysql", "impala", "redshift", "postgresql"};
 
   public JdbcQueryDataTypeForAllDatabasesTest(String database) {
     this.database = database;
@@ -67,6 +69,7 @@ public class JdbcQueryDataTypeForAllDatabasesTest {
     IMPALA_HOST = System.getenv("VERDICTDB_TEST_IMPALA_HOST");
   }
 
+  // impala
   private static final String IMPALA_DATABASE =
       "data_type_test" + RandomStringUtils.randomAlphanumeric(4).toLowerCase();
 
@@ -74,6 +77,7 @@ public class JdbcQueryDataTypeForAllDatabasesTest {
 
   private static final String IMPALA_PASSWORD = "";
 
+  // redshift
   private static final String REDSHIFT_HOST;
 
   private static final String REDSHIFT_DATABASE = "dev";
@@ -82,6 +86,7 @@ public class JdbcQueryDataTypeForAllDatabasesTest {
 
   private static final String REDSHIFT_PASSWORD;
 
+  // postgres
   private static final String POSTGRES_HOST;
 
   private static final String POSTGRES_DATABASE = "test";
@@ -89,7 +94,7 @@ public class JdbcQueryDataTypeForAllDatabasesTest {
   private static final String POSTGRES_USER = "postgres";
 
   private static final String POSTGRES_PASSWORD = "";
-
+  
   private static final String VERDICT_META_SCHEMA =
       "verdictdbmetaschema_" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
 

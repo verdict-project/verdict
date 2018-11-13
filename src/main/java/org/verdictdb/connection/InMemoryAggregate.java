@@ -14,6 +14,7 @@ import java.sql.PreparedStatement;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.sql.DriverManager;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -59,8 +60,8 @@ public class InMemoryAggregate {
       fieldNames.append(" ");
       // char -> varchar in case this type is an array of char
       int columnType = dbmsQueryResult.getColumnType(i);
-      if (columnType==CHAR) {
-        columnType=VARCHAR;
+      if (columnType == CHAR) {
+        columnType = VARCHAR;
       }
       fieldNames.append(DataTypeConverter.typeName(columnType));
       columnNames.append(dbmsQueryResult.getColumnName(i));
@@ -68,7 +69,9 @@ public class InMemoryAggregate {
     }
     // create table
     String createSql = "CREATE TABLE IF NOT EXISTS " + tableName + " (" + fieldNames + ")";
-    conn.createStatement().execute(createSql);
+    Statement stmt = conn.createStatement();
+    stmt.execute(createSql);
+    stmt.close();
 
     // insert values
     String sql = "INSERT INTO " + tableName + " ("
@@ -78,11 +81,13 @@ public class InMemoryAggregate {
         + ")";
     PreparedStatement statement = conn.prepareStatement(sql);
     while (dbmsQueryResult.next()) {
-      for (int i = 1; i <= dbmsQueryResult.getColumnCount(); i++)
+      for (int i = 1; i <= dbmsQueryResult.getColumnCount(); i++) {
         statement.setObject(i, dbmsQueryResult.getValue(i - 1));
+      }
       statement.addBatch();
     }
     statement.executeBatch();
+    statement.close();
   }
 
   public DbmsQueryResult executeQuery(SelectQuery query) throws VerdictDBException, SQLException {

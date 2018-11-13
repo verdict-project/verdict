@@ -8,7 +8,7 @@ VerdictDB is a thin, platform-independent, interactive analytics library that wo
 ## Contents
 
 1. Getting Started
-    - [Quickstart](/getting_started/quickstart)
+    - [Quickstart (Java)](/getting_started/quickstart)
     - [Install / Download](/getting_started/install)
     - [What's More](/getting_started/whatsmore)
 1. How VerdictDB works
@@ -26,7 +26,7 @@ VerdictDB is a thin, platform-independent, interactive analytics library that wo
     - [ML-based Analytics](/tutorial/advanced)
 1. Reference
     - [Connecting to Data Sources](/reference/connection)
-    - [VerdictDB JDBC Propertires](/reference/properties)
+    - [VerdictDB JDBC Properties](/reference/properties)
     - [Simple Querying](/reference/querying)
     - Scrambles
         - [What is a Scramble?](/reference/what_is_scramble)

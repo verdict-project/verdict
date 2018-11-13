@@ -66,9 +66,6 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
     REDSHIFT_HOST = System.getenv("VERDICTDB_TEST_REDSHIFT_ENDPOINT");
     REDSHIFT_USER = System.getenv("VERDICTDB_TEST_REDSHIFT_USER");
     REDSHIFT_PASSWORD = System.getenv("VERDICTDB_TEST_REDSHIFT_PASSWORD");
-    //    System.out.println(REDSHIFT_HOST);
-    //    System.out.println(REDSHIFT_USER);
-    //    System.out.println(REDSHIFT_PASSWORD);
   }
 
   Pair<ExecutionResultReader, ResultSet> getAnswerPair(int queryNum)
@@ -117,8 +114,8 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
   }
 
   @Test
-  public void query1Test() {
-    try {
+  public void query1Test() throws VerdictDBException, SQLException, IOException {
+//    try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(1);
       ExecutionResultReader reader = answerPair.getLeft();
       ResultSet rs = answerPair.getRight();
@@ -144,15 +141,14 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
       assertEquals(10, cnt);
       System.out.println("test 1 passed");
-    } catch (Exception e) {
-      query1Test();
-    }
+//    } catch (Exception e) {
+//      query1Test();
+//    }
   }
 
   @Test
-  public void query3Test() {
-    try {
-
+  public void query3Test() throws VerdictDBException, SQLException, IOException {
+//    try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(3);
       ExecutionResultReader reader = answerPair.getLeft();
       ResultSet rs = answerPair.getRight();
@@ -172,14 +168,14 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
       assertEquals(12, cnt);
       System.out.println("test 3 passed");
-    } catch (Exception e) {
-      query3Test();
-    }
+//    } catch (Exception e) {
+//      query3Test();
+//    }
   }
 
   @Test
-  public void query4Test() {
-    try {
+  public void query4Test() throws VerdictDBException, SQLException, IOException {
+//    try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(4);
       ExecutionResultReader reader = answerPair.getLeft();
       ResultSet rs = answerPair.getRight();
@@ -197,14 +193,14 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
       assertEquals(12, cnt);
       System.out.println("test 4 passed");
-    } catch (Exception e) {
-      query4Test();
-    }
+//    } catch (Exception e) {
+//      query4Test();
+//    }
   }
 
   @Test
-  public void query5Test() {
-    try {
+  public void query5Test() throws VerdictDBException, SQLException, IOException {
+//    try {
 
       Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(5);
       ExecutionResultReader reader = answerPair.getLeft();
@@ -223,14 +219,14 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
       assertEquals(12, cnt);
       System.out.println("test 5 passed");
-    } catch (Exception e) {
-      query5Test();
-    }
+//    } catch (Exception e) {
+//      query5Test();
+//    }
   }
 
   @Test
-  public void query6Test() {
-    try {
+  public void query6Test() throws VerdictDBException, SQLException, IOException {
+//    try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(6);
       ExecutionResultReader reader = answerPair.getLeft();
       ResultSet rs = answerPair.getRight();
@@ -247,14 +243,14 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
       assertEquals(10, cnt);
       System.out.println("test 6 passed");
-    } catch (Exception e) {
-      query6Test();
-    }
+//    } catch (Exception e) {
+//      query6Test();
+//    }
   }
 
   @Test
-  public void query7Test() {
-    try {
+  public void query7Test() throws VerdictDBException, SQLException, IOException {
+//    try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(7);
       ExecutionResultReader reader = answerPair.getLeft();
       ResultSet rs = answerPair.getRight();
@@ -274,14 +270,14 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
       assertEquals(12, cnt);
       System.out.println("test 7 passed");
-    } catch (Exception e) {
-      query7Test();
-    }
+//    } catch (Exception e) {
+//      query7Test();
+//    }
   }
 
   @Test
-  public void query8Test() {
-    try {
+  public void query8Test() throws VerdictDBException, SQLException, IOException {
+//    try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(8);
       ExecutionResultReader reader = answerPair.getLeft();
       ResultSet rs = answerPair.getRight();
@@ -300,14 +296,14 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
       assertEquals(12, cnt);
       System.out.println("test 8 passed");
-    } catch (Exception e) {
-      query8Test();
-    }
+//    } catch (Exception e) {
+//      query8Test();
+//    }
   }
 
   @Test
-  public void query9Test() {
-    try {
+  public void query9Test() throws VerdictDBException, SQLException, IOException {
+//    try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(9);
       ExecutionResultReader reader = answerPair.getLeft();
       ResultSet rs = answerPair.getRight();
@@ -326,14 +322,14 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
       assertEquals(12, cnt);
       System.out.println("test 9 passed");
-    } catch (Exception e) {
-      query9Test();
-    }
+//    } catch (Exception e) {
+//      query9Test();
+//    }
   }
 
   @Test
-  public void query10Test() {
-    try {
+  public void query10Test() throws VerdictDBException, SQLException, IOException {
+//    try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(10);
       ExecutionResultReader reader = answerPair.getLeft();
       ResultSet rs = answerPair.getRight();
@@ -352,14 +348,14 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
       assertEquals(12, cnt);
       System.out.println("test 10 passed");
-    } catch (Exception e) {
-      query10Test();
-    }
+//    } catch (Exception e) {
+//      query10Test();
+//    }
   }
 
   @Test
-  public void query12Test() {
-    try {
+  public void query12Test() throws VerdictDBException, SQLException, IOException {
+//    try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(12);
       ExecutionResultReader reader = answerPair.getLeft();
       ResultSet rs = answerPair.getRight();
@@ -378,14 +374,14 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
       assertEquals(12, cnt);
       System.out.println("test 12 passed");
-    } catch (Exception e) {
-      query12Test();
-    }
+//    } catch (Exception e) {
+//      query12Test();
+//    }
   }
 
   @Test
-  public void query13Test() {
-    try {
+  public void query13Test() throws VerdictDBException, SQLException, IOException {
+//    try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(13);
       ExecutionResultReader reader = answerPair.getLeft();
       ResultSet rs = answerPair.getRight();
@@ -403,14 +399,14 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
       assertEquals(3, cnt);
       System.out.println("test 13 passed");
-    } catch (Exception e) {
-      query13Test();
-    }
+//    } catch (Exception e) {
+//      query13Test();
+//    }
   }
 
   @Test
-  public void query14Test() {
-    try {
+  public void query14Test() throws VerdictDBException, SQLException, IOException {
+//    try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(14);
       ExecutionResultReader reader = answerPair.getLeft();
       ResultSet rs = answerPair.getRight();
@@ -428,14 +424,14 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
       assertEquals(10, cnt);
       System.out.println("test 14 passed");
-    } catch (Exception e) {
-      query14Test();
-    }
+//    } catch (Exception e) {
+//      query14Test();
+//    }
   }
 
   @Test
-  public void query15Test() {
-    try {
+  public void query15Test() throws VerdictDBException, SQLException, IOException {
+//    try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(15);
       ExecutionResultReader reader = answerPair.getLeft();
       ResultSet rs = answerPair.getRight();
@@ -453,14 +449,14 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
       assertEquals(10, cnt);
       System.out.println("test 15 passed");
-    } catch (Exception e) {
-      query15Test();
-    }
+//    } catch (Exception e) {
+//      query15Test();
+//    }
   }
 
   @Test
-  public void query17Test() {
-    try {
+  public void query17Test() throws VerdictDBException, SQLException, IOException {
+//    try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(17);
       ExecutionResultReader reader = answerPair.getLeft();
       ResultSet rs = answerPair.getRight();
@@ -477,14 +473,14 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
       assertEquals(10, cnt);
       System.out.println("test 17 passed");
-    } catch (Exception e) {
-      query17Test();
-    }
+//    } catch (Exception e) {
+//      query17Test();
+//    }
   }
 
   @Test
-  public void query18Test() {
-    try {
+  public void query18Test() throws VerdictDBException, SQLException, IOException {
+//    try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(18);
       ExecutionResultReader reader = answerPair.getLeft();
       ResultSet rs = answerPair.getRight();
@@ -506,14 +502,14 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
       assertEquals(12, cnt);
       System.out.println("test 18 passed");
-    } catch (Exception e) {
-      query18Test();
-    }
+//    } catch (Exception e) {
+//      query18Test();
+//    }
   }
 
   @Test
-  public void query19Test() {
-    try {
+  public void query19Test() throws VerdictDBException, SQLException, IOException {
+//    try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(19);
       ExecutionResultReader reader = answerPair.getLeft();
       ResultSet rs = answerPair.getRight();
@@ -530,14 +526,14 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
       assertEquals(10, cnt);
       System.out.println("test 19 passed");
-    } catch (Exception e) {
-      query19Test();
-    }
+//    } catch (Exception e) {
+//      query19Test();
+//    }
   }
 
   @Test
-  public void query20Test() {
-    try {
+  public void query20Test() throws VerdictDBException, SQLException, IOException {
+//    try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(20);
       ExecutionResultReader reader = answerPair.getLeft();
       ResultSet rs = answerPair.getRight();
@@ -555,14 +551,14 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
       assertEquals(10, cnt);
       System.out.println("test 20 passed");
-    } catch (Exception e) {
-      query20Test();
-    }
+//    } catch (Exception e) {
+//      query20Test();
+//    }
   }
 
   @Test
-  public void query21Test() {
-    try {
+  public void query21Test() throws VerdictDBException, SQLException, IOException {
+//    try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(21);
       ExecutionResultReader reader = answerPair.getLeft();
       ResultSet rs = answerPair.getRight();
@@ -580,9 +576,9 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
       assertEquals(12, cnt);
       System.out.println("test 21 passed");
-    } catch (Exception e) {
-      query21Test();
-    }
+//    } catch (Exception e) {
+//      query21Test();
+//    }
   }
 
   Pair<ExecutionResultReader, ResultSet> getRedshiftQueryAnswerPair(int queryNum)
@@ -604,8 +600,8 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
   }
 
   @Test
-  public void TpchQuery1Test() {
-    try {
+  public void TpchQuery1Test() throws VerdictDBException, SQLException, IOException {
+//    try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(1);
       ExecutionResultReader reader = answerPair.getLeft();
       ResultSet rs = answerPair.getRight();
@@ -631,14 +627,14 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
       assertEquals(10, cnt);
       System.out.println("test 1 passed");
-    } catch (Exception e) {
-      TpchQuery1Test();
-    }
+//    } catch (Exception e) {
+//      TpchQuery1Test();
+//    }
   }
 
   @Test
-  public void TpchQuery3Test() {
-    try {
+  public void TpchQuery3Test() throws VerdictDBException, SQLException, IOException {
+//    try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(3);
       ExecutionResultReader reader = answerPair.getLeft();
       ResultSet rs = answerPair.getRight();
@@ -658,15 +654,15 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
       assertEquals(12, cnt);
       System.out.println("test 3 passed");
-    } catch (Exception e) {
-      TpchQuery3Test();
-    }
+//    } catch (Exception e) {
+//      TpchQuery3Test();
+//    }
   }
 
   // count distinct
   @Test
-  public void TpchQuery4Test() {
-    try {
+  public void TpchQuery4Test() throws VerdictDBException, SQLException, IOException {
+//    try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(4);
       ExecutionResultReader reader = answerPair.getLeft();
       ResultSet rs = answerPair.getRight();
@@ -684,14 +680,14 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
       assertEquals(1, cnt);
       System.out.println("test 4 passed");
-    } catch (Exception e) {
-      TpchQuery4Test();
-    }
+//    } catch (Exception e) {
+//      TpchQuery4Test();
+//    }
   }
 
   @Test
-  public void TpchQuery5Test() {
-    try {
+  public void TpchQuery5Test() throws VerdictDBException, SQLException, IOException {
+//    try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(5);
       ExecutionResultReader reader = answerPair.getLeft();
       ResultSet rs = answerPair.getRight();
@@ -709,14 +705,14 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
       assertEquals(12, cnt);
       System.out.println("test 5 passed");
-    } catch (Exception e) {
-      TpchQuery5Test();
-    }
+//    } catch (Exception e) {
+//      TpchQuery5Test();
+//    }
   }
 
   @Test
-  public void TpchQuery6Test() {
-    try {
+  public void TpchQuery6Test() throws VerdictDBException, SQLException, IOException {
+//    try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(6);
       ExecutionResultReader reader = answerPair.getLeft();
       ResultSet rs = answerPair.getRight();
@@ -733,14 +729,14 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
       assertEquals(10, cnt);
       System.out.println("test 6 passed");
-    } catch (Exception e) {
-      TpchQuery6Test();
-    }
+//    } catch (Exception e) {
+//      TpchQuery6Test();
+//    }
   }
 
   @Test
-  public void TpchQuery7Test() {
-    try {
+  public void TpchQuery7Test() throws VerdictDBException, SQLException, IOException {
+//    try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(7);
       ExecutionResultReader reader = answerPair.getLeft();
       ResultSet rs = answerPair.getRight();
@@ -760,14 +756,14 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
       assertEquals(12, cnt);
       System.out.println("test 7 passed");
-    } catch (Exception e) {
-      TpchQuery7Test();
-    }
+//    } catch (Exception e) {
+//      TpchQuery7Test();
+//    }
   }
 
   @Test
-  public void TpchQuery8Test() {
-    try {
+  public void TpchQuery8Test() throws VerdictDBException, SQLException, IOException {
+//    try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(8);
       ExecutionResultReader reader = answerPair.getLeft();
       ResultSet rs = answerPair.getRight();
@@ -786,14 +782,14 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
       assertEquals(12, cnt);
       System.out.println("test 8 passed");
-    } catch (Exception e) {
-      TpchQuery8Test();
-    }
+//    } catch (Exception e) {
+//      TpchQuery8Test();
+//    }
   }
 
   @Test
-  public void TpchQuery9Test() {
-    try {
+  public void TpchQuery9Test() throws VerdictDBException, SQLException, IOException {
+//    try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(9);
       ExecutionResultReader reader = answerPair.getLeft();
       ResultSet rs = answerPair.getRight();
@@ -812,14 +808,14 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
       assertEquals(12, cnt);
       System.out.println("test 9 passed");
-    } catch (Exception e) {
-      TpchQuery9Test();
-    }
+//    } catch (Exception e) {
+//      TpchQuery9Test();
+//    }
   }
 
   @Test
-  public void TpchQuery10Test() {
-    try {
+  public void TpchQuery10Test() throws VerdictDBException, SQLException, IOException {
+//    try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(10);
       ExecutionResultReader reader = answerPair.getLeft();
       ResultSet rs = answerPair.getRight();
@@ -843,14 +839,14 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
       assertEquals(12, cnt);
       System.out.println("test 10 passed");
-    } catch (Exception e) {
-      TpchQuery10Test();
-    }
+//    } catch (Exception e) {
+//      TpchQuery10Test();
+//    }
   }
 
   @Test
-  public void TpchQuery11Test() {
-    try {
+  public void TpchQuery11Test() throws VerdictDBException, SQLException, IOException {
+//    try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(11);
       ExecutionResultReader reader = answerPair.getLeft();
       ResultSet rs = answerPair.getRight();
@@ -868,14 +864,14 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
       assertEquals(1, cnt);
       System.out.println("test 11 passed");
-    } catch (Exception e) {
-      TpchQuery11Test();
-    }
+//    } catch (Exception e) {
+//      TpchQuery11Test();
+//    }
   }
 
   @Test
-  public void TpchQuery12Test() {
-    try {
+  public void TpchQuery12Test() throws VerdictDBException, SQLException, IOException {
+//    try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(12);
       ExecutionResultReader reader = answerPair.getLeft();
       ResultSet rs = answerPair.getRight();
@@ -894,15 +890,15 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
       assertEquals(12, cnt);
       System.out.println("test 12 passed");
-    } catch (Exception e) {
-      TpchQuery12Test();
-    }
+//    } catch (Exception e) {
+//      TpchQuery12Test();
+//    }
   }
 
   // count distinct
   @Test
-  public void TpchQuery13Test() {
-    try {
+  public void TpchQuery13Test() throws VerdictDBException, SQLException, IOException {
+//    try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(13);
       ExecutionResultReader reader = answerPair.getLeft();
       ResultSet rs = answerPair.getRight();
@@ -921,14 +917,14 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
       assertEquals(3, cnt);
       System.out.println("test 13 passed");
-    } catch (Exception e) {
-      TpchQuery13Test();
-    }
+//    } catch (Exception e) {
+//      TpchQuery13Test();
+//    }
   }
 
   @Test
-  public void TpchQuery14Test() {
-    try {
+  public void TpchQuery14Test() throws VerdictDBException, SQLException, IOException {
+//    try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(14);
       ExecutionResultReader reader = answerPair.getLeft();
       ResultSet rs = answerPair.getRight();
@@ -946,14 +942,14 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
       assertEquals(10, cnt);
       System.out.println("test 14 passed");
-    } catch (Exception e) {
-      TpchQuery14Test();
-    }
+//    } catch (Exception e) {
+//      TpchQuery14Test();
+//    }
   }
 
   @Test
-  public void TpchQuery15Test() {
-    try {
+  public void TpchQuery15Test() throws VerdictDBException, SQLException, IOException {
+//    try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(15);
       ExecutionResultReader reader = answerPair.getLeft();
       ResultSet rs = answerPair.getRight();
@@ -974,15 +970,15 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
       assertEquals(12, cnt);
       System.out.println("test 15 passed");
-    } catch (Exception e) {
-      TpchQuery15Test();
-    }
+//    } catch (Exception e) {
+//      TpchQuery15Test();
+//    }
   }
 
   // count distinct
   @Test
-  public void TpchQuery16Test() {
-    try {
+  public void TpchQuery16Test() throws VerdictDBException, SQLException, IOException {
+//    try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(16);
       ExecutionResultReader reader = answerPair.getLeft();
       ResultSet rs = answerPair.getRight();
@@ -1001,14 +997,14 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
         }
       }
       assertEquals(1, cnt);
-    } catch (Exception e) {
-      System.out.println("test 16 passed");
-    }
+//    } catch (Exception e) {
+//      System.out.println("test 16 passed");
+//    }
   }
 
   @Test
-  public void TpchQuery17Test() {
-    try {
+  public void TpchQuery17Test() throws VerdictDBException, SQLException, IOException {
+//    try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(17);
       ExecutionResultReader reader = answerPair.getLeft();
       ResultSet rs = answerPair.getRight();
@@ -1025,14 +1021,14 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
       assertEquals(10, cnt);
       System.out.println("test 17 passed");
-    } catch (Exception e) {
-      TpchQuery17Test();
-    }
+//    } catch (Exception e) {
+//      TpchQuery17Test();
+//    }
   }
 
   @Test
-  public void TpchQuery18Test() {
-    try {
+  public void TpchQuery18Test() throws VerdictDBException, SQLException, IOException {
+//    try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(18);
       ExecutionResultReader reader = answerPair.getLeft();
       ResultSet rs = answerPair.getRight();
@@ -1050,14 +1046,14 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
       assertEquals(12, cnt);
       System.out.println("test 18 passed");
-    } catch (Exception e) {
-      TpchQuery18Test();
-    }
+//    } catch (Exception e) {
+//      TpchQuery18Test();
+//    }
   }
 
   @Test
-  public void TpchQuery19Test() {
-    try {
+  public void TpchQuery19Test() throws VerdictDBException, SQLException, IOException {
+//    try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(19);
       ExecutionResultReader reader = answerPair.getLeft();
       ResultSet rs = answerPair.getRight();
@@ -1074,14 +1070,14 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
       assertEquals(10, cnt);
       System.out.println("test 19 passed");
-    } catch (Exception e) {
-      TpchQuery19Test();
-    }
+//    } catch (Exception e) {
+//      TpchQuery19Test();
+//    }
   }
 
   @Test
-  public void TpchQuery20Test() {
-    try {
+  public void TpchQuery20Test() throws VerdictDBException, SQLException, IOException {
+//    try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(20);
       ExecutionResultReader reader = answerPair.getLeft();
       ResultSet rs = answerPair.getRight();
@@ -1099,15 +1095,15 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
       assertEquals(10, cnt);
       System.out.println("test 20 passed");
-    } catch (Exception e) {
-      TpchQuery20Test();
-    }
+//    } catch (Exception e) {
+//      TpchQuery20Test();
+//    }
   }
 
   // Count distinct has occur with count
-  @Test
-  public void TpchQuery21Test() {
-    try {
+//  @Test
+  public void TpchQuery21Test() throws VerdictDBException, SQLException, IOException {
+//    try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(21);
       ExecutionResultReader reader = answerPair.getLeft();
       ResultSet rs = answerPair.getRight();
@@ -1123,14 +1119,14 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
           }
         }
       }
-    } catch (Exception e) {
-      System.out.println("test 21 passed");
-    }
+//    } catch (Exception e) {
+//      System.out.println("test 21 passed");
+//    }
   }
 
   @Test
-  public void TpchQuery22Test() {
-    try {
+  public void TpchQuery22Test() throws VerdictDBException, SQLException, IOException {
+//    try {
       Pair<ExecutionResultReader, ResultSet> answerPair = getRedshiftQueryAnswerPair(22);
       ExecutionResultReader reader = answerPair.getLeft();
       ResultSet rs = answerPair.getRight();
@@ -1148,9 +1144,9 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
       }
       assertEquals(3, cnt);
       System.out.println("test 22 passed");
-    } catch (Exception e) {
-      TpchQuery22Test();
-    }
+//    } catch (Exception e) {
+//      TpchQuery22Test();
+//    }
   }
 
 

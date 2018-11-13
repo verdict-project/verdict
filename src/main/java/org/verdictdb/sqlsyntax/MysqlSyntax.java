@@ -198,4 +198,29 @@ public class MysqlSyntax extends SqlSyntax {
   public String getApproximateCountDistinct(String column) {
     return String.format("count(distinct %s)", column);
   }
+
+  /**
+   * The following query returns 9.6757 (9.6757 / 100 = 0.0968):
+   * 
+   * select stddev(c)
+   * from (
+   *     select v, count(*) as c
+   *     from (
+   *         select conv(substr(md5(value), 1, 8), 16, 10) % 100 as v
+   *         from mytable
+   *     ) t1
+   *     group by v
+   * ) t2;
+   * 
+   * where mytable contains the integers from 0 to 10000.
+   * 
+   * Note that the stddev of rand() is sqrt(0.01 * 0.99) = 0.09949874371.
+   */
+  @Override
+  public String hashFunction(String column, int upper_bound) {
+    String f = String.format(
+        "conv(substr(md5(%s%s%s), 1, 8), 16, 10) % %d",
+        getQuoteString(), column, getQuoteString(), upper_bound);
+    return f;
+  }
 }
