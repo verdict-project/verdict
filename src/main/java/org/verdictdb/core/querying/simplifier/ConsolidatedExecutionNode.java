@@ -254,6 +254,7 @@ public class ConsolidatedExecutionNode extends QueryNodeWithPlaceHolders {
         for (int i = 0; i < queryResult.getMetaData().isAggregate.size(); i++) {
           if (!selectQueryColumnAlias.get(i).equals(asteriskAlias)) {
             int idx = 0;
+            // Get the index of the alias name in the columnName field of the queryResult.
             while (!selectQueryColumnAlias.get(i).equals(queryResult.getColumnName(idx))) {
               idx++;
             }
