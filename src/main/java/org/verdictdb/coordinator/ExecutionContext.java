@@ -337,7 +337,8 @@ public class ExecutionContext {
                 (ctx.percent == null) ? 1.0 : Double.parseDouble(ctx.percent.getText());
             long blocksize =
                 (ctx.blocksize == null) ? (long) 1e6 : Long.parseLong(ctx.blocksize.getText());
-            String hashColumnName = stripQuote(ctx.hash_column.getText());
+            String hashColumnName = 
+                (ctx.hash_column == null) ? null : stripQuote(ctx.hash_column.getText());
 
             CreateScrambleQuery query =
                 new CreateScrambleQuery(
