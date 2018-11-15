@@ -65,8 +65,7 @@ public class QueryResultAccuracyEstimatorFromDifference extends QueryResultAccur
       // IndexOutOfBoundsException
       // please take a look and apply a proper fix later.
       for (int i = 0; i < currentAnswer.getColumnCount(); i++) {
-        if (i < currentAnswer.getMetaData().isAggregate.size()
-            && currentAnswer.getMetaData().isAggregate.get(i)) {
+        if (currentAnswer.getMetaData().isAggregate.get(i)) {
           aggregatedValues.add(currentAnswer.getValue(i));
         } else {
           nonAggregatedValues.add(currentAnswer.getValue(i));
