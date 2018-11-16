@@ -1,6 +1,14 @@
 package org.verdictdb.jdbc41;
 
-import static org.junit.Assert.assertEquals;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.junit.AfterClass;
+import org.junit.Assume;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.verdictdb.commons.VerdictOption;
+import org.verdictdb.exception.VerdictDBException;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -14,14 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.verdictdb.commons.VerdictOption;
-import org.verdictdb.exception.VerdictDBException;
+import static org.junit.Assert.assertEquals;
 
 /** Created by Dong Young Yoon on 7/18/18. */
 @RunWith(Parameterized.class)
@@ -306,6 +307,41 @@ public class JdbcCommonQueryForAllDatabasesTest {
     ResultSet vcRs = vcStmt.executeQuery(sql);
     while (jdbcRs.next() && vcRs.next()) {
       assertEquals(jdbcRs.getInt(1), vcRs.getInt(1));
+    }
+  }
+
+  @Test
+  public void runShowTablesInEmptySchemaTest() throws SQLException {
+    Assume.assumeTrue(database.equalsIgnoreCase("mysql"));
+    String sql =
+        String.format("SHOW TABLES IN this_schema_is_empty", options.getVerdictTempSchemaName());
+
+    Statement jdbcStmt = connMap.get(database).createStatement();
+    Statement vcStmt = vcMap.get(database).createStatement();
+
+    jdbcStmt.execute(String.format("DROP SCHEMA IF EXISTS this_schema_is_empty"));
+    jdbcStmt.execute(String.format("CREATE SCHEMA IF NOT EXISTS this_schema_is_empty"));
+
+    ResultSet jdbcRs = jdbcStmt.executeQuery(sql);
+    ResultSet vcRs = vcStmt.executeQuery(sql);
+    while (jdbcRs.next() && vcRs.next()) {
+      assertEquals(jdbcRs.getObject(1), vcRs.getObject(1));
+    }
+    jdbcStmt.execute(String.format("DROP SCHEMA IF EXISTS this_schema_is_empty"));
+  }
+
+  @Test
+  public void runShowTablesInSchemaTest() throws SQLException {
+    Assume.assumeTrue(database.equalsIgnoreCase("mysql") || database.equalsIgnoreCase("impala"));
+    String sql = String.format("SHOW TABLES IN %s", options.getVerdictTempSchemaName());
+
+    Statement jdbcStmt = connMap.get(database).createStatement();
+    Statement vcStmt = vcMap.get(database).createStatement();
+
+    ResultSet jdbcRs = jdbcStmt.executeQuery(sql);
+    ResultSet vcRs = vcStmt.executeQuery(sql);
+    while (jdbcRs.next() && vcRs.next()) {
+      assertEquals(jdbcRs.getObject(1), vcRs.getObject(1));
     }
   }
 

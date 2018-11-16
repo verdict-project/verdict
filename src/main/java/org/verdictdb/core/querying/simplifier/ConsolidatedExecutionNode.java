@@ -7,6 +7,7 @@ import com.google.common.base.Optional;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
+import org.apache.spark.sql.catalyst.expressions.Alias;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.core.execplan.ExecutionInfoToken;
 import org.verdictdb.core.querying.*;
@@ -40,6 +41,12 @@ public class ConsolidatedExecutionNode extends QueryNodeWithPlaceHolders {
 
   private CreateTableAsSelectNode childNode;
 
+  // This records the alias of selectQuery of ConsolidatedExecutionNode.
+  // It is used to resolve the case of asterisk column.
+  private List<String> selectQueryColumnAlias = new ArrayList<>();
+
+  private final String asteriskAlias = "verdictdb_asterisk_alias";
+
   public ConsolidatedExecutionNode(
       SelectQuery selectQuery, QueryNodeWithPlaceHolders parent, CreateTableAsSelectNode child) {
     super(parent.getId(), selectQuery);
@@ -53,11 +60,11 @@ public class ConsolidatedExecutionNode extends QueryNodeWithPlaceHolders {
     //      addPlaceholderRecord(record);
     //    }
   }
-  
+
   public ExecutableNodeBase getParentNode() {
     return parentNode;
   }
-  
+
   public ExecutableNodeBase getChildNode() {
     return childNode;
   }
@@ -219,6 +226,11 @@ public class ConsolidatedExecutionNode extends QueryNodeWithPlaceHolders {
         } else {
           isAggregated.add(false);
         }
+        if (sel instanceof AliasedColumn) {
+          selectQueryColumnAlias.add(((AliasedColumn) sel).getAliasName());
+        } else {
+          selectQueryColumnAlias.add(asteriskAlias);
+        }
       }
       ((SelectAllExecutionNode) parentNode).setAggregateColumn(isAggregated);
     }
@@ -229,6 +241,30 @@ public class ConsolidatedExecutionNode extends QueryNodeWithPlaceHolders {
   public ExecutionInfoToken createToken(DbmsQueryResult result) {
     // pass the information from the internal parent node
     ExecutionInfoToken token = parentNode.createToken(result);
+    // Addition check that the query is a query contains Asterisk column that without asyncAggExecutionNode.
+    // For instance, query like 'select * from lineitem'. In that case, all the values of isAggregate field
+    // are false.
+    if (token.containsKey("queryResult")) {
+      DbmsQueryResult queryResult = (DbmsQueryResult) token.getValue("queryResult");
+      if (queryResult.getColumnCount() != queryResult.getMetaData().isAggregate.size()) {
+        List<Boolean> isAggregate = new ArrayList<>();
+        for (int i = 0; i < queryResult.getColumnCount(); i++) {
+          isAggregate.add(false);
+        }
+        for (int i = 0; i < queryResult.getMetaData().isAggregate.size(); i++) {
+          // If it is not asterisk column, we will find the index of the column in queryResult.
+          if (!selectQueryColumnAlias.get(i).equals(asteriskAlias)) {
+            int idx = 0;
+            // Get the index of the alias name in the columnName field of the queryResult.
+            while (!selectQueryColumnAlias.get(i).equals(queryResult.getColumnName(idx))) {
+              idx++;
+            }
+            isAggregate.set(idx, queryResult.getMetaData().isAggregate.get(i));
+          }
+        }
+        queryResult.getMetaData().isAggregate = isAggregate;
+      }
+    }
     return token;
   }
 

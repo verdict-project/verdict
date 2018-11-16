@@ -1,6 +1,5 @@
 package org.verdictdb.coordinator;
 
-import org.verdictdb.VerdictResultStream;
 import org.verdictdb.VerdictSingleResult;
 
 import java.math.BigDecimal;
@@ -12,11 +11,13 @@ public class QueryResultAccuracyEstimatorFromDifference extends QueryResultAccur
 
   Coordinator runningCoordinator;
 
-  // the values of the result should be within [(1-valueError)*prevValue, (1+valueError)*prevValue] of the previous result.
+  // the values of the result should be within [(1-valueError)*prevValue, (1+valueError)*prevValue]
+  // of the previous result.
   // Otherwise, it will fetch next result.
   Double valueError = 0.05;
 
-  // the #row of the result should be within  [(1-groupCountError)*prev#row, (1+groupCountError)*prev#row] of the previous result.
+  // the #row of the result should be within  [(1-groupCountError)*prev#row,
+  // (1+groupCountError)*prev#row] of the previous result.
   // Otherwise, it will fetch next result.
   Double groupCountError = 0.05;
 
@@ -54,12 +55,15 @@ public class QueryResultAccuracyEstimatorFromDifference extends QueryResultAccur
     HashMap<List<Object>, List<Object>> newAggregatedMap = new HashMap<>();
     VerdictSingleResult currentAnswer = answers.get(answers.size() - 1);
     // query result without asyncAggregate
-    if (currentAnswer.getMetaData()==null || currentAnswer.getMetaData().isAggregate.isEmpty()) {
+    if (currentAnswer.getMetaData() == null || currentAnswer.getMetaData().isAggregate.isEmpty()) {
       return true;
     }
     while (currentAnswer.next()) {
       List<Object> aggregatedValues = new ArrayList<>();
       List<Object> nonAggregatedValues = new ArrayList<>();
+      // dyoon: this does not seem to handle "SELECT *" correctly resulting in
+      // IndexOutOfBoundsException
+      // please take a look and apply a proper fix later.
       for (int i = 0; i < currentAnswer.getColumnCount(); i++) {
         if (currentAnswer.getMetaData().isAggregate.get(i)) {
           aggregatedValues.add(currentAnswer.getValue(i));
@@ -77,7 +81,6 @@ public class QueryResultAccuracyEstimatorFromDifference extends QueryResultAccur
     }
     VerdictSingleResult previousAnswer = answers.get(answers.size() - 2);
 
-
     // check if #groupCountError is converged
     if (currentAnswer.getRowCount() < previousAnswer.getRowCount() * (1 - groupCountError)
         || currentAnswer.getRowCount() > previousAnswer.getRowCount() * (1 + groupCountError)) {
@@ -93,7 +96,7 @@ public class QueryResultAccuracyEstimatorFromDifference extends QueryResultAccur
           int idx = aggregatedValues.indexOf(v);
           double newValue, oldValue;
           // if v is Integer type or Double type, it is safe to case to double
-          // Otherwise, if v is BigDecimal type, it needs to be convert to double 
+          // Otherwise, if v is BigDecimal type, it needs to be convert to double
           if (v instanceof BigDecimal) {
             newValue = ((BigDecimal) v).doubleValue();
             oldValue = ((BigDecimal) prevAggregatedValues.get(idx)).doubleValue();
@@ -101,8 +104,7 @@ public class QueryResultAccuracyEstimatorFromDifference extends QueryResultAccur
             newValue = (double) v;
             oldValue = (double) prevAggregatedValues.get(idx);
           }
-          if (newValue < oldValue * (1 - valueError)
-              || newValue > oldValue * (1 + valueError)) {
+          if (newValue < oldValue * (1 - valueError) || newValue > oldValue * (1 + valueError)) {
             isValueConverged = false;
             break;
           }

@@ -707,6 +707,89 @@ YEAR:                            Y E A R;
 YEARS:                           Y E A R S;
 YEARWEEK:                        Y E A R W E E K;
 
+// Geospatial functions (constructors)
+ST_ASBINARY:                     S T '_' A S B I N A R Y;
+ST_ASTEXT:                       S T '_' A S T E X T;
+ST_GEOMETRYFROMTEXT:             S T '_' G E O M E T R Y F R O M T E X T;
+ST_GEOMFROMBINARY:               S T '_' G E O M F R O M B I N A R Y;
+ST_LINEFROMTEXT:                 S T '_' L I N E F R O M T E X T;
+ST_LINESTRING:                   S T '_' L I N E S T R I N G;
+ST_MULTIPOINT:                   S T '_' M U L T I P O I N T;
+ST_POINT:                        S T '_' P O I N T;
+ST_POLYGON:                      S T '_' P O L Y G O N;
+
+// Geospatial functions (relationship tests)
+ST_CONTAINS:                     S T '_' C O N T A I N S;
+ST_CROSSES:                      S T '_' C R O S S E S;
+ST_DISJOINT:                     S T '_' D I S J O I N T;
+ST_EQUALS:                       S T '_' E Q U A L S;
+ST_INTERSECTS:                   S T '_' I N T E R S E C T S;
+ST_OVERLAPS:                     S T '_' O V E R L A P S;
+ST_RELATE:                       S T '_' R E L A T E;
+ST_TOUCHES:                      S T '_' T O U C H E S;
+ST_WITHIN:                       S T '_' W I T H I N;
+
+// Geospatial functions (operations)
+GEOMETRY_UNION:                  G E O M E T R Y '_' U N I O N;
+ST_BOUNDARY:                     S T '_' B O U N D A R Y;
+ST_BUFFER:                       S T '_' B U F F E R;
+ST_DIFFERENCE:                   S T '_' D I F F E R E N C E;
+ST_ENVELOPE:                     S T '_' E N V E L O P E;
+ST_ENVELOPEASPTS:                S T '_' E N V E L O P E A S P T S;
+ST_EXTERIORRING:                 S T '_' E X T E R I O R R I N G;
+ST_INTERSECTION:                 S T '_' I N T E R S E C T I O N;
+ST_SYMDIFFERENCE:                S T '_' S Y M D I F F E R E N C E;
+ST_UNION:                        S T '_' U N I O N;
+
+// Geospatial functions (accessors)
+ST_AREA:                         S T '_' A R E A;
+ST_CENTROID:                     S T '_' C E N T R O I D;
+ST_CONVEXHULL:                   S T '_' C O N V E X H U L L;
+ST_COORDDIM:                     S T '_' C O O R D D I M;
+ST_DIMENSION:                    S T '_' D I M E N S I O N;
+ST_DISTANCE:                     S T '_' D I S T A N C E;
+ST_GEOMETRYN:                    S T '_' G E O M E T R Y N;
+ST_INTERIORRINGN:                S T '_' I N T E R I O R R I N G N;
+ST_GEOMETRYTYPE:                 S T '_' G E O M E T R Y T Y P E;
+ST_ISCLOSED:                     S T '_' I S C L O S E D;
+ST_ISEMPTY:                      S T '_' I S E M P T Y;
+ST_ISSIMPLE:                     S T '_' I S S I M P L E;
+ST_ISRING:                       S T '_' I S R I N G;
+ST_ISVALID:                      S T '_' I S V A L I D;
+ST_LENGTH:                       S T '_' L E N G T H;
+ST_POINTN:                       S T '_' P O I N T N;
+ST_XMAX:                         S T '_' X M A X;
+ST_YMAX:                         S T '_' Y M A X;
+ST_XMIN:                         S T '_' X M I N;
+ST_YMIN:                         S T '_' Y M I N;
+ST_STARTPOINT:                   S T '_' S T A R T P O I N T;
+SIMPLIFY_GEOMETRY:               S I M P L I F Y '_' G E O M E T R Y;
+ST_ENDPOINT:                     S T '_' E N D P O I N T;
+ST_X:                            S T '_' X;
+ST_Y:                            S T '_' Y;
+ST_INTERIORRINGS:                S T '_' I N T E R I O R R I N G S;
+ST_NUMGEOMETRIES:                S T '_' N U M G E O M E T R I E S;
+ST_GEOMETRIES:                   S T '_' G E O M E T R I E S;
+ST_NUMPOINTS:                    S T '_' N U M P O I N T S;
+ST_NUMINTERIORRING:              S T '_' N U M I N T E R I O R R I N G;
+LINE_LOCATE_POINT:               L I N E '_' L O C A T E '_' P O I N T;
+GEOMETRY_INVALID_REASON:         G E O M E T R Y '_' I N V A L I D '_' R E A S O N;
+GREAT_CIRCLE_DISTANCE:           G R E A T '_' C I R C L E '_' D I S T A N C E;
+
+// Geospatial functions (aggregations)
+CONVEX_HULL_AGG:                 C O N V E X '_' H U L L '_' A G G;
+GEOMETRY_UNION_AGG:              G E O M E T R Y '_' U N I O N '_' A G G;
+
+// Geospatial functions (bing tiles)
+BING_TILE:                       B I N G '_' T I L E;
+BING_TILE_AT:                    B I N G '_' T I L E '_' A T;
+BING_TILES_AROUND:               B I N G '_' T I L E S '_' A R O U N D;
+BING_TILE_COORDINATES:           B I N G '_' T I L E '_' C O O R D I N A T E S;
+BING_TILE_POLYGON:               B I N G '_' T I L E '_' P O L Y G O N;
+BING_TILE_QUADKEY:               B I N G '_' T I L E '_' Q U A D K E Y;
+BING_TILE_ZOOM_LEVEL:            B I N G '_' T I L E '_' Z O O M '_' L E V E L;
+GEOMETRY_TO_BING_TILES:          G E O M E T R Y '_' T O '_' B I N G '_' T I L E S;
+
 DOLLAR_ACTION:                   '$' A C T I O N;
 
 SPACE:              [ \t\r\n]+    -> channel(1);

@@ -16,10 +16,6 @@
 
 package org.verdictdb.sqlreader;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 import org.verdictdb.core.sqlobject.ColumnOp;
 import org.verdictdb.core.sqlobject.ConstantColumn;
 import org.verdictdb.core.sqlobject.SelectQuery;
@@ -27,6 +23,10 @@ import org.verdictdb.core.sqlobject.SubqueryColumn;
 import org.verdictdb.core.sqlobject.UnnamedColumn;
 import org.verdictdb.parser.VerdictSQLParser;
 import org.verdictdb.parser.VerdictSQLParserBaseVisitor;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class CondGen extends VerdictSQLParserBaseVisitor<UnnamedColumn> {
 
@@ -198,17 +198,47 @@ public class CondGen extends VerdictSQLParserBaseVisitor<UnnamedColumn> {
   }
 
   @Override
-  public UnnamedColumn visitFunc_predicate(VerdictSQLParser.Func_predicateContext ctx) {
-    UnnamedColumn pred = visit(ctx.predicate_function());
+  public UnnamedColumn visitUnary_func_predicate(VerdictSQLParser.Unary_func_predicateContext ctx) {
+    UnnamedColumn pred = visit(ctx.unary_predicate_function());
     return pred;
   }
 
   @Override
-  public UnnamedColumn visitPredicate_function(VerdictSQLParser.Predicate_functionContext ctx) {
+  public UnnamedColumn visitUnary_predicate_function(
+      VerdictSQLParser.Unary_predicate_functionContext ctx) {
     ExpressionGen g = new ExpressionGen();
     UnnamedColumn col = g.visit(ctx.expression());
     return col;
   }
+
+  @Override
+  public UnnamedColumn visitBinary_func_predicate(
+      VerdictSQLParser.Binary_func_predicateContext ctx) {
+    UnnamedColumn pred = visit(ctx.binary_predicate_function());
+    return pred;
+  }
+
+  @Override
+  public UnnamedColumn visitBinary_predicate_function(
+      VerdictSQLParser.Binary_predicate_functionContext ctx) {
+    ExpressionGen g = new ExpressionGen();
+    String fname = ctx.function_name.getText().toLowerCase();
+    return new ColumnOp(
+        fname, Arrays.asList(g.visit(ctx.expression(0)), g.visit(ctx.expression(1))));
+  }
+
+  //  @Override
+  //  public UnnamedColumn visitFunc_predicate(VerdictSQLParser.Func_predicateContext ctx) {
+  //    UnnamedColumn pred = visit(ctx.predicate_function());
+  //    return pred;
+  //  }
+  //
+  //  @Override
+  //  public UnnamedColumn visitPredicate_function(VerdictSQLParser.Predicate_functionContext ctx) {
+  //    ExpressionGen g = new ExpressionGen();
+  //    UnnamedColumn col = g.visit(ctx.expression());
+  //    return col;
+  //  }
 
   @Override
   public UnnamedColumn visitComp_between_expr(VerdictSQLParser.Comp_between_exprContext ctx) {
