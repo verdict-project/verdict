@@ -1,24 +1,34 @@
 package org.verdictdb.connection;
 
-import static java.sql.Types.CHAR;
-import static java.sql.Types.VARCHAR;
-
 import org.apache.commons.lang3.RandomStringUtils;
 import org.verdictdb.commons.DataTypeConverter;
-import org.verdictdb.core.sqlobject.*;
+import org.verdictdb.core.sqlobject.AbstractRelation;
+import org.verdictdb.core.sqlobject.AliasedColumn;
+import org.verdictdb.core.sqlobject.AsteriskColumn;
+import org.verdictdb.core.sqlobject.BaseColumn;
+import org.verdictdb.core.sqlobject.BaseTable;
+import org.verdictdb.core.sqlobject.ColumnOp;
+import org.verdictdb.core.sqlobject.GroupingAttribute;
+import org.verdictdb.core.sqlobject.SelectItem;
+import org.verdictdb.core.sqlobject.SelectQuery;
+import org.verdictdb.core.sqlobject.SetOperationRelation;
+import org.verdictdb.core.sqlobject.UnnamedColumn;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sqlsyntax.H2Syntax;
 import org.verdictdb.sqlwriter.SelectQueryToSql;
 
-import java.sql.PreparedStatement;
 import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.sql.DriverManager;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import static java.sql.Types.CHAR;
+import static java.sql.Types.VARCHAR;
 
 public class InMemoryAggregate {
 
@@ -35,8 +45,7 @@ public class InMemoryAggregate {
     try {
       Class.forName("org.h2.Driver");
       inMemoryAggregate = new InMemoryAggregate();
-      String h2Database =
-          "verdictdb_" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
+      String h2Database = "verdictdb_" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
       String DB_CONNECTION = String.format("jdbc:h2:mem:%s;DB_CLOSE_DELAY=-1", h2Database);
       inMemoryAggregate.conn = DriverManager.getConnection(DB_CONNECTION, "", "");
     } catch (SQLException | ClassNotFoundException e) {
@@ -74,11 +83,8 @@ public class InMemoryAggregate {
     stmt.close();
 
     // insert values
-    String sql = "INSERT INTO " + tableName + " ("
-        + columnNames
-        + ") VALUES ("
-        + bindVariables
-        + ")";
+    String sql =
+        "INSERT INTO " + tableName + " (" + columnNames + ") VALUES (" + bindVariables + ")";
     PreparedStatement statement = conn.prepareStatement(sql);
     while (dbmsQueryResult.next()) {
       for (int i = 1; i <= dbmsQueryResult.getColumnCount(); i++) {
@@ -99,7 +105,8 @@ public class InMemoryAggregate {
     return dbmsQueryResult;
   }
 
-  public String combineTables(String combinedTableName, String newAggTableName, SelectQuery dependentQuery)
+  public String combineTables(
+      String combinedTableName, String newAggTableName, SelectQuery dependentQuery)
       throws SQLException, VerdictDBException {
     String tableName = selectAsyncAggTable + selectAsyncAggTableID++;
 
@@ -134,19 +141,19 @@ public class InMemoryAggregate {
           }
         }
       }
-      SelectQuery left = SelectQuery.create(new AsteriskColumn(),
-          new BaseTable("PUBLIC", newAggTableName));
-      SelectQuery right = SelectQuery.create(new AsteriskColumn(),
-          new BaseTable("PUBLIC", combinedTableName));
-      AbstractRelation setOperation = new SetOperationRelation(left, right, SetOperationRelation.SetOpType.unionAll);
+      SelectQuery left =
+          SelectQuery.create(new AsteriskColumn(), new BaseTable("PUBLIC", newAggTableName));
+      SelectQuery right =
+          SelectQuery.create(new AsteriskColumn(), new BaseTable("PUBLIC", combinedTableName));
+      AbstractRelation setOperation =
+          new SetOperationRelation(left, right, SetOperationRelation.SetOpType.unionAll);
       copy.clearFilter();
       copy.setFromList(Arrays.asList(setOperation));
       copy.clearGroupby();
       copy.addGroupby(groupList);
       String sql = selectQueryToSql.toSql(copy);
       Statement stmt = conn.createStatement();
-      stmt.execute(
-          String.format("CREATE TABLE %s AS %s", tableName, sql));
+      stmt.execute(String.format("CREATE TABLE %s AS %s", tableName, sql));
       stmt.close();
     }
 
@@ -178,12 +185,11 @@ public class InMemoryAggregate {
       if (!conn.isClosed()) {
         // This will close all the connection and the database.
         Statement stmt = conn.createStatement();
-        stmt.executeQuery("SHUTDOWN");
+        stmt.execute("SHUTDOWN");
         stmt.close();
       }
     } catch (SQLException e) {
       e.printStackTrace();
     }
   }
-
 }
