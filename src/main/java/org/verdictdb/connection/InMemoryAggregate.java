@@ -29,6 +29,8 @@ public class InMemoryAggregate {
   private static SelectQueryToSql selectQueryToSql = new SelectQueryToSql(new H2Syntax());
 
   private Connection conn;
+  
+  private boolean aborted = false;
 
   public static InMemoryAggregate create() {
     InMemoryAggregate inMemoryAggregate = null;
@@ -47,6 +49,11 @@ public class InMemoryAggregate {
   }
 
   public void createTable(DbmsQueryResult dbmsQueryResult, String tableName) throws SQLException {
+    // the query processing has already been finished; thus, no more processing will be needed.
+    if (aborted) {
+      return;
+    }
+    
     StringBuilder columnNames = new StringBuilder();
     StringBuilder fieldNames = new StringBuilder();
     StringBuilder bindVariables = new StringBuilder();
@@ -91,6 +98,11 @@ public class InMemoryAggregate {
   }
 
   public DbmsQueryResult executeQuery(SelectQuery query) throws VerdictDBException, SQLException {
+    // the query processing has already been finished; thus, no more processing will be needed.
+    if (aborted) {
+      return null;
+    }
+    
     String sql = selectQueryToSql.toSql(query).toUpperCase();
     Statement stmt = conn.createStatement();
     ResultSet rs = stmt.executeQuery(sql);
@@ -101,6 +113,11 @@ public class InMemoryAggregate {
 
   public String combineTables(String combinedTableName, String newAggTableName, SelectQuery dependentQuery)
       throws SQLException, VerdictDBException {
+    // the query processing has already been finished; thus, no more processing will be needed.
+    if (aborted) {
+      return null;
+    }
+    
     String tableName = selectAsyncAggTable + selectAsyncAggTableID++;
 
     // check targetTable exists
@@ -174,6 +191,8 @@ public class InMemoryAggregate {
   }
 
   public void abort() {
+    aborted = true;
+    
     try {
       if (!conn.isClosed()) {
         // This will close all the connection and the database.

@@ -162,8 +162,9 @@ public class PostgresqlSyntax extends SqlSyntax {
   @Override
   public String hashFunction(String column) {
     String f = String.format(
-        "(('x' || lpad(substr(md5(cast(%s%s%s as varchar)), 1, 8), 16, '0'))::bit(64)::bigint %% %d) / %d",
-        getQuoteString(), column, getQuoteString(), hashPrecision, hashPrecision);
+        "(('x' || lpad(substr(md5(cast(%s as varchar)), 1, 8), 16, '0'))::bit(64)::bigint %% %d) "
+        + "/ cast(%d as double precision)",
+        column, hashPrecision, hashPrecision);
     return f;
   }
 }
