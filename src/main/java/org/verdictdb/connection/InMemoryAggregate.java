@@ -178,7 +178,7 @@ public class InMemoryAggregate {
       if (!conn.isClosed()) {
         // This will close all the connection and the database.
         Statement stmt = conn.createStatement();
-        stmt.executeQuery("SHUTDOWN");
+        stmt.execute("SHUTDOWN");
         stmt.close();
       }
     } catch (SQLException e) {

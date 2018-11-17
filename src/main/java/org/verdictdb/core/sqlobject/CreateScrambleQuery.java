@@ -92,8 +92,7 @@ public class CreateScrambleQuery extends CreateTableQuery {
           method));
     }
     
-    if (method.equals("hash") && hashColumnName != null) {
-    } else {
+    if (method.equals("hash") && hashColumnName == null) {
       throw new VerdictDBValueException(
           "The hash column is null."
           + "If the scrambling method is hash, "
