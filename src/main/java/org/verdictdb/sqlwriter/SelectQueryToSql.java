@@ -46,7 +46,8 @@ public class SelectQueryToSql {
           "is_not_null",
           "is_null",
           "rand",
-          "floor", "interval");
+          "floor",
+          "interval");
 
   public SelectQueryToSql(SqlSyntax syntax) {
     this.syntax = syntax;
@@ -124,8 +125,7 @@ public class SelectQueryToSql {
       } else if (columnOp.getOpType().equals("subtract")) {
         return withParentheses(columnOp.getOperand(0))
             + " - "
-            +
-            withParentheses(columnOp.getOperand(1));
+            + withParentheses(columnOp.getOperand(1));
       } else if (columnOp.getOpType().equals("multiply")) {
         return withParentheses(columnOp.getOperand(0))
             + " * "
