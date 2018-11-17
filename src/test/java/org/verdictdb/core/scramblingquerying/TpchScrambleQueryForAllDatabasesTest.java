@@ -1,4 +1,20 @@
-package org.verdictdb.jdbc41;
+/*
+ *    Copyright 2018 University of Michigan
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
+
+package org.verdictdb.core.scramblingquerying;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
@@ -12,6 +28,7 @@ import org.verdictdb.commons.DatabaseConnectionHelpers;
 import org.verdictdb.commons.VerdictOption;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.jdbc41.VerdictConnection;
 
 import java.io.File;
 import java.io.IOException;
@@ -25,12 +42,11 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 /** Created by Dong Young Yoon on 7/18/18. */
 @RunWith(Parameterized.class)
-public class JdbcTpchQueryForAllDatabasesTest {
+public class TpchScrambleQueryForAllDatabasesTest {
 
   private static Map<String, Connection> connMap = new HashMap<>();
 
@@ -59,7 +75,7 @@ public class JdbcTpchQueryForAllDatabasesTest {
   //  private static final String[] targetDatabases = {"mysql", "impala", "redshift", "postgresql"};
   private static final String[] targetDatabases = {"mysql", "impala", "redshift"};
 
-  public JdbcTpchQueryForAllDatabasesTest(String database, String query) {
+  public TpchScrambleQueryForAllDatabasesTest(String database, String query) {
     this.database = database;
     this.query = query;
   }
@@ -212,6 +228,10 @@ public class JdbcTpchQueryForAllDatabasesTest {
     conn.createStatement()
         .execute(
             String.format("CREATE SCHEMA IF NOT EXISTS %s", options.getVerdictTempSchemaName()));
+    vc.createStatement()
+        .execute(
+            String.format(
+                "CREATE SCRAMBLE %s.lineitem_scramble FROM %s.lineitem", SCHEMA_NAME, SCHEMA_NAME));
     return conn;
   }
 
@@ -232,6 +252,10 @@ public class JdbcTpchQueryForAllDatabasesTest {
     conn.createStatement()
         .execute(
             String.format("CREATE SCHEMA IF NOT EXISTS %s", options.getVerdictTempSchemaName()));
+    vc.createStatement()
+        .execute(
+            String.format(
+                "CREATE SCRAMBLE %s.lineitem_scramble FROM %s.lineitem", SCHEMA_NAME, SCHEMA_NAME));
     return conn;
   }
 
@@ -254,6 +278,10 @@ public class JdbcTpchQueryForAllDatabasesTest {
     conn.createStatement()
         .execute(
             String.format("CREATE SCHEMA IF NOT EXISTS %s", options.getVerdictTempSchemaName()));
+    vc.createStatement()
+        .execute(
+            String.format(
+                "CREATE SCRAMBLE %s.lineitem_scramble FROM %s.lineitem", SCHEMA_NAME, SCHEMA_NAME));
     return conn;
   }
 
@@ -271,7 +299,7 @@ public class JdbcTpchQueryForAllDatabasesTest {
     return conn;
   }
 
-  @Test
+  @Test(expected = Test.None.class /* no exception expected */)
   public void testTpch() throws IOException, SQLException {
     ClassLoader classLoader = getClass().getClassLoader();
     String filename = "";
@@ -302,19 +330,19 @@ public class JdbcTpchQueryForAllDatabasesTest {
 
       int columnCount = jdbcRs.getMetaData().getColumnCount();
       int columnCount2 = vcRs.getMetaData().getColumnCount();
-      assertEquals(columnCount, columnCount2);
+      //      assertEquals(columnCount, columnCount2);
       boolean jdbcNext = jdbcRs.next();
       boolean vcNext = vcRs.next();
       while (jdbcNext && vcNext) {
-        assertEquals(jdbcNext, vcNext);
+        //        assertEquals(jdbcNext, vcNext);
         for (int i = 1; i <= columnCount; ++i) {
           System.out.println(jdbcRs.getObject(i) + " : " + vcRs.getObject(i));
-          assertEquals(jdbcRs.getObject(i), vcRs.getObject(i));
+          //          assertEquals(jdbcRs.getObject(i), vcRs.getObject(i));
         }
         jdbcNext = jdbcRs.next();
         vcNext = vcRs.next();
       }
-      assertEquals(jdbcNext, vcNext);
+      //      assertEquals(jdbcNext, vcNext);
     } else {
       System.out.println(String.format("tpch%d does not exist.", query));
     }
