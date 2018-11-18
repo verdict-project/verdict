@@ -65,11 +65,7 @@ public class JdbcConnection extends DbmsConnection {
     }
 
     SqlSyntax syntax = SqlSyntaxList.getSyntaxFromConnectionString(connectionString);
-    //    String dbName = connectionString.split(":")[1];
-    //    SqlSyntax syntax = SqlSyntaxList.getSyntaxFor(dbName);
-
     JdbcConnection jdbcConn = new JdbcConnection(conn, syntax);
-    //    jdbcConn.setOutputDebugMessage(true);
 
     if (syntax instanceof PrestoSyntax) {
       String catalog = null;

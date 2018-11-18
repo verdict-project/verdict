@@ -49,10 +49,10 @@ public class ScrambleTableReplacer {
   }
 
   public int replace(SelectQuery query) {
-    return replace(query, true);
+    return replace(query, true, null);
   }
 
-  public int replace(SelectQuery query, boolean doReset) {
+  public int replace(SelectQuery query, boolean doReset, Triple<Boolean, Boolean, BaseColumn> outerInspectionInfo) {
     if (doReset) { 
       replaceCount = 0;
     }
@@ -62,7 +62,14 @@ public class ScrambleTableReplacer {
         SelectQueryCoordinator.inspectAggregatesInSelectList(query);
     boolean containAggregatedItem = inspectionInfo.getLeft();
     boolean containCountDistinctItem = inspectionInfo.getMiddle();
-    BaseColumn countDistinctColumn = inspectionInfo.getRight();
+    
+    // this is to handle the case that an outer query includes aggregate functions,
+    // the current query is simply a projection.
+    if (outerInspectionInfo != null && !containAggregatedItem && !containCountDistinctItem) {
+      containAggregatedItem = outerInspectionInfo.getLeft();
+      containCountDistinctItem = outerInspectionInfo.getMiddle();
+      inspectionInfo = outerInspectionInfo; 
+    }
     
     // if both count-distinct and other aggregates appear
     if (containAggregatedItem && containCountDistinctItem) {
@@ -72,14 +79,14 @@ public class ScrambleTableReplacer {
     else if (containAggregatedItem) {
       List<AbstractRelation> fromList = query.getFromList();
       for (int i = 0; i < fromList.size(); i++) {
-        fromList.set(i, replaceTableForSimpleAggregates(fromList.get(i)));
+        fromList.set(i, replaceTableForSimpleAggregates(fromList.get(i), inspectionInfo));
       }
     }
     // if only count-distinct appears
     else if (containCountDistinctItem) {
       List<AbstractRelation> fromList = query.getFromList();
       for (int i = 0; i < fromList.size(); i++) {
-        fromList.set(i, replaceTableForCountDistinct(fromList.get(i), countDistinctColumn));
+        fromList.set(i, replaceTableForCountDistinct(fromList.get(i), inspectionInfo));
       }
     }
     
@@ -95,7 +102,9 @@ public class ScrambleTableReplacer {
    */
   private AbstractRelation replaceTableForCountDistinct(
       AbstractRelation table, 
-      BaseColumn countDistinctColumn) {
+      Triple<Boolean, Boolean, BaseColumn> inspectionInfo) {
+    
+    BaseColumn countDistinctColumn = inspectionInfo.getRight();
     
     if (table instanceof BaseTable) {
       BaseTable bt = (BaseTable) table;
@@ -124,17 +133,19 @@ public class ScrambleTableReplacer {
     } else if (table instanceof JoinTable) {
       JoinTable jt = (JoinTable) table;
       for (AbstractRelation relation : jt.getJoinList()) {
-        this.replaceTableForCountDistinct(relation, countDistinctColumn);
+        this.replaceTableForCountDistinct(relation, inspectionInfo);
       }
     } else if (table instanceof SelectQuery) {
       SelectQuery subquery = (SelectQuery) table;
-      this.replace(subquery, false);
+      this.replace(subquery, false, inspectionInfo);
     }
     
     return table;
   }
   
-  private AbstractRelation replaceTableForSimpleAggregates(AbstractRelation table) {
+  private AbstractRelation replaceTableForSimpleAggregates(
+      AbstractRelation table, 
+      Triple<Boolean, Boolean, BaseColumn> inspectionInfo) {
     if (table instanceof BaseTable) {
       BaseTable bt = (BaseTable) table;
       
@@ -160,11 +171,11 @@ public class ScrambleTableReplacer {
     } else if (table instanceof JoinTable) {
       JoinTable jt = (JoinTable) table;
       for (AbstractRelation relation : jt.getJoinList()) {
-        this.replaceTableForSimpleAggregates(relation);
+        this.replaceTableForSimpleAggregates(relation, inspectionInfo);
       }
     } else if (table instanceof SelectQuery) {
       SelectQuery subquery = (SelectQuery) table;
-      this.replace(subquery, false);
+      this.replace(subquery, false, inspectionInfo);
     }
 
     return table;
