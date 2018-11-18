@@ -228,7 +228,8 @@ public class RedshiftSyntax extends SqlSyntax {
   @Override
   public String hashFunction(String column) {
     String f = String.format(
-        "(strtol(substring(md5(cast(%s as varchar)), 0, 8), 16) %% %d) / %d",
+        "(strtol(substring(md5(cast(%s as varchar)), 0, 8), 16) %% %d) / "
+        + "cast(%d as double precision)",
         column, hashPrecision, hashPrecision);
     return f;
   }

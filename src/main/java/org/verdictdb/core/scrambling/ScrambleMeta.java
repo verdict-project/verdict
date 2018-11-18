@@ -49,7 +49,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
   "aggregationBlockCount",
   "tierColumn",
   "numberOfTiers",
-  "method"
+  "method",
+  "hashcolumn"
 })
 public class ScrambleMeta implements Serializable {
 
@@ -77,6 +78,9 @@ public class ScrambleMeta implements Serializable {
 
   // scramble method used
   String method;
+  
+  // the column on which a hash function is used (only applicable to hash sampling).
+  String hashColumn;
 
   /**
    * The probability mass function of the sizes of the aggregation blocks for a tier. The key is the
@@ -137,7 +141,8 @@ public class ScrambleMeta implements Serializable {
       String tierColumn,
       int tierCount,
       Map<Integer, List<Double>> cumulativeMassDistributionPerTier,
-      String method)
+      String method,
+      String hashColumn)
       throws VerdictDBValueException {
 
     this(
@@ -152,6 +157,7 @@ public class ScrambleMeta implements Serializable {
         cumulativeMassDistributionPerTier);
 
     this.method = method;
+    this.hashColumn = hashColumn;
   }
 
   public String getAggregationBlockColumn() {
@@ -197,6 +203,10 @@ public class ScrambleMeta implements Serializable {
   public String getMethod() {
     return method;
   }
+  
+  public String getHashColumn() {
+    return hashColumn;
+  }
 
   public void setAggregationBlockColumn(String aggregationBlockColumn) {
     this.aggregationBlockColumn = aggregationBlockColumn;
@@ -233,6 +243,14 @@ public class ScrambleMeta implements Serializable {
 
   public void setTableName(String tableName) {
     this.tableName = tableName;
+  }
+  
+  public void setMethod(String method) {
+    this.method = method;
+  }
+  
+  public void setHashColumn(String hashColumn) {
+    this.hashColumn = hashColumn;
   }
 
   public void setTierColumn(String tierColumn) {

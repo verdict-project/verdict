@@ -220,6 +220,19 @@ public class ScramblingCoordinator {
     return meta;
   }
 
+  /**
+   * 
+   * @param originalSchema  Original schema name
+   * @param originalTable   Original table name
+   * @param newSchema       Scramble schema name
+   * @param newTable        Scramble table name
+   * @param methodName    Either 'uniform' or 'hash'
+   * @param primaryColumn Passes hashcolumn for hash sampling.
+   * @param relativeSize  The ratio of a scramble in comparison to the original table.
+   * @param customOptions
+   * @return
+   * @throws VerdictDBException
+   */
   // scramble(CreateScrambleQuery query) method relies on this.
   public ScrambleMeta scramble(
       String originalSchema,
@@ -276,8 +289,8 @@ public class ScramblingCoordinator {
     // perform scrambling
     log.info(
         String.format(
-            "Starts to create a new scramble %s.%s from %s.%s",
-            newSchema, newTable, originalSchema, originalTable));
+            "Starts to create a new %s scramble %s.%s from %s.%s",
+            methodName.toUpperCase(), newSchema, newTable, originalSchema, originalTable));
     ScramblingPlan plan =
         ScramblingPlan.create(
             newSchema, newTable, originalSchema, originalTable, scramblingMethod, effectiveOptions);
@@ -285,6 +298,8 @@ public class ScramblingCoordinator {
     log.info(String.format("Finished creating %s.%s", newSchema, newTable));
 
     // Reinitiate Connections after table creation is done
+    // This is to handle the case that the JDBC connections are disconnected due to
+    // the long idle time.
     if (conn instanceof ConcurrentJdbcConnection) {
       ((ConcurrentJdbcConnection) conn).reinitiateConnection();
     } else if (conn instanceof CachedDbmsConnection
@@ -316,7 +331,8 @@ public class ScramblingCoordinator {
             tierColumn,
             tierCount,
             cumulativeDistribution,
-            methodName);
+            methodName,
+            primaryColumn);
 
     return meta;
   }

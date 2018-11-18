@@ -20,8 +20,12 @@ import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.core.sqlobject.AbstractRelation;
+import org.verdictdb.core.sqlobject.AliasedColumn;
+import org.verdictdb.core.sqlobject.BaseColumn;
 import org.verdictdb.core.sqlobject.BaseTable;
+import org.verdictdb.core.sqlobject.ColumnOp;
 import org.verdictdb.core.sqlobject.JoinTable;
+import org.verdictdb.core.sqlobject.SelectItem;
 import org.verdictdb.core.sqlobject.SelectQuery;
 
 import java.util.Iterator;
@@ -47,21 +51,107 @@ public class ScrambleTableReplacer {
   }
 
   public int replace(SelectQuery query, boolean doReset) {
-    if (doReset) replaceCount = 0;
-    List<AbstractRelation> fromList = query.getFromList();
-    for (int i = 0; i < fromList.size(); i++) {
-      fromList.set(i, replaceTable(fromList.get(i)));
+    if (doReset) { 
+      replaceCount = 0;
     }
+    
+    // check select list
+    BaseColumn countDistinctColumn = null;
+    boolean containAggregatedItem = false;
+    boolean containCountDistinctItem = false;
+    for (SelectItem selectItem : query.getSelectList()) {
+      if (selectItem instanceof AliasedColumn
+          && ((AliasedColumn) selectItem).getColumn() instanceof ColumnOp) {
+        ColumnOp opcolumn = (ColumnOp) ((AliasedColumn) selectItem).getColumn();
+        if (opcolumn.doesColumnOpContainOpType("countdistinct")) {
+          opcolumn.replaceAllColumnOpOpType("countdistinct", "approx_countdistinct");
+          containCountDistinctItem = true;
+          
+          if (opcolumn.getOperand() instanceof BaseColumn) {
+            countDistinctColumn = (BaseColumn) opcolumn.getOperand();
+          }
+        }
+        if ((((AliasedColumn) selectItem).getColumn()).isAggregateColumn()) {
+          containAggregatedItem = true;
+        }
+      }
+    }
+    
+    // if both count-distinct and other aggregates appear
+    if (containAggregatedItem && containCountDistinctItem) {
+      throw new RuntimeException("This line is not supposed to be reached.");
+    }
+    // if no count-distinct appears and other aggregates appear
+    else if (containAggregatedItem) {
+      List<AbstractRelation> fromList = query.getFromList();
+      for (int i = 0; i < fromList.size(); i++) {
+        fromList.set(i, replaceTableForSimpleAggregates(fromList.get(i)));
+      }
+    }
+    // if only count-distinct appears
+    else if (containCountDistinctItem) {
+      List<AbstractRelation> fromList = query.getFromList();
+      for (int i = 0; i < fromList.size(); i++) {
+        fromList.set(i, replaceTableForCountDistinct(fromList.get(i), countDistinctColumn));
+      }
+    }
+    
     return replaceCount;
   }
 
-  private AbstractRelation replaceTable(AbstractRelation table) {
+  /**
+   * Replaces an original table if there exists a corresponding scramble.
+   * Use a hash scramble.
+   * 
+   * @param table
+   * @return
+   */
+  private AbstractRelation replaceTableForCountDistinct(
+      AbstractRelation table, 
+      BaseColumn countDistinctColumn) {
+    
     if (table instanceof BaseTable) {
       BaseTable bt = (BaseTable) table;
-      Iterator<ScrambleMeta> iterator = metaSet.iterator();
-      while (iterator.hasNext()) {
-        ScrambleMeta meta = iterator.next();
+      
+      for (ScrambleMeta meta : metaSet) {
+        // substitute names with those of the first scrambled table found.
+        if (meta.getOriginalSchemaName().equals(bt.getSchemaName())
+            && meta.getOriginalTableName().equals(bt.getTableName())
+            && meta.getMethod().equalsIgnoreCase("hash")
+            && countDistinctColumn.getColumnName().equals(meta.getHashColumn())) {
+          ++replaceCount;
+          bt.setSchemaName(meta.getSchemaName());
+          bt.setTableName(meta.getTableName());
 
+          log.info(
+              String.format(
+                  "Automatic table replacement: %s.%s -> %s.%s",
+                  meta.getOriginalSchemaName(),
+                  meta.getOriginalTableName(),
+                  meta.getSchemaName(),
+                  meta.getTableName()));
+
+          break;
+        }
+      }
+    } else if (table instanceof JoinTable) {
+      JoinTable jt = (JoinTable) table;
+      for (AbstractRelation relation : jt.getJoinList()) {
+        this.replaceTableForCountDistinct(relation, countDistinctColumn);
+      }
+    } else if (table instanceof SelectQuery) {
+      SelectQuery subquery = (SelectQuery) table;
+      this.replace(subquery, false);
+    }
+    
+    return table;
+  }
+  
+  private AbstractRelation replaceTableForSimpleAggregates(AbstractRelation table) {
+    if (table instanceof BaseTable) {
+      BaseTable bt = (BaseTable) table;
+      
+      for (ScrambleMeta meta : metaSet) {
         // substitute names with those of the first scrambled table found.
         if (meta.getOriginalSchemaName().equals(bt.getSchemaName())
             && meta.getOriginalTableName().equals(bt.getTableName())) {
@@ -83,7 +173,7 @@ public class ScrambleTableReplacer {
     } else if (table instanceof JoinTable) {
       JoinTable jt = (JoinTable) table;
       for (AbstractRelation relation : jt.getJoinList()) {
-        this.replaceTable(relation);
+        this.replaceTableForSimpleAggregates(relation);
       }
     } else if (table instanceof SelectQuery) {
       SelectQuery subquery = (SelectQuery) table;

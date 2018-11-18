@@ -85,6 +85,14 @@ public class ScrambleMetaSet implements Serializable, Iterable<ScrambleMeta> {
   public String getTierColumn(String schemaName, String tableName) {
     return meta.get(metaKey(schemaName, tableName)).getTierColumn();
   }
+  
+  public String getScramblingMethod(String schemaName, String tableName) {
+    return meta.get(metaKey(schemaName, tableName)).getMethod();
+  }
+  
+  public String getHashColumn(String schemaName, String tableName) {
+    return meta.get(metaKey(schemaName, tableName)).getHashColumn();
+  }
 
   /**
    * Add a new scramble meta entry. If there exists an existing entry for the same scrambled table,

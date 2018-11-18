@@ -115,6 +115,27 @@ public class MySqlTpchSelectQueryCoordinatorTest {
     System.out.println(String.format("Query %d Executed.", queryNum));
     return new ImmutablePair<>(reader, rs);
   }
+  
+  @Test
+  public void queryCountDistinctTest() throws VerdictDBException, SQLException, IOException {
+    Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(100);
+    ExecutionResultReader reader = answerPair.getLeft();
+    ResultSet rs = answerPair.getRight();
+    int cnt = 0;
+    while (reader.hasNext()) {
+      DbmsQueryResult dbmsQueryResult = reader.next();
+      cnt++;
+      if (cnt == 10) {
+        while (rs.next()) {
+          dbmsQueryResult.next();
+          assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
+          assertEquals(rs.getString(2), dbmsQueryResult.getString(1));
+          assertEquals(rs.getLong(3), dbmsQueryResult.getLong(2));
+        }
+      }
+    }
+    assertEquals(10, cnt);
+  }
 
   @Test
   public void query1Test() throws VerdictDBException, SQLException, IOException {

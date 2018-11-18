@@ -191,6 +191,10 @@ public class ScrambleMetaStore extends VerdictMetaStore {
     conn.execute(sql);
   }
 
+  /**
+   * Removes the metastore table if exists.
+   * @throws VerdictDBException
+   */
   public void remove() throws VerdictDBException {
     // create a schema if not exists
     CreateSchemaQuery createSchemaQuery = new CreateSchemaQuery(storeSchema);
@@ -205,7 +209,7 @@ public class ScrambleMetaStore extends VerdictMetaStore {
   }
 
   /**
-   * This will add on top of existing entries.
+   * This will add on top of existing entries. A new metastore table is created if not exists.
    *
    * @param scrambleMetaSet
    * @throws VerdictDBException
