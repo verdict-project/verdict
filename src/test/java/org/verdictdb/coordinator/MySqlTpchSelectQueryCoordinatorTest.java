@@ -83,6 +83,8 @@ public class MySqlTpchSelectQueryCoordinatorTest {
     dbmsConn.execute(
         String.format("DROP TABLE IF EXISTS `%s`.`lineitem_scrambled`", MYSQL_DATABASE));
     dbmsConn.execute(String.format("DROP TABLE IF EXISTS `%s`.`orders_scrambled`", MYSQL_DATABASE));
+    dbmsConn.execute(
+        String.format("DROP TABLE IF EXISTS `%s`.`lineitem_hash_scrambled`", MYSQL_DATABASE));
 
     ScramblingCoordinator scrambler =
         new ScramblingCoordinator(dbmsConn, MYSQL_DATABASE, MYSQL_DATABASE, (long) 100);
@@ -91,8 +93,12 @@ public class MySqlTpchSelectQueryCoordinatorTest {
             MYSQL_DATABASE, "lineitem", MYSQL_DATABASE, "lineitem_scrambled", "uniform");
     ScrambleMeta meta2 =
         scrambler.scramble(MYSQL_DATABASE, "orders", MYSQL_DATABASE, "orders_scrambled", "uniform");
+    ScrambleMeta meta3 =
+        scrambler.scramble(
+            MYSQL_DATABASE, "lineitem", MYSQL_DATABASE, "lineitem_hash_scrambled", "hash", "l_orderkey");
     meta.addScrambleMeta(meta1);
     meta.addScrambleMeta(meta2);
+    meta.addScrambleMeta(meta3);
     stmt.execute(String.format("drop schema if exists `%s`", options.getVerdictTempSchemaName()));
     stmt.execute(
         String.format("create schema if not exists `%s`", options.getVerdictTempSchemaName()));

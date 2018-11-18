@@ -119,6 +119,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
       SelectAsyncAggExecutionNode newRoot = (SelectAsyncAggExecutionNode) root.getSources().get(0);
       root.cancelSubscriptionTo(newRoot);
       return newRoot;
+      
     } else {
       return root;
     }
@@ -172,6 +173,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
     //    SELECT p FROM (SELECT SUM(price) as p from [Scramble Table])
     if (aggNodeBlock.getBlockRootNode().getSubscribers().size() == 1 &&
         aggNodeBlock.getBlockRootNode().getSubscribers().get(0) instanceof SelectAllExecutionNode) {
+      
       // Convert to SelectAsyncAggExecutionNode
       // Second, according to the plan, create individual nodes that perform aggregations.
       for (int i = 0; i < aggPlan.totalBlockAggCount(); i++) {
@@ -232,6 +234,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
 
       // Re-link the subscription relationship for the new AsyncAggNode
       newRoot = SelectAsyncAggExecutionNode.create(idCreator, individualAggNodes, scrambleMeta, aggNodeBlock);
+      
     } else {
       // Otherwise, create AsyncAggExeuctionNode instead.
       // Second, according to the plan, create individual nodes that perform aggregations.
@@ -368,7 +371,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
     return identified;
   }
 
-  private List<ColumnOp> getAggregateColumn(UnnamedColumn sel) {
+  private List<ColumnOp> getAggregateColumns(UnnamedColumn sel) {
     List<SelectItem> itemToCheck = new ArrayList<>();
     itemToCheck.add(sel);
     List<ColumnOp> columnOps = new ArrayList<>();
@@ -380,9 +383,13 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
             || ((ColumnOp) s).getOpType().equals("sum")
             || ((ColumnOp) s).getOpType().equals("avg")
             || ((ColumnOp) s).getOpType().equals("max")
-            || ((ColumnOp) s).getOpType().equals("min")) {
+            || ((ColumnOp) s).getOpType().equals("min")
+            || ((ColumnOp) s).getOpType().equals("countdistinct")
+            || ((ColumnOp) s).getOpType().equals("approx_countdistinct")) {
           columnOps.add((ColumnOp) s);
-        } else itemToCheck.addAll(((ColumnOp) s).getOperands());
+        } else {
+          itemToCheck.addAll(((ColumnOp) s).getOperands());
+        }
       }
     }
     return columnOps;
@@ -667,7 +674,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
           prefix = "agg";
           newAlias = prefix + aggColumnIdentiferNum;
         }
-        List<ColumnOp> columnOps = getAggregateColumn(((AliasedColumn) selectItem).getColumn());
+        List<ColumnOp> columnOps = getAggregateColumns(((AliasedColumn) selectItem).getColumn());
         // If it contains agg columns
         if (!columnOps.isEmpty()) {
           meta.getAggColumn().put(selectItem, columnOps);
@@ -727,6 +734,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
                           newAlias);
                   aggColumnAlias.add(newAlias);
                   ++aggColumnIdentiferNum;
+                  
                 } else if (col.getOperand(0) instanceof ColumnOp && !meta.getAggColumnAggAliasPair()
                     .containsKey(new ImmutablePair<>(col.getOpType(), col.getOperand(0)))) {
                   ColumnOp col1 = new ColumnOp(col.getOpType(), col.getOperand(0));
@@ -735,11 +743,13 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
                       .put(new ImmutablePair<>(col.getOpType(), col1.getOperand(0)), newAlias);
                   aggColumnAlias.add(newAlias);
                   ++aggColumnIdentiferNum;
+                  
                 } else if (!newAlias.startsWith("agg")) {
                   ColumnOp col1 = new ColumnOp("count", col.getOperand(0));
                   newSelectlist.add(new AliasedColumn(col1, newAlias));
                   aggColumnAlias.add(newAlias);
                 }
+                
               } else if (col.getOpType().equals("sum")) {
                 if (!meta.getAggColumnAggAliasPair()
                     .containsKey(new ImmutablePair<>(col.getOpType(), col.getOperand(0)))) {
@@ -755,6 +765,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
                   aggColumnAlias.add(newAlias);
                 }
               }
+              
             } else if (col.getOpType().equals("max") || col.getOpType().equals("min")) {
               ColumnOp col1 = new ColumnOp(col.getOpType(), col.getOperand(0));
               newSelectlist.add(new AliasedColumn(col1, newAlias));

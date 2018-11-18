@@ -41,7 +41,7 @@ import static org.junit.Assert.assertTrue;
 public class CreateScrambleTableFromSqlTest {
 
   private static final String[] targetDatabases = {"mysql", "impala", "redshift", "postgresql"};
-  //  private static final String[] targetDatabases = {"impala"};
+//    private static final String[] targetDatabases = {"mysql"};
 
   private static Map<String, Pair<Connection, Connection>> connections = new HashMap<>();
 
@@ -322,7 +322,7 @@ public class CreateScrambleTableFromSqlTest {
 
     String countOriginalSql =
         String.format(
-            "SELECT * FROM %s.lineitem LIMIT 1", DatabaseConnectionHelpers.COMMON_SCHEMA_NAME);
+            "SELECT COUNT(*) FROM %s.lineitem LIMIT 1", DatabaseConnectionHelpers.COMMON_SCHEMA_NAME);
 
     ScrambleMetaSet scrambleMetaSet = store.retrieve();
     SelectQueryCoordinator coordinator =
@@ -363,7 +363,7 @@ public class CreateScrambleTableFromSqlTest {
 
     String countOriginalSql =
         String.format(
-            "SELECT * FROM %s.lineitem LIMIT 1", DatabaseConnectionHelpers.COMMON_SCHEMA_NAME);
+            "SELECT COUNT(*) FROM %s.lineitem LIMIT 1", DatabaseConnectionHelpers.COMMON_SCHEMA_NAME);
 
     ScrambleMetaSet scrambleMetaSet = store.retrieve();
     SelectQueryCoordinator coordinator =

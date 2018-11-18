@@ -199,19 +199,22 @@ public class SelectQueryCoordinator implements Coordinator {
       if (table instanceof BaseTable) {
         String schemaName = ((BaseTable) table).getSchemaName();
         String tableName = ((BaseTable) table).getTableName();
+        if (!scrambleMetaSet.isScrambled(schemaName, tableName)) {
+          continue;
+        }
+        String method = scrambleMetaSet.getScramblingMethod(schemaName, tableName);
 
         if (containAggregatedItem) {
-          String method = scrambleMetaSet.getScramblingMethod(schemaName, tableName);
-          if (!method.equalsIgnoreCase("uniform")) {
+          if (!method.equalsIgnoreCase("uniform")
+              && !method.equalsIgnoreCase("fastconverge")) {
             throw new VerdictDBValueException(
                 "Simple aggregates must be used with a uniform scramble.");
           }
         } else if (containCountDistinctItem) {
-          String method = scrambleMetaSet.getScramblingMethod(schemaName, tableName);
           String hashColumn = scrambleMetaSet.getHashColumn(schemaName, tableName);
           if (!method.equalsIgnoreCase("hash")
               || hashColumn == null
-              || hashColumn.equalsIgnoreCase(countDistinctColumn.getColumnName())) {
+              || !hashColumn.equalsIgnoreCase(countDistinctColumn.getColumnName())) {
             throw new VerdictDBValueException(
                 "Count distinct of a column must be used with the hash scramble "
                     + "built on that column.");
@@ -234,7 +237,7 @@ public class SelectQueryCoordinator implements Coordinator {
    * 
    * @return (ifContainsSimpleAggregates, ifContainsCountDistinct, countDistinctColumn)
    */
-  private Triple<Boolean, Boolean, BaseColumn> inspectAggregatesInSelectList(SelectQuery query) {
+  static public Triple<Boolean, Boolean, BaseColumn> inspectAggregatesInSelectList(SelectQuery query) {
     // check select list
     boolean containAggregatedItem = false;
     boolean containCountDistinctItem = false;
@@ -244,16 +247,14 @@ public class SelectQueryCoordinator implements Coordinator {
       if (selectItem instanceof AliasedColumn
           && ((AliasedColumn) selectItem).getColumn() instanceof ColumnOp) {
         ColumnOp opcolumn = (ColumnOp) ((AliasedColumn) selectItem).getColumn();
-        if (opcolumn.doesColumnOpContainOpType("countdistinct")) {
-//          opcolumn.replaceAllColumnOpOpType("countdistinct", "approx_countdistinct");
+        if (opcolumn.isCountDistinctAggregate()) {
           containCountDistinctItem = true;
           
           if (opcolumn.getOperand() instanceof BaseColumn) {
             countDistinctColumn = (BaseColumn) opcolumn.getOperand();
           }
         }
-        if (!containAggregatedItem
-            && (((AliasedColumn) selectItem).getColumn()).isAggregateColumn()) {
+        if (opcolumn.isCumulativeAggregateColumn()) {
           containAggregatedItem = true;
         }
       }

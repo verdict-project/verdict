@@ -16,7 +16,9 @@
 
 package org.verdictdb.sqlreader;
 
+import org.apache.commons.lang3.tuple.Triple;
 import org.verdictdb.commons.VerdictDBLogger;
+import org.verdictdb.coordinator.SelectQueryCoordinator;
 import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.core.sqlobject.AbstractRelation;
@@ -56,26 +58,11 @@ public class ScrambleTableReplacer {
     }
     
     // check select list
-    BaseColumn countDistinctColumn = null;
-    boolean containAggregatedItem = false;
-    boolean containCountDistinctItem = false;
-    for (SelectItem selectItem : query.getSelectList()) {
-      if (selectItem instanceof AliasedColumn
-          && ((AliasedColumn) selectItem).getColumn() instanceof ColumnOp) {
-        ColumnOp opcolumn = (ColumnOp) ((AliasedColumn) selectItem).getColumn();
-        if (opcolumn.doesColumnOpContainOpType("countdistinct")) {
-          opcolumn.replaceAllColumnOpOpType("countdistinct", "approx_countdistinct");
-          containCountDistinctItem = true;
-          
-          if (opcolumn.getOperand() instanceof BaseColumn) {
-            countDistinctColumn = (BaseColumn) opcolumn.getOperand();
-          }
-        }
-        if ((((AliasedColumn) selectItem).getColumn()).isAggregateColumn()) {
-          containAggregatedItem = true;
-        }
-      }
-    }
+    Triple<Boolean, Boolean, BaseColumn> inspectionInfo = 
+        SelectQueryCoordinator.inspectAggregatesInSelectList(query);
+    boolean containAggregatedItem = inspectionInfo.getLeft();
+    boolean containCountDistinctItem = inspectionInfo.getMiddle();
+    BaseColumn countDistinctColumn = inspectionInfo.getRight();
     
     // if both count-distinct and other aggregates appear
     if (containAggregatedItem && containCountDistinctItem) {
