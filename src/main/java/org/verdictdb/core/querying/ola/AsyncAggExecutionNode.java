@@ -259,13 +259,7 @@ public class AsyncAggExecutionNode extends ProjectionNode {
       aggcol.setOperand(0, scalingColumn);
     }
 
-
-
     selectQuery = replaceWithOriginalSelectList(selectQuery, sourceAggMeta);
-
-    //    System.out.println("Finished composing a query in AsyncAggNode.");
-    //    System.out.println(selectQuery);
-
     return super.createQuery(tokens);
   }
 
@@ -360,14 +354,8 @@ public class AsyncAggExecutionNode extends ProjectionNode {
 
     Map<Integer, String> multipleTierTableTierInfo = new HashMap<>();
     List<ColumnOp> aggColumnlist = new ArrayList<>();
-    //    ScrambleMetaSet scrambleMetaSet = getScrambleMeta();
-
     List<HyperTableCube> cubes = sourceAggMeta.getCubes();
-    //    SelectQuery dependentQuery = (SelectQuery) token.getValue("dependentQuery");
-
-    //    dependentQuery.deepcopy().getSelectList();
     List<SelectItem> newSelectList = new ArrayList<>(sourceSelectList);
-    //    AggMeta aggMeta = (AggMeta) token.getValue("aggMeta");
 
     for (SelectItem selectItem : newSelectList) {
       if (selectItem instanceof AliasedColumn) {
@@ -382,6 +370,7 @@ public class AsyncAggExecutionNode extends ProjectionNode {
                   new BaseColumn(INNER_RAW_AGG_TABLE_ALIAS, aliasedColumn.getAliasName()));
           aggColumnlist.add(aggColumn);
           newSelectList.set(index, new AliasedColumn(aggColumn, aliasedColumn.getAliasName()));
+          
         } else if (sourceAggMeta
             .getMaxminAggAlias()
             .keySet()
@@ -572,15 +561,19 @@ public class AsyncAggExecutionNode extends ProjectionNode {
     return col.get();
   }
 
-  SelectItem replaceColumnWithAggMeta(SelectItem sel, AggMeta aggMeta) {
+  private SelectItem replaceColumnWithAggMeta(SelectItem sel, AggMeta aggMeta) {
 
     Map<SelectItem, List<ColumnOp>> aggColumn = aggMeta.getAggColumn();
+    
     // Case 1: aggregate column
     if (aggColumn.containsKey(sel)) {
       List<ColumnOp> columnOps = aggColumn.get(sel);
       for (ColumnOp col : columnOps) {
-        // If it is count or sum, set col to be aggContents
-        if (col.getOpType().equals("count") || col.getOpType().equals("sum")) {
+        // If it is count, sum, countdistinct, or approx_countdistinct, set col to be aggContents
+        if (col.getOpType().equals("count") 
+            || col.getOpType().equals("sum")
+            || col.getOpType().equals("countdistinct")
+            || col.getOpType().equals("approx_countdistinct")) {
           String aliasName = null;
           if (col.getOpType().equals("count")) {
             aliasName =
@@ -599,10 +592,11 @@ public class AsyncAggExecutionNode extends ProjectionNode {
                 aggMeta
                     .getAggColumnAggAliasPair()
                     .get(new ImmutablePair<>(col.getOpType(), col.getOperand(0)));
-          }
+          }          
           ColumnOp aggContent = (ColumnOp) aggContents.get(aliasName);
           col.setOpType(aggContent.getOpType());
           col.setOperand(aggContent.getOperands());
+          
         } else if (col.getOpType().equals("max") || col.getOpType().equals("min")) {
           String aliasName =
               aggMeta
@@ -617,9 +611,8 @@ public class AsyncAggExecutionNode extends ProjectionNode {
             col.setOpType(aggContent.getOpType());
             col.setOperand(aggContent.getOperands());
           }
-        }
-        // If it is avg, set col to be divide columnOp
-        else if (col.getOpType().equals("avg")) {
+          
+        } else if (col.getOpType().equals("avg")) {  // If it is avg, set col to be divide columnOp
           String aliasNameSum =
               aggMeta.getAggColumnAggAliasPair().get(new ImmutablePair<>("sum", col.getOperand(0)));
           ColumnOp aggContentSum = (ColumnOp) aggContents.get(aliasNameSum);
@@ -636,17 +629,10 @@ public class AsyncAggExecutionNode extends ProjectionNode {
     // Case 2: non-aggregate column
     // this non-aggregate column must exist in the column list of the scaled table
     else if (sel instanceof AliasedColumn) {
-      //      AliasedColumn ac = (AliasedColumn) sel;
-      //      if (ac.getAliasName().startsWith(AsyncAggExecutionNode.getHavingConditionAlias())
-      //          || ac.getAliasName().startsWith(AsyncAggExecutionNode.getGroupByAlias())
-      //          || ac.getAliasName().startsWith(AsyncAggExecutionNode.getOrderByAlias())) {
-      //        return null;
-      //      } else {
       ((AliasedColumn) sel)
           .setColumn(
               new BaseColumn(TIER_CONSOLIDATED_TABLE_ALIAS, ((AliasedColumn) sel).getAliasName()));
       ((AliasedColumn) sel).setAliasName(((AliasedColumn) sel).getAliasName());
-      //      }
     }
     return sel;
   }
@@ -657,7 +643,7 @@ public class AsyncAggExecutionNode extends ProjectionNode {
    * @param queryToReplace, aggMeta
    * @return replaced original select list
    */
-  SelectQuery replaceWithOriginalSelectList(SelectQuery queryToReplace, AggMeta aggMeta) {
+  private SelectQuery replaceWithOriginalSelectList(SelectQuery queryToReplace, AggMeta aggMeta) {
     List<SelectItem> originalSelectList = aggMeta.getOriginalSelectList();
     List<SelectItem> newSelectList = new ArrayList<>();
     Map<SelectItem, List<ColumnOp>> aggColumn = aggMeta.getAggColumn();
@@ -676,8 +662,9 @@ public class AsyncAggExecutionNode extends ProjectionNode {
     boolean firstHaving = true;
     int orderByIndex = 0;
     for (SelectItem sel : originalSelectList) {
-      SelectItem replacedSel = this.replaceColumnWithAggMeta(sel, aggMeta);
+      SelectItem replacedSel = replaceColumnWithAggMeta(sel, aggMeta);
       SelectItem item = (replacedSel != null) ? replacedSel : sel;
+      
       if (item instanceof AliasedColumn) {
         AliasedColumn ac = (AliasedColumn) item;
         if (ac.getAliasName().startsWith(HAVING_CONDITION_ALIAS)) {
@@ -686,10 +673,12 @@ public class AsyncAggExecutionNode extends ProjectionNode {
             firstHaving = false;
           }
           queryToReplace.addHavingByAnd(ac.getColumn());
+          
         } else if (ac.getAliasName().startsWith(ORDER_BY_ALIAS)) {
           OrderbyAttribute attribute = queryToReplace.getOrderby().get(orderByIndex++);
           attribute.setAttribute(ac.getColumn());
         }
+        
         if (ac.getAliasName().startsWith(HAVING_CONDITION_ALIAS)
             || ac.getAliasName().startsWith(ORDER_BY_ALIAS)
             || ac.getAliasName().startsWith(GROUP_BY_ALIAS)) {
@@ -699,7 +688,6 @@ public class AsyncAggExecutionNode extends ProjectionNode {
       newSelectList.add(item);
     }
     queryToReplace.clearSelectList();
-    //    queryToReplace.getSelectList().addAll(originalSelectList);
     queryToReplace.getSelectList().addAll(newSelectList);
     return queryToReplace;
   }
@@ -752,6 +740,7 @@ public class AsyncAggExecutionNode extends ProjectionNode {
                       TIER_CONSOLIDATED_TABLE_ALIAS, ((AliasedColumn) sel).getAliasName()));
           newSelectlist.add(new AliasedColumn(col, ((AliasedColumn) sel).getAliasName()));
           aggContents.put(((AliasedColumn) sel).getAliasName(), col);
+          
         } else {
           // if it is not a tier column, we need to put it in the group by list
           if (!tierColumnAliases.contains(((AliasedColumn) sel).getAliasName())) {

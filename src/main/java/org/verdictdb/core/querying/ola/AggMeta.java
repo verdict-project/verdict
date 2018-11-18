@@ -128,37 +128,6 @@ public class AggMeta implements Serializable {
       TierCombination comb = new TierCombination(scrambles, c);
       combinations.add(comb);
     }
-  
-//    List<Integer> currentTierNumbers = new ArrayList<>(Collections.nCopies(tierCounts.size(), 0));
-//    while (true) {
-//      // add the tier permutation for the current
-//      List<Integer> numbers = new ArrayList<>(currentTierNumbers);
-//      TierCombination comb = new TierCombination(scrambles, numbers);
-//      combinations.add(comb);
-//    
-//      // increment the tier permutation by one.
-//      int lastItemIndex = currentTierNumbers.size() - 1;
-//      currentTierNumbers.set(lastItemIndex, currentTierNumbers.get(lastItemIndex) + 1);
-//      
-//      // propagate the carry over if exists
-//      boolean carryOverExists = false;
-//      for (int i = lastItemIndex; i >= 0; i--) {
-//        if (carryOverExists) {
-//          currentTierNumbers.set(i, currentTierNumbers.get(i) + 1);
-//        }
-//        if (currentTierNumbers.get(i).equals(tierCounts.get(i))) {
-//          currentTierNumbers.set(i, 0);
-//          carryOverExists = true;
-//        } else {
-//          carryOverExists = false;
-//        }
-//      }
-//    
-//      // the existence of the carry over indicates that we have covered all combinations.
-//      if (carryOverExists) {
-//        break;
-//      }
-//    }
     
     return combinations;
   }

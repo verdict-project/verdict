@@ -131,6 +131,9 @@ public class MySqlTpchSelectQueryCoordinatorTest {
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
       cnt++;
+//      dbmsQueryResult.next();
+//      System.out.println(String.format("%d: %d", cnt, dbmsQueryResult.getLong(2)));
+      
       if (cnt == 10) {
         while (rs.next()) {
           dbmsQueryResult.next();

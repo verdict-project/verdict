@@ -5,6 +5,7 @@ import static java.sql.Types.VARCHAR;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.verdictdb.commons.DataTypeConverter;
+import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.core.sqlobject.*;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sqlsyntax.H2Syntax;
@@ -31,6 +32,8 @@ public class InMemoryAggregate {
   private Connection conn;
   
   private boolean aborted = false;
+  
+  private VerdictDBLogger log = VerdictDBLogger.getLogger(this.getClass());;
 
   public static InMemoryAggregate create() {
     InMemoryAggregate inMemoryAggregate = null;
@@ -137,14 +140,16 @@ public class InMemoryAggregate {
           resetSchemaAndTableForCombining(col);
           String alias = ((AliasedColumn) sel).getAliasName().toUpperCase();
           ((AliasedColumn) sel).setAliasName(alias);
+          
           if (col.isAggregateColumn()) {
             if (col instanceof ColumnOp && ((ColumnOp) col).getOpType().equals("max")) {
               ((AliasedColumn) sel).setColumn(new ColumnOp("max", new BaseColumn(alias)));
             } else if (col instanceof ColumnOp && ((ColumnOp) col).getOpType().equals("min")) {
               ((AliasedColumn) sel).setColumn(new ColumnOp("min", new BaseColumn(alias)));
-            } else {
+            } else {    // count, sum, countdistinct, approx_countdistinct
               ((AliasedColumn) sel).setColumn(new ColumnOp("sum", new BaseColumn(alias)));
             }
+            
           } else {
             ((AliasedColumn) sel).setColumn(new BaseColumn(alias));
             groupList.add(((AliasedColumn) sel).getColumn());
@@ -161,6 +166,9 @@ public class InMemoryAggregate {
       copy.clearGroupby();
       copy.addGroupby(groupList);
       String sql = selectQueryToSql.toSql(copy);
+      
+      log.debug("Issues the following query to an in-memory db: " + sql);
+      
       Statement stmt = conn.createStatement();
       stmt.execute(
           String.format("CREATE TABLE %s AS %s", tableName, sql));
