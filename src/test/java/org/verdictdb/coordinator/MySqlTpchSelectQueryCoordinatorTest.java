@@ -123,7 +123,7 @@ public class MySqlTpchSelectQueryCoordinatorTest {
   }
   
   @Test
-  public void queryCountDistinctTest() throws VerdictDBException, SQLException, IOException {
+  public void queryCountDistinct1Test() throws VerdictDBException, SQLException, IOException {
     Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(100);
     ExecutionResultReader reader = answerPair.getLeft();
     ResultSet rs = answerPair.getRight();
@@ -131,8 +131,6 @@ public class MySqlTpchSelectQueryCoordinatorTest {
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
       cnt++;
-//      dbmsQueryResult.next();
-//      System.out.println(String.format("%d: %d", cnt, dbmsQueryResult.getLong(2)));
       
       if (cnt == 10) {
         while (rs.next()) {
@@ -140,6 +138,46 @@ public class MySqlTpchSelectQueryCoordinatorTest {
           assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
           assertEquals(rs.getString(2), dbmsQueryResult.getString(1));
           assertEquals(rs.getLong(3), dbmsQueryResult.getLong(2));
+        }
+      }
+    }
+    assertEquals(10, cnt);
+  }
+  
+  @Test
+  public void queryCountDistinct2Test() throws VerdictDBException, SQLException, IOException {
+    Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(101);
+    ExecutionResultReader reader = answerPair.getLeft();
+    ResultSet rs = answerPair.getRight();
+    int cnt = 0;
+    while (reader.hasNext()) {
+      DbmsQueryResult dbmsQueryResult = reader.next();
+      cnt++;
+      
+      if (cnt == 10) {
+        while (rs.next()) {
+          dbmsQueryResult.next();
+          assertEquals(rs.getLong(1), dbmsQueryResult.getLong(0));
+        }
+      }
+    }
+    assertEquals(10, cnt);
+  }
+  
+  @Test
+  public void queryCountDistinct3Test() throws VerdictDBException, SQLException, IOException {
+    Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(102);
+    ExecutionResultReader reader = answerPair.getLeft();
+    ResultSet rs = answerPair.getRight();
+    int cnt = 0;
+    while (reader.hasNext()) {
+      DbmsQueryResult dbmsQueryResult = reader.next();
+      cnt++;
+      
+      if (cnt == 10) {
+        while (rs.next()) {
+          dbmsQueryResult.next();
+          assertEquals(rs.getLong(1), dbmsQueryResult.getLong(0));
         }
       }
     }

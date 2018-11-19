@@ -336,7 +336,9 @@ public class ExecutionContext {
 
   private VerdictResultStream generateShowTablesResultFromQuery(String query) throws VerdictDBException {
     VerdictSQLParser parser = NonValidatingSQLParser.parserOf(query);
-    String schema = parser.show_tables_statement().schema.getText();
+    String schema = (parser.show_tables_statement().schema == null)? 
+        conn.getDefaultSchema()
+        : parser.show_tables_statement().schema.getText();
     List<String> header = Arrays.asList("table");
     List<String> rows = conn.getTables(schema);
     VerdictSingleResultFromListData result = createWithSingleColumn(header, (List) rows);
@@ -350,10 +352,12 @@ public class ExecutionContext {
       public Pair<String, String> visitDescribe_table_statement(
           VerdictSQLParser.Describe_table_statementContext ctx) {
         String table = ctx.table.table.getText();
-        String schema = ctx.table.schema.getText();
-        if (schema == null) {
-          schema = conn.getDefaultSchema();
-        }
+        String schema = (ctx.table.schema == null)?
+            conn.getDefaultSchema()
+            : ctx.table.schema.getText();
+//        if (schema == null) {
+//          schema = conn.getDefaultSchema();
+//        }
         return new ImmutablePair<>(schema, table);
       }
     };

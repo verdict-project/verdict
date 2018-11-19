@@ -53,6 +53,7 @@ import org.verdictdb.sqlreader.ScrambleTableReplacer;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 
 public class SelectQueryCoordinator implements Coordinator {
@@ -234,6 +235,8 @@ public class SelectQueryCoordinator implements Coordinator {
   }
   
   /**
+   * For the third element, the operand inside the count-distinct, we recursively examine the
+   * columnOp until we find count-distinct.
    * 
    * @return (ifContainsSimpleAggregates, ifContainsCountDistinct, countDistinctColumn)
    */
@@ -247,11 +250,26 @@ public class SelectQueryCoordinator implements Coordinator {
       if (selectItem instanceof AliasedColumn
           && ((AliasedColumn) selectItem).getColumn() instanceof ColumnOp) {
         ColumnOp opcolumn = (ColumnOp) ((AliasedColumn) selectItem).getColumn();
+        
         if (opcolumn.isCountDistinctAggregate()) {
+          // since the count-distinct may exist inside some other functions,
+          // e.g., cast(count(distinct col) as integer), we check the internal operands recursively.
           containCountDistinctItem = true;
           
-          if (opcolumn.getOperand() instanceof BaseColumn) {
-            countDistinctColumn = (BaseColumn) opcolumn.getOperand();
+          List<UnnamedColumn> cols = new LinkedList<>();
+          cols.add(opcolumn);
+          while (cols.size() > 0) {
+            UnnamedColumn col = cols.remove(0);
+            if (col instanceof ColumnOp 
+                && (((ColumnOp) col).getOpType().equals("countdistinct")
+                || ((ColumnOp) col).getOpType().equals("approx_countdistinct"))) {
+              UnnamedColumn operand = ((ColumnOp) col).getOperand();
+              if (operand instanceof BaseColumn) {
+                countDistinctColumn = (BaseColumn) operand;
+              }
+            } else if (col instanceof ColumnOp) {
+              cols.addAll(((ColumnOp) col).getOperands());
+            }
           }
         }
         if (opcolumn.isUniformSampleAggregateColumn()) {

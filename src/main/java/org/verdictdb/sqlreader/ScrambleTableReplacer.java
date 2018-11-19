@@ -29,6 +29,7 @@ import org.verdictdb.core.sqlobject.ColumnOp;
 import org.verdictdb.core.sqlobject.JoinTable;
 import org.verdictdb.core.sqlobject.SelectItem;
 import org.verdictdb.core.sqlobject.SelectQuery;
+import org.verdictdb.exception.VerdictDBValueException;
 
 import java.util.Iterator;
 import java.util.List;
@@ -48,11 +49,15 @@ public class ScrambleTableReplacer {
     this.metaSet = metaSet;
   }
 
-  public int replaceQuery(SelectQuery query) {
+  public int replaceQuery(SelectQuery query) throws VerdictDBValueException {
     return replaceQuery(query, true, null);
   }
 
-  private int replaceQuery(SelectQuery query, boolean doReset, Triple<Boolean, Boolean, BaseColumn> outerInspectionInfo) {
+  private int replaceQuery(
+      SelectQuery query, 
+      boolean doReset, 
+      Triple<Boolean, Boolean, BaseColumn> outerInspectionInfo) 
+          throws VerdictDBValueException {
     if (doReset) { 
       replaceCount = 0;
     }
@@ -62,6 +67,12 @@ public class ScrambleTableReplacer {
         SelectQueryCoordinator.inspectAggregatesInSelectList(query);
     boolean containAggregatedItem = inspectionInfo.getLeft();
     boolean containCountDistinctItem = inspectionInfo.getMiddle();
+    BaseColumn countDistinctColumn = inspectionInfo.getRight();
+    
+    if (containCountDistinctItem && countDistinctColumn == null) {
+      throw new VerdictDBValueException("A base column is not found "
+          + "inside the count-distinct function.");
+    }
     
     // this is to handle the case that an outer query includes aggregate functions,
     // the current query is simply a projection.
@@ -115,10 +126,11 @@ public class ScrambleTableReplacer {
    * 
    * @param table
    * @return
+   * @throws VerdictDBValueException 
    */
   private AbstractRelation replaceTableForCountDistinct(
       AbstractRelation table, 
-      Triple<Boolean, Boolean, BaseColumn> inspectionInfo) {
+      Triple<Boolean, Boolean, BaseColumn> inspectionInfo) throws VerdictDBValueException {
     
     BaseColumn countDistinctColumn = inspectionInfo.getRight();
     
@@ -161,7 +173,7 @@ public class ScrambleTableReplacer {
   
   private AbstractRelation replaceTableForSimpleAggregates(
       AbstractRelation table, 
-      Triple<Boolean, Boolean, BaseColumn> inspectionInfo) {
+      Triple<Boolean, Boolean, BaseColumn> inspectionInfo) throws VerdictDBValueException {
     if (table instanceof BaseTable) {
       BaseTable bt = (BaseTable) table;
       
