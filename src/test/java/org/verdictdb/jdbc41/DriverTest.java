@@ -1,6 +1,14 @@
 package org.verdictdb.jdbc41;
 
-import static org.junit.Assert.assertEquals;
+import com.google.common.base.Charsets;
+import com.google.common.io.Files;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.verdictdb.commons.DatabaseConnectionHelpers;
+import org.verdictdb.commons.VerdictOption;
+import org.verdictdb.exception.VerdictDBDbmsException;
 
 import java.io.File;
 import java.io.IOException;
@@ -11,16 +19,7 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.Properties;
 
-import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.verdictdb.commons.DatabaseConnectionHelpers;
-import org.verdictdb.commons.VerdictOption;
-import org.verdictdb.exception.VerdictDBDbmsException;
-
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
+import static org.junit.Assert.assertEquals;
 
 public class DriverTest {
 
@@ -48,6 +47,7 @@ public class DriverTest {
   @BeforeClass
   public static void setup() throws VerdictDBDbmsException, SQLException, IOException {
     options.setVerdictTempSchemaName(REDSHIFT_SCHEMA);
+    options.setVerdictMetaSchemaName(REDSHIFT_SCHEMA);
     String connectionString =
         String.format("jdbc:redshift://%s/%s", REDSHIFT_HOST, REDSHIFT_DATABASE);
     conn =
@@ -69,6 +69,7 @@ public class DriverTest {
     info.setProperty("user", REDSHIFT_USER);
     info.setProperty("password", REDSHIFT_PASSWORD);
     info.setProperty("verdictdbtempschema", REDSHIFT_SCHEMA);
+    info.setProperty("verdictdbmetaschema", REDSHIFT_SCHEMA);
     Connection conn = DriverManager.getConnection(verdictConnectionString, info);
 
     ResultSet rs =
@@ -99,6 +100,7 @@ public class DriverTest {
     Properties info = new Properties();
     info.setProperty("user", REDSHIFT_USER);
     info.setProperty("password", REDSHIFT_PASSWORD);
+    info.setProperty("verdictdbmetaschema", REDSHIFT_SCHEMA);
     Connection conn = DriverManager.getConnection(verdictConnectionString, info);
 
     String schema = conn.getSchema();
@@ -116,6 +118,7 @@ public class DriverTest {
     Properties info = new Properties();
     info.setProperty("user", REDSHIFT_USER);
     info.setProperty("password", REDSHIFT_PASSWORD);
+    info.setProperty("verdictdbmetaschema", REDSHIFT_SCHEMA);
     Connection conn = DriverManager.getConnection(verdictConnectionString, info);
   }
 
