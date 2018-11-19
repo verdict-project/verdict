@@ -48,11 +48,11 @@ public class ScrambleTableReplacer {
     this.metaSet = metaSet;
   }
 
-  public int replace(SelectQuery query) {
-    return replace(query, true, null);
+  public int replaceQuery(SelectQuery query) {
+    return replaceQuery(query, true, null);
   }
 
-  public int replace(SelectQuery query, boolean doReset, Triple<Boolean, Boolean, BaseColumn> outerInspectionInfo) {
+  private int replaceQuery(SelectQuery query, boolean doReset, Triple<Boolean, Boolean, BaseColumn> outerInspectionInfo) {
     if (doReset) { 
       replaceCount = 0;
     }
@@ -87,6 +87,22 @@ public class ScrambleTableReplacer {
       List<AbstractRelation> fromList = query.getFromList();
       for (int i = 0; i < fromList.size(); i++) {
         fromList.set(i, replaceTableForCountDistinct(fromList.get(i), inspectionInfo));
+      }
+    }
+    // no aggregate appears; check any subqueries
+    else {
+      List<AbstractRelation> fromList = query.getFromList();
+      for (int i = 0; i < fromList.size(); i++) {
+        AbstractRelation rel = fromList.get(i);
+        if (rel instanceof JoinTable) {
+          for (AbstractRelation joined : ((JoinTable) rel).getJoinList()) {
+            if (joined instanceof SelectQuery) {
+              replaceQuery((SelectQuery) joined, false, null);
+            }
+          }
+        } else if (rel instanceof SelectQuery) {
+          replaceQuery((SelectQuery) rel, false, null);
+        }
       }
     }
     
@@ -137,7 +153,7 @@ public class ScrambleTableReplacer {
       }
     } else if (table instanceof SelectQuery) {
       SelectQuery subquery = (SelectQuery) table;
-      this.replace(subquery, false, inspectionInfo);
+      this.replaceQuery(subquery, false, inspectionInfo);
     }
     
     return table;
@@ -175,7 +191,7 @@ public class ScrambleTableReplacer {
       }
     } else if (table instanceof SelectQuery) {
       SelectQuery subquery = (SelectQuery) table;
-      this.replace(subquery, false, inspectionInfo);
+      this.replaceQuery(subquery, false, inspectionInfo);
     }
 
     return table;

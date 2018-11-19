@@ -338,7 +338,7 @@ public class SelectQueryCoordinator implements Coordinator {
 
     // replaces original tables with scrambles
     ScrambleTableReplacer replacer = new ScrambleTableReplacer(scrambleMetaSet);
-    int scrambleCount = replacer.replace(selectQuery);
+    int scrambleCount = replacer.replaceQuery(selectQuery);
     
     // ensure scramble validity
     // Moreover, if the agg is count-distinct, either the specified scramble is of type
