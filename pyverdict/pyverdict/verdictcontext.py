@@ -15,6 +15,7 @@
 '''
 import os
 import pkg_resources
+import sys
 from .verdictresult import SingleResultSet
 from . import verdictcommon
 from .verdictexception import *
@@ -24,14 +25,16 @@ from time import sleep
 
 class VerdictContext:
     """
-    The main Python interface to VerdictDB Java core.
+    The main Python interface to VerdictDB's Java core.
 
-    The path to the jdbc drivers must be specified to use them.
+    All necessary JDBC drivers (i.e., jar files) are already included in the 
+    pyverdict package. These drivers are included in the classpath.
 
     Args:
         url: jdbc connection string
-        extra_class_path: The extra classpath used in addition to verdictdb's jar file. This arg
-                          can either be a single str or a list of str; each str is an absolute path
+        extra_class_path: The extra classpath used in addition to verdictdb's 
+                          jar file. This arg can either be a single str or a
+                          list of str; each str is an absolute path
                           to a jar file.
     """
 
@@ -44,18 +47,18 @@ class VerdictContext:
     @classmethod
     def new_mysql_context(cls, host, user, password, port=3306):
         connection_string = \
-            'jdbc:mysql://{:s}:{:d}?user={:s}&password={:s}'.format(host, port, user, password)
+            f'jdbc:mysql://{host}:{port}?user={user}&password={password}'
         return cls(connection_string)
 
     @classmethod
     def new_presto_context(cls, host, catalog, user, password=None, port=8081):
         if password is None:
             connection_string = \
-                'jdbc:presto://{:s}:{:d}/{:s}?user={:s}'.format(host, port, catalog, user)
+                f'jdbc:presto://{host}:{port}/{catalog}?user={user}'
         else:
             connection_string = \
-                'jdbc:presto://{:s}:{:d}/{:s}?user={:s}&password={:s}'.format(
-                    host, port, catalog, user, password)
+                f'jdbc:presto://{host}:{port}/{catalog}?' \
+                f'user={user}&password={password}'
         return cls(connection_string)
 
     def sql(self, query):
@@ -81,7 +84,8 @@ class VerdictContext:
             raise VerdictException('The url must start with \'jdbc\'')
         if len(tokenized_url) < 2:
             raise VerdictException(
-                'This url does not seem to have valid connection information: ' + url)
+                'This url does not seem to have valid ' \
+                f'connection information: {url}')
         return tokenized_url[1]
 
     def _get_gateway(self, extra_class_path):
@@ -89,11 +93,13 @@ class VerdictContext:
         Initializes a py4j gateway.
 
         Args:
-            class_path: Either a single str or a list of str; each str is an absolute path to the
-            jar file.
+            class_path: Either a single str or a list of str; each str is an
+                        absolute path to the jar file.
         """
         class_path = self._get_class_path(extra_class_path)
-        gateway = JavaGateway.launch_gateway(classpath=class_path, die_on_exit=True)
+        gateway = JavaGateway.launch_gateway(
+            classpath=class_path, die_on_exit=True,
+            redirect_stdout=sys.stdout)
         sleep(1)
         return gateway
 
@@ -107,15 +113,15 @@ class VerdictContext:
         if not os.path.isfile(verdict_jar_path):
             raise VerdictException("VerdictDB's jar file is not found.")
 
-        str_class_path = '{}:{}'.format(lib_jar_path, verdict_jar_path)
+        str_class_path = f'{lib_jar_path}:{verdict_jar_path}'
 
         if extra_class_path is None:
             pass
         if isinstance(extra_class_path, str):
-            str_class_path = '{}:{}'.format(extra_class_path, lib_jar_path)
+            str_class_path = f'{extra_class_path}:{lib_jar_path}'
         elif isinstance(extra_class_path, list):
             extra_class_path_str = ':'.join(extra_class_path)
-            str_class_path = '{}:{}'.format(extra_class_path_str, lib_jar_path)
+            str_class_path = f'{extra_class_path_str}:{lib_jar_path}'
 
         return str_class_path
 
@@ -133,7 +139,7 @@ class VerdictContext:
         root_dir = os.path.dirname(os.path.abspath(__file__))
         lib_dir = os.path.join(root_dir, 'verdict_jar')
         version = self._get_verdictdb_version();
-        verdict_jar_file = 'verdictdb-core-{}-jar-with-dependencies.jar'.format(version)
+        verdict_jar_file = f'verdictdb-core-{version}-jar-with-dependencies.jar'
         verdict_jar_path = os.path.join(lib_dir, verdict_jar_file)
         return verdict_jar_path
 
