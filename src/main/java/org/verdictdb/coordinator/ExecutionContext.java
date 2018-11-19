@@ -388,7 +388,7 @@ public class ExecutionContext {
   }
 
   public void abort() {
-    log.debug("Aborts an ExecutionContext: " + this);
+    log.trace("Aborts an ExecutionContext: " + this);
     if (runningCoordinator != null) {
       Coordinator c = runningCoordinator;
       runningCoordinator = null;

@@ -249,6 +249,10 @@ public class VerdictContext {
       e.printStackTrace();
     }
   }
+  
+  public void setLoglevel(String level) {
+    options.setVerdictConsoleLogLevel(level);
+  }
 
   public void close() {
     this.abort(); // terminates all ExecutionContexts first.

@@ -78,6 +78,8 @@ class SingleResultSet:
         """
         rows = self.rows()
         columns = self.column_names()
+        if len(columns) == 0 and len(rows) == 0:
+            columns = ['empty']
         return pd.DataFrame(np.array(rows), columns=columns)
 
     @classmethod

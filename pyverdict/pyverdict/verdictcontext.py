@@ -61,6 +61,9 @@ class VerdictContext:
                 f'user={user}&password={password}'
         return cls(connection_string)
 
+    def set_loglevel(self, level):
+        self._context.setLoglevel(level)
+
     def sql(self, query):
         return self.sql_raw_result(query).to_df()
 
