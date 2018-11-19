@@ -35,6 +35,7 @@ import org.verdictdb.metastore.CachedScrambleMetaStore;
 import org.verdictdb.metastore.ScrambleMetaStore;
 import org.verdictdb.metastore.VerdictMetaStore;
 import org.verdictdb.parser.VerdictSQLParser;
+import org.verdictdb.parser.VerdictSQLParser.IdContext;
 import org.verdictdb.parser.VerdictSQLParserBaseVisitor;
 import org.verdictdb.sqlreader.NonValidatingSQLParser;
 import org.verdictdb.sqlreader.RelationGen;
@@ -336,9 +337,10 @@ public class ExecutionContext {
 
   private VerdictResultStream generateShowTablesResultFromQuery(String query) throws VerdictDBException {
     VerdictSQLParser parser = NonValidatingSQLParser.parserOf(query);
-    String schema = (parser.show_tables_statement().schema == null)? 
+    IdContext schemaCtx = parser.show_tables_statement().schema;
+    String schema = (schemaCtx == null)? 
         conn.getDefaultSchema()
-        : parser.show_tables_statement().schema.getText();
+        : schemaCtx.getText();
     List<String> header = Arrays.asList("table");
     List<String> rows = conn.getTables(schema);
     VerdictSingleResultFromListData result = createWithSingleColumn(header, (List) rows);
@@ -351,10 +353,11 @@ public class ExecutionContext {
       @Override
       public Pair<String, String> visitDescribe_table_statement(
           VerdictSQLParser.Describe_table_statementContext ctx) {
+        IdContext schemaCtx = ctx.table.schema;
         String table = ctx.table.table.getText();
-        String schema = (ctx.table.schema == null)?
+        String schema = (schemaCtx == null)?
             conn.getDefaultSchema()
-            : ctx.table.schema.getText();
+            : schemaCtx.getText();
 //        if (schema == null) {
 //          schema = conn.getDefaultSchema();
 //        }
