@@ -87,7 +87,7 @@ public class ScrambleMetaSet implements Serializable, Iterable<ScrambleMeta> {
   }
   
   public String getScramblingMethod(String schemaName, String tableName) {
-    return meta.get(metaKey(schemaName, tableName)).getMethod();
+    return meta.get(metaKey(schemaName, tableName)).getMethodWithDefault("uniform");
   }
   
   public String getHashColumn(String schemaName, String tableName) {

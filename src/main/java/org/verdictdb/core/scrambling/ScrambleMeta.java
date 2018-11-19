@@ -204,6 +204,14 @@ public class ScrambleMeta implements Serializable {
     return method;
   }
   
+  public String getMethodWithDefault(String defaultMethod) {
+    if (method == null) {
+      return defaultMethod;
+    } else {
+      return method;
+    }
+  }
+  
   public String getHashColumn() {
     return hashColumn;
   }
