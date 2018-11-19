@@ -11,6 +11,7 @@ import org.junit.runners.Parameterized;
 import org.verdictdb.commons.DatabaseConnectionHelpers;
 import org.verdictdb.commons.VerdictOption;
 import org.verdictdb.connection.JdbcConnection;
+import org.verdictdb.coordinator.ExecutionContext.QueryType;
 import org.verdictdb.core.resulthandler.ExecutionResultReader;
 import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;

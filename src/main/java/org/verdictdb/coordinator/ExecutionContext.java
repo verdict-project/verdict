@@ -66,7 +66,7 @@ public class ExecutionContext {
 
   private VerdictOption options;
 
-  private enum QueryType {
+  public enum QueryType {
     select, scrambling, drop_scramble, drop_all_scrambles, set_default_schema, unknown, show_databases, show_tables, show_scrambles, describe_table
   }
 
@@ -306,15 +306,13 @@ public class ExecutionContext {
         RelationGen g = new RelationGen();
         BaseTable originalTable = (BaseTable) g.visit(ctx.original_table);
         BaseTable scrambleTable = (BaseTable) g.visit(ctx.scrambled_table);
-        String method = (ctx.scrambling_method_name() == null) ? "uniform"
-            : stripQuote(ctx.scrambling_method_name().getText());
-        // .getText()
-        // .replace("'", "")
-        // .replace("\"", "")
-        // .replace("`", ""); // remove all types of 'quotes'
+        String method = (ctx.method == null) ? "uniform"
+            : stripQuote(ctx.method.getText());
         double percent = (ctx.percent == null) ? 1.0 : Double.parseDouble(ctx.percent.getText());
-        long blocksize = (ctx.blocksize == null) ? (long) 1e6 : Long.parseLong(ctx.blocksize.getText());
-        String hashColumnName = (ctx.hash_column == null) ? null : stripQuote(ctx.hash_column.getText());
+        long blocksize = 
+            (ctx.blocksize == null) ? (long) 1e6 : Long.parseLong(ctx.blocksize.getText());
+        String hashColumnName = 
+            (ctx.hash_column == null) ? null : stripQuote(ctx.hash_column.getText());
 
         CreateScrambleQuery query = new CreateScrambleQuery(scrambleTable.getSchemaName(),
             scrambleTable.getTableName(), originalTable.getSchemaName(), originalTable.getTableName(), method,
@@ -413,24 +411,6 @@ public class ExecutionContext {
         }
       }
 
-      // DbmsQueryResult rs;
-      // if (conn.getSyntax() instanceof RedshiftSyntax
-      // || conn.getSyntax() instanceof PostgresqlSyntax) {
-      // rs =
-      // conn.execute(
-      // String.format(
-      // "SELECT * FROM information_schema.tables WHERE table_schema = '%s'",
-      // schema));
-      // } else {
-      // rs = conn.execute(String.format("show tables in %s", schema));
-      // }
-      // while (rs.next()) {
-      // String tableName = rs.getString(0);
-      // if (tableName.startsWith(tempTablePrefix)) {
-      // tempTableList.add(tableName);
-      // }
-      // }
-
       for (String tempTable : tempTableList) {
         conn.execute(String.format("DROP TABLE IF EXISTS %s.%s", schema, tempTable));
       }
@@ -439,7 +419,7 @@ public class ExecutionContext {
     }
   }
 
-  private QueryType identifyQueryType(String query) {
+  public static QueryType identifyQueryType(String query) {
     VerdictSQLParser parser = NonValidatingSQLParser.parserOf(query);
 
     VerdictSQLParserBaseVisitor<QueryType> visitor = new VerdictSQLParserBaseVisitor<QueryType>() {
