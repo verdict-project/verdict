@@ -190,7 +190,7 @@ public class SelectQueryCoordinator implements Coordinator {
       throws VerdictDBException {
     
     Triple<Boolean, Boolean, BaseColumn> inspectionInfo = inspectAggregatesInSelectList(query);
-    boolean containAggregatedItem = inspectionInfo.getLeft();
+    boolean containAggregateItem = inspectionInfo.getLeft();
     boolean containCountDistinctItem = inspectionInfo.getMiddle();
     countDistinctColumn = inspectionInfo.getRight();
     
@@ -204,7 +204,7 @@ public class SelectQueryCoordinator implements Coordinator {
         }
         String method = scrambleMetaSet.getScramblingMethod(schemaName, tableName);
 
-        if (containAggregatedItem) {
+        if (containAggregateItem) {
           if (!method.equalsIgnoreCase("uniform")
               && !method.equalsIgnoreCase("fastconverge")) {
             throw new VerdictDBValueException(

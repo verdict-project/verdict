@@ -129,7 +129,7 @@ public class ScrambleTableReplacer {
         // substitute names with those of the first scrambled table found.
         if (meta.getOriginalSchemaName().equals(bt.getSchemaName())
             && meta.getOriginalTableName().equals(bt.getTableName())
-            && meta.getMethod().equalsIgnoreCase("hash")
+            && meta.getMethodWithDefault("uniform").equalsIgnoreCase("hash")
             && countDistinctColumn.getColumnName().equals(meta.getHashColumn())) {
           ++replaceCount;
           bt.setSchemaName(meta.getSchemaName());
@@ -168,7 +168,8 @@ public class ScrambleTableReplacer {
       for (ScrambleMeta meta : metaSet) {
         // substitute names with those of the first scrambled table found.
         if (meta.getOriginalSchemaName().equals(bt.getSchemaName())
-            && meta.getOriginalTableName().equals(bt.getTableName())) {
+            && meta.getOriginalTableName().equals(bt.getTableName())
+            && meta.getMethodWithDefault("uniform").equalsIgnoreCase("uniform")) {
           ++replaceCount;
           bt.setSchemaName(meta.getSchemaName());
           bt.setTableName(meta.getTableName());
