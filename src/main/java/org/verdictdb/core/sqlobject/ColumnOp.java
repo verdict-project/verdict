@@ -433,7 +433,7 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
 //    return aggExists;
   }
 
-  public boolean isCumulativeAggregateColumn() {
+  public boolean isUniformSampleAggregateColumn() {
     Set<String> ops = new HashSet<>(Arrays.asList("avg", "sum", "count", "max", "min"));
     return doesContainOpIn(ops);
   }

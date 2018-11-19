@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.AfterClass;
@@ -274,7 +275,13 @@ public class MetaDataStatementsTest {
     DbmsConnection dbmsconn =
         new CachedDbmsConnection(
             new JdbcConnection(connMap.get(database), syntaxMap.get(database)));
-    VerdictContext verdict = new VerdictContext(dbmsconn);
+    
+    VerdictOption option = new VerdictOption();
+    final String verdictmeta = 
+        "verdictmeta" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
+    option.setVerdictMetaSchemaName(verdictmeta);
+    VerdictContext verdict = new VerdictContext(dbmsconn, option);
+    
     ExecutionContext exec = new ExecutionContext(
         dbmsconn, verdict.getMetaStore(), verdict.getContextId(), 0, options);
     VerdictSingleResult result = exec.sql("show schemas");
@@ -288,6 +295,9 @@ public class MetaDataStatementsTest {
       //      assertEquals(jdbcRs.getString(1), result.getValue(0));
     }
     assertEquals(expected, actual);
+    
+    // teardown
+    dbmsconn.execute(String.format("drop schema if exists %s", verdictmeta));
   }
 
   @Test
@@ -321,11 +331,18 @@ public class MetaDataStatementsTest {
     DbmsConnection dbmsconn =
         new CachedDbmsConnection(
             new JdbcConnection(connMap.get(database), syntaxMap.get(database)));
-    VerdictContext verdict = new VerdictContext(dbmsconn);
+    
+    VerdictOption option = new VerdictOption();
+    final String verdictmeta = 
+        "verdictmeta" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
+    option.setVerdictMetaSchemaName(verdictmeta);
+    VerdictContext verdict = new VerdictContext(dbmsconn, option);
+    
     ExecutionContext exec = new ExecutionContext(
         dbmsconn, verdict.getMetaStore(), verdict.getContextId(), 0, options);
     VerdictSingleResult result = exec.sql(vcsql);
 
+    // test
     Set<String> expected = new HashSet<>();
     Set<String> actual = new HashSet<>();
     while (jdbcRs.next()) {
@@ -335,6 +352,9 @@ public class MetaDataStatementsTest {
       //      assertEquals(jdbcRs.getString(1), result.getValue(0));
     }
     assertEquals(expected, actual);
+    
+    // teardown
+    dbmsconn.execute(String.format("drop schema if exists %s", verdictmeta));
   }
 
   @Test
@@ -372,7 +392,13 @@ public class MetaDataStatementsTest {
     DbmsConnection dbmsconn =
         new CachedDbmsConnection(
             new JdbcConnection(connMap.get(database), syntaxMap.get(database)));
-    VerdictContext verdict = new VerdictContext(dbmsconn);
+    
+    VerdictOption option = new VerdictOption();
+    final String verdictmeta = 
+        "verdictmeta" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
+    option.setVerdictMetaSchemaName(verdictmeta);
+    VerdictContext verdict = new VerdictContext(dbmsconn, option);
+    
     ExecutionContext exec = new ExecutionContext(
         dbmsconn, verdict.getMetaStore(), verdict.getContextId(), 0, options);
     VerdictSingleResult result = exec.sql(vcsql);
@@ -381,7 +407,12 @@ public class MetaDataStatementsTest {
       assertEquals(jdbcRs.getString(1), result.getValue(0));
       if (database.equals("postgresql") && jdbcRs.getString(1).equals("strcol")) {
         assertEquals("character varying(5)", result.getValue(1));
-      } else assertEquals(jdbcRs.getString(2), result.getValue(1));
+      } else {
+        assertEquals(jdbcRs.getString(2), result.getValue(1));
+      }
     }
+    
+    // teardown
+    dbmsconn.execute(String.format("drop schema if exists %s", verdictmeta));
   }
 }

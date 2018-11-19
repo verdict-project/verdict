@@ -40,6 +40,11 @@ import org.verdictdb.sqlreader.RelationStandardizer;
 import org.verdictdb.sqlsyntax.MysqlSyntax;
 import org.verdictdb.sqlwriter.SelectQueryToSql;
 
+/**
+ * We no longer test this class.
+ * @author Yongjoo Park
+ *
+ */
 public class AsyncAggMultipleTiersScaleTest {
   
   private static final String MYSQL_HOST;
@@ -159,7 +164,7 @@ public class AsyncAggMultipleTiersScaleTest {
     stmt.execute("drop schema if exists `verdictdb_temp`;");
   }
 
-  @Test
+//  @Test
   public void ScrambleTableTest() throws VerdictDBException,SQLException {
     RelationStandardizer.resetItemID();
     String sql = "select avg(value) from originalTable_scrambled";

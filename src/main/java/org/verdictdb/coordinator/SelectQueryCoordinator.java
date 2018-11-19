@@ -254,7 +254,7 @@ public class SelectQueryCoordinator implements Coordinator {
             countDistinctColumn = (BaseColumn) opcolumn.getOperand();
           }
         }
-        if (opcolumn.isCumulativeAggregateColumn()) {
+        if (opcolumn.isUniformSampleAggregateColumn()) {
           containAggregatedItem = true;
         }
       }
@@ -299,11 +299,11 @@ public class SelectQueryCoordinator implements Coordinator {
     if (query.getHaving().isPresent()) {
       UnnamedColumn having = query.getHaving().get();
       if (having instanceof ColumnOp
-          && ((ColumnOp) having).doesColumnOpContainOpType("countdistinct")) {
+          && ((ColumnOp) having).isCountDistinctAggregate()) {
         containCountDistinctItem = true;
 //        ((ColumnOp) having).replaceAllColumnOpOpType("countdistnct", "approx_countdistinct");
       }
-      if (having instanceof ColumnOp && having.isAggregateColumn()) {
+      if (having instanceof ColumnOp && ((ColumnOp) having).isUniformSampleAggregateColumn()) {
         containAggregatedItem = true;
       }
       if (containAggregatedItem && containCountDistinctItem) {
