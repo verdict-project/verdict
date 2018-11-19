@@ -134,8 +134,8 @@ public class RedshiftScrambleManipulationTest {
       long expected = rs1.getLong(1);
       long actual = rs2.getLong(1);
       System.out.println(expected + " : " + actual);
-      assertTrue(expected * 0.5 < actual);
-      assertTrue(actual < expected * 1.5);
+      assertTrue(expected * 0.25 < actual);
+      assertTrue(actual < expected * 2);
     }
   }
 
