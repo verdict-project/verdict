@@ -110,6 +110,7 @@ public class InMemoryAggregate {
     Statement stmt = conn.createStatement();
     ResultSet rs = stmt.executeQuery(sql);
     DbmsQueryResult dbmsQueryResult = new JdbcQueryResult(rs);
+    rs.close();
     stmt.close();
     return dbmsQueryResult;
   }
@@ -130,10 +131,12 @@ public class InMemoryAggregate {
       stmt.execute(
           String.format("CREATE TABLE %s AS SELECT * FROM %s", tableName, combinedTableName));
       stmt.close();
+      
     } else {
       // if exists, combineTables two tables using the logic of AggCombinerExecutionNode
       List<GroupingAttribute> groupList = new ArrayList<>();
       SelectQuery copy = dependentQuery.deepcopy();
+      
       for (SelectItem sel : copy.getSelectList()) {
         if (sel instanceof AliasedColumn) {
           UnnamedColumn col = ((AliasedColumn) sel).getColumn();
@@ -156,6 +159,7 @@ public class InMemoryAggregate {
           }
         }
       }
+      
       SelectQuery left = SelectQuery.create(new AsteriskColumn(),
           new BaseTable("PUBLIC", newAggTableName));
       SelectQuery right = SelectQuery.create(new AsteriskColumn(),

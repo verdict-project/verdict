@@ -193,7 +193,7 @@ jobs:
     # Now build and test
     - run:
         name: Run unit tests
-        command: mvn -P jdk8 -B test 2> /dev/null
+        command: mvn -P jdk8 -Dtest=VerdictStatementStreamSqlTest -B test 2> /dev/null
         no_output_timeout: 30m
 
     # Check the JDBC service file correctness
@@ -387,12 +387,12 @@ workflows:
   version: 2
   build_and_test:
     jobs:
-    - build-jdk7
+    # - build-jdk7
     - build-jdk8
-    - build-jdk8-update-codecov
-    - build-spark
-    - build-impala-redshift
-    - build-pyverdict
+    # - build-jdk8-update-codecov
+    # - build-spark
+    # - build-impala-redshift
+    # - build-pyverdict
     - deploy-doc:
         filters:
           branches:
