@@ -169,7 +169,7 @@ public class ScrambleTableReplacer {
         // substitute names with those of the first scrambled table found.
         if (meta.getOriginalSchemaName().equals(bt.getSchemaName())
             && meta.getOriginalTableName().equals(bt.getTableName())
-            && meta.getMethodWithDefault("uniform").equalsIgnoreCase("uniform")) {
+            && meta.isMethodCompatibleWithSimpleAggregates()) {
           ++replaceCount;
           bt.setSchemaName(meta.getSchemaName());
           bt.setTableName(meta.getTableName());

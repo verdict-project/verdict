@@ -33,6 +33,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
@@ -91,7 +92,8 @@ public class ScrambleMeta implements Serializable {
   Map<Integer, List<Double>> cumulativeDistributionForTier = new HashMap<>();
 
   // subsample column; not used currently
-  @JsonIgnore String subsampleColumn;
+  @JsonIgnore
+  String subsampleColumn;
 
   public ScrambleMeta() {}
 
@@ -204,12 +206,23 @@ public class ScrambleMeta implements Serializable {
     return method;
   }
   
+  @JsonIgnore
   public String getMethodWithDefault(String defaultMethod) {
     if (method == null) {
       return defaultMethod;
     } else {
       return method;
     }
+  }
+  
+  /**
+   * Checks if this scramble can be used for avg, sum, count, min, or max.
+   * @return True if it is the case
+   */
+  @JsonIgnore
+  public boolean isMethodCompatibleWithSimpleAggregates() {
+    String m = getMethodWithDefault("uniform");
+    return m.equalsIgnoreCase("uniform") || m.equalsIgnoreCase("fastconverge"); 
   }
   
   public String getHashColumn() {
@@ -279,6 +292,7 @@ public class ScrambleMeta implements Serializable {
 
   public static ScrambleMeta fromJsonString(String jsonString) {
     ObjectMapper objectMapper = new ObjectMapper();
+    objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
     try {
       ScrambleMeta meta = objectMapper.readValue(jsonString, ScrambleMeta.class);
       return meta;
