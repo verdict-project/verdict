@@ -138,9 +138,6 @@ public class CachedDbmsConnection extends DbmsConnection implements MetaDataProv
 
   public String getDefaultSchema() {
     String schema = originalConn.getDefaultSchema();
-    //    if (defaultSchema == null) {
-    //      defaultSchema = metaProvider.getDefaultSchema();
-    //    }
     return schema;
   }
 

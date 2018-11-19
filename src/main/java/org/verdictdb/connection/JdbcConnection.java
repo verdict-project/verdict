@@ -344,7 +344,14 @@ public class JdbcConnection extends DbmsConnection {
   @Override
   public void setDefaultSchema(String schema) throws VerdictDBDbmsException {
     try {
-      conn.setCatalog(schema);
+      // these database have a different meaning for catalog; thus, does not change.
+      if (syntax instanceof PrestoSyntax
+          || syntax instanceof PostgresqlSyntax
+          || syntax instanceof RedshiftSyntax) {
+        
+      } else {
+        conn.setCatalog(schema);
+      }
     } catch (SQLException e) {
       throw new VerdictDBDbmsException(e);
     }
