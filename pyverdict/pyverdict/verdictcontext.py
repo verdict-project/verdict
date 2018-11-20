@@ -13,6 +13,7 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 '''
+import atexit
 import os
 import pkg_resources
 import sys
@@ -22,6 +23,15 @@ from .verdictexception import *
 from py4j.java_gateway import JavaGateway
 from time import sleep
 
+# To properly close all connections
+created_verdict_contexts = []
+
+def close_verdict_contexts():
+    for c in created_verdict_contexts:
+        c.close()
+
+atexit.register(close_verdict_contexts)
+
 
 class VerdictContext:
     """
@@ -29,6 +39,9 @@ class VerdictContext:
 
     All necessary JDBC drivers (i.e., jar files) are already included in the 
     pyverdict package. These drivers are included in the classpath.
+
+    JVM is started on a separate process, which is to prevent KeyboardInterrupt
+    (or Ctrl+C) from killing the JVM process.
 
     Args:
         url: jdbc connection string
@@ -44,11 +57,17 @@ class VerdictContext:
         self._dbtype = self._get_dbtype(url)
         self._url = url
 
+    def close(self):
+        self._context.close()
+        self._gateway.close()
+
     @classmethod
     def new_mysql_context(cls, host, user, password, port=3306):
         connection_string = \
             f'jdbc:mysql://{host}:{port}?user={user}&password={password}'
-        return cls(connection_string)
+        ins = cls(connection_string)
+        created_verdict_contexts.append(ins)
+        return ins
 
     @classmethod
     def new_presto_context(cls, host, catalog, user, password=None, port=8081):
@@ -59,7 +78,9 @@ class VerdictContext:
             connection_string = \
                 f'jdbc:presto://{host}:{port}/{catalog}?' \
                 f'user={user}&password={password}'
-        return cls(connection_string)
+        ins = cls(connection_string)
+        created_verdict_contexts.append(ins)
+        return ins
 
     def set_loglevel(self, level):
         self._context.setLoglevel(level)
@@ -102,7 +123,9 @@ class VerdictContext:
         class_path = self._get_class_path(extra_class_path)
         gateway = JavaGateway.launch_gateway(
             classpath=class_path, die_on_exit=True,
-            redirect_stdout=sys.stdout)
+            redirect_stdout=sys.stdout,
+            redirect_stderr=sys.stderr,
+            create_new_process_group=True)
         sleep(1)
         return gateway
 
