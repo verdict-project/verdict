@@ -388,11 +388,11 @@ workflows:
   build_and_test:
     jobs:
     - build-jdk7
-    # - build-jdk8
-    # - build-jdk8-update-codecov
-    # - build-spark
-    # - build-impala-redshift
-    # - build-pyverdict
+    - build-jdk8
+    - build-jdk8-update-codecov
+    - build-spark
+    - build-impala-redshift
+    - build-pyverdict
     - deploy-doc:
         filters:
           branches:
