@@ -160,11 +160,16 @@ public class PrestoSyntax extends SqlSyntax {
    * Note that the stddev of rand() is sqrt(0.01 * 0.99) = 0.09949874371.
    * 
    * I alss tested xxhash64(); however, its std was larger (i.e., 10.243500033157268).
+   * 
+   * Now I test xxhash64() for faster speed.
    */
   @Override
   public String hashFunction(String column) {
+//    String f = String.format(
+//        "(from_base(substr(to_hex(md5(to_utf8(cast(%s as varchar)))), 1, 8), 16) %% %d) / %d",
+//        column, hashPrecision, hashPrecision);
     String f = String.format(
-        "(from_base(substr(to_hex(md5(to_utf8(cast(%s as varchar)))), 1, 8), 16) %% %d) / %d",
+        "(from_base(substr(to_hex(xxhash64(to_utf8(cast(%s as varchar)))), 1, 8), 16) %% %d) / %d",
         column, hashPrecision, hashPrecision);
     return f;
   }
