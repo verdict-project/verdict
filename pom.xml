@@ -346,7 +346,7 @@
                             <source>1.7</source>
                             <target>1.7</target>
                             <excludes>
-                                <exclude>**/org/verdictdb/connection/PrestoJdbcConnection.java</exclude>
+                                <exclude>org/verdictdb/connection/PrestoJdbcConnection.java</exclude>
                             </excludes>
                         </configuration>
                     </plugin>
