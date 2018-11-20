@@ -116,8 +116,8 @@ public class PrestoUniformScramblingQueryTest {
         String.format("jdbc:presto://%s/%s/default", PRESTO_HOST, PRESTO_CATALOG);
     String verdictConnectionString =
         String.format(
-            "jdbc:verdict:presto://%s/%s/default&verdictdbtempschema=%s",
-            PRESTO_HOST, PRESTO_CATALOG, SCHEMA_NAME);
+            "jdbc:verdict:presto://%s/%s/default;verdictdbtempschema=%s&verdictdbmetaschema=%s",
+            PRESTO_HOST, PRESTO_CATALOG, VERDICT_TEMP_SCHEMA, VERDICT_META_SCHEMA);
     conn =
         DatabaseConnectionHelpers.setupPresto(
             connectionString, PRESTO_USER, PRESTO_PASSWORD, SCHEMA_NAME);
