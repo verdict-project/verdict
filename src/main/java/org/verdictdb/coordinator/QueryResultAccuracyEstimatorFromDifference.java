@@ -1,11 +1,11 @@
 package org.verdictdb.coordinator;
 
-import org.verdictdb.VerdictSingleResult;
-
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+
+import org.verdictdb.VerdictSingleResult;
 
 public class QueryResultAccuracyEstimatorFromDifference extends QueryResultAccuracyEstimator {
 

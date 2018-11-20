@@ -16,10 +16,10 @@
 
 package org.verdictdb.sqlsyntax;
 
-import com.google.common.base.Joiner;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import com.google.common.base.Joiner;
 
 /** Created by Dong Young Yoon on 10/12/18. */
 public class PrestoHiveSyntax extends PrestoSyntax {

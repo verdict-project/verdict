@@ -16,7 +16,11 @@
 
 package org.verdictdb.sqlwriter;
 
-import com.google.common.base.Joiner;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.core.sqlobject.AsteriskColumn;
@@ -36,10 +40,7 @@ import org.verdictdb.sqlsyntax.PrestoHiveSyntax;
 import org.verdictdb.sqlsyntax.SparkSyntax;
 import org.verdictdb.sqlsyntax.SqlSyntax;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
+import com.google.common.base.Joiner;
 
 public class CreateTableToSql {
 

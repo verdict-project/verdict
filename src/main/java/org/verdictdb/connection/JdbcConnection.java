@@ -16,11 +16,21 @@
 
 package org.verdictdb.connection;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.commons.StringSplitter;
 import org.verdictdb.commons.VerdictDBLogger;
-import org.verdictdb.coordinator.ExecutionContext;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.sqlsyntax.HiveSyntax;
 import org.verdictdb.sqlsyntax.ImpalaSyntax;
@@ -30,16 +40,6 @@ import org.verdictdb.sqlsyntax.RedshiftSyntax;
 import org.verdictdb.sqlsyntax.SparkSyntax;
 import org.verdictdb.sqlsyntax.SqlSyntax;
 import org.verdictdb.sqlsyntax.SqlSyntaxList;
-
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.List;
 
 public class JdbcConnection extends DbmsConnection {
 
@@ -77,7 +77,8 @@ public class JdbcConnection extends DbmsConnection {
         Constructor<?> prestoConnClsConstructor = 
             prestoConnClass.getConstructor(Connection.class, SqlSyntax.class);
         jdbcConn = (JdbcConnection) prestoConnClsConstructor.newInstance(conn, syntax);
-        ((PrestoJdbcConnection) jdbcConn).ensureCatalogSet();
+        Method ensureMethod = prestoConnClass.getMethod("ensureCatalogSet");
+        ensureMethod.invoke(jdbcConn);
       } catch (ClassNotFoundException | NoSuchMethodException | SecurityException 
           | InstantiationException | IllegalAccessException | IllegalArgumentException 
           | InvocationTargetException e) {

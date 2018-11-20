@@ -3,16 +3,29 @@ package org.verdictdb.core.querying.simplifier;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.google.common.base.Optional;
-
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
-import org.apache.spark.sql.catalyst.expressions.Alias;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.core.execplan.ExecutionInfoToken;
-import org.verdictdb.core.querying.*;
-import org.verdictdb.core.sqlobject.*;
+import org.verdictdb.core.querying.CreateTableAsSelectNode;
+import org.verdictdb.core.querying.ExecutableNodeBase;
+import org.verdictdb.core.querying.PlaceHolderRecord;
+import org.verdictdb.core.querying.QueryNodeBase;
+import org.verdictdb.core.querying.QueryNodeWithPlaceHolders;
+import org.verdictdb.core.querying.SelectAllExecutionNode;
+import org.verdictdb.core.sqlobject.AbstractRelation;
+import org.verdictdb.core.sqlobject.AliasedColumn;
+import org.verdictdb.core.sqlobject.BaseTable;
+import org.verdictdb.core.sqlobject.ColumnOp;
+import org.verdictdb.core.sqlobject.JoinTable;
+import org.verdictdb.core.sqlobject.SelectItem;
+import org.verdictdb.core.sqlobject.SelectQuery;
+import org.verdictdb.core.sqlobject.SqlConvertible;
+import org.verdictdb.core.sqlobject.SubqueryColumn;
+import org.verdictdb.core.sqlobject.UnnamedColumn;
 import org.verdictdb.exception.VerdictDBException;
+
+import com.google.common.base.Optional;
 
 /**
  * Used for simplifying two nodes into one. This class may be used in a recursively way to simplify

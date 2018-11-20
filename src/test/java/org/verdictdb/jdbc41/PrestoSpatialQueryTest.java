@@ -16,6 +16,14 @@
 
 package org.verdictdb.jdbc41;
 
+import static org.junit.Assert.assertEquals;
+
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -24,14 +32,6 @@ import org.junit.experimental.categories.Category;
 import org.verdictdb.category.PrestoTests;
 import org.verdictdb.commons.VerdictOption;
 import org.verdictdb.exception.VerdictDBDbmsException;
-
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-
-import static org.junit.Assert.assertEquals;
 
 /** Created by Dong Young Yoon on 8/16/18. */
 @Category(PrestoTests.class)

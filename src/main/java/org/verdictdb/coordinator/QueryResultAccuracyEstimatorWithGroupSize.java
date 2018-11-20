@@ -1,8 +1,5 @@
 package org.verdictdb.coordinator;
 
-import org.verdictdb.VerdictResultStream;
-import org.verdictdb.VerdictSingleResult;
-
 public class QueryResultAccuracyEstimatorWithGroupSize extends QueryResultAccuracyEstimator {
 
   private int resultNumToBreak = 2;

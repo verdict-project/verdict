@@ -1,19 +1,17 @@
 package org.verdictdb.core.querying;
 
+import java.sql.SQLException;
+import java.util.List;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.connection.InMemoryAggregate;
 import org.verdictdb.core.execplan.ExecutionInfoToken;
-import org.verdictdb.core.execplan.ExecutionTokenQueue;
 import org.verdictdb.core.sqlobject.CreateTableAsSelectQuery;
 import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.core.sqlobject.SqlConvertible;
 import org.verdictdb.exception.VerdictDBException;
-
-import java.sql.SQLException;
-import java.util.List;
-import java.util.Map;
 
 /**
  *

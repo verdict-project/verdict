@@ -16,23 +16,19 @@
 
 package org.verdictdb.sqlreader;
 
+import java.util.List;
+
 import org.apache.commons.lang3.tuple.Triple;
 import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.coordinator.SelectQueryCoordinator;
 import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.core.sqlobject.AbstractRelation;
-import org.verdictdb.core.sqlobject.AliasedColumn;
 import org.verdictdb.core.sqlobject.BaseColumn;
 import org.verdictdb.core.sqlobject.BaseTable;
-import org.verdictdb.core.sqlobject.ColumnOp;
 import org.verdictdb.core.sqlobject.JoinTable;
-import org.verdictdb.core.sqlobject.SelectItem;
 import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.exception.VerdictDBValueException;
-
-import java.util.Iterator;
-import java.util.List;
 
 /** Created by Dong Young Yoon on 7/31/18. */
 public class ScrambleTableReplacer {
