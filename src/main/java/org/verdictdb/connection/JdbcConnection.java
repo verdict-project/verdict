@@ -80,9 +80,15 @@ public class JdbcConnection extends DbmsConnection {
         Method ensureMethod = prestoConnClass.getMethod("ensureCatalogSet");
         ensureMethod.invoke(jdbcConn);
       } catch (ClassNotFoundException | NoSuchMethodException | SecurityException 
-          | InstantiationException | IllegalAccessException | IllegalArgumentException 
-          | InvocationTargetException e) {
+          | InstantiationException | IllegalAccessException | IllegalArgumentException e) {
+        
         throw new RuntimeException("Instantiating PrestoJdbcConnection failed.");
+      } catch (InvocationTargetException e) {
+        if (e.getTargetException() instanceof VerdictDBDbmsException) {
+          throw new VerdictDBDbmsException(e.getMessage());
+        } else {
+          throw new RuntimeException("Instantiating PrestoJdbcConnection failed.");
+        }
       }
     } else { 
       jdbcConn = new JdbcConnection(conn, syntax);
