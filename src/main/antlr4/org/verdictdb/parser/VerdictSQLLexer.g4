@@ -156,6 +156,7 @@ PRINT:                           P R I N T;
 PROC:                            P R O C;
 PROCEDURE:                       P R O C E D U R E;
 RAISERROR:                       R A I S E R R O R;
+RATIO:                           R A T I O;
 RAWTOHEX:                        R A W T O H E X;
 READ:                            R E A D;
 READTEXT:                        R E A D T E X T;

@@ -20,6 +20,7 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.commons.StringSplitter;
 import org.verdictdb.commons.VerdictDBLogger;
+import org.verdictdb.coordinator.ExecutionContext;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.sqlsyntax.HiveSyntax;
 import org.verdictdb.sqlsyntax.ImpalaSyntax;
@@ -30,6 +31,8 @@ import org.verdictdb.sqlsyntax.SparkSyntax;
 import org.verdictdb.sqlsyntax.SqlSyntax;
 import org.verdictdb.sqlsyntax.SqlSyntaxList;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
@@ -48,14 +51,14 @@ public class JdbcConnection extends DbmsConnection {
 
   JdbcQueryResult jrs = null;
 
-  private boolean outputDebugMessage = false;
+  protected boolean outputDebugMessage = false;
 
-  private Statement runningStatement = null;
+  protected Statement runningStatement = null;
 
-  private VerdictDBLogger log;
+  protected VerdictDBLogger log;
 
-  private boolean isAborting = false;
-
+  protected boolean isAborting = false;
+  
   public static JdbcConnection create(Connection conn) throws VerdictDBDbmsException {
     String connectionString = null;
     try {
@@ -65,18 +68,23 @@ public class JdbcConnection extends DbmsConnection {
     }
 
     SqlSyntax syntax = SqlSyntaxList.getSyntaxFromConnectionString(connectionString);
-    JdbcConnection jdbcConn = new JdbcConnection(conn, syntax);
-
+    JdbcConnection jdbcConn = null;
     if (syntax instanceof PrestoSyntax) {
-      String catalog = null;
+      // To handle that Presto's JDBC driver is not compatible with JDK7,
+      // we use Java's reflection-based instantiation.
       try {
-        catalog = jdbcConn.getConnection().getCatalog();
-      } catch (SQLException e) {
-        e.printStackTrace();
+        Class<?> prestoConnClass = Class.forName("org.verdictdb.connection.PrestoJdbcConnection");
+        Constructor<?> prestoConnClsConstructor = 
+            prestoConnClass.getConstructor(Connection.class, SqlSyntax.class);
+        jdbcConn = (JdbcConnection) prestoConnClsConstructor.newInstance(conn, syntax);
+        ((PrestoJdbcConnection) jdbcConn).ensureCatalogSet();
+      } catch (ClassNotFoundException | NoSuchMethodException | SecurityException 
+          | InstantiationException | IllegalAccessException | IllegalArgumentException 
+          | InvocationTargetException e) {
+        throw new RuntimeException("Instantiating PrestoJdbcConnection failed.");
       }
-      if (catalog == null || catalog.isEmpty()) {
-        throw new VerdictDBDbmsException("Session catalog is not set.");
-      }
+    } else { 
+      jdbcConn = new JdbcConnection(conn, syntax);
     }
 
     return jdbcConn;
@@ -141,20 +149,20 @@ public class JdbcConnection extends DbmsConnection {
     return finalResult;
   }
 
-  private void setRunningStatement(Statement stmt) {
+  protected void setRunningStatement(Statement stmt) {
     synchronized (this) {
       runningStatement = stmt;
     }
   }
 
-  private Statement getRunningStatement() {
+  protected Statement getRunningStatement() {
     synchronized (this) {
       return runningStatement;
     }
   }
 
   public DbmsQueryResult executeSingle(String sql) throws VerdictDBDbmsException {
-    log.debug("Issuing the following query to DBMS: " + sql);
+    log.debug("Issues the following query to DBMS: " + sql);
 
     try {
       Statement stmt = conn.createStatement();

@@ -291,6 +291,14 @@ public class ScramblingCoordinator {
         String.format(
             "Starts to create a new %s scramble %s.%s from %s.%s",
             methodName.toUpperCase(), newSchema, newTable, originalSchema, originalTable));
+    if (methodName.equalsIgnoreCase("hash")) {
+      log.info(String.format("Method: %s on %s", methodName.toUpperCase(), primaryColumn));
+    } else {
+      log.info(String.format("Method: %s", methodName.toUpperCase()));
+    }
+    log.info(String.format("Relative size: %.6f (or equivalently, %.4f %%)", 
+        relativeSize, relativeSize*100));
+    
     ScramblingPlan plan =
         ScramblingPlan.create(
             newSchema, newTable, originalSchema, originalTable, scramblingMethod, effectiveOptions);
