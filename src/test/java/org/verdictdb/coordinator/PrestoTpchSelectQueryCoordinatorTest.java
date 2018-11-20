@@ -102,7 +102,7 @@ public class PrestoTpchSelectQueryCoordinatorTest {
   Pair<ExecutionResultReader, ResultSet> getAnswerPair(int queryNum)
       throws VerdictDBException, SQLException, IOException {
     String filename = "query" + queryNum + ".sql";
-    File file = new File("src/test/resources/tpch_test_query/" + filename);
+    File file = new File("src/test/resources/tpch_test_query/presto/" + filename);
     String sql = Files.toString(file, Charsets.UTF_8);
     JdbcConnection jdbcConn = new JdbcConnection(conn, new PrestoHiveSyntax());
     jdbcConn.setOutputDebugMessage(true);
@@ -115,6 +115,24 @@ public class PrestoTpchSelectQueryCoordinatorTest {
     ResultSet rs = stmt.executeQuery(sql);
     System.out.println(String.format("Query %d Executed.", queryNum));
     return new ImmutablePair<>(reader, rs);
+  }
+
+  private static double convertObjectToDouble(Object o) {
+    if (o instanceof String) {
+      return Double.valueOf((String) o);
+    } else if (o instanceof Number) {
+      return ((Number) o).doubleValue();
+    }
+    return 0;
+  }
+
+  private static long convertObjectToLong(Object o) {
+    if (o instanceof String) {
+      return Long.valueOf((String) o);
+    } else if (o instanceof Number) {
+      return ((Number) o).longValue();
+    }
+    return 0;
   }
 
   @Test
@@ -132,7 +150,7 @@ public class PrestoTpchSelectQueryCoordinatorTest {
           dbmsQueryResult.next();
           assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
           assertEquals(rs.getString(2), dbmsQueryResult.getString(1));
-          assertEquals(rs.getLong(3), dbmsQueryResult.getLong(2));
+          assertEquals(convertObjectToLong(rs.getObject(3)), dbmsQueryResult.getLong(2));
         }
       }
     }
@@ -152,7 +170,7 @@ public class PrestoTpchSelectQueryCoordinatorTest {
       if (cnt == 10) {
         while (rs.next()) {
           dbmsQueryResult.next();
-          assertEquals(rs.getLong(1), dbmsQueryResult.getLong(0));
+          assertEquals(convertObjectToLong(rs.getLong(1)), dbmsQueryResult.getLong(0));
         }
       }
     }
@@ -172,7 +190,7 @@ public class PrestoTpchSelectQueryCoordinatorTest {
       if (cnt == 10) {
         while (rs.next()) {
           dbmsQueryResult.next();
-          assertEquals(rs.getLong(1), dbmsQueryResult.getLong(0));
+          assertEquals(convertObjectToLong(rs.getLong(1)), dbmsQueryResult.getLong(0));
         }
       }
     }
@@ -193,14 +211,14 @@ public class PrestoTpchSelectQueryCoordinatorTest {
           dbmsQueryResult.next();
           assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
           assertEquals(rs.getString(2), dbmsQueryResult.getString(1));
-          assertEquals(rs.getLong(3), dbmsQueryResult.getLong(2));
-          assertEquals(rs.getDouble(4), dbmsQueryResult.getDouble(3), 1e-5);
-          assertEquals(rs.getDouble(5), dbmsQueryResult.getDouble(4), 1e-5);
-          assertEquals(rs.getDouble(6), dbmsQueryResult.getDouble(5), 1e-5);
-          assertEquals(rs.getDouble(7), dbmsQueryResult.getDouble(6), 1e-5);
-          assertEquals(rs.getDouble(8), dbmsQueryResult.getDouble(7), 1e-5);
-          assertEquals(rs.getDouble(9), dbmsQueryResult.getDouble(8), 1e-5);
-          assertEquals(rs.getDouble(10), dbmsQueryResult.getDouble(9), 1e-5);
+          assertEquals(convertObjectToLong(rs.getObject(3)), dbmsQueryResult.getLong(2));
+          assertEquals(convertObjectToDouble(rs.getObject(4)), dbmsQueryResult.getDouble(3), 1);
+          assertEquals(convertObjectToDouble(rs.getObject(5)), dbmsQueryResult.getDouble(4), 1);
+          assertEquals(convertObjectToDouble(rs.getObject(6)), dbmsQueryResult.getDouble(5), 1);
+          assertEquals(convertObjectToDouble(rs.getObject(7)), dbmsQueryResult.getDouble(6), 1);
+          assertEquals(convertObjectToDouble(rs.getObject(8)), dbmsQueryResult.getDouble(7), 1);
+          assertEquals(convertObjectToDouble(rs.getObject(9)), dbmsQueryResult.getDouble(8), 1);
+          assertEquals(convertObjectToDouble(rs.getObject(10)), dbmsQueryResult.getDouble(9), 1);
         }
       }
     }
@@ -219,8 +237,8 @@ public class PrestoTpchSelectQueryCoordinatorTest {
       if (cnt == 12) {
         while (rs.next()) {
           dbmsQueryResult.next();
-          assertEquals(rs.getDouble(1), dbmsQueryResult.getDouble(0), 1e-5);
-          assertEquals(rs.getDouble(2), dbmsQueryResult.getDouble(1), 1e-5);
+          assertEquals(convertObjectToDouble(rs.getObject(1)), dbmsQueryResult.getDouble(0), 1);
+          assertEquals(convertObjectToDouble(rs.getObject(2)), dbmsQueryResult.getDouble(1), 1);
           assertEquals(rs.getString(3), dbmsQueryResult.getString(2));
           assertEquals(rs.getString(4), dbmsQueryResult.getString(3));
         }
@@ -242,7 +260,7 @@ public class PrestoTpchSelectQueryCoordinatorTest {
         while (rs.next()) {
           dbmsQueryResult.next();
           assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
-          assertEquals(rs.getDouble(2), dbmsQueryResult.getDouble(1), 1e-5);
+          assertEquals(convertObjectToDouble(rs.getObject(2)), dbmsQueryResult.getDouble(1), 1);
         }
       }
     }
@@ -262,7 +280,7 @@ public class PrestoTpchSelectQueryCoordinatorTest {
         while (rs.next()) {
           dbmsQueryResult.next();
           assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
-          assertEquals(rs.getDouble(2), dbmsQueryResult.getDouble(1), 1e-5);
+          assertEquals(convertObjectToDouble(rs.getObject(2)), dbmsQueryResult.getDouble(1), 1);
         }
       }
     }
@@ -281,7 +299,7 @@ public class PrestoTpchSelectQueryCoordinatorTest {
       if (cnt == 10) {
         while (rs.next()) {
           dbmsQueryResult.next();
-          assertEquals(rs.getDouble(1), dbmsQueryResult.getDouble(0), 1e-5);
+          assertEquals(convertObjectToDouble(rs.getObject(1)), dbmsQueryResult.getDouble(0), 1);
         }
       }
     }
@@ -303,7 +321,7 @@ public class PrestoTpchSelectQueryCoordinatorTest {
           assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
           assertEquals(rs.getString(2), dbmsQueryResult.getString(1));
           assertEquals(rs.getString(3), dbmsQueryResult.getString(2));
-          assertEquals(rs.getDouble(4), dbmsQueryResult.getDouble(3), 1e-5);
+          assertEquals(convertObjectToDouble(rs.getObject(4)), dbmsQueryResult.getDouble(3), 1);
         }
       }
     }
@@ -323,8 +341,8 @@ public class PrestoTpchSelectQueryCoordinatorTest {
         while (rs.next()) {
           dbmsQueryResult.next();
           assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
-          assertEquals(rs.getDouble(2), dbmsQueryResult.getDouble(1), 1e-5);
-          assertEquals(rs.getDouble(3), dbmsQueryResult.getDouble(2), 1e-5);
+          assertEquals(convertObjectToDouble(rs.getObject(2)), dbmsQueryResult.getDouble(1), 1);
+          assertEquals(convertObjectToDouble(rs.getObject(3)), dbmsQueryResult.getDouble(2), 1);
         }
       }
     }
@@ -345,7 +363,7 @@ public class PrestoTpchSelectQueryCoordinatorTest {
           dbmsQueryResult.next();
           assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
           assertEquals(rs.getString(2), dbmsQueryResult.getString(1));
-          assertEquals(rs.getDouble(3), dbmsQueryResult.getDouble(2), 1e-5);
+          assertEquals(convertObjectToDouble(rs.getObject(3)), dbmsQueryResult.getDouble(2), 1);
         }
       }
     }
@@ -366,7 +384,7 @@ public class PrestoTpchSelectQueryCoordinatorTest {
           dbmsQueryResult.next();
           assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
           assertEquals(rs.getString(2), dbmsQueryResult.getString(1));
-          assertEquals(rs.getDouble(3), dbmsQueryResult.getDouble(2), 1e-5);
+          assertEquals(convertObjectToDouble(rs.getObject(3)), dbmsQueryResult.getDouble(2), 1);
         }
       }
     }
@@ -386,8 +404,8 @@ public class PrestoTpchSelectQueryCoordinatorTest {
         while (rs.next()) {
           dbmsQueryResult.next();
           assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
-          assertEquals(rs.getDouble(2), dbmsQueryResult.getDouble(1), 1e-5);
-          assertEquals(rs.getDouble(3), dbmsQueryResult.getDouble(2), 1e-5);
+          assertEquals(convertObjectToDouble(rs.getObject(2)), dbmsQueryResult.getDouble(1), 1);
+          assertEquals(convertObjectToDouble(rs.getObject(3)), dbmsQueryResult.getDouble(2), 1);
         }
       }
     }
@@ -407,7 +425,7 @@ public class PrestoTpchSelectQueryCoordinatorTest {
         while (rs.next()) {
           dbmsQueryResult.next();
           assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
-          assertEquals(rs.getDouble(2), dbmsQueryResult.getDouble(1), 1e-5);
+          assertEquals(convertObjectToDouble(rs.getObject(2)), dbmsQueryResult.getDouble(1), 1);
         }
       }
     }
@@ -426,8 +444,8 @@ public class PrestoTpchSelectQueryCoordinatorTest {
       if (cnt == 10) {
         while (rs.next()) {
           dbmsQueryResult.next();
-          assertEquals(rs.getDouble(2), dbmsQueryResult.getDouble(1), 1e-5);
-          assertEquals(rs.getDouble(1), dbmsQueryResult.getDouble(0), 1e-5);
+          assertEquals(convertObjectToDouble(rs.getObject(2)), dbmsQueryResult.getDouble(1), 1);
+          assertEquals(convertObjectToDouble(rs.getObject(1)), dbmsQueryResult.getDouble(0), 1);
         }
       }
     }
@@ -446,8 +464,8 @@ public class PrestoTpchSelectQueryCoordinatorTest {
       if (cnt == 10) {
         while (rs.next()) {
           dbmsQueryResult.next();
-          assertEquals(rs.getDouble(2), dbmsQueryResult.getDouble(1), 1e-5);
-          assertEquals(rs.getDouble(1), dbmsQueryResult.getDouble(0), 1e-5);
+          assertEquals(convertObjectToDouble(rs.getObject(2)), dbmsQueryResult.getDouble(1), 1);
+          assertEquals(convertObjectToDouble(rs.getObject(1)), dbmsQueryResult.getDouble(0), 1);
         }
       }
     }
@@ -466,7 +484,7 @@ public class PrestoTpchSelectQueryCoordinatorTest {
       if (cnt == 10) {
         while (rs.next()) {
           dbmsQueryResult.next();
-          assertEquals(rs.getDouble(1), dbmsQueryResult.getDouble(0), 1e-5);
+          assertEquals(convertObjectToDouble(rs.getObject(1)), dbmsQueryResult.getDouble(0), 1);
         }
       }
     }
@@ -490,7 +508,7 @@ public class PrestoTpchSelectQueryCoordinatorTest {
           assertEquals(rs.getString(3), dbmsQueryResult.getString(2));
           assertEquals(rs.getString(4), dbmsQueryResult.getString(3));
           assertEquals(rs.getString(5), dbmsQueryResult.getString(4));
-          assertEquals(rs.getDouble(6), dbmsQueryResult.getDouble(5), 1e-5);
+          assertEquals(convertObjectToDouble(rs.getObject(6)), dbmsQueryResult.getDouble(5), 1);
         }
       }
     }
@@ -509,7 +527,7 @@ public class PrestoTpchSelectQueryCoordinatorTest {
       if (cnt == 10) {
         while (rs.next()) {
           dbmsQueryResult.next();
-          assertEquals(rs.getDouble(1), dbmsQueryResult.getDouble(0), 1e-5);
+          assertEquals(convertObjectToDouble(rs.getObject(1)), dbmsQueryResult.getDouble(0), 1);
         }
       }
     }
@@ -529,7 +547,7 @@ public class PrestoTpchSelectQueryCoordinatorTest {
         while (rs.next()) {
           dbmsQueryResult.next();
           assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
-          assertEquals(rs.getDouble(2), dbmsQueryResult.getDouble(1), 1e-5);
+          assertEquals(convertObjectToDouble(rs.getObject(2)), dbmsQueryResult.getDouble(1), 1);
         }
       }
     }
@@ -549,7 +567,7 @@ public class PrestoTpchSelectQueryCoordinatorTest {
         while (rs.next()) {
           dbmsQueryResult.next();
           assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
-          assertEquals(rs.getDouble(2), dbmsQueryResult.getDouble(1), 1e-5);
+          assertEquals(convertObjectToDouble(rs.getObject(2)), dbmsQueryResult.getDouble(1), 1);
         }
       }
     }
