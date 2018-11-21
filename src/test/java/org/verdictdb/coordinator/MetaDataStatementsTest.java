@@ -197,7 +197,7 @@ public class MetaDataStatementsTest {
   private static void setupRedshift() throws SQLException, VerdictDBDbmsException, IOException {
     String connectionString =
         String.format(
-            "jdbc:redshift://%s/%s;verdictdbmetaschema",
+            "jdbc:redshift://%s/%s;verdictdbmetaschema=%s",
             REDSHIFT_HOST, REDSHIFT_DATABASE, PostgresRedshift_SCHEMA_NAME);
     Connection conn =
         DriverManager.getConnection(connectionString, REDSHIFT_USER, REDSHIFT_PASSWORD);
