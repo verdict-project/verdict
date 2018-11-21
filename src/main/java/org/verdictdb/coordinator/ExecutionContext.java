@@ -80,8 +80,8 @@ public class ExecutionContext {
   }
 
   /**
-   * @param conn         DbmsConnection
-   * @param contextId    parent's context id
+   * @param conn DbmsConnection
+   * @param contextId parent's context id
    * @param serialNumber serial number of this ExecutionContext
    * @param options
    */
@@ -130,10 +130,10 @@ public class ExecutionContext {
     } else {
       QueryType queryType = identifyQueryType(query);
       if ((queryType != QueryType.select
-          && queryType != QueryType.show_databases
-          && queryType != QueryType.show_tables
-          && queryType != QueryType.describe_table
-          && queryType != QueryType.show_scrambles)
+              && queryType != QueryType.show_databases
+              && queryType != QueryType.show_tables
+              && queryType != QueryType.describe_table
+              && queryType != QueryType.show_scrambles)
           && getResult) {
         throw new VerdictDBException(
             "Can not issue data manipulation statements with executeQuery().");
@@ -144,7 +144,8 @@ public class ExecutionContext {
       if (stream == null) {
         return null;
       }
-      QueryResultAccuracyEstimator accEst = new QueryResultAccuracyEstimatorFromDifference(runningCoordinator);
+      QueryResultAccuracyEstimator accEst =
+          new QueryResultAccuracyEstimatorFromDifference(runningCoordinator);
       try {
         while (stream.hasNext()) {
           VerdictSingleResult rs = stream.next();
@@ -154,7 +155,7 @@ public class ExecutionContext {
           }
         }
         // return the last result otherwise
-        return accEst.getAnswers().get(accEst.getAnswerCount()-1);
+        return accEst.getAnswers().get(accEst.getAnswerCount() - 1);
       } catch (RuntimeException e) {
         throw e;
       } finally {
@@ -293,7 +294,8 @@ public class ExecutionContext {
           public Pair<BaseTable, BaseTable> visitDrop_scramble_statement(
               VerdictSQLParser.Drop_scramble_statementContext ctx) {
             RelationGen g = new RelationGen();
-            BaseTable originalTable = (BaseTable) g.visit(ctx.original_table);
+            BaseTable originalTable =
+                (ctx.original_table != null) ? (BaseTable) g.visit(ctx.original_table) : null;
             BaseTable scrambleTable = (BaseTable) g.visit(ctx.scrambled_table);
             return ImmutablePair.of(originalTable, scrambleTable);
           }

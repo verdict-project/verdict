@@ -285,4 +285,38 @@ public class RedshiftScrambleManipulationTest {
     }
     assertEquals(metaCount, 1);
   }
+
+  @Test
+  public void DropScrambleWithoutOriginalTableTest() throws SQLException, InterruptedException {
+    vc.createStatement()
+        .execute(
+            String.format(
+                "CREATE SCRAMBLE %s.orders_scramble9 FROM %s.orders", SCHEMA_NAME, SCHEMA_NAME));
+    String sql = String.format("DROP SCRAMBLE %s.orders_scramble9", SCHEMA_NAME, SCHEMA_NAME);
+    vc.createStatement().execute(sql);
+
+    // check whether the actual scramble table has been removed
+    sql =
+        String.format(
+            "SELECT COUNT(*) as cnt FROM pg_tables WHERE schemaname = '%s' AND tablename = '%s'",
+            SCHEMA_NAME, "orders_scramble9");
+    ResultSet rs1 = conn.createStatement().executeQuery(sql);
+    if (rs1.next()) {
+      assertEquals(0, rs1.getInt(1));
+    }
+
+    // Check whether the metadata of the dropped scramble table is correctly inserted
+    sql = String.format("SHOW SCRAMBLES");
+    ResultSet rs = vc.createStatement().executeQuery(sql);
+
+    // Check the most up-to-date metadata
+    if (rs.next()) {
+      assertEquals("N/A", rs.getString(1));
+      assertEquals(SCHEMA_NAME, rs.getString(3));
+      String scrambleName = rs.getString(4);
+      if (scrambleName.equals("orders_scramble9")) {
+        assertEquals("DELETED", rs.getString(6));
+      }
+    }
+  }
 }

@@ -162,8 +162,8 @@ public class ScrambleMetaStore extends VerdictMetaStore {
 
   public void dropScrambleTable(BaseTable originalTable, BaseTable scrambleTable)
       throws VerdictDBException {
-    String originalTableSchema = originalTable.getSchemaName();
-    String originalTableName = originalTable.getTableName();
+    String originalTableSchema = (originalTable != null) ? originalTable.getSchemaName() : "N/A";
+    String originalTableName = (originalTable != null) ? originalTable.getTableName() : "N/A";
     String scrambleTableSchema = scrambleTable.getSchemaName();
     String scrambleTableName = scrambleTable.getTableName();
 
