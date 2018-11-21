@@ -158,8 +158,6 @@ public class RedshiftScrambleManipulationTest {
     String sql = String.format("SHOW SCRAMBLES");
     ResultSet rs = vc.createStatement().executeQuery(sql);
     while (rs.next()) {
-      assertEquals(rs.getString(1), SCHEMA_NAME);
-      assertEquals(rs.getString(2), "orders");
       assertEquals(rs.getString(3), SCHEMA_NAME);
       assertTrue(rs.getString(4).startsWith("orders_scramble"));
     }
@@ -203,7 +201,6 @@ public class RedshiftScrambleManipulationTest {
     ResultSet rs = vc.createStatement().executeQuery(sql);
     int rowCount = 0;
     while (rs.next()) {
-      assertEquals(SCHEMA_NAME, rs.getString(1));
       assertEquals(SCHEMA_NAME, rs.getString(3));
       String scrambleName = rs.getString(4);
       if (scrambleName.equals("orders_scramble4") && rowCount == 0) {
@@ -243,7 +240,6 @@ public class RedshiftScrambleManipulationTest {
     Set<String> deleted = new HashSet<>();
     int rowCount = 0;
     while (rs.next()) {
-      assertEquals(SCHEMA_NAME, rs.getString(1));
       assertEquals(SCHEMA_NAME, rs.getString(3));
       String scrambleName = rs.getString(4);
       assertTrue(scrambleName.startsWith("orders_scramble"));
