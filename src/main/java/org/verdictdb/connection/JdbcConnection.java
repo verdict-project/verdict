@@ -292,9 +292,11 @@ public class JdbcConnection extends DbmsConnection {
         queryResult = executeQuery(syntax.getPartitionCommand(schema, table));
         for (int i = 0; i < queryResult.getColumnCount(); i++) {
           String columnName = queryResult.getColumnName(i);
-          if (columnName.equals("#rows")) {
+          if (columnName.equalsIgnoreCase("#rows")) {
             break;
-          } else partition.add(columnName);
+          } else {
+            partition.add(columnName);
+          }
         }
         return partition;
       } catch (Exception e) {

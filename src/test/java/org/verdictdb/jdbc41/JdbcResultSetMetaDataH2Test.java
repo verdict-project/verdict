@@ -125,9 +125,9 @@ public class JdbcResultSetMetaDataH2Test {
 
   @Test
   public void getColumnNameTest() throws SQLException {
-    assertEquals("gender", jdbcResultSetMetaData1.getColumnName(1));
-    assertEquals("cnt", jdbcResultSetMetaData1.getColumnName(2));
-    assertEquals("ageavg", jdbcResultSetMetaData1.getColumnName(3));
+    assertEquals("GENDER", jdbcResultSetMetaData1.getColumnName(1));
+    assertEquals("CNT", jdbcResultSetMetaData1.getColumnName(2));
+    assertEquals("AGEAVG", jdbcResultSetMetaData1.getColumnName(3));
     assertEquals("gender", jdbcResultSetMetaData2.getColumnName(1));
     assertEquals("cnt", jdbcResultSetMetaData2.getColumnName(2));
     assertEquals("ageavg", jdbcResultSetMetaData2.getColumnName(3));
@@ -135,9 +135,9 @@ public class JdbcResultSetMetaDataH2Test {
 
   @Test
   public void getColumnLabelTest() throws SQLException {
-    assertEquals("gender", jdbcResultSetMetaData1.getColumnLabel(1));
-    assertEquals("cnt", jdbcResultSetMetaData1.getColumnLabel(2));
-    assertEquals("ageavg", jdbcResultSetMetaData1.getColumnLabel(3));
+    assertEquals("GENDER", jdbcResultSetMetaData1.getColumnLabel(1));
+    assertEquals("CNT", jdbcResultSetMetaData1.getColumnLabel(2));
+    assertEquals("AGEAVG", jdbcResultSetMetaData1.getColumnLabel(3));
     assertEquals("gender", jdbcResultSetMetaData2.getColumnLabel(1));
     assertEquals("cnt", jdbcResultSetMetaData2.getColumnLabel(2));
     assertEquals("ageavg", jdbcResultSetMetaData2.getColumnLabel(3));
