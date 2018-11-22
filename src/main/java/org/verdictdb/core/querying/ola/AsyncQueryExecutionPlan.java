@@ -392,7 +392,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
             || ((ColumnOp) s).getOpType().equals("max")
             || ((ColumnOp) s).getOpType().equals("min")
             || ((ColumnOp) s).getOpType().equals("countdistinct")
-            || ((ColumnOp) s).getOpType().equals("approx_countdistinct")) {
+            || ((ColumnOp) s).getOpType().equals("approx_distinct")) {
           columnOps.add((ColumnOp) s);
         } else {
           itemToCheck.addAll(((ColumnOp) s).getOperands());
@@ -733,7 +733,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
                 col.getOpType().equals("count") 
                 || col.getOpType().equals("sum")
                 || col.getOpType().equals("countdistinct")
-                || col.getOpType().equals("approx_countdistinct")) {
+                || col.getOpType().equals("approx_distinct")) {
               
               if (col.getOpType().equals("count")) {
                 if (!meta.getAggColumnAggAliasPair()
@@ -785,7 +785,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
                 }
                 
               } else if (col.getOpType().equals("countdistinct") 
-                  || col.getOpType().equals("approx_countdistinct")) {
+                  || col.getOpType().equals("approx_distinct")) {
                 if (!meta.getAggColumnAggAliasPair()
                     .containsKey(new ImmutablePair<>(col.getOpType(), col.getOperand(0)))) {
                   ColumnOp col1 = new ColumnOp(col.getOpType(), col.getOperand(0));

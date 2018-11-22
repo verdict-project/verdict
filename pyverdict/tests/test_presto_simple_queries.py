@@ -97,7 +97,7 @@ class TestClass:
         self.compare_approximate_query_result(sql)
 
     def test_verdict_block_count(self):
-        sql = """select min(verdictdbblock), max(verdictdbblock)
+        sql = """bypass select min(verdictdbblock), max(verdictdbblock)
             from {}.{}""".format(test_schema, test_scramble)
         result = verdict_conn.sql_raw_result(sql)
         types = result.types()

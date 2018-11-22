@@ -1,6 +1,7 @@
 package org.verdictdb.coordinator;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
@@ -191,6 +192,31 @@ public class PrestoTpchSelectQueryCoordinatorTest {
         while (rs.next()) {
           dbmsQueryResult.next();
           assertEquals(convertObjectToLong(rs.getLong(1)), dbmsQueryResult.getLong(0));
+        }
+      }
+    }
+    assertEquals(10, cnt);
+  }
+  
+  @Test
+  public void queryCountDistinct4Test() throws VerdictDBException, SQLException, IOException {
+    Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(103);
+    ExecutionResultReader reader = answerPair.getLeft();
+    ResultSet rs = answerPair.getRight();
+    int cnt = 0;
+    while (reader.hasNext()) {
+      DbmsQueryResult dbmsQueryResult = reader.next();
+      cnt++;
+
+      // Note: due to the property of approx_distinct
+      // the sum is not exactly equal to the original approx_distinct
+      if (cnt == 10) {
+        while (rs.next()) {
+          dbmsQueryResult.next();
+          long lowerBound = (long) (dbmsQueryResult.getLong(0) * 0.8);
+          long upperBound = (long) (dbmsQueryResult.getLong(0) * 1.2);
+          assertTrue(convertObjectToLong(rs.getLong(1)) >= lowerBound);
+          assertTrue(convertObjectToLong(rs.getLong(1)) <= upperBound);
         }
       }
     }

@@ -51,7 +51,7 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
    *   <li>min
    *   <li>max
    *   <li>countdistinct
-   *   <li>approx_countdistinct
+   *   <li>approx_distinct
    *   <li>substr
    *   <li>substring
    *   <li>rand
@@ -148,6 +148,14 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
 
   public static ColumnOp count() {
     return new ColumnOp("count");
+  }
+  
+  public static ColumnOp countdistinct() {
+    return new ColumnOp("countdistinct");
+  }
+  
+  public static ColumnOp approx_distinct() {
+    return new ColumnOp("approx_distinct");
   }
 
   public static ColumnOp equal(UnnamedColumn column1, UnnamedColumn column2) {
@@ -403,13 +411,13 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
   }
   
   public boolean isCountDistinctAggregate() {
-    Set<String> ops = new HashSet<>(Arrays.asList("countdistinct", "approx_countdistinct"));
+    Set<String> ops = new HashSet<>(Arrays.asList("countdistinct", "approx_distinct"));
     return doesContainOpIn(ops);
   }
 
   public boolean isColumnOpAggregate() {
     Set<String> ops = new HashSet<>(Arrays.asList(
-            "avg", "sum", "count", "max", "min", "countdistinct", "approx_countdistinct"));
+            "avg", "sum", "count", "max", "min", "countdistinct", "approx_distinct"));
     return doesContainOpIn(ops);
 //    if (this.getOpType().equals("avg")
 //        || this.getOpType().equals("sum")
@@ -417,7 +425,7 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
 //        || this.getOpType().equals("max")
 //        || this.getOpType().equals("min")
 //        || this.getOpType().equals("countdistinct")
-//        || this.getOpType().equals("approx_countdistinct")) {
+//        || this.getOpType().equals("approx_distinct")) {
 //      return true;
 //    }
 //    boolean aggExists = false;

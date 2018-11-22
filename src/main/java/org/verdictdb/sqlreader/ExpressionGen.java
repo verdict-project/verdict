@@ -219,7 +219,9 @@ public class ExpressionGen extends VerdictSQLParserBaseVisitor<UnnamedColumn> {
                       g.visit(ctx.cast_as_expression().expression()),
                       ConstantColumn.valueOf(Joiner.on(" ").join(dataTypeStr))));
               // ConstantColumn.valueOf(ctx.cast_as_expression().data_type().getText())));
-            } else return new ColumnOp(fname, g.visit(ctx.expression()));
+            } else {
+              return new ColumnOp(fname, g.visit(ctx.expression()));
+            }
           }
 
           @Override

@@ -950,6 +950,7 @@ simple_id
     | AREA
     | CENTER
     | CIRCLE
+    | COUNT
     | DATE
     | DAY
     | DAYNAME
@@ -958,6 +959,7 @@ simple_id
     | DAYOFYEAR
     | DEGREES
     | DIAMETER
+    | DISTINCT
     | HEIGHT
     | HOUR
     | LEFT

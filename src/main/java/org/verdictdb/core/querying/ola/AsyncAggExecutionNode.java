@@ -570,11 +570,11 @@ public class AsyncAggExecutionNode extends ProjectionNode {
     if (aggColumn.containsKey(sel)) {
       List<ColumnOp> columnOps = aggColumn.get(sel);
       for (ColumnOp col : columnOps) {
-        // If it is count, sum, countdistinct, or approx_countdistinct, set col to be aggContents
+        // If it is count, sum, countdistinct, or approx_distinct, set col to be aggContents
         if (col.getOpType().equals("count") 
             || col.getOpType().equals("sum")
             || col.getOpType().equals("countdistinct")
-            || col.getOpType().equals("approx_countdistinct")) {
+            || col.getOpType().equals("approx_distinct")) {
           String aliasName = null;
           if (col.getOpType().equals("count")) {
             aliasName =

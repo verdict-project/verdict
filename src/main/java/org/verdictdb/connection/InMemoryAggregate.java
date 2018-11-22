@@ -195,7 +195,7 @@ public class InMemoryAggregate {
               ((AliasedColumn) sel).setColumn(new ColumnOp("max", new BaseColumn(alias)));
             } else if (col instanceof ColumnOp && ((ColumnOp) col).getOpType().equals("min")) {
               ((AliasedColumn) sel).setColumn(new ColumnOp("min", new BaseColumn(alias)));
-            } else {    // count, sum, countdistinct, approx_countdistinct
+            } else {    // count, sum, countdistinct, approx_distinct
               ((AliasedColumn) sel).setColumn(new ColumnOp("sum", new BaseColumn(alias)));
             }
             
