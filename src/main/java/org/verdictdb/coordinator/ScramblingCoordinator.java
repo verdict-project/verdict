@@ -64,6 +64,8 @@ public class ScramblingCoordinator {
       new HashSet<>(Arrays.asList("uniform", "fastconverge"));
 
   // default options
+  // Note that these options are actually all specified by the values in
+  // ExecutionContext.generateScrambleQuery()
   private final Map<String, String> options =
       new HashMap<String, String>() {
         private static final long serialVersionUID = -4491518418086939738L;
@@ -104,6 +106,8 @@ public class ScramblingCoordinator {
     this.conn = conn;
     this.scratchpadSchema = Optional.fromNullable(scratchpadSchema);
     this.scrambleSchema = Optional.fromNullable(scrambleSchema);
+    options.put("minScrambleTableBlockSize", 
+        String.valueOf(conn.getSyntax().getRecommendedblockSize()));
     if (blockSize != null) {
       options.put("minScrambleTableBlockSize", String.valueOf(blockSize));
     }

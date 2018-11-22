@@ -198,8 +198,11 @@ public class ExecutionContext {
       CreateScrambleQuery scrambleQuery = generateScrambleQuery(query);
       scrambleQuery.checkIfSupported(); // checks the validity; throws an exception if not.
 
-      ScramblingCoordinator scrambler = new ScramblingCoordinator(conn, scrambleQuery.getNewSchema(),
-          options.getVerdictTempSchemaName(), scrambleQuery.getBlockSize());
+      ScramblingCoordinator scrambler = new ScramblingCoordinator(
+          conn, 
+          scrambleQuery.getNewSchema(),
+          options.getVerdictTempSchemaName(), 
+          scrambleQuery.getBlockSize());
 
       // store this metadata to our own metadata db.
       ScrambleMeta meta = scrambler.scramble(scrambleQuery);
@@ -311,13 +314,20 @@ public class ExecutionContext {
             : stripQuote(ctx.method.getText());
         double percent = (ctx.percent == null) ? 1.0 : Double.parseDouble(ctx.percent.getText());
         long blocksize = 
-            (ctx.blocksize == null) ? (long) 1e6 : Long.parseLong(ctx.blocksize.getText());
+            (ctx.blocksize == null) ? (long) conn.getSyntax().getRecommendedblockSize() 
+                : Long.parseLong(ctx.blocksize.getText());
         String hashColumnName = 
             (ctx.hash_column == null) ? null : stripQuote(ctx.hash_column.getText());
 
-        CreateScrambleQuery query = new CreateScrambleQuery(scrambleTable.getSchemaName(),
-            scrambleTable.getTableName(), originalTable.getSchemaName(), originalTable.getTableName(), method,
-            percent, blocksize, hashColumnName);
+        CreateScrambleQuery query = new CreateScrambleQuery(
+            scrambleTable.getSchemaName(),
+            scrambleTable.getTableName(), 
+            originalTable.getSchemaName(), 
+            originalTable.getTableName(), 
+            method,
+            percent, 
+            blocksize, 
+            hashColumnName);
         if (ctx.IF() != null)
           query.setIfNotExists(true);
         return query;

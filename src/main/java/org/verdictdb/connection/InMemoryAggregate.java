@@ -87,27 +87,47 @@ public class InMemoryAggregate {
       columnNames.append(dbmsQueryResult.getColumnName(i));
       bindVariables.append('?');
     }
-    // create table
-    String createSql = "CREATE TABLE IF NOT EXISTS " + tableName + " (" + fieldNames + ")";
-    Statement stmt = conn.createStatement();
-    stmt.execute(createSql);
-    stmt.close();
+    
+    Statement stmt = null;
+    PreparedStatement pstmt = null;
+    
+    try {
+      // create table
+      String createSql = "CREATE TABLE IF NOT EXISTS " + tableName + " (" + fieldNames + ")";
+      stmt = conn.createStatement();
+      stmt.execute(createSql);
+      stmt.close();
 
-    // insert values
-    String sql = "INSERT INTO " + tableName + " ("
-        + columnNames
-        + ") VALUES ("
-        + bindVariables
-        + ")";
-    PreparedStatement statement = conn.prepareStatement(sql);
-    while (dbmsQueryResult.next()) {
-      for (int i = 1; i <= dbmsQueryResult.getColumnCount(); i++) {
-        statement.setObject(i, dbmsQueryResult.getValue(i - 1));
+      // insert values
+      String sql = "INSERT INTO " + tableName + " ("
+          + columnNames
+          + ") VALUES ("
+          + bindVariables
+          + ")";
+      pstmt = conn.prepareStatement(sql);
+      while (dbmsQueryResult.next()) {
+        for (int i = 1; i <= dbmsQueryResult.getColumnCount(); i++) {
+          pstmt.setObject(i, dbmsQueryResult.getValue(i - 1));
+        }
+        pstmt.addBatch();
       }
-      statement.addBatch();
+      pstmt.executeBatch();
+    
+    } catch (SQLException e) {
+      if (aborted) {
+        // do nothing
+      } else {
+        throw e;
+      }
+      
+    } finally {
+      if (stmt  != null) {
+        stmt.close();
+      }
+      if (pstmt != null) {
+        pstmt.close();
+      }
     }
-    statement.executeBatch();
-    statement.close();
   }
 
   public DbmsQueryResult executeQuery(SelectQuery query) throws VerdictDBException, SQLException {
@@ -118,10 +138,21 @@ public class InMemoryAggregate {
     
     String sql = selectQueryToSql.toSql(query).toUpperCase();
     Statement stmt = conn.createStatement();
-    ResultSet rs = stmt.executeQuery(sql);
-    DbmsQueryResult dbmsQueryResult = new JdbcQueryResult(rs);
-    rs.close();
-    stmt.close();
+    DbmsQueryResult dbmsQueryResult = null;
+    
+    try {
+      ResultSet rs = stmt.executeQuery(sql);
+      dbmsQueryResult = new JdbcQueryResult(rs);
+      rs.close();
+    } catch (SQLException e) {
+      if (aborted) {
+        // do nothing
+      } else {
+        throw e;
+      }
+    } finally {
+      stmt.close();
+    }
     return dbmsQueryResult;
   }
 

@@ -21,7 +21,7 @@ from .verdictresult import SingleResultSet
 from . import verdictcommon
 from .verdictexception import *
 from py4j.java_gateway import JavaGateway
-from time import sleep
+from time import sleep, time
 
 # To properly close all connections
 created_verdict_contexts = []
@@ -62,9 +62,13 @@ class VerdictContext:
         self._gateway.close()
 
     @classmethod
-    def new_mysql_context(cls, host, user, password, port=3306):
-        connection_string = \
-            f'jdbc:mysql://{host}:{port}?user={user}&password={password}'
+    def new_mysql_context(cls, host, user, password=None, port=3306):
+        if password is None:
+            connection_string = \
+                f'jdbc:mysql://{host}:{port}?user={user}'
+        else:
+            connection_string = \
+                f'jdbc:mysql://{host}:{port}?user={user}&password={password}'
         ins = cls(connection_string)
         created_verdict_contexts.append(ins)
         return ins
@@ -92,12 +96,25 @@ class VerdictContext:
         '''
         Development API
         '''
+        start_time = time()
+
         java_resultset = self._context.sql(query)
         if java_resultset is None:
             msg = 'processed'
-            return SingleResultSet.status_result(msg, self)
+            result_set = SingleResultSet.status_result(msg, self)
         else:
-            return SingleResultSet.from_java_resultset(java_resultset, self)
+            result_set = SingleResultSet.from_java_resultset(java_resultset, self)
+
+        elapsed_time = time() - start_time
+        if elapsed_time < 60.0:
+            elapsed_time_str = "{0:.3f} seconds".format(elapsed_time)
+        else:
+            elapsed_min = elapsed_time // 60
+            elapsed_sec = elapsed_time % 60
+            elapsed_time_str = "{0} mins {1:.3f} seconds".format(elapsed_min, elapsed_sec)
+        print("{} row(s) in the result ({})".format(len(result_set.rows()), elapsed_time_str))
+
+        return result_set
 
     def get_dbtype(self):
         return self._dbtype.lower()

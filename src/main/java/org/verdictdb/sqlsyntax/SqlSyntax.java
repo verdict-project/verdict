@@ -55,6 +55,16 @@ public abstract class SqlSyntax {
   public abstract String randFunction();
   
   /**
+   * This indicates the size of each block. Using a smaller block increases the speed at the cost
+   * of some processing overhead.
+   * @return
+   */
+  public long getRecommendedblockSize() {
+    return (int) 1e6;
+  }
+  
+  
+  /**
    * Returns a hash value between 0 (inclusive) and 1 (exclusive).
    * 
    * This hash function is supposed to provide good randomization quality. That is,
