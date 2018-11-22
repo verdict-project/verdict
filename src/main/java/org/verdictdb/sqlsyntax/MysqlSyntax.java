@@ -174,11 +174,6 @@ public class MysqlSyntax extends SqlSyntax {
   public String randFunction() {
     return "rand()";
   }
-  
-  @Override
-  public long getRecommendedblockSize() {
-    return (int) 1e5;
-  }
 
   @Override
   public boolean isAsRequiredBeforeSelectInCreateTable() {
