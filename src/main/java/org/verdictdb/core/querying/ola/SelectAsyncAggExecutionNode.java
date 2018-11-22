@@ -1,22 +1,34 @@
 package org.verdictdb.core.querying.ola;
 
-import com.google.common.collect.ImmutableMap;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.connection.InMemoryAggregate;
 import org.verdictdb.core.execplan.ExecutionInfoToken;
-import org.verdictdb.core.querying.*;
-import org.verdictdb.core.scrambling.ScrambleMeta;
+import org.verdictdb.core.querying.ExecutableNodeBase;
+import org.verdictdb.core.querying.IdCreator;
+import org.verdictdb.core.querying.QueryNodeBase;
+import org.verdictdb.core.querying.SelectAggExecutionNode;
+import org.verdictdb.core.querying.SubscriptionTicket;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
-import org.verdictdb.core.sqlobject.*;
+import org.verdictdb.core.sqlobject.BaseTable;
+import org.verdictdb.core.sqlobject.ColumnOp;
+import org.verdictdb.core.sqlobject.CreateTableAsSelectQuery;
+import org.verdictdb.core.sqlobject.SelectItem;
+import org.verdictdb.core.sqlobject.SelectQuery;
+import org.verdictdb.core.sqlobject.SqlConvertible;
+import org.verdictdb.core.sqlobject.UnnamedColumn;
+import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
-import java.sql.SQLException;
-import java.util.*;
 
 
 /**
- *
  * An selectAsyncAggExecutionNode will be created when the outer query is an aggregation query
  * that contains the scramble table. Instead of creating AsyncAggExecutionNode,
  * selectAggExecutionNode will be created. The sources of selectAggExecutionNode are
@@ -37,9 +49,9 @@ public class SelectAsyncAggExecutionNode extends AsyncAggExecutionNode {
   // The key of this map is a list of tier numbers (e.g., [1, 2]),
   // and the value of this map is the corresponding scale factor (e.g., 10.0);
   // that is, an entry of this map could be [1, 2] -> 10.0
-  private HashMap<List<Integer>, Double> conditionToScaleFactorMap = new HashMap<>();
+//  private HashMap<List<Integer>, Double> conditionToScaleFactorMap = new HashMap<>();
 
-  private Map<Integer, String> scrambledTableTierInfo;
+//  private Map<Integer, String> scrambledTableTierInfo;
 
   private AggMeta aggMeta;
 
@@ -94,8 +106,8 @@ public class SelectAsyncAggExecutionNode extends AsyncAggExecutionNode {
         sumUpTierGroup(subquery, sourceAggMeta);
     node.selectQuery = pair.getLeft();
     ((AsyncAggExecutionNode) node).aggContents = pair.getRight();
-    node.scrambledTableTierInfo =
-        new ImmutableMap.Builder<Integer, String>().putAll(aggColumnsAndQuery.getRight()).build();
+//    node.scrambledTableTierInfo =
+//        new ImmutableMap.Builder<Integer, String>().putAll(aggColumnsAndQuery.getRight()).build();
 
     // add (1) order-by, (2) limit, (3) having clauses to the select query
     QueryNodeBase aggRoot = (QueryNodeBase) aggNodeBlock.getBlockRootNode();
@@ -121,7 +133,7 @@ public class SelectAsyncAggExecutionNode extends AsyncAggExecutionNode {
     String table = (String) token.getValue("tableName");
     SelectQuery dependentQuery = (SelectQuery) token.getValue("dependentQuery");
     synchronized (this) {
-      if (aggMeta==null) {
+      if (aggMeta == null) {
         aggMeta = (AggMeta) token.getValue("aggMeta");
       } else {
         AggMeta childAggMeta = (AggMeta) token.getValue("aggMeta");
@@ -129,16 +141,21 @@ public class SelectAsyncAggExecutionNode extends AsyncAggExecutionNode {
         token.setKeyValue("aggMeta", aggMeta);
       }
       try {
-        selectAsyncAggTableName = inMemoryAggregate.combineTables(table, selectAsyncAggTableName, dependentQuery);
+        selectAsyncAggTableName = 
+            inMemoryAggregate.combineTables(table, selectAsyncAggTableName, dependentQuery);
         token.setKeyValue("tableName", selectAsyncAggTableName);
+        
+        // here, the base aggregate functions (e.g., sum(col), count(col)) are composed to
+        // reconstruct the original aggregate function (e.g., avg(col) = sum(col) / count(col))
         SelectQuery query = ((CreateTableAsSelectQuery) super.createQuery(tokens)).getSelect();
         dbmsQueryResult = inMemoryAggregate.executeQuery(query);
+        
       } catch (SQLException e) {
-        e.printStackTrace();
+        throw new VerdictDBDbmsException(e);
+//        e.printStackTrace();
       }
     }
     return null;
-
   }
 
   @Override
@@ -162,28 +179,25 @@ public class SelectAsyncAggExecutionNode extends AsyncAggExecutionNode {
     aggMeta.setTierColumnForScramble(childAggMeta.getTierColumnForScramble());
   }
 
-  private String findScrambleAlias(
-      Map<ScrambleMeta, String> tierColums, Pair<String, String> table) {
-
-    for (Map.Entry<ScrambleMeta, String> metaToAlias : tierColums.entrySet()) {
-      ScrambleMeta meta = metaToAlias.getKey();
-      String aliasName = metaToAlias.getValue();
-      if (meta.getSchemaName().equals(table.getLeft())
-          && meta.getTableName().equals(table.getRight())) {
-        return aliasName;
-      }
-    }
-    return null;
-  }
-
+//  private String findScrambleAlias(
+//      Map<ScrambleMeta, String> tierColums, Pair<String, String> table) {
+//
+//    for (Map.Entry<ScrambleMeta, String> metaToAlias : tierColums.entrySet()) {
+//      ScrambleMeta meta = metaToAlias.getKey();
+//      String aliasName = metaToAlias.getValue();
+//      if (meta.getSchemaName().equals(table.getLeft())
+//          && meta.getTableName().equals(table.getRight())) {
+//        return aliasName;
+//      }
+//    }
+//    return null;
+//  }
 
   public ScrambleMetaSet getScrambleMeta() {
-    //    return (ScrambleMetaSet) retrieveStoredObjectThreadSafely(SCRAMBLE_META_STORE_KEY);
     return scrambleMeta;
   }
 
   public void setScrambleMetaSet(ScrambleMetaSet meta) {
-    //    storeObjectThreadSafely(SCRAMBLE_META_STORE_KEY, meta);
     this.scrambleMeta = meta;
   }
 

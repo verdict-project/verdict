@@ -26,4 +26,5 @@ public interface SelectItem extends Serializable {
   boolean isAggregateColumn();
 
   SelectItem deepcopy();
+
 }

@@ -1,11 +1,10 @@
 package org.verdictdb.coordinator;
 
-import com.google.common.collect.Lists;
-import org.verdictdb.VerdictSingleResult;
-import org.verdictdb.commons.VerdictDBLogger;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import org.verdictdb.VerdictSingleResult;
+import org.verdictdb.commons.VerdictDBLogger;
 
 public abstract class QueryResultAccuracyEstimator {
 

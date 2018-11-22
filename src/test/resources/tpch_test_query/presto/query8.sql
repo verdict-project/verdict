@@ -7,7 +7,7 @@ select
 from
   (
     select
-      substring(o_orderdate,1,4) as o_year,
+      date_format(o_orderdate, '%Y') as o_year,
       l_extendedprice * (1 - l_discount) as volume,
       n2.n_name as nation
     from
@@ -20,7 +20,7 @@ from
       join nation n2 on s_nationkey = n2.n_nationkey
     where
       r_name = 'AMERICA'
-      and o_orderdate between '1995-01-01' and '1996-12-31'
+      and o_orderdate between date '1995-01-01' and date '1996-12-31'
       and p_type = 'ECONOMY ANODIZED STEEL'  ) as all_nations
 group by
   o_year

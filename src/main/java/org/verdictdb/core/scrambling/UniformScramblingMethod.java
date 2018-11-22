@@ -16,27 +16,19 @@
 
 package org.verdictdb.core.scrambling;
 
-import org.verdictdb.commons.VerdictDBLogger;
-import org.verdictdb.connection.DbmsQueryResult;
-import org.verdictdb.core.execplan.ExecutionInfoToken;
-import org.verdictdb.core.querying.ExecutableNodeBase;
-import org.verdictdb.core.querying.QueryNodeBase;
-import org.verdictdb.core.sqlobject.AbstractRelation;
-import org.verdictdb.core.sqlobject.AliasedColumn;
-import org.verdictdb.core.sqlobject.BaseTable;
-import org.verdictdb.core.sqlobject.ColumnOp;
-import org.verdictdb.core.sqlobject.ConstantColumn;
-import org.verdictdb.core.sqlobject.SelectItem;
-import org.verdictdb.core.sqlobject.SelectQuery;
-import org.verdictdb.core.sqlobject.SqlConvertible;
-import org.verdictdb.core.sqlobject.UnnamedColumn;
-import org.verdictdb.exception.VerdictDBException;
-import org.verdictdb.exception.VerdictDBValueException;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+
+import org.verdictdb.commons.VerdictDBLogger;
+import org.verdictdb.connection.DbmsQueryResult;
+import org.verdictdb.core.querying.ExecutableNodeBase;
+import org.verdictdb.core.sqlobject.AbstractRelation;
+import org.verdictdb.core.sqlobject.BaseTable;
+import org.verdictdb.core.sqlobject.ColumnOp;
+import org.verdictdb.core.sqlobject.ConstantColumn;
+import org.verdictdb.core.sqlobject.UnnamedColumn;
 
 public class UniformScramblingMethod extends ScramblingMethodBase {
 
@@ -101,6 +93,8 @@ public class UniformScramblingMethod extends ScramblingMethodBase {
     blockSize = (long) Math.ceil(effectiveRowCount / (double) actualNumberOfBlocks);
 
     if (blockSize == 0) blockSize = 1; // just a sanity check
+    
+    // including the ones that will be thrown away due to relative size < 1.0
     totalNumberOfblocks = (int) Math.ceil(tableSize / (double) blockSize);
 
     List<Double> prob = new ArrayList<>();
@@ -116,7 +110,6 @@ public class UniformScramblingMethod extends ScramblingMethodBase {
   @Override
   public List<Double> getCumulativeProbabilityDistributionForTier(
       Map<String, Object> metaData, int tier) {
-
     return calculateBlockCountsAndCumulativeProbabilityDistForTier(metaData, tier);
   }
 
@@ -164,47 +157,5 @@ public class UniformScramblingMethod extends ScramblingMethodBase {
   @Override
   public double getRelativeSize() {
     return relativeSize;
-  }
-}
-
-class TableSizeCountNode extends QueryNodeBase {
-
-  private static final long serialVersionUID = 4363953197389542868L;
-
-  private String schemaName;
-
-  private String tableName;
-
-  public static final String TOTAL_COUNT_ALIAS_NAME = "verdictdbtotalcount";
-
-  public TableSizeCountNode(String schemaName, String tableName) {
-    super(-1, null);
-    this.schemaName = schemaName;
-    this.tableName = tableName;
-  }
-
-  @Override
-  public SqlConvertible createQuery(List<ExecutionInfoToken> tokens) throws VerdictDBException {
-    if (tokens.size() == 0) {
-      // no token information passed
-      throw new VerdictDBValueException("No token is passed.");
-    }
-
-    String tableSourceAlias = "t";
-
-    // compose a select list
-    List<SelectItem> selectList = new ArrayList<>();
-    selectList.add(new AliasedColumn(ColumnOp.count(), TOTAL_COUNT_ALIAS_NAME));
-
-    selectQuery =
-        SelectQuery.create(selectList, new BaseTable(schemaName, tableName, tableSourceAlias));
-    return selectQuery;
-  }
-
-  @Override
-  public ExecutionInfoToken createToken(DbmsQueryResult result) {
-    ExecutionInfoToken token = new ExecutionInfoToken();
-    token.setKeyValue(this.getClass().getSimpleName(), result);
-    return token;
   }
 }

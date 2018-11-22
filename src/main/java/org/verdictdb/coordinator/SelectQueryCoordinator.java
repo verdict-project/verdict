@@ -16,8 +16,14 @@
 
 package org.verdictdb.coordinator;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
 import org.verdictdb.commons.DataTypeConverter;
 import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.commons.VerdictOption;
@@ -35,6 +41,7 @@ import org.verdictdb.core.resulthandler.ExecutionResultReader;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.core.sqlobject.AbstractRelation;
 import org.verdictdb.core.sqlobject.AliasedColumn;
+import org.verdictdb.core.sqlobject.BaseColumn;
 import org.verdictdb.core.sqlobject.BaseTable;
 import org.verdictdb.core.sqlobject.ColumnOp;
 import org.verdictdb.core.sqlobject.CreateSchemaQuery;
@@ -44,13 +51,10 @@ import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.core.sqlobject.SubqueryColumn;
 import org.verdictdb.core.sqlobject.UnnamedColumn;
 import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.exception.VerdictDBValueException;
 import org.verdictdb.sqlreader.NonValidatingSQLParser;
 import org.verdictdb.sqlreader.RelationStandardizer;
 import org.verdictdb.sqlreader.ScrambleTableReplacer;
-
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
 
 public class SelectQueryCoordinator implements Coordinator {
 
@@ -136,10 +140,6 @@ public class SelectQueryCoordinator implements Coordinator {
       return new ExecutionResultReader(queue);
     }
 
-    // Check the query does not have unsupported syntax, such as count distinct with other agg.
-    // Otherwise, it will throw to an exception
-    ensureQuerySupport(selectQuery);
-
     // make plan
     // if the plan does not include any aggregates, it will simply be a parsed structure of the
     // original query.
@@ -175,42 +175,135 @@ public class SelectQueryCoordinator implements Coordinator {
       planRunner = null;
     }
   }
+  
+  /**
+   * Ensures that simple aggregates (i.e., sum, count, avg) are associated with uniform scrambles,
+   * and that count-distinct aggregates are associated with hash scrambles.
+   * 
+   * @param query
+   * @throws VerdictDBException
+   */
+  private void ensureScrambleCorrectness(SelectQuery query) throws VerdictDBException {
+    ensureScrambleCorrectnessInner(query, null);
+  }
+  
+  private void ensureScrambleCorrectnessInner(SelectQuery query, BaseColumn countDistinctColumn)
+      throws VerdictDBException {
+    
+    Triple<Boolean, Boolean, BaseColumn> inspectionInfo = inspectAggregatesInSelectList(query);
+    boolean containAggregateItem = inspectionInfo.getLeft();
+    boolean containCountDistinctItem = inspectionInfo.getMiddle();
+    countDistinctColumn = inspectionInfo.getRight();
+    
+    // check from list
+    for (AbstractRelation table : query.getFromList()) {
+      if (table instanceof BaseTable) {
+        String schemaName = ((BaseTable) table).getSchemaName();
+        String tableName = ((BaseTable) table).getTableName();
+        if (!scrambleMetaSet.isScrambled(schemaName, tableName)) {
+          continue;
+        }
+        String method = scrambleMetaSet.getScramblingMethod(schemaName, tableName);
+
+        if (containAggregateItem) {
+          if (!method.equalsIgnoreCase("uniform")
+              && !method.equalsIgnoreCase("fastconverge")) {
+            throw new VerdictDBValueException(
+                "Simple aggregates must be used with a uniform scramble.");
+          }
+        } else if (containCountDistinctItem) {
+          String hashColumn = scrambleMetaSet.getHashColumn(schemaName, tableName);
+          if (!method.equalsIgnoreCase("hash")
+              || hashColumn == null
+              || !hashColumn.equalsIgnoreCase(countDistinctColumn.getColumnName())) {
+            throw new VerdictDBValueException(
+                "Count distinct of a column must be used with the hash scramble "
+                    + "built on that column.");
+          }
+        }
+        
+      } else if (table instanceof JoinTable) {
+        for (AbstractRelation jointable : ((JoinTable) table).getJoinList()) {
+          if (jointable instanceof SelectQuery) {
+            ensureQuerySupport((SelectQuery) jointable);
+          }
+        }
+      } else if (table instanceof SelectQuery) {
+        ensureScrambleCorrectnessInner((SelectQuery) table, countDistinctColumn);
+      }  
+    }
+  }
+  
+  /**
+   * For the third element, the operand inside the count-distinct, we recursively examine the
+   * columnOp until we find count-distinct.
+   * 
+   * @return (ifContainsSimpleAggregates, ifContainsCountDistinct, countDistinctColumn)
+   */
+  static public Triple<Boolean, Boolean, BaseColumn> inspectAggregatesInSelectList(SelectQuery query) {
+    // check select list
+    boolean containAggregatedItem = false;
+    boolean containCountDistinctItem = false;
+    BaseColumn countDistinctColumn = null;
+    
+    for (SelectItem selectItem : query.getSelectList()) {
+      if (selectItem instanceof AliasedColumn
+          && ((AliasedColumn) selectItem).getColumn() instanceof ColumnOp) {
+        ColumnOp opcolumn = (ColumnOp) ((AliasedColumn) selectItem).getColumn();
+        
+        if (opcolumn.isCountDistinctAggregate()) {
+          // since the count-distinct may exist inside some other functions,
+          // e.g., cast(count(distinct col) as integer), we check the internal operands recursively.
+          containCountDistinctItem = true;
+          
+          List<UnnamedColumn> cols = new LinkedList<>();
+          cols.add(opcolumn);
+          while (cols.size() > 0) {
+            UnnamedColumn col = cols.remove(0);
+            if (col instanceof ColumnOp 
+                && (((ColumnOp) col).getOpType().equals("countdistinct")
+                || ((ColumnOp) col).getOpType().equals("approx_countdistinct"))) {
+              UnnamedColumn operand = ((ColumnOp) col).getOperand();
+              if (operand instanceof BaseColumn) {
+                countDistinctColumn = (BaseColumn) operand;
+              }
+            } else if (col instanceof ColumnOp) {
+              cols.addAll(((ColumnOp) col).getOperands());
+            }
+          }
+        }
+        if (opcolumn.isUniformSampleAggregateColumn()) {
+          containAggregatedItem = true;
+        }
+      }
+    }
+    
+    return Triple.of(containAggregatedItem, containCountDistinctItem, countDistinctColumn);
+  }
 
   /**
+   * Ensures that simple aggregates (i.e., sum, count, avg) and count-distinct do not appear
+   * together.
+   * 
    * @param query Select query
    * @return check if the query contain the syntax that is not supported by VerdictDB
    */
   private void ensureQuerySupport(SelectQuery query) throws VerdictDBException {
-    // current, only if count distinct appear along with other aggregation function will return
-    // false
-
-    // check select list
-    boolean containAggregatedItem = false;
-    boolean containCountDistinctItem = false;
-    for (SelectItem selectItem : query.getSelectList()) {
-      if (selectItem instanceof AliasedColumn
-          && ((AliasedColumn) selectItem).getColumn() instanceof ColumnOp) {
-        if (((ColumnOp) ((AliasedColumn) selectItem).getColumn())
-            .doesColumnOpContainOpType("countdistinct")) {
-          ((ColumnOp) ((AliasedColumn) selectItem).getColumn())
-              .replaceAllColumnOpOpType("countdistinct", "approx_countdistinct");
-          containCountDistinctItem = true;
-        }
-        if (!containAggregatedItem
-            && (((AliasedColumn) selectItem).getColumn()).isAggregateColumn()) {
-          containAggregatedItem = true;
-        }
-        if (containAggregatedItem && containCountDistinctItem) {
-          throw new VerdictDBException(
-              "Count distinct and other aggregate functions cannot appear in the same select list.");
-        }
-      }
+    
+    Triple<Boolean, Boolean, BaseColumn> inspectionInfo = inspectAggregatesInSelectList(query);
+    boolean containAggregatedItem = inspectionInfo.getLeft();
+    boolean containCountDistinctItem = inspectionInfo.getMiddle();
+    
+    if (containAggregatedItem && containCountDistinctItem) {
+      throw new VerdictDBException(
+          "Count distinct and other aggregate functions cannot appear in the same select list.");
     }
+    
     // check from list
     for (AbstractRelation table : query.getFromList()) {
       if (table instanceof SelectQuery) {
         ensureQuerySupport((SelectQuery) table);
-      } else if (table instanceof JoinTable) {
+      }  else if (table instanceof JoinTable) {
         for (AbstractRelation jointable : ((JoinTable) table).getJoinList()) {
           if (jointable instanceof SelectQuery) {
             ensureQuerySupport((SelectQuery) jointable);
@@ -219,15 +312,16 @@ public class SelectQueryCoordinator implements Coordinator {
       }
     }
 
-    // also need to check having since we will convert having clause into select list
+    // also need to check the having clause
+    // since we will convert having clause into select list
     if (query.getHaving().isPresent()) {
       UnnamedColumn having = query.getHaving().get();
       if (having instanceof ColumnOp
-          && ((ColumnOp) having).doesColumnOpContainOpType("countdistinct")) {
+          && ((ColumnOp) having).isCountDistinctAggregate()) {
         containCountDistinctItem = true;
-        ((ColumnOp) having).replaceAllColumnOpOpType("countdistnct", "approx_countdistinct");
+//        ((ColumnOp) having).replaceAllColumnOpOpType("countdistnct", "approx_countdistinct");
       }
-      if (having instanceof ColumnOp && having.isAggregateColumn()) {
+      if (having instanceof ColumnOp && ((ColumnOp) having).isUniformSampleAggregateColumn()) {
         containAggregatedItem = true;
       }
       if (containAggregatedItem && containCountDistinctItem) {
@@ -238,19 +332,42 @@ public class SelectQueryCoordinator implements Coordinator {
   }
 
 
+  /**
+   * Perform two types of operations. First, this method associates proper table aliases. Second, 
+   * this method replaces original tables with corresponding scrambles.
+   * 
+   * @param query
+   * @return
+   * @throws VerdictDBException
+   */
   private SelectQuery standardizeQuery(String query) throws VerdictDBException {
     // parse the query
     RelationStandardizer.resetItemID();
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
-    SelectQuery relation = (SelectQuery) sqlToRelation.toRelation(query);
-    MetaDataProvider metaData = createMetaDataFor(relation);
-    //    ScrambleMetaStore metaStore = new ScrambleMetaStore(conn, options);
+    SelectQuery selectQuery = (SelectQuery) sqlToRelation.toRelation(query);
+    MetaDataProvider metaData = createMetaDataFor(selectQuery);
     RelationStandardizer gen = new RelationStandardizer(metaData, conn.getSyntax());
-    relation = gen.standardize(relation);
+    selectQuery = gen.standardize(selectQuery);
 
+    // Ensure that the query does not have unsupported syntax, 
+    // such as count distinct with other agg. 
+    // Otherwise, it will throw to an exception
+    ensureQuerySupport(selectQuery);
+
+    // replaces original tables with scrambles
     ScrambleTableReplacer replacer = new ScrambleTableReplacer(scrambleMetaSet);
-    int scrambleCount = replacer.replace(relation);
-    return (scrambleCount == 0) ? null : relation;
+    int scrambleCount = replacer.replaceQuery(selectQuery);
+    
+    // ensure scramble validity
+    // Moreover, if the agg is count-distinct, either the specified scramble is of type
+    // 'hash scramble' or there must exist a hash scramble created for the specified (original) 
+    // table.
+    ensureScrambleCorrectness(selectQuery);
+    
+    // TODO: Replace count-distinct with approx-count-distinct
+    
+    
+    return (scrambleCount == 0) ? null : selectQuery;
   }
 
   private MetaDataProvider createMetaDataFor(SelectQuery relation) throws VerdictDBException {

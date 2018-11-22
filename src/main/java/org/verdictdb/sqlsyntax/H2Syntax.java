@@ -116,7 +116,7 @@ public class H2Syntax extends SqlSyntax {
   }
 
   @Override
-  public String hashFunction(String column, int upper_bound) {
+  public String hashFunction(String column) {
     // TODO Auto-generated method stub
     return null;
   }

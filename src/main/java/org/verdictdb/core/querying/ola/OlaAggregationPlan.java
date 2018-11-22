@@ -71,7 +71,6 @@ public class OlaAggregationPlan {
   // this method is supposed to rely on HyperTableCube's merge method.
   public static OlaAggregationPlan createMergedOlaAggMeta(
       OlaAggregationPlan meta1, OlaAggregationPlan meta2) {
-
     return null;
   }
 

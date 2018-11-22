@@ -16,6 +16,13 @@
 
 package org.verdictdb;
 
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Properties;
+
 import org.apache.commons.lang3.RandomStringUtils;
 import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.commons.VerdictOption;
@@ -34,13 +41,6 @@ import org.verdictdb.metastore.ScrambleMetaStore;
 import org.verdictdb.metastore.VerdictMetaStore;
 import org.verdictdb.sqlsyntax.SqlSyntax;
 import org.verdictdb.sqlsyntax.SqlSyntaxList;
-
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Properties;
 
 public class VerdictContext {
 
@@ -248,6 +248,10 @@ public class VerdictContext {
     } catch (VerdictDBDbmsException e) {
       e.printStackTrace();
     }
+  }
+  
+  public void setLoglevel(String level) {
+    options.setVerdictConsoleLogLevel(level);
   }
 
   public void close() {

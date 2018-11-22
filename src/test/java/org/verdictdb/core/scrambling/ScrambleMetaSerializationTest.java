@@ -49,7 +49,7 @@ public class ScrambleMetaSerializationTest {
             + "\"originalSchemaName\":\"Original_Schema\",\"originalTableName\":\"origiNAL_TABLE\","
             + "\"aggregationBlockColumn\":\"verdictDBblock\",\"aggregationBlockCount\":3,"
             + "\"tierColumn\":\"VerdictTIER\",\"numberOfTiers\":2,"
-            + "\"method\":null,"
+            + "\"method\":null,\"hashColumn\":null,"
             + "\"cumulativeDistributions\":{\"0\":[0.3,0.6,1.0],\"1\":[0.2,0.5,1.0]}}";
     return jsonString;
   }

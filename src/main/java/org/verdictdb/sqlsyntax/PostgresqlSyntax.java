@@ -77,6 +77,11 @@ public class PostgresqlSyntax extends SqlSyntax {
   public String randFunction() {
     return "random()";
   }
+  
+  @Override
+  public long getRecommendedblockSize() {
+    return (int) 1e5;
+  }
 
   @Override
   public String getSchemaCommand() {
@@ -160,10 +165,11 @@ public class PostgresqlSyntax extends SqlSyntax {
    * https://stackoverflow.com/questions/8316164/convert-hex-in-text-representation-to-decimal-number
    */
   @Override
-  public String hashFunction(String column, int upper_bound) {
+  public String hashFunction(String column) {
     String f = String.format(
-        "('x' || lpad(substr(md5(cast(%s%s%s as varchar)), 1, 8), 16, '0'))::bit(64)::bigint % %d",
-        getQuoteString(), column, getQuoteString(), upper_bound);
+        "(('x' || lpad(substr(md5(cast(%s as varchar)), 1, 8), 16, '0'))::bit(64)::bigint %% %d) "
+        + "/ cast(%d as double precision)",
+        column, hashPrecision, hashPrecision);
     return f;
   }
 }

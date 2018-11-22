@@ -16,6 +16,14 @@
 
 package org.verdictdb.core.scramblingquerying;
 
+import static org.junit.Assert.assertEquals;
+
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -25,14 +33,6 @@ import org.verdictdb.category.PrestoTests;
 import org.verdictdb.commons.DatabaseConnectionHelpers;
 import org.verdictdb.commons.VerdictOption;
 import org.verdictdb.exception.VerdictDBDbmsException;
-
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-
-import static org.junit.Assert.assertEquals;
 
 /** Created by Dong Young Yoon on 8/16/18. */
 @Category(PrestoTests.class)
@@ -116,8 +116,8 @@ public class PrestoUniformScramblingQueryTest {
         String.format("jdbc:presto://%s/%s/default", PRESTO_HOST, PRESTO_CATALOG);
     String verdictConnectionString =
         String.format(
-            "jdbc:verdict:presto://%s/%s/default&verdictdbtempschema=%s",
-            PRESTO_HOST, PRESTO_CATALOG, SCHEMA_NAME);
+            "jdbc:verdict:presto://%s/%s/default;verdictdbtempschema=%s&verdictdbmetaschema=%s",
+            PRESTO_HOST, PRESTO_CATALOG, VERDICT_TEMP_SCHEMA, VERDICT_META_SCHEMA);
     conn =
         DatabaseConnectionHelpers.setupPresto(
             connectionString, PRESTO_USER, PRESTO_PASSWORD, SCHEMA_NAME);

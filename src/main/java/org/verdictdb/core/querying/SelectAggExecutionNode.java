@@ -1,19 +1,17 @@
 package org.verdictdb.core.querying;
 
+import java.sql.SQLException;
+import java.util.List;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.connection.InMemoryAggregate;
 import org.verdictdb.core.execplan.ExecutionInfoToken;
-import org.verdictdb.core.execplan.ExecutionTokenQueue;
 import org.verdictdb.core.sqlobject.CreateTableAsSelectQuery;
 import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.core.sqlobject.SqlConvertible;
 import org.verdictdb.exception.VerdictDBException;
-
-import java.sql.SQLException;
-import java.util.List;
-import java.util.Map;
 
 /**
  *
@@ -42,7 +40,8 @@ public class SelectAggExecutionNode extends AggExecutionNode {
   }
 
   public static SelectAggExecutionNode create(AggExecutionNode node) {
-    SelectAggExecutionNode selectAggExecutionNode = new SelectAggExecutionNode(node.namer, node.selectQuery);
+    SelectAggExecutionNode selectAggExecutionNode = 
+        new SelectAggExecutionNode(node.namer, node.selectQuery);
     selectAggExecutionNode.aggMeta = node.aggMeta;
     selectAggExecutionNode.placeholderRecords = node.placeholderRecords;
     selectAggExecutionNode.placeholderTablesinFilter = node.placeholderTablesinFilter;
@@ -75,7 +74,7 @@ public class SelectAggExecutionNode extends AggExecutionNode {
     try {
       inMemoryAggregate.createTable(result, tableName);
     } catch (SQLException e) {
-      e.printStackTrace();
+      throw new RuntimeException(e);
     }
     token.setKeyValue("schemaName", "PUBLIC");
     token.setKeyValue("tableName", tableName);

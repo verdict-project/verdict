@@ -16,6 +16,17 @@
 
 package org.verdictdb.connection;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.commons.StringSplitter;
@@ -30,14 +41,6 @@ import org.verdictdb.sqlsyntax.SparkSyntax;
 import org.verdictdb.sqlsyntax.SqlSyntax;
 import org.verdictdb.sqlsyntax.SqlSyntaxList;
 
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.List;
-
 public class JdbcConnection extends DbmsConnection {
 
   Connection conn;
@@ -48,14 +51,14 @@ public class JdbcConnection extends DbmsConnection {
 
   JdbcQueryResult jrs = null;
 
-  private boolean outputDebugMessage = false;
+  protected boolean outputDebugMessage = false;
 
-  private Statement runningStatement = null;
+  protected Statement runningStatement = null;
 
-  private VerdictDBLogger log;
+  protected VerdictDBLogger log;
 
-  private boolean isAborting = false;
-
+  protected boolean isAborting = false;
+  
   public static JdbcConnection create(Connection conn) throws VerdictDBDbmsException {
     String connectionString = null;
     try {
@@ -65,22 +68,30 @@ public class JdbcConnection extends DbmsConnection {
     }
 
     SqlSyntax syntax = SqlSyntaxList.getSyntaxFromConnectionString(connectionString);
-    //    String dbName = connectionString.split(":")[1];
-    //    SqlSyntax syntax = SqlSyntaxList.getSyntaxFor(dbName);
-
-    JdbcConnection jdbcConn = new JdbcConnection(conn, syntax);
-    //    jdbcConn.setOutputDebugMessage(true);
-
+    JdbcConnection jdbcConn = null;
     if (syntax instanceof PrestoSyntax) {
-      String catalog = null;
+      // To handle that Presto's JDBC driver is not compatible with JDK7,
+      // we use Java's reflection-based instantiation.
       try {
-        catalog = jdbcConn.getConnection().getCatalog();
-      } catch (SQLException e) {
-        e.printStackTrace();
+        Class<?> prestoConnClass = Class.forName("org.verdictdb.connection.PrestoJdbcConnection");
+        Constructor<?> prestoConnClsConstructor = 
+            prestoConnClass.getConstructor(Connection.class, SqlSyntax.class);
+        jdbcConn = (JdbcConnection) prestoConnClsConstructor.newInstance(conn, syntax);
+        Method ensureMethod = prestoConnClass.getMethod("ensureCatalogSet");
+        ensureMethod.invoke(jdbcConn);
+      } catch (ClassNotFoundException | NoSuchMethodException | SecurityException 
+          | InstantiationException | IllegalAccessException | IllegalArgumentException e) {
+        
+        throw new RuntimeException("Instantiating PrestoJdbcConnection failed.");
+      } catch (InvocationTargetException e) {
+        if (e.getTargetException() instanceof VerdictDBDbmsException) {
+          throw new VerdictDBDbmsException(e.getMessage());
+        } else {
+          throw new RuntimeException("Instantiating PrestoJdbcConnection failed.");
+        }
       }
-      if (catalog == null || catalog.isEmpty()) {
-        throw new VerdictDBDbmsException("Session catalog is not set.");
-      }
+    } else { 
+      jdbcConn = new JdbcConnection(conn, syntax);
     }
 
     return jdbcConn;
@@ -145,20 +156,20 @@ public class JdbcConnection extends DbmsConnection {
     return finalResult;
   }
 
-  private void setRunningStatement(Statement stmt) {
+  protected void setRunningStatement(Statement stmt) {
     synchronized (this) {
       runningStatement = stmt;
     }
   }
 
-  private Statement getRunningStatement() {
+  protected Statement getRunningStatement() {
     synchronized (this) {
       return runningStatement;
     }
   }
 
   public DbmsQueryResult executeSingle(String sql) throws VerdictDBDbmsException {
-    log.debug("Issuing the following query to DBMS: " + sql);
+    log.debug("Issues the following query to DBMS: " + sql);
 
     try {
       Statement stmt = conn.createStatement();
@@ -281,9 +292,11 @@ public class JdbcConnection extends DbmsConnection {
         queryResult = executeQuery(syntax.getPartitionCommand(schema, table));
         for (int i = 0; i < queryResult.getColumnCount(); i++) {
           String columnName = queryResult.getColumnName(i);
-          if (columnName.equals("#rows")) {
+          if (columnName.equalsIgnoreCase("#rows")) {
             break;
-          } else partition.add(columnName);
+          } else {
+            partition.add(columnName);
+          }
         }
         return partition;
       } catch (Exception e) {
@@ -348,7 +361,14 @@ public class JdbcConnection extends DbmsConnection {
   @Override
   public void setDefaultSchema(String schema) throws VerdictDBDbmsException {
     try {
-      conn.setCatalog(schema);
+      // these database have a different meaning for catalog; thus, does not change.
+      if (syntax instanceof PrestoSyntax
+          || syntax instanceof PostgresqlSyntax
+          || syntax instanceof RedshiftSyntax) {
+        
+      } else {
+        conn.setCatalog(schema);
+      }
     } catch (SQLException e) {
       throw new VerdictDBDbmsException(e);
     }

@@ -174,6 +174,11 @@ public class MysqlSyntax extends SqlSyntax {
   public String randFunction() {
     return "rand()";
   }
+  
+  @Override
+  public long getRecommendedblockSize() {
+    return (int) 1e6;
+  }
 
   @Override
   public boolean isAsRequiredBeforeSelectInCreateTable() {
@@ -217,10 +222,10 @@ public class MysqlSyntax extends SqlSyntax {
    * Note that the stddev of rand() is sqrt(0.01 * 0.99) = 0.09949874371.
    */
   @Override
-  public String hashFunction(String column, int upper_bound) {
+  public String hashFunction(String column) {
     String f = String.format(
-        "conv(substr(md5(%s%s%s), 1, 8), 16, 10) % %d",
-        getQuoteString(), column, getQuoteString(), upper_bound);
+        "(conv(substr(md5(%s), 1, 8), 16, 10) %% %d) / %d",
+        column, hashPrecision, hashPrecision);
     return f;
   }
 }
