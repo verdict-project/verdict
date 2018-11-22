@@ -15,6 +15,8 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.verdictdb.category.PrestoTests;
 import org.verdictdb.commons.DatabaseConnectionHelpers;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.DbmsQueryResult;
@@ -22,6 +24,7 @@ import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
 
+@Category(PrestoTests.class)
 public class PrestoHashScramblingCoordinatorTest {
 
   private static Connection prestoConn;

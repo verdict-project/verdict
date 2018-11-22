@@ -52,7 +52,7 @@ public class JdbcQueryResult extends AttributeValueRetrievalHelper implements Db
     ResultSetMetaData meta = resultSet.getMetaData();
     int columnCount = meta.getColumnCount();
     for (int i = 0; i < columnCount; i++) {
-      columnNames.add(meta.getColumnLabel(i + 1).toLowerCase());
+      columnNames.add(meta.getColumnLabel(i + 1));
       columnTypes.add(meta.getColumnType(i + 1));
       precision.add(meta.getPrecision(i + 1));
       scale.add(meta.getScale(i + 1));

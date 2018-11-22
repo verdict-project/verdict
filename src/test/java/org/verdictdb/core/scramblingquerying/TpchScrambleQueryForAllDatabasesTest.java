@@ -74,6 +74,7 @@ public class TpchScrambleQueryForAllDatabasesTest {
   // TODO: Add support for all four databases
   //  private static final String[] targetDatabases = {"mysql", "impala", "redshift", "postgresql"};
   private static final String[] targetDatabases = {"mysql", "impala", "redshift"};
+//  private static final String[] targetDatabases = {"mysql"};
 
   public TpchScrambleQueryForAllDatabasesTest(String database, String query) {
     this.database = database;
@@ -182,6 +183,7 @@ public class TpchScrambleQueryForAllDatabasesTest {
           queryCount = TPCH_QUERY_COUNT;
           break;
       }
+      
       // query 4, 13, 16, 21 contains count distinct
       for (int query = 1; query <= queryCount; ++query) {
         if (query != 13 && query != 21) {
@@ -200,8 +202,8 @@ public class TpchScrambleQueryForAllDatabasesTest {
       }
 
       // Uncomment below lines to test a specific query
-      //      params.clear();
-      //      params.add(new Object[] {database, "e8"});
+//      params.clear();
+//      params.add(new Object[] {database, "14"});
     }
     return params;
   }

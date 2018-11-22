@@ -40,7 +40,8 @@ public class SelectAggExecutionNode extends AggExecutionNode {
   }
 
   public static SelectAggExecutionNode create(AggExecutionNode node) {
-    SelectAggExecutionNode selectAggExecutionNode = new SelectAggExecutionNode(node.namer, node.selectQuery);
+    SelectAggExecutionNode selectAggExecutionNode = 
+        new SelectAggExecutionNode(node.namer, node.selectQuery);
     selectAggExecutionNode.aggMeta = node.aggMeta;
     selectAggExecutionNode.placeholderRecords = node.placeholderRecords;
     selectAggExecutionNode.placeholderTablesinFilter = node.placeholderTablesinFilter;
@@ -73,7 +74,7 @@ public class SelectAggExecutionNode extends AggExecutionNode {
     try {
       inMemoryAggregate.createTable(result, tableName);
     } catch (SQLException e) {
-      e.printStackTrace();
+      throw new RuntimeException(e);
     }
     token.setKeyValue("schemaName", "PUBLIC");
     token.setKeyValue("tableName", tableName);

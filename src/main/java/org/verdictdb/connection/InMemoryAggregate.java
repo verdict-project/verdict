@@ -33,7 +33,7 @@ import org.verdictdb.sqlwriter.SelectQueryToSql;
 
 public class InMemoryAggregate {
 
-  private static final String selectAsyncAggTable = "VERDICTDB_SELECTASYNCAGG";
+  private static final String SELECT_ASYNC_AGG_TABLE = "VERDICTDB_SELECTASYNCAGG";
 
   private long selectAsyncAggTableID = 0;
 
@@ -66,24 +66,24 @@ public class InMemoryAggregate {
       return;
     }
     
-    StringBuilder columnNames = new StringBuilder();
-    StringBuilder fieldNames = new StringBuilder();
+    StringBuilder insertColNames = new StringBuilder();
+    StringBuilder tableColDefs = new StringBuilder();
     StringBuilder bindVariables = new StringBuilder();
     for (int i = 0; i < dbmsQueryResult.getColumnCount(); i++) {
       if (i > 0) {
-        columnNames.append(", ");
-        fieldNames.append(", ");
+        insertColNames.append(", ");
+        tableColDefs.append(", ");
         bindVariables.append(", ");
       }
-      fieldNames.append(dbmsQueryResult.getColumnName(i));
-      fieldNames.append(" ");
+      tableColDefs.append(String.format("\"%s\"", dbmsQueryResult.getColumnName(i)));
+      tableColDefs.append(" ");
       // char -> varchar in case this type is an array of char
       int columnType = dbmsQueryResult.getColumnType(i);
       if (columnType == CHAR) {
         columnType = VARCHAR;
       }
-      fieldNames.append(DataTypeConverter.typeName(columnType));
-      columnNames.append(dbmsQueryResult.getColumnName(i));
+      tableColDefs.append(DataTypeConverter.typeName(columnType));
+      insertColNames.append(String.format("\"%s\"", dbmsQueryResult.getColumnName(i)));
       bindVariables.append('?');
     }
     
@@ -92,17 +92,20 @@ public class InMemoryAggregate {
     
     try {
       // create table
-      String createSql = "CREATE TABLE IF NOT EXISTS " + tableName + " (" + fieldNames + ")";
+      String createSql = "CREATE TABLE IF NOT EXISTS " + tableName + " (" + tableColDefs + ")";
+//      log.info(createSql);
+      
       stmt = conn.createStatement();
       stmt.execute(createSql);
       stmt.close();
 
       // insert values
       String sql = "INSERT INTO " + tableName + " ("
-          + columnNames
+          + insertColNames
           + ") VALUES ("
           + bindVariables
           + ")";
+//      log.info(sql);
       pstmt = conn.prepareStatement(sql);
       while (dbmsQueryResult.next()) {
         for (int i = 1; i <= dbmsQueryResult.getColumnCount(); i++) {
@@ -135,7 +138,9 @@ public class InMemoryAggregate {
       return null;
     }
     
-    String sql = selectQueryToSql.toSql(query).toUpperCase();
+    String sql = selectQueryToSql.toSql(query);
+//    log.info(sql);
+    
     Statement stmt = conn.createStatement();
     DbmsQueryResult dbmsQueryResult = null;
     
@@ -163,7 +168,7 @@ public class InMemoryAggregate {
       return null;
     }
     
-    String tableName = selectAsyncAggTable + selectAsyncAggTableID++;
+    String tableName = SELECT_ASYNC_AGG_TABLE + selectAsyncAggTableID++;
 
     // check targetTable exists
     if (newAggTableName.equals("")) {
@@ -182,7 +187,7 @@ public class InMemoryAggregate {
         if (sel instanceof AliasedColumn) {
           UnnamedColumn col = ((AliasedColumn) sel).getColumn();
           resetSchemaAndTableForCombining(col);
-          String alias = ((AliasedColumn) sel).getAliasName().toUpperCase();
+          String alias = ((AliasedColumn) sel).getAliasName();
           ((AliasedColumn) sel).setAliasName(alias);
           
           if (col.isAggregateColumn()) {
@@ -237,7 +242,7 @@ public class InMemoryAggregate {
         ((BaseColumn) col).setSchemaName("");
         ((BaseColumn) col).setTableName("UNIONTABLE");
         ((BaseColumn) col).setTableSourceAlias("");
-        ((BaseColumn) col).setColumnName(((BaseColumn) col).getColumnName().toUpperCase());
+        ((BaseColumn) col).setColumnName(((BaseColumn) col).getColumnName());
       } else if (col instanceof ColumnOp) {
         columns.addAll(((ColumnOp) col).getOperands());
       }

@@ -43,7 +43,7 @@ import org.verdictdb.sqlwriter.QueryToSql;
 
 import com.google.common.base.Optional;
 
-// When scrambling, UniformScramblindMethod determines blockSize, blockCount and actualBlockCount
+// When scrambling, UniformScramblingMethod determines blockSize, blockCount and actualBlockCount
 // as follows:
 
 // 1. scrambleTableSize = ceil(tableRowCount * relativeSize)
@@ -231,9 +231,9 @@ public class ScramblingCoordinator {
    * @param originalTable   Original table name
    * @param newSchema       Scramble schema name
    * @param newTable        Scramble table name
-   * @param methodName    Either 'uniform' or 'hash'
-   * @param primaryColumn Passes hashcolumn for hash sampling.
-   * @param relativeSize  The ratio of a scramble in comparison to the original table.
+   * @param methodName      Either 'uniform' or 'hash'
+   * @param primaryColumn   Passes hashcolumn for hash sampling.
+   * @param relativeSize    The ratio of a scramble in comparison to the original table.
    * @param customOptions
    * @return
    * @throws VerdictDBException
