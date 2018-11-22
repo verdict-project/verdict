@@ -3,7 +3,6 @@ lexer grammar VerdictSQLLexer;
 
 
 // Verdict Keywords
-
 SIZE:                            S I Z E;
 COLUMNS:                         C O L U M N S;
 SHOW:                            S H O W;
@@ -22,6 +21,7 @@ ALL:                             A L L;
 ALTER:                           A L T E R;
 AND:                             A N D;
 ANY:                             A N Y;
+APPROX_DISTINCT:                 A P P R O X '_' D I S T I N C T;
 AS:                              A S;
 ASC:                             A S C;
 ASCII:                           A S C I I;
