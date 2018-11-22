@@ -50,8 +50,7 @@ public class InMemoryAggregate {
     try {
       Class.forName("org.h2.Driver");
       inMemoryAggregate = new InMemoryAggregate();
-      String h2Database =
-          "verdictdb_" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
+      String h2Database = "verdictdb_" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
       String DB_CONNECTION = String.format("jdbc:h2:mem:%s;DB_CLOSE_DELAY=-1", h2Database);
       inMemoryAggregate.conn = DriverManager.getConnection(DB_CONNECTION, "", "");
     } catch (SQLException | ClassNotFoundException e) {
@@ -156,7 +155,8 @@ public class InMemoryAggregate {
     return dbmsQueryResult;
   }
 
-  public String combineTables(String combinedTableName, String newAggTableName, SelectQuery dependentQuery)
+  public String combineTables(
+      String combinedTableName, String newAggTableName, SelectQuery dependentQuery)
       throws SQLException, VerdictDBException {
     // the query processing has already been finished; thus, no more processing will be needed.
     if (aborted) {
@@ -200,12 +200,14 @@ public class InMemoryAggregate {
           }
         }
       }
-      
-      SelectQuery left = SelectQuery.create(new AsteriskColumn(),
-          new BaseTable("PUBLIC", newAggTableName));
-      SelectQuery right = SelectQuery.create(new AsteriskColumn(),
-          new BaseTable("PUBLIC", combinedTableName));
-      AbstractRelation setOperation = new SetOperationRelation(left, right, SetOperationRelation.SetOpType.unionAll);
+
+      SelectQuery left =
+          SelectQuery.create(new AsteriskColumn(), new BaseTable("PUBLIC", newAggTableName));
+      SelectQuery right =
+          SelectQuery.create(new AsteriskColumn(), new BaseTable("PUBLIC", combinedTableName));
+      AbstractRelation setOperation =
+          new SetOperationRelation(left, right, SetOperationRelation.SetOpType.unionAll);
+
       copy.clearFilter();
       copy.setFromList(Arrays.asList(setOperation));
       copy.clearGroupby();
@@ -215,8 +217,7 @@ public class InMemoryAggregate {
       log.debug("Issues the following query to an in-memory db: " + sql);
       
       Statement stmt = conn.createStatement();
-      stmt.execute(
-          String.format("CREATE TABLE %s AS %s", tableName, sql));
+      stmt.execute(String.format("CREATE TABLE %s AS %s", tableName, sql));
       stmt.close();
     }
 
@@ -257,5 +258,4 @@ public class InMemoryAggregate {
       e.printStackTrace();
     }
   }
-
 }

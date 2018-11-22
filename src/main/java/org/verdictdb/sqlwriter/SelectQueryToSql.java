@@ -63,7 +63,8 @@ public class SelectQueryToSql {
           "is_null",
           "rand",
           "floor",
-          "hash");
+          "hash",
+          "interval");
 
   public SelectQueryToSql(SqlSyntax syntax) {
     this.syntax = syntax;
