@@ -68,7 +68,8 @@ public class ExecutionContext {
   private VerdictOption options;
 
   public enum QueryType {
-    select, scrambling, drop_scramble, drop_all_scrambles, set_default_schema, unknown, show_databases, show_tables, show_scrambles, describe_table
+    select, scrambling, drop_scramble, drop_all_scrambles, set_default_schema, unknown, 
+    show_databases, show_tables, show_scrambles, describe_table
   }
 
   /**
@@ -345,7 +346,8 @@ public class ExecutionContext {
     return new VerdictResultStreamFromSingleResult(result);
   }
 
-  private VerdictResultStream generateShowTablesResultFromQuery(String query) throws VerdictDBException {
+  private VerdictResultStream generateShowTablesResultFromQuery(String query) 
+      throws VerdictDBException {
     VerdictSQLParser parser = NonValidatingSQLParser.parserOf(query);
     IdContext schemaCtx = parser.show_tables_statement().schema;
     String schema = (schemaCtx == null)? 
@@ -357,9 +359,11 @@ public class ExecutionContext {
     return new VerdictResultStreamFromSingleResult(result);
   }
 
-  private VerdictResultStream generateDescribeTableResultFromQuery(String query) throws VerdictDBException {
+  private VerdictResultStream generateDescribeTableResultFromQuery(String query) 
+      throws VerdictDBException {
     VerdictSQLParser parser = NonValidatingSQLParser.parserOf(query);
-    VerdictSQLParserBaseVisitor<Pair<String, String>> visitor = new VerdictSQLParserBaseVisitor<Pair<String, String>>() {
+    VerdictSQLParserBaseVisitor<Pair<String, String>> visitor = 
+        new VerdictSQLParserBaseVisitor<Pair<String, String>>() {
       @Override
       public Pair<String, String> visitDescribe_table_statement(
           VerdictSQLParser.Describe_table_statementContext ctx) {
@@ -447,12 +451,14 @@ public class ExecutionContext {
       }
 
       @Override
-      public QueryType visitCreate_scramble_statement(VerdictSQLParser.Create_scramble_statementContext ctx) {
+      public QueryType visitCreate_scramble_statement(
+          VerdictSQLParser.Create_scramble_statementContext ctx) {
         return QueryType.scrambling;
       }
 
       @Override
-      public QueryType visitDrop_scramble_statement(VerdictSQLParser.Drop_scramble_statementContext ctx) {
+      public QueryType visitDrop_scramble_statement(
+          VerdictSQLParser.Drop_scramble_statementContext ctx) {
         return QueryType.drop_scramble;
       }
 
@@ -463,7 +469,8 @@ public class ExecutionContext {
       }
 
       @Override
-      public QueryType visitShow_scrambles_statement(VerdictSQLParser.Show_scrambles_statementContext ctx) {
+      public QueryType visitShow_scrambles_statement(
+          VerdictSQLParser.Show_scrambles_statementContext ctx) {
         return QueryType.show_scrambles;
       }
 
@@ -473,17 +480,20 @@ public class ExecutionContext {
       }
 
       @Override
-      public QueryType visitShow_databases_statement(VerdictSQLParser.Show_databases_statementContext ctx) {
+      public QueryType visitShow_databases_statement(
+          VerdictSQLParser.Show_databases_statementContext ctx) {
         return QueryType.show_databases;
       }
 
       @Override
-      public QueryType visitShow_tables_statement(VerdictSQLParser.Show_tables_statementContext ctx) {
+      public QueryType visitShow_tables_statement(
+          VerdictSQLParser.Show_tables_statementContext ctx) {
         return QueryType.show_tables;
       }
 
       @Override
-      public QueryType visitDescribe_table_statement(VerdictSQLParser.Describe_table_statementContext ctx) {
+      public QueryType visitDescribe_table_statement(
+          VerdictSQLParser.Describe_table_statementContext ctx) {
         return QueryType.describe_table;
       }
     };

@@ -339,12 +339,12 @@ public class ScrambleMetaStore extends VerdictMetaStore {
       Set<Pair<String, String>> addedSet = new HashSet<>();
 
       while (result.next()) {
-        String originalSchema = result.getString(0);
-        String originalTable = result.getString(1);
+//        String originalSchema = result.getString(0);
+//        String originalTable = result.getString(1);
         String scrambleSchema = result.getString(2);
         String scrambleTable = result.getString(3);
-        BaseTable original = new BaseTable(originalSchema, originalTable);
-        BaseTable scramble = new BaseTable(scrambleSchema, scrambleTable);
+//        BaseTable original = new BaseTable(originalSchema, originalTable);
+//        BaseTable scramble = new BaseTable(scrambleSchema, scrambleTable);
         Pair<String, String> pair = ImmutablePair.of(scrambleSchema, scrambleTable);
         String jsonString = result.getString(5);
         if (jsonString.toUpperCase().equals(DELETED)) {
