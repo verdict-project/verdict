@@ -177,7 +177,7 @@ public class MysqlSyntax extends SqlSyntax {
   
   @Override
   public long getRecommendedblockSize() {
-    return (int) 1e6;
+    return (int) 1e5;
   }
 
   @Override

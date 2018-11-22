@@ -19,6 +19,8 @@ import json
 
 __version__ = get_metadata('__version__')
 
+__verdictdb_version__ = get_metadata('__verdictdb_version__')
+
 def mysql_context(host, user, password=None, port=3306):
     return VerdictContext.new_mysql_context(host, user, password, port)
 
