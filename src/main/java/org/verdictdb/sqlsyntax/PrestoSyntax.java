@@ -169,7 +169,8 @@ public class PrestoSyntax extends SqlSyntax {
 //        "(from_base(substr(to_hex(md5(to_utf8(cast(%s as varchar)))), 1, 8), 16) %% %d) / %d",
 //        column, hashPrecision, hashPrecision);
     String f = String.format(
-        "(from_base(substr(to_hex(xxhash64(to_utf8(cast(%s as varchar)))), 1, 8), 16) %% %d) / %d",
+        "(from_base(substr(to_hex(xxhash64(to_utf8(cast(%s as varchar)))), 1, 8), 16) %% %d) "
+        + "/ cast(%d as double)",
         column, hashPrecision, hashPrecision);
     return f;
   }

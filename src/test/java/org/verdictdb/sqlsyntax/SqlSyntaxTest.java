@@ -81,5 +81,23 @@ public class SqlSyntaxTest {
     SqlSyntax actual = JdbcConnection.create(conn).getSyntax();
     assertEquals(expected, actual);
   }
+  
+  @Test
+  public void testPrestoSyntaxInference() throws SQLException, VerdictDBDbmsException {
+    final String PRESTO_HOST = System.getenv("VERDICTDB_TEST_PRESTO_HOST");
+    final String PRESTO_CATALOG = System.getenv("VERDICTDB_TEST_PRESTO_CATALOG");
+    final String PRESTO_USER = System.getenv("VERDICTDB_TEST_PRESTO_USER");
+    final String PRESTO_PASSWORD = System.getenv("VERDICTDB_TEST_PRESTO_PASSWORD");
+    
+    String prestoConnectionString =
+        String.format("jdbc:presto://%s/%s/default", PRESTO_HOST, PRESTO_CATALOG);
+    
+    Connection conn = 
+        DriverManager.getConnection(prestoConnectionString, PRESTO_USER, PRESTO_PASSWORD);
+
+    SqlSyntax expected = new PrestoHiveSyntax();
+    SqlSyntax actual = JdbcConnection.create(conn).getSyntax();
+    assertEquals(expected, actual);
+  }
 
 }
