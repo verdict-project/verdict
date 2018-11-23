@@ -24,7 +24,9 @@ import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.core.resulthandler.ExecutionResultReader;
 import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
+import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.sqlreader.NonValidatingSQLParser;
 import org.verdictdb.sqlsyntax.RedshiftSyntax;
 
 import com.google.common.base.Charsets;
@@ -594,7 +596,8 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
     dbmsConn.setDefaultSchema(REDSHIFT_SCHEMA);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsConn, options);
     coordinator.setScrambleMetaSet(meta);
-    ExecutionResultReader reader = coordinator.process(sql);
+    SelectQuery selectQuery = NonValidatingSQLParser.toSelectQuery(sql);
+    ExecutionResultReader reader = coordinator.process(selectQuery);
 
     ResultSet rs = stmt.executeQuery(sql);
     return new ImmutablePair<>(reader, rs);

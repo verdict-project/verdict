@@ -21,7 +21,7 @@ import java.io.Serializable;
 public interface SelectItem extends Serializable {
 
   /**
-   * @return True if a column is a non-subquery column and includes aggergate functions.
+   * @return True if a column is a non-subquery column and includes aggregate functions.
    */
   boolean isAggregateColumn();
 

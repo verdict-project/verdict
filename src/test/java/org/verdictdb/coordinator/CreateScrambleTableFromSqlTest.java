@@ -35,6 +35,7 @@ import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.metastore.ScrambleMetaStore;
+import org.verdictdb.sqlreader.NonValidatingSQLParser;
 
 /** Created by Dong Young Yoon on 7/26/18. */
 @RunWith(Parameterized.class)
@@ -327,7 +328,8 @@ public class CreateScrambleTableFromSqlTest {
     ScrambleMetaSet scrambleMetaSet = store.retrieve();
     SelectQueryCoordinator coordinator =
         new SelectQueryCoordinator(jdbcConn, scrambleMetaSet, options);
-    ExecutionResultReader reader = coordinator.process(countOriginalSql);
+    SelectQuery selectQuery = NonValidatingSQLParser.toSelectQuery(countOriginalSql);
+    ExecutionResultReader reader = coordinator.process(selectQuery);
     while (reader.hasNext()) {
       reader.next();
     }
@@ -368,7 +370,8 @@ public class CreateScrambleTableFromSqlTest {
     ScrambleMetaSet scrambleMetaSet = store.retrieve();
     SelectQueryCoordinator coordinator =
         new SelectQueryCoordinator(jdbcConn, scrambleMetaSet, options);
-    ExecutionResultReader reader = coordinator.process(countOriginalSql);
+    SelectQuery selectQuery = NonValidatingSQLParser.toSelectQuery(countOriginalSql);
+    ExecutionResultReader reader = coordinator.process(selectQuery);
     while (reader.hasNext()) {
       reader.next();
     }

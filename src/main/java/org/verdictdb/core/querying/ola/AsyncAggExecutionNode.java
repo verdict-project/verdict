@@ -89,7 +89,7 @@ public class AsyncAggExecutionNode extends ProjectionNode {
   //  private String newTableName;
 
   // This is the list of aggregate columns contained in the selectQuery field.
-  List<ColumnOp> aggColumns;
+  protected List<ColumnOp> aggColumns;
 
   private Map<Integer, String> scrambledTableTierInfo;
 

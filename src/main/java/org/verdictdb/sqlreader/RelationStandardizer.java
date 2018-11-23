@@ -42,8 +42,10 @@ import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.core.sqlobject.SubqueryColumn;
 import org.verdictdb.core.sqlobject.UnnamedColumn;
 import org.verdictdb.exception.VerdictDBDbmsException;
+import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sqlsyntax.H2Syntax;
 import org.verdictdb.sqlsyntax.SqlSyntax;
+
 
 public class RelationStandardizer {
 
@@ -90,6 +92,19 @@ public class RelationStandardizer {
   public RelationStandardizer(MetaDataProvider meta, SqlSyntax syntax) {
     this.meta = meta;
     this.syntax = syntax;
+  }
+  
+
+  public static SelectQuery standardizeSelectQuery(
+      SelectQuery selectQuery, 
+      MetaDataProvider metaData,
+      SqlSyntax syntax) 
+      throws VerdictDBException {
+//    MetaDataProvider metaData = createMetaDataFor(selectQuery);
+    RelationStandardizer gen = new RelationStandardizer(metaData, syntax);
+    selectQuery = gen.standardize(selectQuery);
+    selectQuery.setStandardized();
+    return selectQuery;
   }
 
   /**
@@ -232,7 +247,7 @@ public class RelationStandardizer {
     for (SelectItem item : selectItems) {
       if (item instanceof AliasedColumn) {
         AliasedColumn aliasedColumn = (AliasedColumn) item;
-        if (aliasedColumn.getAliasName().equals(col)) {
+        if (aliasedColumn.getAliasName().equals(col.getColumnName())) {
           return aliasedColumn;
         }
       }
@@ -272,7 +287,7 @@ public class RelationStandardizer {
           } else {
             newGroupby.add(column);
           }
-        } else if (((BaseColumn) g).getTableSourceAlias() != null) {
+        } else if (((BaseColumn) g).getTableSourceAlias() != "") {
           // if it is a base column, let's get its current table alias and replace.
           String tableSource = ((BaseColumn) g).getTableSourceAlias();
           String columnName = ((BaseColumn) g).getColumnName();

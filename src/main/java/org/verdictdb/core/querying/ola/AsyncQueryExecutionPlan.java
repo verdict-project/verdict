@@ -202,11 +202,13 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
         aggroot.getAggMeta().setCubes(Arrays.asList(aggPlan.cubes.get(i)));
 
         // rewrite the select list of the individual aggregate nodes to add tier columns
+        // also agg alias are identified in this function.
         resetTierColumnAliasGeneration();
         addTierColumnsRecursively(copy, aggroot, new HashSet<ExecutableNode>());
 
         // Insert predicates into individual aggregation nodes
-        for (Pair<ExecutableNodeBase, Triple<String, String, String>> a : scrambledNodeAndTableName) {
+        for (Pair<ExecutableNodeBase, Triple<String, String, String>> a 
+            : scrambledNodeAndTableName) {
           ExecutableNodeBase scrambledNode = a.getLeft();
           String schemaName = a.getRight().getLeft();
           String tableName = a.getRight().getMiddle();
@@ -648,7 +650,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
     }
   }
 
-  /*-
+  /**
    * For example, convert
    *
    * 1. avg(price) ---------------------> sum(price) as 'agg0', count(price) as 'agg1'

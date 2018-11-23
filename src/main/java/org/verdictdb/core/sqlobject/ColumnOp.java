@@ -410,6 +410,16 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
     return aggExists;
   }
   
+  public boolean isMinAggregate() {
+    Set<String> ops = new HashSet<>(Arrays.asList("min"));
+    return doesContainOpIn(ops);
+  }
+  
+  public boolean isMaxAggregate() {
+    Set<String> ops = new HashSet<>(Arrays.asList("max"));
+    return doesContainOpIn(ops);
+  }
+  
   public boolean isCountDistinctAggregate() {
     Set<String> ops = new HashSet<>(Arrays.asList("countdistinct", "approx_distinct"));
     return doesContainOpIn(ops);

@@ -38,8 +38,9 @@ import org.verdictdb.core.sqlobject.UnnamedColumn;
 import com.google.common.collect.Sets;
 
 /**
- * Use for store hyper table cube and aggregate column alias name of individual aggregate node and
- * combiner
+ * Stores 
+ * 1. hypercubes (that indicate aggregation blocks), and
+ * 2. aggregate column alias names.
  */
 public class AggMeta implements Serializable {
   
@@ -52,15 +53,17 @@ public class AggMeta implements Serializable {
   
   private List<SelectItem> originalSelectList;
   
+  // later, these columns are summed for combining answers from smaller queries
   private List<String> aggAlias = new ArrayList<>();
+  
+  // later, these columns are either maxed or mined for combining answers for smaller queries.
+  private Map<String, String> maxminAggAlias = new HashMap<>();
   
   /**
    * Mapping from scrambled table to the column alias name for its tier column in the associated
    * current select query.
    */
   private Map<ScrambleMeta, String> tierColumnForScramble = new HashMap<>();
-  
-  Map<String, String> maxminAggAlias = new HashMap<>();
   
   Map<SelectItem, List<ColumnOp>> aggColumn = new HashMap<>();
   
@@ -218,6 +221,18 @@ public class AggMeta implements Serializable {
   
   public String getTierColumnName() {
     return tierColumnName;
+  }
+  
+  public void addAggAlias(String alias) {
+    aggAlias.add(alias);
+  }
+  
+  public void addMinAlias(String alias) {
+    maxminAggAlias.put(alias, "min");
+  }
+  
+  public void addMaxAlias(String alias) {
+    maxminAggAlias.put(alias, "max");
   }
   
   public void setAggAlias(List<String> aggAlias) {

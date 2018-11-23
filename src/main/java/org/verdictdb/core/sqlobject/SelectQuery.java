@@ -28,6 +28,8 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 import com.google.common.base.Optional;
 
 public class SelectQuery extends AbstractRelation implements SqlConvertible {
+  
+  private boolean isStandardized;
 
   private static final long serialVersionUID = -4830209213341883527L;
 
@@ -232,6 +234,14 @@ public class SelectQuery extends AbstractRelation implements SqlConvertible {
   @Override
   public String toString() {
     return ToStringBuilder.reflectionToString(this, ToStringStyle.SHORT_PREFIX_STYLE);
+  }
+  
+  public boolean isStandardized() {
+    return isStandardized;
+  }
+  
+  public void setStandardized() {
+    isStandardized = true;
   }
 
   // deep copy the select list

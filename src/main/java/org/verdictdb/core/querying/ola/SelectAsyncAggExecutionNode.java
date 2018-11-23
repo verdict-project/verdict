@@ -53,7 +53,7 @@ public class SelectAsyncAggExecutionNode extends AsyncAggExecutionNode {
 
 //  private Map<Integer, String> scrambledTableTierInfo;
 
-  private AggMeta aggMeta;
+//  private AggMeta aggMeta;
 
   private InMemoryAggregate inMemoryAggregate = InMemoryAggregate.create();
 
@@ -65,8 +65,9 @@ public class SelectAsyncAggExecutionNode extends AsyncAggExecutionNode {
   /**
    * A factory method for SelectAsyncAggExecutionNode.
    *
-   * <p>This static method performs the following operations: 1. Link individual selectAggregate nodes
-   * 2. Replace the SelectQuery with base aggregation and create a InMemoryAggregate object
+   * This static method performs the following operations: 
+   * 1. Link individual selectAggregate nodes
+   * 2. Replace the SelectQuery with base aggregation and create an InMemoryAggregate object
    *
    * @param idCreator
    * @param selectAggs
@@ -82,7 +83,8 @@ public class SelectAsyncAggExecutionNode extends AsyncAggExecutionNode {
     SelectAsyncAggExecutionNode node = new SelectAsyncAggExecutionNode(idCreator);
 
     // this placeholder base table is used for query construction later
-    Pair<BaseTable, SubscriptionTicket> tableAndTicket = node.createPlaceHolderTable(INNER_RAW_AGG_TABLE_ALIAS);
+    Pair<BaseTable, SubscriptionTicket> tableAndTicket = 
+        node.createPlaceHolderTable(INNER_RAW_AGG_TABLE_ALIAS);
     BaseTable placeholderTable = tableAndTicket.getLeft();
     SubscriptionTicket ticket = tableAndTicket.getRight();
 
@@ -129,6 +131,9 @@ public class SelectAsyncAggExecutionNode extends AsyncAggExecutionNode {
 
   @Override
   public SqlConvertible createQuery(List<ExecutionInfoToken> tokens) throws VerdictDBException {
+    
+    log.debug("create query called");
+    
     ExecutionInfoToken token = tokens.get(0);
     String table = (String) token.getValue("tableName");
     SelectQuery dependentQuery = (SelectQuery) token.getValue("dependentQuery");
