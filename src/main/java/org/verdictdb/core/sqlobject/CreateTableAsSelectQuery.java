@@ -63,7 +63,11 @@ public class CreateTableAsSelectQuery extends CreateTableQuery {
     this.select = query.select;
     this.overwrite = query.overwrite;
     this.ifNotExists = query.ifNotExists;
-    this.primaryColumns = query.primaryKeyColumnName;
+    if (query.primaryKeyColumnName==null) {
+      this.primaryColumns = new ArrayList<>();
+    } else {
+      this.primaryColumns = query.primaryKeyColumnName;
+    }
     // A PRIMARY KEY must include all columns in the table's partitioning function
     if (!this.primaryColumns.isEmpty()) {
       this.primaryColumns.addAll(this.partitionColumns);
