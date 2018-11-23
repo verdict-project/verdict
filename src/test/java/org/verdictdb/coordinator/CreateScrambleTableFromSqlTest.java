@@ -328,8 +328,7 @@ public class CreateScrambleTableFromSqlTest {
     ScrambleMetaSet scrambleMetaSet = store.retrieve();
     SelectQueryCoordinator coordinator =
         new SelectQueryCoordinator(jdbcConn, scrambleMetaSet, options);
-    SelectQuery selectQuery = NonValidatingSQLParser.toSelectQuery(countOriginalSql);
-    ExecutionResultReader reader = coordinator.process(selectQuery);
+    ExecutionResultReader reader = coordinator.process(countOriginalSql);
     while (reader.hasNext()) {
       reader.next();
     }
@@ -370,8 +369,7 @@ public class CreateScrambleTableFromSqlTest {
     ScrambleMetaSet scrambleMetaSet = store.retrieve();
     SelectQueryCoordinator coordinator =
         new SelectQueryCoordinator(jdbcConn, scrambleMetaSet, options);
-    SelectQuery selectQuery = NonValidatingSQLParser.toSelectQuery(countOriginalSql);
-    ExecutionResultReader reader = coordinator.process(selectQuery);
+    ExecutionResultReader reader = coordinator.process(countOriginalSql);
     while (reader.hasNext()) {
       reader.next();
     }
