@@ -303,10 +303,11 @@ public class ScramblingCoordinator {
     }
     log.info(String.format("Relative size: %.6f (or equivalently, %.4f %%)", 
         relativeSize, relativeSize*100));
-    
+
+    List<String> primaryKeyColumnName = conn.getPrimaryKey(originalSchema, originalTable);
     ScramblingPlan plan =
         ScramblingPlan.create(
-            newSchema, newTable, originalSchema, originalTable, scramblingMethod, effectiveOptions);
+            newSchema, newTable, originalSchema, originalTable, scramblingMethod, primaryKeyColumnName, effectiveOptions);
     ExecutablePlanRunner.runTillEnd(conn, plan);
     log.info(String.format("Finished creating %s.%s", newSchema, newTable));
 

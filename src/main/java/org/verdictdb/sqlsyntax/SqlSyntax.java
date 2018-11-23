@@ -123,4 +123,8 @@ public abstract class SqlSyntax {
   public String getApproximateCountDistinct(String column) {
     return String.format("count (distinct %s)", column);
   }
+
+  public String getPrimaryKey(String schema, String table) {
+    return null;
+  }
 }

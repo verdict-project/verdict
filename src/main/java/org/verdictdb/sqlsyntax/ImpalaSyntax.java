@@ -149,6 +149,7 @@ public class ImpalaSyntax extends SqlSyntax {
     return String.format("ndv(%s)", column);
   }
 
+
   /**
    * The following query returns 4.594682917363407 (4.59 / 100 = 0.0459):
    * 

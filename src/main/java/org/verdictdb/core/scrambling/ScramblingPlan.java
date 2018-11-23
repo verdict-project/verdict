@@ -70,6 +70,7 @@ public class ScramblingPlan extends SimpleTreePlan {
       String oldSchemaName,
       String oldTableName,
       ScramblingMethod method,
+      List<String> primaryKeyColumnName,
       Map<String, String> options) {
 
     // create a node for step 1 - column meta data retrieval
@@ -93,7 +94,8 @@ public class ScramblingPlan extends SimpleTreePlan {
     // create a node for step 3 - scrambling
     ExecutableNodeBase scramblingNode =
         ScramblingNode.create(
-            newSchemaName, newTableName, oldSchemaName, oldTableName, method, options);
+            newSchemaName, newTableName, oldSchemaName, oldTableName, method, primaryKeyColumnName, options);
+
     scramblingNode.subscribeTo(columnMetaDataNode, 100); // for total table size
     for (int i = 0; i < statsNodes.size(); i++) {
       scramblingNode.subscribeTo(statsNodes.get(i), i);

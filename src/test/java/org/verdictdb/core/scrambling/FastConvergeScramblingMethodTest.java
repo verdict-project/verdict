@@ -99,7 +99,7 @@ public class FastConvergeScramblingMethodTest {
     
     ScramblingPlan plan =
         ScramblingPlan.create(
-            newSchema, newTable, originalSchema, originalTable, scramblingMethod, options);
+            newSchema, newTable, originalSchema, originalTable, scramblingMethod, null, options);
     JdbcConnection jdbcConn = JdbcConnection.create(h2conn);
     ExecutablePlanRunner.runTillEnd(jdbcConn, plan);
     

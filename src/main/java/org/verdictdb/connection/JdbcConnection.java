@@ -399,4 +399,5 @@ public class JdbcConnection extends DbmsConnection {
     newConn.outputDebugMessage = this.outputDebugMessage;
     return newConn;
   }
+
 }

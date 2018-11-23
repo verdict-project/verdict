@@ -93,7 +93,7 @@ public class UniformScramblingNodeTest {
     ScramblingNode node = ScramblingNode.create(
         newSchemaName, newTableName,
         oldSchemaName, oldTableName,
-        method, options);
+        method, null, options);
 
     // set tokens
     List<ExecutionInfoToken> tokens = new ArrayList<>();
