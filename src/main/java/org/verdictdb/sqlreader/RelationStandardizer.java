@@ -81,8 +81,7 @@ public class RelationStandardizer {
   private HashMap<String, String> colNameAndTempColAlias = new HashMap<>();
 
   // Since we replace all table alias using our generated alias name, this map will record the table
-  // alias name
-  // we replaced.
+  // alias name we replaced.
   private HashMap<String, String> oldTableAliasMap = new HashMap<>();
 
   public RelationStandardizer(MetaDataProvider meta) {
@@ -144,16 +143,20 @@ public class RelationStandardizer {
 //      }
 //    }
     
-//    if (col.getSchemaName().equals("")) {
-//      // Yongjoo: I don't think this behavior is always safe (e.g., a column is from a subquery)
-////      col.setSchemaName(meta.getDefaultSchema());
-//      if (tableInfoAndAlias.containsKey(
-//          new ImmutablePair<>(col.getSchemaName(), col.getTableSourceAlias()))) {
-//        col.setTableSourceAlias(
-//            tableInfoAndAlias.get(
-//                new ImmutablePair<>(col.getSchemaName(), col.getTableSourceAlias())));
-//      }
-//    }
+    // When no schema name is specified, the table name of a column is parsed as an alias 
+    // by default; however, the alias name can actually be the name of the table.
+    if (col.getSchemaName().equals("")) {
+      // Yongjoo: I don't think setting the schema is always safe 
+      // (e.g., a column is from a subquery)
+//      col.setSchemaName(meta.getDefaultSchema());
+      String defaultSchema = meta.getDefaultSchema();
+      Pair<String, String> searchKey = 
+          new ImmutablePair<>(defaultSchema, col.getTableSourceAlias());
+      if (tableInfoAndAlias.containsKey(searchKey)) {
+        col.setTableSourceAlias(tableInfoAndAlias.get(searchKey));
+      }
+      
+    }
 
     return col;
   }
