@@ -499,7 +499,10 @@ public class RelationStandardizer {
   }
 
   public SelectQuery standardize(SelectQuery relationToAlias) throws VerdictDBDbmsException {
+    // From (Source)
     List<AbstractRelation> fromList = setupTableSources(relationToAlias);
+    
+    // Select
     List<SelectItem> selectItemList = replaceSelectList(relationToAlias.getSelectList());
     SelectQuery AliasedRelation = SelectQuery.create(selectItemList, fromList);
 
