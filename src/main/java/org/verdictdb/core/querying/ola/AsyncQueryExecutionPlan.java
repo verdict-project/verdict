@@ -242,7 +242,8 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
       }
 
       // Re-link the subscription relationship for the new AsyncAggNode
-      newRoot = SelectAsyncAggExecutionNode.create(idCreator, individualAggNodes, scrambleMeta, aggNodeBlock);
+      newRoot = SelectAsyncAggExecutionNode.create(
+          idCreator, individualAggNodes, scrambleMeta, aggNodeBlock);
       
     } else {
       // Otherwise, create AsyncAggExeuctionNode instead.

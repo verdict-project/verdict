@@ -129,6 +129,10 @@ public class SelectAsyncAggExecutionNode extends AsyncAggExecutionNode {
     return node;
   }
 
+  /**
+   * The individual aggregation results are retrieved and sent to this method in tokens. Then,
+   * this method combines those answers and scale them.
+   */
   @Override
   public SqlConvertible createQuery(List<ExecutionInfoToken> tokens) throws VerdictDBException {
     ExecutionInfoToken token = tokens.get(0);
@@ -175,6 +179,7 @@ public class SelectAsyncAggExecutionNode extends AsyncAggExecutionNode {
     cubes.addAll(aggMeta.getCubes());
     cubes.addAll(childAggMeta.getCubes());
     aggMeta.setCubes(cubes);
+    
     aggMeta.setAggAlias(childAggMeta.getAggAlias());
     aggMeta.setOriginalSelectList(childAggMeta.getOriginalSelectList());
     aggMeta.setAggColumn(childAggMeta.getAggColumn());
