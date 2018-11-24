@@ -30,6 +30,7 @@ import org.verdictdb.VerdictSingleResult;
 import org.verdictdb.commons.DataTypeConverter;
 import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.commons.VerdictOption;
+import org.verdictdb.connection.CachedDbmsConnection;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.MetaDataProvider;
 import org.verdictdb.connection.StaticMetaData;
@@ -505,7 +506,12 @@ public class ExecutionContext {
           queryContext.getVerdictContextId(), this.serialNumber);
       List<String> tempTableList = new ArrayList<>();
 
-      List<String> allTempTables = conn.getTables(schema);
+      List<String> allTempTables = null;
+      if (conn instanceof CachedDbmsConnection) {
+        allTempTables = ((CachedDbmsConnection) conn).getTablesWithoutCaching(schema);
+      } else {
+        allTempTables = conn.getTables(schema);
+      }
       for (String tableName : allTempTables) {
         if (tableName.startsWith(tempTablePrefix)) {
           tempTableList.add(tableName);

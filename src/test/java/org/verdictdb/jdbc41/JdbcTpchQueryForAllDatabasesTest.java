@@ -77,6 +77,9 @@ public class JdbcTpchQueryForAllDatabasesTest {
   private static final String MYSQL_DATABASE =
       "tpch_test_" + RandomStringUtils.randomAlphanumeric(4).toLowerCase();
 
+  private static final String SCHEMA_NAME =
+      "verdictdb_tpch_query_test_" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
+
   private static final String MYSQL_USER = "root";
 
   private static final String MYSQL_PASSWORD = "";
@@ -123,9 +126,6 @@ public class JdbcTpchQueryForAllDatabasesTest {
     REDSHIFT_USER = System.getenv("VERDICTDB_TEST_REDSHIFT_USER");
     REDSHIFT_PASSWORD = System.getenv("VERDICTDB_TEST_REDSHIFT_PASSWORD");
   }
-
-  private static final String SCHEMA_NAME =
-      "verdictdb_tpch_query_test_" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
 
   @BeforeClass
   public static void setupDatabases() throws SQLException, VerdictDBDbmsException, IOException {

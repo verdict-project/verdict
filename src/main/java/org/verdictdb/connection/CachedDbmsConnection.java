@@ -90,8 +90,13 @@ public class CachedDbmsConnection extends DbmsConnection implements MetaDataProv
     if (!schemaCache.isEmpty()) {
       return schemaCache;
     }
-    schemaCache.addAll(originalConn.getSchemas());
-    return schemaCache;
+    synchronized (this) {
+      List<String> schemas = new ArrayList<>();
+      schemaCache.clear();
+      schemaCache.addAll(originalConn.getSchemas());
+      schemas.addAll(schemaCache);
+      return schemas;
+    }
   }
 
   @Override
@@ -99,8 +104,17 @@ public class CachedDbmsConnection extends DbmsConnection implements MetaDataProv
     if (tablesCache.containsKey(schema) && !tablesCache.get(schema).isEmpty()) {
       return tablesCache.get(schema);
     }
-    tablesCache.put(schema, originalConn.getTables(schema));
-    return tablesCache.get(schema);
+    return getTablesWithoutCaching(schema);
+  }
+  
+  public List<String> getTablesWithoutCaching(String schema) 
+      throws VerdictDBDbmsException {
+    synchronized (this) {
+      List<String> tables = new ArrayList<>();
+      tablesCache.put(schema, originalConn.getTables(schema));
+      tables.addAll(tablesCache.get(schema));
+      return tables;
+    }
   }
 
   @Override
@@ -110,8 +124,12 @@ public class CachedDbmsConnection extends DbmsConnection implements MetaDataProv
     if (columnsCache.containsKey(key) && !columnsCache.get(key).isEmpty()) {
       return columnsCache.get(key);
     }
-    columnsCache.put(key, originalConn.getColumns(schema, table));
-    return columnsCache.get(key);
+    synchronized (this) {
+      List<Pair<String, String>> columns = new ArrayList<>();
+      columnsCache.put(key, originalConn.getColumns(schema, table));
+      columns.addAll(columnsCache.get(key));
+      return columns;
+    }
   }
 
   /**
@@ -132,8 +150,12 @@ public class CachedDbmsConnection extends DbmsConnection implements MetaDataProv
     if (columnsCache.containsKey(key) && !partitionCache.isEmpty()) {
       return partitionCache.get(key);
     }
-    partitionCache.put(key, originalConn.getPartitionColumns(schema, table));
-    return partitionCache.get(key);
+    synchronized (this) {
+      List<String> columns = new ArrayList<>();
+      partitionCache.put(key, originalConn.getPartitionColumns(schema, table));
+      columns.addAll(partitionCache.get(key));
+      return columns;
+    }
   }
 
   public String getDefaultSchema() {
