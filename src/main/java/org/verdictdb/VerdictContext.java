@@ -149,7 +149,11 @@ public class VerdictContext {
     }
     VerdictOption options = new VerdictOption();
     options.parseConnectionString(jdbcConnectionString);
-    return new VerdictContext(ConcurrentJdbcConnection.create(jdbcConnectionString), options);
+    if (jdbcConnectionString.split(":")[1].toLowerCase().equals("mysql")) {
+      return new VerdictContext(JdbcConnection.create(jdbcConnectionString), options);
+    } else {
+      return new VerdictContext(ConcurrentJdbcConnection.create(jdbcConnectionString), options);
+    }
   }
 
   /**
@@ -172,7 +176,11 @@ public class VerdictContext {
     options.parseConnectionString(jdbcConnectionString);
     options.parseProperties(info);
     options.parseConnectionString(jdbcConnectionString);
-    return new VerdictContext(ConcurrentJdbcConnection.create(jdbcConnectionString, info), options);
+    if (jdbcConnectionString.split(":")[1].toLowerCase().equals("mysql")) {
+      return new VerdictContext(JdbcConnection.create(jdbcConnectionString, info), options);
+    } else {
+      return new VerdictContext(ConcurrentJdbcConnection.create(jdbcConnectionString, info), options);
+    }
     //    Connection jdbcConn = DriverManager.getConnection(jdbcConnectionString, info);
     //    return fromJdbcConnection(jdbcConn);
   }
@@ -199,14 +207,22 @@ public class VerdictContext {
     info.setProperty("password", password);
     VerdictOption options = new VerdictOption();
     options.parseConnectionString(jdbcConnectionString);
-    return new VerdictContext(ConcurrentJdbcConnection.create(jdbcConnectionString, info), options);
+    if (jdbcConnectionString.split(":")[1].toLowerCase().equals("mysql")) {
+      return new VerdictContext(JdbcConnection.create(jdbcConnectionString, info), options);
+    } else {
+      return new VerdictContext(ConcurrentJdbcConnection.create(jdbcConnectionString, info), options);
+    }
   }
 
   public static VerdictContext fromConnectionString(
       String jdbcConnectionString, VerdictOption options) throws VerdictDBException {
     attemptLoadDriverClass(jdbcConnectionString);
     options.parseConnectionString(jdbcConnectionString);
-    return new VerdictContext(ConcurrentJdbcConnection.create(jdbcConnectionString), options);
+    if (jdbcConnectionString.split(":")[1].toLowerCase().equals("mysql")) {
+      return new VerdictContext(JdbcConnection.create(jdbcConnectionString), options);
+    } else {
+      return new VerdictContext(ConcurrentJdbcConnection.create(jdbcConnectionString), options);
+    }
   }
 
   public static VerdictContext fromConnectionString(
@@ -221,7 +237,11 @@ public class VerdictContext {
     info.setProperty("user", user);
     info.setProperty("password", password);
     options.parseConnectionString(jdbcConnectionString);
-    return new VerdictContext(ConcurrentJdbcConnection.create(jdbcConnectionString, info), options);
+    if (jdbcConnectionString.split(":")[1].toLowerCase().equals("mysql")) {
+      return new VerdictContext(JdbcConnection.create(jdbcConnectionString, info), options);
+    } else {
+      return new VerdictContext(ConcurrentJdbcConnection.create(jdbcConnectionString, info), options);
+    }
   }
 
   private static boolean attemptLoadDriverClass(String jdbcConnectionString) {

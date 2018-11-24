@@ -19,13 +19,10 @@ package org.verdictdb.connection;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -58,6 +55,29 @@ public class JdbcConnection extends DbmsConnection {
   protected VerdictDBLogger log;
 
   protected boolean isAborting = false;
+
+  public static JdbcConnection create(String jdbcConnectionString, Properties info) throws VerdictDBDbmsException {
+    try {
+      Connection c;
+      if (info == null) {
+        c = DriverManager.getConnection(jdbcConnectionString);
+      } else {
+        c = DriverManager.getConnection(jdbcConnectionString, info);
+      }
+      return JdbcConnection.create(c);
+    } catch (SQLException e) {
+      throw new VerdictDBDbmsException(e);
+    }
+  }
+
+  public static JdbcConnection create(String jdbcConnectionString) throws VerdictDBDbmsException {
+    try {
+      Connection c = DriverManager.getConnection(jdbcConnectionString);
+      return JdbcConnection.create(c);
+    } catch (SQLException e) {
+      throw new VerdictDBDbmsException(e);
+    }
+  }
   
   public static JdbcConnection create(Connection conn) throws VerdictDBDbmsException {
     String connectionString = null;
