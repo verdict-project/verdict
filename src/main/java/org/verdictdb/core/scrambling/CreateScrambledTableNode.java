@@ -118,11 +118,6 @@ public class CreateScrambledTableNode extends QueryNodeWithPlaceHolders {
     if (columnMeta == null) {
       throw new VerdictDBException("Column meta is null.");
     }
-    if (primaryKeyColumnName == null) {
-      throw new VerdictDBException("Primary key meta is null.");
-    }
-
-
     CreateScrambledTableQuery createQuery =
         new CreateScrambledTableQuery(
             originalSchemaName,
