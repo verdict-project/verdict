@@ -55,7 +55,6 @@ public class ScramblingNode extends CreateScrambledTableNode {
       ScramblingMethod method,
       String tierColumnName,
       String blockColumnName,
-      List<String> primaryKeyColumnName,
       boolean createIfNotExists) {
 
     super(
@@ -66,7 +65,6 @@ public class ScramblingNode extends CreateScrambledTableNode {
         method,
         tierColumnName,
         blockColumnName,
-        primaryKeyColumnName,
         createIfNotExists);
   }
 
@@ -86,7 +84,6 @@ public class ScramblingNode extends CreateScrambledTableNode {
       String oldSchemaName,
       String oldTableName,
       ScramblingMethod method,
-      List<String> primaryKeyColumnName,
       Map<String, String> options) {
 
     IdCreator idCreator =
@@ -126,7 +123,6 @@ public class ScramblingNode extends CreateScrambledTableNode {
         method,
         tierColumnName,
         blockColumnName,
-        primaryKeyColumnName,
         createIfNotExists);
   }
 

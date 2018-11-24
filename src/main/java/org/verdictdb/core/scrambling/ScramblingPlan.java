@@ -50,6 +50,8 @@ public class ScramblingPlan extends SimpleTreePlan {
 
   static final String PARTITION_METADATA_KEY = "scramblingPlan:partitionMetaData";
 
+  static final String PRIMARYKEY_METADATA_KEY = "scramblingPlan:primarykeyMetaData";
+
   /**
    * Limitations: <br>
    * Currently, this class only works for the databases that support "CREATE TABLE ... PARTITION BY
@@ -70,7 +72,6 @@ public class ScramblingPlan extends SimpleTreePlan {
       String oldSchemaName,
       String oldTableName,
       ScramblingMethod method,
-      List<String> primaryKeyColumnName,
       Map<String, String> options) {
 
     // create a node for step 1 - column meta data retrieval
@@ -80,23 +81,27 @@ public class ScramblingPlan extends SimpleTreePlan {
         ColumnMetadataRetrievalNode.create(oldSchemaName, oldTableName, COLUMN_METADATA_KEY);
     ExecutableNodeBase partitionMetaDataNode =
         PartitionMetadataRetrievalNode.create(oldSchemaName, oldTableName, PARTITION_METADATA_KEY);
+    ExecutableNodeBase primaryKeyMetaDataNode =
+        PrimaryKeyMetaDataRetrievalNode.create(oldSchemaName, oldTableName, PRIMARYKEY_METADATA_KEY);
 
     // create a node for step 2 - statistics retrieval
     // since uniform scrambling does not return any nodes, the step 3 will be run immediately.
     List<ExecutableNodeBase> statsNodes =
         method.getStatisticsNode(
-            oldSchemaName, oldTableName, COLUMN_METADATA_KEY, PARTITION_METADATA_KEY);
+            oldSchemaName, oldTableName, COLUMN_METADATA_KEY, PARTITION_METADATA_KEY, PRIMARYKEY_METADATA_KEY);
     for (ExecutableNodeBase n : statsNodes) {
       n.subscribeTo(columnMetaDataNode, 100);
       n.subscribeTo(partitionMetaDataNode, 101);
+      n.subscribeTo(primaryKeyMetaDataNode, 102);
     }
 
     // create a node for step 3 - scrambling
     ExecutableNodeBase scramblingNode =
         ScramblingNode.create(
-            newSchemaName, newTableName, oldSchemaName, oldTableName, method, primaryKeyColumnName, options);
+            newSchemaName, newTableName, oldSchemaName, oldTableName, method, options);
 
     scramblingNode.subscribeTo(columnMetaDataNode, 100); // for total table size
+    scramblingNode.subscribeTo(primaryKeyMetaDataNode, 101);
     for (int i = 0; i < statsNodes.size(); i++) {
       scramblingNode.subscribeTo(statsNodes.get(i), i);
     }

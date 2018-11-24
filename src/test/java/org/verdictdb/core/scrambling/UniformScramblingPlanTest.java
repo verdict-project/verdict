@@ -80,7 +80,7 @@ public class UniformScramblingPlanTest {
     ScramblingPlan plan = ScramblingPlan.create(
         newSchemaName, newTableName,
         oldSchemaName, oldTableName,
-        method, null, options);
+        method, options);
 //    System.out.println(plan.getReportingNode());
 
     DbmsConnection conn = JdbcConnection.create(mysqlConn);
@@ -109,7 +109,7 @@ public class UniformScramblingPlanTest {
     ScramblingPlan plan = ScramblingPlan.create(
         newSchemaName, newTableName,
         oldSchemaName, oldTableName,
-        method, null, options);
+        method, options);
 //    System.out.println(plan.getReportingNode());
 
     DbmsConnection conn = JdbcConnection.create(mysqlConn);

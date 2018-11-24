@@ -53,8 +53,6 @@ public class CreateScrambledTableNode extends QueryNodeWithPlaceHolders {
 
   private List<String> partitionColumns = new ArrayList<>();
 
-  private List<String> primaryKeyColumnName = new ArrayList<>();
-
   protected ScramblingMethod method;
 
   public CreateScrambledTableNode(IdCreator namer, SelectQuery query) {
@@ -70,7 +68,6 @@ public class CreateScrambledTableNode extends QueryNodeWithPlaceHolders {
       ScramblingMethod method,
       String tierColumnName,
       String blockColumnName,
-      List<String> primaryKeyColumnName,
       boolean createIfNotExists) {
     super(namer, query);
     this.namer = namer;
@@ -79,7 +76,6 @@ public class CreateScrambledTableNode extends QueryNodeWithPlaceHolders {
     this.method = method;
     this.tierColumnName = tierColumnName;
     this.blockColumnName = blockColumnName;
-    this.primaryKeyColumnName = primaryKeyColumnName;
     this.createIfNotExists = createIfNotExists;
   }
 
@@ -107,16 +103,25 @@ public class CreateScrambledTableNode extends QueryNodeWithPlaceHolders {
     newTableSchemaName = tempTableFullName.getLeft();
     newTableName = tempTableFullName.getRight();
     List<Pair<String, String>> columnMeta = null;
+    List<String> primaryKeyColumnName = null;
     for (ExecutionInfoToken token : tokens) {
       Object val = token.getValue(ScramblingPlan.COLUMN_METADATA_KEY);
       if (val != null) {
         columnMeta = (List<Pair<String, String>>) val;
-        break;
+      } else {
+        val = token.getValue(ScramblingPlan.PRIMARYKEY_METADATA_KEY);
+        if (val != null) {
+          primaryKeyColumnName = (List<String>) val;
+        }
       }
     }
     if (columnMeta == null) {
       throw new VerdictDBException("Column meta is null.");
     }
+    if (primaryKeyColumnName == null) {
+      throw new VerdictDBException("Primary key meta is null.");
+    }
+
 
     CreateScrambledTableQuery createQuery =
         new CreateScrambledTableQuery(

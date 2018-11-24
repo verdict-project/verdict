@@ -57,7 +57,8 @@ public class UniformScramblingMethod extends ScramblingMethodBase {
       String oldSchemaName,
       String oldTableName,
       String columnMetaTokenKey,
-      String partitionMetaTokenKey) {
+      String partitionMetaTokenKey,
+      String primarykeyMetaTokenKey) {
     TableSizeCountNode countNode = new TableSizeCountNode(oldSchemaName, oldTableName);
     return Arrays.<ExecutableNodeBase>asList(countNode);
   }
