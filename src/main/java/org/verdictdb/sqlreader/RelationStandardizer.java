@@ -103,7 +103,7 @@ public class RelationStandardizer {
 //    MetaDataProvider metaData = createMetaDataFor(selectQuery);
     RelationStandardizer gen = new RelationStandardizer(metaData, syntax);
     selectQuery = gen.standardize(selectQuery);
-    selectQuery.setStandardized();
+//    selectQuery.setStandardized();
     return selectQuery;
   }
 
@@ -131,24 +131,29 @@ public class RelationStandardizer {
     if (oldTableAliasMap.containsKey(col.getTableSourceAlias())) {
       col.setTableSourceAlias(oldTableAliasMap.get(col.getTableSourceAlias()));
     }
-    if (tableInfoAndAlias.containsValue(col.getTableSourceAlias())) {
-      for (Map.Entry<Pair<String, String>, String> entry : tableInfoAndAlias.entrySet()) {
-        if (entry.getValue().equals(col.getTableSourceAlias())) {
-          col.setSchemaName(entry.getKey().getLeft());
-          col.setTableName(entry.getKey().getRight());
-          break;
-        }
-      }
-    }
-    if (col.getSchemaName().equals("")) {
-      col.setSchemaName(meta.getDefaultSchema());
-      if (tableInfoAndAlias.containsKey(
-          new ImmutablePair<>(col.getSchemaName(), col.getTableSourceAlias()))) {
-        col.setTableSourceAlias(
-            tableInfoAndAlias.get(
-                new ImmutablePair<>(col.getSchemaName(), col.getTableSourceAlias())));
-      }
-    }
+    
+    // Yongjoo: I unsurely commented out these lines, believing that keeping only alias names
+    //          will be enough.
+//    if (tableInfoAndAlias.containsValue(col.getTableSourceAlias())) {
+//      for (Map.Entry<Pair<String, String>, String> entry : tableInfoAndAlias.entrySet()) {
+//        if (entry.getValue().equals(col.getTableSourceAlias())) {
+//          col.setSchemaName(entry.getKey().getLeft());
+//          col.setTableName(entry.getKey().getRight());
+//          break;
+//        }
+//      }
+//    }
+    
+//    if (col.getSchemaName().equals("")) {
+//      // Yongjoo: I don't think this behavior is always safe (e.g., a column is from a subquery)
+////      col.setSchemaName(meta.getDefaultSchema());
+//      if (tableInfoAndAlias.containsKey(
+//          new ImmutablePair<>(col.getSchemaName(), col.getTableSourceAlias()))) {
+//        col.setTableSourceAlias(
+//            tableInfoAndAlias.get(
+//                new ImmutablePair<>(col.getSchemaName(), col.getTableSourceAlias())));
+//      }
+//    }
 
     return col;
   }
@@ -346,9 +351,12 @@ public class RelationStandardizer {
   // returns BaseColumn for group-by, AliasReference for order-by
   private GroupingAttribute getGroupOrOrderByColumn(
       String table, String column, boolean isForOrderBy) {
-    if (isForOrderBy)
+    if (isForOrderBy) {
       return (table != null) ? new AliasReference(table, column) : new AliasReference(column);
-    else return (table != null) ? new BaseColumn(table, column) : new BaseColumn(column);
+    }
+    else {
+      return (table != null) ? new BaseColumn(table, column) : new BaseColumn(column);
+    }
   }
 
   // returns BaseColumn for group-by, AliasReference for order-by
@@ -419,6 +427,7 @@ public class RelationStandardizer {
       tableInfoAndAlias.put(
           ImmutablePair.of(bt.getSchemaName(), bt.getTableName()), table.getAliasName().get());
       return new ImmutablePair<>(colName, table);
+      
     } else if (table instanceof JoinTable) {
       List<String> joinColName = new ArrayList<>();
       for (int i = 0; i < ((JoinTable) table).getJoinList().size(); i++) {
@@ -433,6 +442,7 @@ public class RelationStandardizer {
         }
       }
       return new ImmutablePair<>(joinColName, table);
+      
     } else if (table instanceof SelectQuery) {
       List<String> colName = new ArrayList<>();
       RelationStandardizer g = new RelationStandardizer(meta, syntax);
@@ -443,6 +453,7 @@ public class RelationStandardizer {
       String aliasName = table.getAliasName().get();
       table = g.standardize((SelectQuery) table);
       table.setAliasName(aliasName);
+      
       // Invariant: Only Aliased Column or Asterisk Column should appear in the subquery
       for (SelectItem sel : ((SelectQuery) table).getSelectList()) {
         if (sel instanceof AliasedColumn) {
@@ -460,6 +471,7 @@ public class RelationStandardizer {
             colNameAndTableAlias.put(
                 ((AliasedColumn) sel).getAliasName(), table.getAliasName().get());
           colName.add(((AliasedColumn) sel).getAliasName());
+          
         } else if (sel instanceof AsteriskColumn) {
           // put all the columns in the fromlist of subquery to the colNameAndTableAlias
           HashMap<String, String> subqueryColumnList = g.getColNameAndTableAlias();
