@@ -148,7 +148,15 @@ public class ExecutionContext {
       log.debug("Query type: select");
       return sqlSelectQuery(query, getResult);
 
-    } else if (queryType.equals(QueryType.scrambling)) {
+    }
+    
+    // for other types of queries, we invalidate cached metadata for expected data
+    // manipulations
+    if (conn instanceof CachedDbmsConnection) {
+      ((CachedDbmsConnection) conn).clearCache();
+    }
+    
+    if (queryType.equals(QueryType.scrambling)) {
       log.debug("Query type: scrambling");
       CreateScrambleQuery scrambleQuery = generateScrambleQuery(query);
       scrambleQuery.checkIfSupported(); // checks the validity; throws an exception if not.

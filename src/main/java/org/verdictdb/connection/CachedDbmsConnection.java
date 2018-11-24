@@ -84,6 +84,14 @@ public class CachedDbmsConnection extends DbmsConnection implements MetaDataProv
 
   // Get column name and type
   private HashMap<Pair<String, String>, List<Pair<String, String>>> columnsCache = new HashMap<>();
+  
+  
+  public void clearCache() {
+    schemaCache.clear();
+    tablesCache.clear();
+    partitionCache.clear();
+    columnsCache.clear();
+  }
 
   @Override
   public List<String> getSchemas() throws VerdictDBDbmsException {
