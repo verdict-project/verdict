@@ -1,7 +1,5 @@
 package org.verdictdb.coordinator;
 
-import static org.junit.Assert.*;
-
 import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
@@ -11,7 +9,6 @@ import java.sql.Statement;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.verdictdb.VerdictContext;
 import org.verdictdb.VerdictResultStream;
 import org.verdictdb.VerdictSingleResult;
 import org.verdictdb.commons.DatabaseConnectionHelpers;
@@ -23,9 +20,7 @@ import org.verdictdb.core.resulthandler.ExecutionResultReader;
 import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.core.sqlobject.SelectQuery;
-import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
-import org.verdictdb.sqlreader.NonValidatingSQLParser;
 import org.verdictdb.sqlsyntax.MysqlSyntax;
 
 import com.google.common.base.Charsets;

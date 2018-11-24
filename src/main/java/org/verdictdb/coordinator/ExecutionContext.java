@@ -47,7 +47,6 @@ import org.verdictdb.core.sqlobject.UnnamedColumn;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBTypeException;
-import org.verdictdb.exception.VerdictDBValueException;
 import org.verdictdb.metastore.CachedScrambleMetaStore;
 import org.verdictdb.metastore.ScrambleMetaStore;
 import org.verdictdb.metastore.VerdictMetaStore;

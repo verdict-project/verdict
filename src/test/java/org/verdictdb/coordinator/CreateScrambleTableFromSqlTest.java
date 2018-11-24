@@ -35,7 +35,6 @@ import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.metastore.ScrambleMetaStore;
-import org.verdictdb.sqlreader.NonValidatingSQLParser;
 
 /** Created by Dong Young Yoon on 7/26/18. */
 @RunWith(Parameterized.class)

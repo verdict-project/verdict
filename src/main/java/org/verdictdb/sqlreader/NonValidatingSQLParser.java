@@ -21,14 +21,11 @@ import java.util.List;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.apache.commons.lang3.tuple.Pair;
-import org.verdictdb.connection.MetaDataProvider;
 import org.verdictdb.core.sqlobject.AbstractRelation;
 import org.verdictdb.core.sqlobject.CreateScrambleQuery;
 import org.verdictdb.core.sqlobject.SelectQuery;
-import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.parser.VerdictSQLLexer;
 import org.verdictdb.parser.VerdictSQLParser;
-import org.verdictdb.sqlsyntax.SqlSyntax;
 
 /**
  * This is the entry point to both the select query and the scrambling query.

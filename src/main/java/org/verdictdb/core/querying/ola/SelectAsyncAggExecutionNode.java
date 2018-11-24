@@ -135,7 +135,8 @@ public class SelectAsyncAggExecutionNode extends AsyncAggExecutionNode {
     String table = (String) token.getValue("tableName");
     SelectQuery dependentQuery = (SelectQuery) token.getValue("dependentQuery");
     
-    // in case there are multiple processes, we put the lock using this class.
+    // In case multiple answers are already ready, we must synchronize them.
+    // To achieve this, we put the lock using this class.
     synchronized (SelectAsyncAggExecutionNode.class) {
       if (aggMeta == null) {
         aggMeta = (AggMeta) token.getValue("aggMeta");

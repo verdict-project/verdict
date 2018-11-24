@@ -1,6 +1,5 @@
 package org.verdictdb.coordinator;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -8,6 +7,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.verdictdb.VerdictSingleResult;
+import org.verdictdb.commons.TypeCasting;
 import org.verdictdb.core.sqlobject.AsteriskColumn;
 import org.verdictdb.core.sqlobject.SelectItem;
 import org.verdictdb.core.sqlobject.SelectQuery;
@@ -183,16 +183,9 @@ public class QueryResultAccuracyEstimatorFromDifference extends QueryResultAccur
           Object prevObj = prevAggregatedValues.get(idx);
           Object newObj = aggregatedValues.get(idx);
           
-          double newValue, prevValue;
-          // if v is Integer type or Double type, it is safe to case to double
-          // Otherwise, if v is BigDecimal type, it needs to be convert to double
-          if (newObj instanceof BigDecimal) {
-            newValue = ((BigDecimal) newObj).doubleValue();
-            prevValue = ((BigDecimal) prevObj).doubleValue();
-          } else {
-            newValue = (double) newObj;
-            prevValue = (double) prevAggregatedValues.get(idx);
-          }
+          double newValue = TypeCasting.toDouble(newObj);
+          double prevValue = TypeCasting.toDouble(prevObj);
+          
           if (prevValue < newValue * (1 - valueError) 
               || prevValue > newValue * (1 + valueError)) {
             log.debug(
