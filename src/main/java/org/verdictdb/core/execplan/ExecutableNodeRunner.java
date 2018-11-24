@@ -190,32 +190,32 @@ public class ExecutableNodeRunner implements Runnable {
     return false;
   }
 
-  boolean isQueryIsseuedOnebyOne() {
+  private int setMaxNumberOfRunningNode() {
     if ((conn instanceof JdbcConnection && conn.getSyntax() instanceof MysqlSyntax)
         || (conn instanceof CachedDbmsConnection
           && ((CachedDbmsConnection)conn).getOriginalConnection() instanceof JdbcConnection)
           && ((CachedDbmsConnection)conn).getOriginalConnection().getSyntax() instanceof MysqlSyntax) {
       // For MySQL, issue query one be one.
-      return true;
+      if (node instanceof SelectAsyncAggExecutionNode) {
+        return 2;
+      } else {
+        return 1;
+      }
     } else if (((conn instanceof SparkConnection) || (conn instanceof CachedDbmsConnection
             && ((CachedDbmsConnection) conn).getOriginalConnection() instanceof SparkConnection))
             && !(node instanceof SelectAsyncAggExecutionNode)) {
       // Since abort() does not work for Spark (or I don't know how to do so), we issue query
       // one by one.
-      return true;
+      return 1;
     } else {
-      return false;
+      return 10;
     }
   }
 
   private void runDependents() {
     synchronized (this) {
       if (doesThisNodeContainAsyncAggExecutionNode()) {
-        int maxNumberOfRunningNode = 10;
-        if (isQueryIsseuedOnebyOne()) {
-          maxNumberOfRunningNode = 1;
-        }
-
+        int maxNumberOfRunningNode = setMaxNumberOfRunningNode();
         int currentlyRunningOrCompleteNodeCount = childRunners.size();
 
         // check the number of currently running nodes

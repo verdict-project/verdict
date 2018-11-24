@@ -73,6 +73,7 @@ public class QueryResultAccuracyEstimatorFromDifference extends QueryResultAccur
       }
       newAggregatedMap.put(nonAggregatedValues, aggregatedValues);
     }
+    HashMap<List<Object>, List<Object>> prevAggregatedMap = aggregatedMap;
     aggregatedMap = newAggregatedMap;
     currentAnswer.rewind();
 
@@ -89,9 +90,9 @@ public class QueryResultAccuracyEstimatorFromDifference extends QueryResultAccur
 
     Boolean isValueConverged = true;
     for (List<Object> nonAggregatedValues : newAggregatedMap.keySet()) {
-      if (isValueConverged && aggregatedMap.containsKey(nonAggregatedValues)) {
-        List<Object> prevAggregatedValues = aggregatedMap.get(nonAggregatedValues);
-        List<Object> aggregatedValues = newAggregatedMap.get(nonAggregatedValues);
+      if (isValueConverged && prevAggregatedMap.containsKey(nonAggregatedValues)) {
+        List<Object> prevAggregatedValues = prevAggregatedMap.get(nonAggregatedValues);
+        List<Object> aggregatedValues = aggregatedMap.get(nonAggregatedValues);
         for (Object v : aggregatedValues) {
           int idx = aggregatedValues.indexOf(v);
           double newValue, oldValue;
