@@ -131,13 +131,12 @@ public class SelectAsyncAggExecutionNode extends AsyncAggExecutionNode {
 
   @Override
   public SqlConvertible createQuery(List<ExecutionInfoToken> tokens) throws VerdictDBException {
-    
-    log.debug("create query called");
-    
     ExecutionInfoToken token = tokens.get(0);
     String table = (String) token.getValue("tableName");
     SelectQuery dependentQuery = (SelectQuery) token.getValue("dependentQuery");
-    synchronized (this) {
+    
+    // in case there are multiple processes, we put the lock using this class.
+    synchronized (SelectAsyncAggExecutionNode.class) {
       if (aggMeta == null) {
         aggMeta = (AggMeta) token.getValue("aggMeta");
       } else {

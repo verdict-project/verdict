@@ -33,7 +33,8 @@ import org.verdictdb.sqlwriter.SelectQueryToSql;
 
 public class InMemoryAggregate {
 
-  private static final String SELECT_ASYNC_AGG_TABLE = "VERDICTDB_SELECTASYNCAGG";
+  private final String SELECT_ASYNC_AGG_TABLE = 
+      String.format("VERDICTDB_SELECTASYNCAGG%s_", RandomStringUtils.randomNumeric(4));
 
   private long selectAsyncAggTableID = 0;
 
@@ -145,6 +146,7 @@ public class InMemoryAggregate {
     DbmsQueryResult dbmsQueryResult = null;
     
     try {
+      log.debug("The following query is issued: " + sql);
       ResultSet rs = stmt.executeQuery(sql);
       dbmsQueryResult = new JdbcQueryResult(rs);
       rs.close();
@@ -159,6 +161,10 @@ public class InMemoryAggregate {
     }
     return dbmsQueryResult;
   }
+  
+  private synchronized String getNextTableName() {
+    return SELECT_ASYNC_AGG_TABLE + selectAsyncAggTableID++;
+  }
 
   public String combineTables(
       String combinedTableName, String newAggTableName, SelectQuery dependentQuery)
@@ -168,7 +174,7 @@ public class InMemoryAggregate {
       return null;
     }
     
-    String tableName = SELECT_ASYNC_AGG_TABLE + selectAsyncAggTableID++;
+    String tableName = getNextTableName();
 
     // check targetTable exists
     if (newAggTableName.equals("")) {

@@ -596,8 +596,7 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
     dbmsConn.setDefaultSchema(REDSHIFT_SCHEMA);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsConn, options);
     coordinator.setScrambleMetaSet(meta);
-    SelectQuery selectQuery = NonValidatingSQLParser.toSelectQuery(sql);
-    ExecutionResultReader reader = coordinator.process(selectQuery);
+    ExecutionResultReader reader = coordinator.process(sql);
 
     ResultSet rs = stmt.executeQuery(sql);
     return new ImmutablePair<>(reader, rs);
