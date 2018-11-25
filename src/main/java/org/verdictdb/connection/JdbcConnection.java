@@ -49,7 +49,8 @@ public class JdbcConnection extends DbmsConnection {
 
   protected boolean isAborting = false;
 
-  public static JdbcConnection create(String jdbcConnectionString, Properties info) throws VerdictDBDbmsException {
+  public static JdbcConnection create(String jdbcConnectionString, Properties info) 
+      throws VerdictDBDbmsException {
     try {
       Connection c;
       if (info == null) {
@@ -133,7 +134,9 @@ public class JdbcConnection extends DbmsConnection {
     isAborting = true;
     try {
       synchronized (this) {
-        if (runningStatement != null && !runningStatement.isClosed()) {
+        // having isClosed() check seems to block this statement.
+        if (runningStatement != null) {
+//        if (runningStatement != null && !runningStatement.isClosed()) {
           log.trace("Aborts a running statement.");
           runningStatement.cancel();
           runningStatement.close();
