@@ -65,31 +65,5 @@ public abstract class DbmsConnection implements MetaDataProvider {
 
   public abstract DbmsConnection copy() throws VerdictDBDbmsException;
 
-  /**
-   * @return a list of column names of primary key columns. (0-indexed)
-   */
-  public List<String> getPrimaryKey(String schema, String table) throws VerdictDBDbmsException {
-    List<Integer> primaryKeyIndexList = new ArrayList<>();
-    List<String> primaryKeyColumnName = new ArrayList<>();
-    SqlSyntax syntax = getSyntax();
-    if (syntax.getPrimaryKey(schema, table)!=null) {
-      DbmsQueryResult result = execute(syntax.getPrimaryKey(schema, table));
-      if (syntax instanceof MysqlSyntax) {
-        while (result.next()) {
-          primaryKeyIndexList.add(result.getInt(3) - 1);
-        }
-      }
-      List<String> columns = new ArrayList<>();
-      result = execute(syntax.getColumnsCommand(schema, table));
-      while (result.next()) {
-        columns.add(result.getString(0));
-      }
-      for (int idx:primaryKeyIndexList) {
-        primaryKeyColumnName.add(columns.get(idx));
-      }
-    }
-
-    return primaryKeyColumnName;
-  }
 
 }
