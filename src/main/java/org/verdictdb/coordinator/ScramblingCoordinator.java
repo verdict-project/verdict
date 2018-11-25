@@ -303,7 +303,7 @@ public class ScramblingCoordinator {
     }
     log.info(String.format("Relative size: %.6f (or equivalently, %.4f %%)", 
         relativeSize, relativeSize*100));
-    
+
     ScramblingPlan plan =
         ScramblingPlan.create(
             newSchema, newTable, originalSchema, originalTable, scramblingMethod, effectiveOptions);

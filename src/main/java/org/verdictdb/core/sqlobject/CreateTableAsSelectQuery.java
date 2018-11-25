@@ -44,6 +44,8 @@ public class CreateTableAsSelectQuery extends CreateTableQuery {
   // the number of blocks for each partitioning column
   protected List<Integer> partitionCounts = new ArrayList<>();
 
+  protected List<String> primaryColumns = new ArrayList<>();
+
   protected boolean overwrite = false;
 
   public CreateTableAsSelectQuery(String schemaName, String tableName, SelectQuery select) {
@@ -61,6 +63,15 @@ public class CreateTableAsSelectQuery extends CreateTableQuery {
     this.select = query.select;
     this.overwrite = query.overwrite;
     this.ifNotExists = query.ifNotExists;
+    if (query.primaryKeyColumnName == null) {
+      this.primaryColumns = new ArrayList<>();
+    } else {
+      this.primaryColumns = query.primaryKeyColumnName;
+    }
+    // A PRIMARY KEY must include all columns in the table's partitioning function
+    if (!this.primaryColumns.isEmpty()) {
+      this.primaryColumns.addAll(this.partitionColumns);
+    }
   }
 
   public void addPartitionColumn(String column) {
@@ -81,6 +92,10 @@ public class CreateTableAsSelectQuery extends CreateTableQuery {
 
   public List<Integer> getPartitionCounts() {
     return partitionCounts;
+  }
+
+  public List<String> getPrimaryColumns() {
+    return primaryColumns;
   }
 
   public SelectQuery getSelect() {

@@ -188,8 +188,9 @@ public class FastConvergeScramblingMethodTest {
     String oldTableName = "people";
     String columnMetaTokenKey = "columnMeta";
     String partitionMetaTokenKey = "partitionMeta";
+    String primaryMetaTokenKey = "primaryMeta";
     List<ExecutableNodeBase> nodes = 
-        method.getStatisticsNode(oldSchemaName, oldTableName, columnMetaTokenKey, partitionMetaTokenKey);
+        method.getStatisticsNode(oldSchemaName, oldTableName, columnMetaTokenKey, partitionMetaTokenKey, primaryMetaTokenKey);
     
     // create the node for passing meta information
     ExecutableNodeBase columnMetaDataNode = 

@@ -48,6 +48,8 @@ public class CreateScrambledTableQuery extends CreateTableQuery {
 
   protected List<String> partitionColumns = new ArrayList<>();
 
+  protected List<String> primaryKeyColumnName = new ArrayList<>();
+
   protected boolean overwrite = false;
 
   protected int blockCount = 1;
@@ -65,6 +67,7 @@ public class CreateScrambledTableQuery extends CreateTableQuery {
       int blockCount,
       int actualBlockCount,
       List<Pair<String, String>> columnMeta,
+      List<String> primaryKeyColumnName,
       boolean createIfNotExists) {
     this.originalSchemaName = originalSchemaName;
     this.originalTableName = originalTableName;
@@ -76,6 +79,7 @@ public class CreateScrambledTableQuery extends CreateTableQuery {
     this.blockCount = blockCount;
     this.actualBlockCount = actualBlockCount;
     this.columnMeta = columnMeta;
+    this.primaryKeyColumnName = primaryKeyColumnName;
     this.overwrite = createIfNotExists;
   }
 

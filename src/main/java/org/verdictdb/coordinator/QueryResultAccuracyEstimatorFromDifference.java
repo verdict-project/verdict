@@ -15,8 +15,6 @@ import org.verdictdb.core.sqlobject.SelectQuery;
 /**
  * Estimates the difference based on the difference between two consequent result sets.
  * 
- * Limitation: Currently, this only works properly when the most outer query includes aggregate
- *             columns.
  * 
  * For comparison, the grouping attributes (i.e., non-aggregate attributes) are used as a key,
  * and the non-grouping attributes (i.e., aggregate attributes) are used as values.
@@ -24,6 +22,10 @@ import org.verdictdb.core.sqlobject.SelectQuery;
  * If the changes in the values are smaller than a predefined threshold (e.g., 5%) for every key,
  * the answer is considered to be accurate.
  *
+ * Limitation: Currently, this only works properly when the most outer query includes aggregate
+ *             columns. The reason is that aggregate columns are identified using the original
+ *             query. Thus, if approximate aggregates are computed in an inner query and
+ *             projected to an outer query, the current logic does not identify that.
  */
 public class QueryResultAccuracyEstimatorFromDifference extends QueryResultAccuracyEstimator {
 
@@ -155,6 +157,11 @@ public class QueryResultAccuracyEstimatorFromDifference extends QueryResultAccur
       }
       newAggregatedMap.put(groupValues, aggregateValues);
     }
+// <<<<<<< HEAD
+// =======
+//     HashMap<List<Object>, List<Object>> prevAggregatedMap = aggregatedMap;
+//     aggregatedMap = newAggregatedMap;
+// >>>>>>> origin/joezhong-fix-312
     currentAnswer.rewind();
     
     
@@ -174,6 +181,7 @@ public class QueryResultAccuracyEstimatorFromDifference extends QueryResultAccur
 
     // Check 2: if aggregate values have converged.
     Boolean isValueConverged = true;
+// <<<<<<< HEAD
     for (List<Object> groupingValues : newAggregatedMap.keySet()) {
       if (isValueConverged && groupToNonGroupMap.containsKey(groupingValues)) {
         List<Object> prevAggregatedValues = groupToNonGroupMap.get(groupingValues);
@@ -190,6 +198,25 @@ public class QueryResultAccuracyEstimatorFromDifference extends QueryResultAccur
               || prevValue > newValue * (1 + valueError)) {
             log.debug(
                 String.format("Not accurate enough. Prev: %f, New: %f", prevValue, newValue));
+// =======
+//     for (List<Object> nonAggregatedValues : newAggregatedMap.keySet()) {
+//       if (isValueConverged && prevAggregatedMap.containsKey(nonAggregatedValues)) {
+//         List<Object> prevAggregatedValues = prevAggregatedMap.get(nonAggregatedValues);
+//         List<Object> aggregatedValues = aggregatedMap.get(nonAggregatedValues);
+//         for (Object v : aggregatedValues) {
+//           int idx = aggregatedValues.indexOf(v);
+//           double newValue, oldValue;
+//           // if v is Integer type or Double type, it is safe to case to double
+//           // Otherwise, if v is BigDecimal type, it needs to be convert to double
+//           if (v instanceof BigDecimal) {
+//             newValue = ((BigDecimal) v).doubleValue();
+//             oldValue = ((BigDecimal) prevAggregatedValues.get(idx)).doubleValue();
+//           } else {
+//             newValue = (double) v;
+//             oldValue = (double) prevAggregatedValues.get(idx);
+//           }
+//           if (newValue < oldValue * (1 - valueError) || newValue > oldValue * (1 + valueError)) {
+// >>>>>>> origin/joezhong-fix-312
             isValueConverged = false;
             break;
           }

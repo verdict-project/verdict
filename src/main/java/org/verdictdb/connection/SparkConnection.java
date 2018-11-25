@@ -135,6 +135,11 @@ public class SparkConnection extends DbmsConnection {
   }
 
   @Override
+  public List<String> getPrimaryKey(String schema, String table) throws VerdictDBDbmsException {
+    return null;
+  }
+
+  @Override
   public DbmsQueryResult execute(String sql) throws VerdictDBDbmsException {
     String quoteChars = "'\"";
     List<String> sqls = StringSplitter.splitOnSemicolon(sql, quoteChars);

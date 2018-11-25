@@ -134,6 +134,11 @@ public class ConcurrentJdbcConnection extends DbmsConnection {
   }
 
   @Override
+  public List<String> getPrimaryKey(String schema, String table) throws VerdictDBDbmsException {
+    return null;
+  }
+
+  @Override
   public DbmsQueryResult execute(String query) throws VerdictDBDbmsException {
     return getNextConnection().execute(query);
   }

@@ -33,12 +33,7 @@ import org.verdictdb.core.sqlobject.DropTableQuery;
 import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBTypeException;
-import org.verdictdb.sqlsyntax.HiveSyntax;
-import org.verdictdb.sqlsyntax.ImpalaSyntax;
-import org.verdictdb.sqlsyntax.PostgresqlSyntax;
-import org.verdictdb.sqlsyntax.PrestoHiveSyntax;
-import org.verdictdb.sqlsyntax.SparkSyntax;
-import org.verdictdb.sqlsyntax.SqlSyntax;
+import org.verdictdb.sqlsyntax.*;
 
 import com.google.common.base.Joiner;
 
@@ -228,6 +223,18 @@ public class CreateTableToSql {
       sql.append("using parquet ");
     }
 
+    // set primary key
+    if (syntax instanceof MysqlSyntax && !query.getPrimaryColumns().isEmpty()) {
+      sql.append("(PRIMARY KEY (");
+      for (String column : query.getPrimaryColumns()) {
+        if (query.getPrimaryColumns().indexOf(column) != query.getPrimaryColumns().size() - 1) {
+          sql.append(String.format("`%s`, ", column));
+        } else {
+          sql.append(String.format("`%s`)) ", column));
+        }
+      }
+    }
+
     if (syntax instanceof PrestoHiveSyntax) {
       sql.append("WITH (");
       sql.append("format = 'orc'");
@@ -253,6 +260,7 @@ public class CreateTableToSql {
     if (syntax instanceof HiveSyntax || syntax instanceof ImpalaSyntax) {
       sql.append("stored as parquet ");
     }
+
 
     // select
     if (syntax.isAsRequiredBeforeSelectInCreateTable()) {

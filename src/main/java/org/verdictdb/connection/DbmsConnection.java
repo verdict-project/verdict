@@ -19,8 +19,12 @@ package org.verdictdb.connection;
 import org.verdictdb.core.sqlobject.SqlConvertible;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.sqlsyntax.MysqlSyntax;
 import org.verdictdb.sqlsyntax.SqlSyntax;
 import org.verdictdb.sqlwriter.QueryToSql;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public abstract class DbmsConnection implements MetaDataProvider {
 
@@ -60,4 +64,6 @@ public abstract class DbmsConnection implements MetaDataProvider {
   public abstract void abort();
 
   public abstract DbmsConnection copy() throws VerdictDBDbmsException;
+
+
 }

@@ -11,19 +11,9 @@ import org.apache.commons.lang3.tuple.Triple;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.connection.InMemoryAggregate;
 import org.verdictdb.core.execplan.ExecutionInfoToken;
-import org.verdictdb.core.querying.ExecutableNodeBase;
-import org.verdictdb.core.querying.IdCreator;
-import org.verdictdb.core.querying.QueryNodeBase;
-import org.verdictdb.core.querying.SelectAggExecutionNode;
-import org.verdictdb.core.querying.SubscriptionTicket;
+import org.verdictdb.core.querying.*;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
-import org.verdictdb.core.sqlobject.BaseTable;
-import org.verdictdb.core.sqlobject.ColumnOp;
-import org.verdictdb.core.sqlobject.CreateTableAsSelectQuery;
-import org.verdictdb.core.sqlobject.SelectItem;
-import org.verdictdb.core.sqlobject.SelectQuery;
-import org.verdictdb.core.sqlobject.SqlConvertible;
-import org.verdictdb.core.sqlobject.UnnamedColumn;
+import org.verdictdb.core.sqlobject.*;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
 
@@ -43,6 +33,10 @@ public class SelectAsyncAggExecutionNode extends AsyncAggExecutionNode {
   private static final long serialVersionUID = 70795390245860583L;
 
   private DbmsQueryResult dbmsQueryResult;
+
+  private List<String> selectQueryColumnAlias = new ArrayList<>();
+
+  private final String asteriskAlias = "verdictdb_asterisk_alias";
 
   private String selectAsyncAggTableName = "";
 
@@ -158,7 +152,21 @@ public class SelectAsyncAggExecutionNode extends AsyncAggExecutionNode {
         // reconstruct the original aggregate function (e.g., avg(col) = sum(col) / count(col))
         SelectQuery query = ((CreateTableAsSelectQuery) super.createQuery(tokens)).getSelect();
         dbmsQueryResult = inMemoryAggregate.executeQuery(query);
-        
+
+        List<Boolean> isAggregated = new ArrayList<>();
+        for (SelectItem sel : selectQuery.getSelectList()) {
+          if (sel.isAggregateColumn()) {
+            isAggregated.add(true);
+          } else {
+            isAggregated.add(false);
+          }
+          if (sel instanceof AliasedColumn) {
+            selectQueryColumnAlias.add(((AliasedColumn) sel).getAliasName());
+          } else {
+            selectQueryColumnAlias.add(asteriskAlias);
+          }
+        }
+        dbmsQueryResult.getMetaData().isAggregate = isAggregated;
       } catch (SQLException e) {
         throw new VerdictDBDbmsException(e);
 //        e.printStackTrace();
@@ -171,6 +179,31 @@ public class SelectAsyncAggExecutionNode extends AsyncAggExecutionNode {
   public ExecutionInfoToken createToken(DbmsQueryResult result) {
     ExecutionInfoToken token = super.createToken(result);
     token.setKeyValue("queryResult", dbmsQueryResult);
+
+    // Addition check that the query is a query contains Asterisk column that without asyncAggExecutionNode.
+    // For instance, query like 'select * from lineitem'. In that case, all the values of isAggregate field
+    // are false.
+    if (token.containsKey("queryResult")) {
+      DbmsQueryResult queryResult = (DbmsQueryResult) token.getValue("queryResult");
+      if (queryResult.getColumnCount() != queryResult.getMetaData().isAggregate.size()) {
+        List<Boolean> isAggregate = new ArrayList<>();
+        for (int i = 0; i < queryResult.getColumnCount(); i++) {
+          isAggregate.add(false);
+        }
+        for (int i = 0; i < queryResult.getMetaData().isAggregate.size(); i++) {
+          // If it is not asterisk column, we will find the index of the column in queryResult.
+          if (!selectQueryColumnAlias.get(i).equals(asteriskAlias)) {
+            int idx = 0;
+            // Get the index of the alias name in the columnName field of the queryResult.
+            while (!selectQueryColumnAlias.get(i).equals(queryResult.getColumnName(idx))) {
+              idx++;
+            }
+            isAggregate.set(idx, queryResult.getMetaData().isAggregate.get(i));
+          }
+        }
+        queryResult.getMetaData().isAggregate = isAggregate;
+      }
+    }
     return token;
   }
 

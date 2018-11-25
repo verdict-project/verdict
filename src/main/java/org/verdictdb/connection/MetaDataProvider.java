@@ -36,4 +36,6 @@ public interface MetaDataProvider {
   public String getDefaultSchema();
 
   public void setDefaultSchema(String schema) throws VerdictDBDbmsException;
+
+  public List<String> getPrimaryKey(String schema, String table) throws VerdictDBDbmsException;
 }

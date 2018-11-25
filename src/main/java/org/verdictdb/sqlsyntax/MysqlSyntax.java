@@ -199,6 +199,11 @@ public class MysqlSyntax extends SqlSyntax {
     return String.format("count(distinct %s)", column);
   }
 
+  @Override
+  public String getPrimaryKey(String schema, String table) {
+    return String.format("SHOW KEYS FROM %s.%s WHERE Key_name = 'PRIMARY'", schema, table);
+  }
+
   /**
    * The following query returns 9.6757 (9.6757 / 100 = 0.0968):
    * 
@@ -223,4 +228,6 @@ public class MysqlSyntax extends SqlSyntax {
         column, hashPrecision, hashPrecision);
     return f;
   }
+
+
 }

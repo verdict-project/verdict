@@ -39,6 +39,7 @@ import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.metastore.CachedScrambleMetaStore;
 import org.verdictdb.metastore.ScrambleMetaStore;
 import org.verdictdb.metastore.VerdictMetaStore;
+import org.verdictdb.sqlsyntax.MysqlSyntax;
 import org.verdictdb.sqlsyntax.SqlSyntax;
 import org.verdictdb.sqlsyntax.SqlSyntaxList;
 
@@ -150,7 +151,11 @@ public class VerdictContext {
     }
     VerdictOption options = new VerdictOption();
     options.parseConnectionString(jdbcConnectionString);
-    return new VerdictContext(ConcurrentJdbcConnection.create(jdbcConnectionString), options);
+    if (SqlSyntaxList.getSyntaxFromConnectionString(jdbcConnectionString) instanceof MysqlSyntax) {
+      return new VerdictContext(JdbcConnection.create(jdbcConnectionString), options);
+    } else {
+      return new VerdictContext(ConcurrentJdbcConnection.create(jdbcConnectionString), options);
+    }
   }
 
   /**
@@ -174,7 +179,11 @@ public class VerdictContext {
     options.parseConnectionString(jdbcConnectionString);
     options.parseProperties(info);
     options.parseConnectionString(jdbcConnectionString);
-    return new VerdictContext(ConcurrentJdbcConnection.create(jdbcConnectionString, info), options);
+    if (SqlSyntaxList.getSyntaxFromConnectionString(jdbcConnectionString) instanceof MysqlSyntax) {
+      return new VerdictContext(JdbcConnection.create(jdbcConnectionString, info), options);
+    } else {
+      return new VerdictContext(ConcurrentJdbcConnection.create(jdbcConnectionString, info), options);
+    }
     //    Connection jdbcConn = DriverManager.getConnection(jdbcConnectionString, info);
     //    return fromJdbcConnection(jdbcConn);
   }
@@ -202,7 +211,11 @@ public class VerdictContext {
     info.setProperty("password", password);
     VerdictOption options = new VerdictOption();
     options.parseConnectionString(jdbcConnectionString);
-    return new VerdictContext(ConcurrentJdbcConnection.create(jdbcConnectionString, info), options);
+    if (SqlSyntaxList.getSyntaxFromConnectionString(jdbcConnectionString) instanceof MysqlSyntax) {
+      return new VerdictContext(JdbcConnection.create(jdbcConnectionString, info), options);
+    } else {
+      return new VerdictContext(ConcurrentJdbcConnection.create(jdbcConnectionString, info), options);
+    }
   }
 
   public static VerdictContext fromConnectionString(
@@ -210,7 +223,11 @@ public class VerdictContext {
     jdbcConnectionString = removeVerdictKeywordIfExists(jdbcConnectionString);
     attemptLoadDriverClass(jdbcConnectionString);
     options.parseConnectionString(jdbcConnectionString);
-    return new VerdictContext(ConcurrentJdbcConnection.create(jdbcConnectionString), options);
+    if (SqlSyntaxList.getSyntaxFromConnectionString(jdbcConnectionString) instanceof MysqlSyntax) {
+      return new VerdictContext(JdbcConnection.create(jdbcConnectionString), options);
+    } else {
+      return new VerdictContext(ConcurrentJdbcConnection.create(jdbcConnectionString), options);
+    }
   }
   
   private static String removeVerdictKeywordIfExists(String connectionString) {
@@ -241,7 +258,11 @@ public class VerdictContext {
     info.setProperty("user", user);
     info.setProperty("password", password);
     options.parseConnectionString(jdbcConnectionString);
-    return new VerdictContext(ConcurrentJdbcConnection.create(jdbcConnectionString, info), options);
+    if (SqlSyntaxList.getSyntaxFromConnectionString(jdbcConnectionString) instanceof MysqlSyntax) {
+      return new VerdictContext(JdbcConnection.create(jdbcConnectionString, info), options);
+    } else {
+      return new VerdictContext(ConcurrentJdbcConnection.create(jdbcConnectionString, info), options);
+    }
   }
 
   private static boolean attemptLoadDriverClass(String jdbcConnectionString) {
