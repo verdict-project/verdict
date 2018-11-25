@@ -19,7 +19,12 @@ package org.verdictdb.connection;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -29,7 +34,14 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.commons.StringSplitter;
 import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.exception.VerdictDBDbmsException;
-import org.verdictdb.sqlsyntax.*;
+import org.verdictdb.sqlsyntax.HiveSyntax;
+import org.verdictdb.sqlsyntax.ImpalaSyntax;
+import org.verdictdb.sqlsyntax.PostgresqlSyntax;
+import org.verdictdb.sqlsyntax.PrestoSyntax;
+import org.verdictdb.sqlsyntax.RedshiftSyntax;
+import org.verdictdb.sqlsyntax.SparkSyntax;
+import org.verdictdb.sqlsyntax.SqlSyntax;
+import org.verdictdb.sqlsyntax.SqlSyntaxList;
 
 public class JdbcConnection extends DbmsConnection {
 
@@ -95,8 +107,8 @@ public class JdbcConnection extends DbmsConnection {
         ensureMethod.invoke(jdbcConn);
       } catch (ClassNotFoundException | NoSuchMethodException | SecurityException
           | InstantiationException | IllegalAccessException | IllegalArgumentException e) {
-
         throw new RuntimeException("Instantiating PrestoJdbcConnection failed.");
+        
       } catch (InvocationTargetException e) {
         if (e.getTargetException() instanceof VerdictDBDbmsException) {
           throw new VerdictDBDbmsException(e.getMessage());

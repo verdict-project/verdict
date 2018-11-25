@@ -29,7 +29,6 @@ import org.verdictdb.VerdictSingleResult;
 import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.commons.VerdictOption;
 import org.verdictdb.commons.VerdictTimestamp;
-import org.verdictdb.connection.CachedDbmsConnection;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.coordinator.VerdictSingleResultFromDbmsQueryResult;

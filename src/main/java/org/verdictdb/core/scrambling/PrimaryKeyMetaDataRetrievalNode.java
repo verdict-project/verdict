@@ -1,10 +1,10 @@
 package org.verdictdb.core.scrambling;
 
-import org.verdictdb.core.execplan.MethodInvocationInformation;
-import org.verdictdb.core.querying.ExecutableNodeBase;
-
 import java.util.HashMap;
 import java.util.Map;
+
+import org.verdictdb.core.execplan.MethodInvocationInformation;
+import org.verdictdb.core.querying.ExecutableNodeBase;
 
 public class PrimaryKeyMetaDataRetrievalNode extends ExecutableNodeBase {
 

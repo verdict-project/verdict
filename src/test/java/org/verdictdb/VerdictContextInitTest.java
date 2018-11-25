@@ -17,10 +17,7 @@
 package org.verdictdb;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Properties;
 
@@ -30,8 +27,6 @@ import org.junit.Test;
 import org.verdictdb.commons.DatabaseConnectionHelpers;
 import org.verdictdb.commons.VerdictOption;
 import org.verdictdb.connection.CachedDbmsConnection;
-import org.verdictdb.connection.DbmsConnection;
-import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
 
 /** Created by Dong Young Yoon on 8/9/18. */

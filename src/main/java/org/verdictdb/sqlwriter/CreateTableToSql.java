@@ -33,7 +33,13 @@ import org.verdictdb.core.sqlobject.DropTableQuery;
 import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBTypeException;
-import org.verdictdb.sqlsyntax.*;
+import org.verdictdb.sqlsyntax.HiveSyntax;
+import org.verdictdb.sqlsyntax.ImpalaSyntax;
+import org.verdictdb.sqlsyntax.MysqlSyntax;
+import org.verdictdb.sqlsyntax.PostgresqlSyntax;
+import org.verdictdb.sqlsyntax.PrestoHiveSyntax;
+import org.verdictdb.sqlsyntax.SparkSyntax;
+import org.verdictdb.sqlsyntax.SqlSyntax;
 
 import com.google.common.base.Joiner;
 
