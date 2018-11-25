@@ -144,4 +144,9 @@ public class CachedDbmsConnection extends DbmsConnection implements MetaDataProv
   public void setDefaultSchema(String schema) throws VerdictDBDbmsException {
     originalConn.setDefaultSchema(schema);
   }
+
+  @Override
+  public List<String> getPrimaryKey(String schema, String table) throws VerdictDBDbmsException {
+    return originalConn.getPrimaryKey(schema, table);
+  }
 }

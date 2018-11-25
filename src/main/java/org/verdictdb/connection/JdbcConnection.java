@@ -29,14 +29,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.commons.StringSplitter;
 import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.exception.VerdictDBDbmsException;
-import org.verdictdb.sqlsyntax.HiveSyntax;
-import org.verdictdb.sqlsyntax.ImpalaSyntax;
-import org.verdictdb.sqlsyntax.PostgresqlSyntax;
-import org.verdictdb.sqlsyntax.PrestoSyntax;
-import org.verdictdb.sqlsyntax.RedshiftSyntax;
-import org.verdictdb.sqlsyntax.SparkSyntax;
-import org.verdictdb.sqlsyntax.SqlSyntax;
-import org.verdictdb.sqlsyntax.SqlSyntaxList;
+import org.verdictdb.sqlsyntax.*;
 
 public class JdbcConnection extends DbmsConnection {
 
@@ -79,7 +72,7 @@ public class JdbcConnection extends DbmsConnection {
       throw new VerdictDBDbmsException(e);
     }
   }
-  
+
   public static JdbcConnection create(Connection conn) throws VerdictDBDbmsException {
     String connectionString = null;
     try {
@@ -95,14 +88,14 @@ public class JdbcConnection extends DbmsConnection {
       // we use Java's reflection-based instantiation.
       try {
         Class<?> prestoConnClass = Class.forName("org.verdictdb.connection.PrestoJdbcConnection");
-        Constructor<?> prestoConnClsConstructor = 
+        Constructor<?> prestoConnClsConstructor =
             prestoConnClass.getConstructor(Connection.class, SqlSyntax.class);
         jdbcConn = (JdbcConnection) prestoConnClsConstructor.newInstance(conn, syntax);
         Method ensureMethod = prestoConnClass.getMethod("ensureCatalogSet");
         ensureMethod.invoke(jdbcConn);
-      } catch (ClassNotFoundException | NoSuchMethodException | SecurityException 
+      } catch (ClassNotFoundException | NoSuchMethodException | SecurityException
           | InstantiationException | IllegalAccessException | IllegalArgumentException e) {
-        
+
         throw new RuntimeException("Instantiating PrestoJdbcConnection failed.");
       } catch (InvocationTargetException e) {
         if (e.getTargetException() instanceof VerdictDBDbmsException) {
@@ -111,7 +104,7 @@ public class JdbcConnection extends DbmsConnection {
           throw new RuntimeException("Instantiating PrestoJdbcConnection failed.");
         }
       }
-    } else { 
+    } else {
       jdbcConn = new JdbcConnection(conn, syntax);
     }
 
@@ -276,7 +269,7 @@ public class JdbcConnection extends DbmsConnection {
                 type
                     + "("
                     + queryResult.getInt(
-                        ((PostgresqlSyntax) syntax).getCharacterMaximumLengthColumnIndex())
+                    ((PostgresqlSyntax) syntax).getCharacterMaximumLengthColumnIndex())
                     + ")";
           }
         } else {
@@ -388,7 +381,7 @@ public class JdbcConnection extends DbmsConnection {
       if (syntax instanceof PrestoSyntax
           || syntax instanceof PostgresqlSyntax
           || syntax instanceof RedshiftSyntax) {
-        
+
       } else {
         conn.setCatalog(schema);
       }
@@ -423,4 +416,29 @@ public class JdbcConnection extends DbmsConnection {
     return newConn;
   }
 
+  /**
+   * @return a list of column names of primary key columns. (0-indexed)
+   */
+  @Override
+  public List<String> getPrimaryKey(String schema, String table) throws VerdictDBDbmsException {
+    List<Integer> primaryKeyIndexList = new ArrayList<>();
+    List<String> primaryKeyColumnName = new ArrayList<>();
+    SqlSyntax syntax = getSyntax();
+    if (syntax.getPrimaryKey(schema, table) != null) {
+      DbmsQueryResult result = execute(syntax.getPrimaryKey(schema, table));
+      while (result.next()) {
+        primaryKeyIndexList.add(result.getInt(3) - 1);
+      }
+      List<String> columns = new ArrayList<>();
+      result = execute(syntax.getColumnsCommand(schema, table));
+      while (result.next()) {
+        columns.add(result.getString(0));
+      }
+      for (int idx : primaryKeyIndexList) {
+        primaryKeyColumnName.add(columns.get(idx));
+      }
+    }
+
+    return primaryKeyColumnName;
+  }
 }

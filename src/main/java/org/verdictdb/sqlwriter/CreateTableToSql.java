@@ -226,8 +226,8 @@ public class CreateTableToSql {
     // set primary key
     if (syntax instanceof MysqlSyntax && !query.getPrimaryColumns().isEmpty()) {
       sql.append("(PRIMARY KEY (");
-      for (String column:query.getPrimaryColumns()) {
-        if (query.getPrimaryColumns().indexOf(column)!=query.getPrimaryColumns().size()-1) {
+      for (String column : query.getPrimaryColumns()) {
+        if (query.getPrimaryColumns().indexOf(column) != query.getPrimaryColumns().size() - 1) {
           sql.append(String.format("`%s`, ", column));
         } else {
           sql.append(String.format("`%s`)) ", column));

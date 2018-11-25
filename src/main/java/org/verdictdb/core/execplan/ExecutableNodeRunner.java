@@ -190,13 +190,13 @@ public class ExecutableNodeRunner implements Runnable {
     return false;
   }
 
-  private int setMaxNumberOfRunningNode() {
+  private int getMaxNumberOfRunningNode() {
     if ((conn instanceof JdbcConnection && conn.getSyntax() instanceof MysqlSyntax)
         || (conn instanceof CachedDbmsConnection
           && ((CachedDbmsConnection)conn).getOriginalConnection() instanceof JdbcConnection)
           && ((CachedDbmsConnection)conn).getOriginalConnection().getSyntax() instanceof MysqlSyntax) {
-      // For MySQL, issue query one be one.
-      if (node instanceof SelectAsyncAggExecutionNode) {
+      // For MySQL, issue query one by one.
+      if (node instanceof SelectAsyncAggExecutionNode || node instanceof AsyncAggExecutionNode) {
         return 2;
       } else {
         return 1;
@@ -215,7 +215,7 @@ public class ExecutableNodeRunner implements Runnable {
   private void runDependents() {
     synchronized (this) {
       if (doesThisNodeContainAsyncAggExecutionNode()) {
-        int maxNumberOfRunningNode = setMaxNumberOfRunningNode();
+        int maxNumberOfRunningNode = getMaxNumberOfRunningNode();
         int currentlyRunningOrCompleteNodeCount = childRunners.size();
 
         // check the number of currently running nodes

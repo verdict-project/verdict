@@ -63,7 +63,7 @@ public class CreateTableAsSelectQuery extends CreateTableQuery {
     this.select = query.select;
     this.overwrite = query.overwrite;
     this.ifNotExists = query.ifNotExists;
-    if (query.primaryKeyColumnName==null) {
+    if (query.primaryKeyColumnName == null) {
       this.primaryColumns = new ArrayList<>();
     } else {
       this.primaryColumns = query.primaryKeyColumnName;
@@ -94,7 +94,9 @@ public class CreateTableAsSelectQuery extends CreateTableQuery {
     return partitionCounts;
   }
 
-  public List<String> getPrimaryColumns() { return primaryColumns; }
+  public List<String> getPrimaryColumns() {
+    return primaryColumns;
+  }
 
   public SelectQuery getSelect() {
     return select;

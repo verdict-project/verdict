@@ -27,6 +27,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.commons.DataTypeConverter;
+import org.verdictdb.exception.VerdictDBDbmsException;
 
 public class StaticMetaData implements MetaDataProvider {
 
@@ -103,6 +104,11 @@ public class StaticMetaData implements MetaDataProvider {
 
   public void setDefaultSchema(String schema) {
     defaultSchema = schema;
+  }
+
+  @Override
+  public List<String> getPrimaryKey(String schema, String table) throws VerdictDBDbmsException {
+    return null;
   }
 
   @Override
