@@ -90,7 +90,9 @@ public class GroupByNumberTest {
       sparkConnection.execute(sql);
       fail();
     } catch (VerdictDBDbmsException e) {
-      if (e.getMessage().contains("GROUP BY position 1 is an aggregate function")) {
+      // added an error message for spark 2.2.1
+      if (e.getMessage().contains("GROUP BY position 1 is an aggregate function")
+          || e.getMessage().contains("aggregate functions are not allowed in GROUP BY")) {
         // expected
       } else {
         throw e;

@@ -83,6 +83,7 @@
         <maven.surefire.version>2.12.4</maven.surefire.version>
         <maven.javadoc.version>2.10.4</maven.javadoc.version>
         <spark.version>2.2.1</spark.version>   <!-- google dataproc default version -->
+        <janino.version>3.0.0</janino.version> <!-- matching version with spark 2.2.1 -->
         <skipTests>false</skipTests>
     </properties>
 
@@ -152,22 +153,6 @@
         </plugins>
     </build>
     
-    <!-- <dependencyManagement>
-        <dependencies>
-            Spark java.lang.NoClassDefFoundError: org/codehaus/janino/InternalCompilerException
-            <dependency>
-                <groupId>org.codehaus.janino</groupId>
-                <artifactId>commons-compiler</artifactId>
-                <version>3.0.8</version>
-            </dependency>
-            <dependency>
-                <groupId>org.codehaus.janino</groupId>
-                <artifactId>janino</artifactId>
-                <version>3.0.8</version>
-            </dependency>
-        </dependencies>
-    </dependencyManagement> -->
-
     <dependencies>
         <dependency>
             <groupId>org.antlr</groupId>
@@ -200,9 +185,19 @@
             <version>1.2.3</version>
         </dependency>
         <dependency>
+            <groupId>org.codehaus.janino</groupId>
+            <artifactId>janino</artifactId>
+            <version>${janino.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.codehaus.janino</groupId>
+            <artifactId>commons-compiler</artifactId>
+            <version>${janino.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-            <version>1.7.25</version>
+            <version>1.7.16</version>
         </dependency>
         <dependency>
             <groupId>log4j</groupId>
@@ -372,6 +367,8 @@
                                 <exclude>**/SparkTpchSelectQueryCoordinatorTest.java</exclude>
                                 <exclude>**/RedshiftTpchSelectQueryCoordinatorTest.java</exclude>
                                 <exclude>**/ImpalaTpchSelectQueryCoordinatorTest.java</exclude>
+                                <exclude>**/ResultSetMetaDataSparkTest</exclude>
+                                <exclude>**/SparkConnectionTest</exclude>
                             </excludes>
                             <systemProperties>
                                 <enableTimeout>true</enableTimeout>
