@@ -367,8 +367,12 @@
                                 <exclude>**/SparkTpchSelectQueryCoordinatorTest.java</exclude>
                                 <exclude>**/RedshiftTpchSelectQueryCoordinatorTest.java</exclude>
                                 <exclude>**/ImpalaTpchSelectQueryCoordinatorTest.java</exclude>
-                                <exclude>**/ResultSetMetaDataSparkTest</exclude>
-                                <exclude>**/SparkConnectionTest</exclude>
+                                <exclude>**/ResultSetMetaDataSparkTest.java</exclude>
+                                <exclude>**/SparkConnectionTest.java</exclude>
+                                <exclude>**/SparkQueryResultTest.java</exclude>
+                                <exclude>**/SparkUniformScramblingCoordinatorTest.java</exclude>
+                                <exclude>**/GroupByNumberTest.java</exclude>
+                                <exclude>**/CreateTableToSqlSparkTest.java</exclude>
                             </excludes>
                             <systemProperties>
                                 <enableTimeout>true</enableTimeout>
