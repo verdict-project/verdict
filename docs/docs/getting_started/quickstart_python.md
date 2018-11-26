@@ -27,7 +27,7 @@ Suppose MySQL is set as described on [this page](/tutorial/setup/mysql/).
 
 ```python
 import pyverdict
-verdict = pyverdict.mysql_context('localhost', 'root', '')
+verdict = pyverdict.mysql('localhost', 'root', '')
 verdict.sql('show schemas')     # this returns pandas DataFrame containing schema names
 ```
 
