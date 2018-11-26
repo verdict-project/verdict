@@ -38,8 +38,9 @@ import org.verdictdb.core.sqlobject.UnnamedColumn;
 import com.google.common.collect.Sets;
 
 /**
- * Use for store hyper table cube and aggregate column alias name of individual aggregate node and
- * combiner
+ * Stores 
+ * 1. hypercubes (that indicate aggregation blocks), and
+ * 2. aggregate column alias names.
  */
 public class AggMeta implements Serializable {
   
@@ -52,15 +53,17 @@ public class AggMeta implements Serializable {
   
   private List<SelectItem> originalSelectList;
   
+  // later, these columns are summed for combining answers from smaller queries
   private List<String> aggAlias = new ArrayList<>();
+  
+  // later, these columns are either maxed or mined for combining answers for smaller queries.
+  private Map<String, String> maxminAggAlias = new HashMap<>();
   
   /**
    * Mapping from scrambled table to the column alias name for its tier column in the associated
    * current select query.
    */
   private Map<ScrambleMeta, String> tierColumnForScramble = new HashMap<>();
-  
-  Map<String, String> maxminAggAlias = new HashMap<>();
   
   Map<SelectItem, List<ColumnOp>> aggColumn = new HashMap<>();
   
@@ -128,37 +131,6 @@ public class AggMeta implements Serializable {
       TierCombination comb = new TierCombination(scrambles, c);
       combinations.add(comb);
     }
-  
-//    List<Integer> currentTierNumbers = new ArrayList<>(Collections.nCopies(tierCounts.size(), 0));
-//    while (true) {
-//      // add the tier permutation for the current
-//      List<Integer> numbers = new ArrayList<>(currentTierNumbers);
-//      TierCombination comb = new TierCombination(scrambles, numbers);
-//      combinations.add(comb);
-//    
-//      // increment the tier permutation by one.
-//      int lastItemIndex = currentTierNumbers.size() - 1;
-//      currentTierNumbers.set(lastItemIndex, currentTierNumbers.get(lastItemIndex) + 1);
-//      
-//      // propagate the carry over if exists
-//      boolean carryOverExists = false;
-//      for (int i = lastItemIndex; i >= 0; i--) {
-//        if (carryOverExists) {
-//          currentTierNumbers.set(i, currentTierNumbers.get(i) + 1);
-//        }
-//        if (currentTierNumbers.get(i).equals(tierCounts.get(i))) {
-//          currentTierNumbers.set(i, 0);
-//          carryOverExists = true;
-//        } else {
-//          carryOverExists = false;
-//        }
-//      }
-//    
-//      // the existence of the carry over indicates that we have covered all combinations.
-//      if (carryOverExists) {
-//        break;
-//      }
-//    }
     
     return combinations;
   }
@@ -249,6 +221,18 @@ public class AggMeta implements Serializable {
   
   public String getTierColumnName() {
     return tierColumnName;
+  }
+  
+  public void addAggAlias(String alias) {
+    aggAlias.add(alias);
+  }
+  
+  public void addMinAlias(String alias) {
+    maxminAggAlias.put(alias, "min");
+  }
+  
+  public void addMaxAlias(String alias) {
+    maxminAggAlias.put(alias, "max");
   }
   
   public void setAggAlias(List<String> aggAlias) {

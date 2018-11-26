@@ -16,13 +16,13 @@
 
 package org.verdictdb.sqlwriter;
 
+import java.util.List;
+
 import org.verdictdb.commons.VerdictTimestamp;
 import org.verdictdb.core.sqlobject.InsertValuesQuery;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sqlsyntax.PrestoSyntax;
 import org.verdictdb.sqlsyntax.SqlSyntax;
-
-import java.util.List;
 
 public class InsertQueryToSql {
 

@@ -34,7 +34,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.verdictdb.connection.TypeCasting;
+import org.verdictdb.commons.TypeCasting;
 import org.verdictdb.core.aggresult.AggregateFrame;
 import org.verdictdb.core.aggresult.AggregateGroup;
 import org.verdictdb.core.aggresult.AggregateMeasures;

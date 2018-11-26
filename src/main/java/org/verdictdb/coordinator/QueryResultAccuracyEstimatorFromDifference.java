@@ -1,31 +1,104 @@
 package org.verdictdb.coordinator;
 
-import org.verdictdb.VerdictSingleResult;
-
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
+import org.verdictdb.VerdictSingleResult;
+import org.verdictdb.commons.TypeCasting;
+import org.verdictdb.core.sqlobject.AsteriskColumn;
+import org.verdictdb.core.sqlobject.SelectItem;
+import org.verdictdb.core.sqlobject.SelectQuery;
+
+/**
+ * Estimates the difference based on the difference between two consequent result sets.
+ * 
+ * 
+ * For comparison, the grouping attributes (i.e., non-aggregate attributes) are used as a key,
+ * and the non-grouping attributes (i.e., aggregate attributes) are used as values.
+ * 
+ * If the changes in the values are smaller than a predefined threshold (e.g., 5%) for every key,
+ * the answer is considered to be accurate.
+ *
+ * Limitation: Currently, this only works properly when the most outer query includes aggregate
+ *             columns. The reason is that aggregate columns are identified using the original
+ *             query. Thus, if approximate aggregates are computed in an inner query and
+ *             projected to an outer query, the current logic does not identify that.
+ */
 public class QueryResultAccuracyEstimatorFromDifference extends QueryResultAccuracyEstimator {
 
-  Coordinator runningCoordinator;
+//  Coordinator runningCoordinator;
 
   // the values of the result should be within [(1-valueError)*prevValue, (1+valueError)*prevValue]
   // of the previous result.
   // Otherwise, it will fetch next result.
-  Double valueError = 0.05;
+  private Double valueError = 0.02;
 
   // the #row of the result should be within  [(1-groupCountError)*prev#row,
   // (1+groupCountError)*prev#row] of the previous result.
   // Otherwise, it will fetch next result.
-  Double groupCountError = 0.05;
+  private Double groupCountError = 0.05;
 
-  // key is the values of non-aggregated column, value is the values of aggregated column
-  HashMap<List<Object>, List<Object>> aggregatedMap = new HashMap<>();
+  // Stores the latest result in an alternative form.
+  // The key is the values of grouping columns; the value is the values of non-grouping columns
+  // The grouping columns are analyzed using the original query.
+  private HashMap<List<Object>, List<Object>> groupToNonGroupMap;
+  
+  // Used for inferring grouping and aggregate columns.
+  private SelectQuery originalQuery;
+  
+  // this field is set when the first result set is added (using the add() method).
+//  private Set<Integer> groupingColumnIndexes = new HashSet<>();
+  private Set<Integer> nongroupingColumnIndxes = new HashSet<>();
 
-  QueryResultAccuracyEstimatorFromDifference(Coordinator runningCoordinator) {
-    this.runningCoordinator = runningCoordinator;
+  QueryResultAccuracyEstimatorFromDifference(SelectQuery originalQuery) {
+    this.originalQuery = originalQuery;
+//    this.runningCoordinator = runningCoordinator;
+  }
+  
+  @Override
+  public void add(VerdictSingleResult rs) {
+    super.add(rs);
+    
+    // Using the first answer, we estimate grouping and aggregate columns.
+    if (getAnswerCount() != 1) {
+      return;
+    }
+    
+    List<SelectItem> selectItems = originalQuery.getSelectList();
+    VerdictSingleResult singleAnswer = answers.get(0);
+    
+    // estimate the number of columns that would be projected by '*'.
+    int numColExceptforAsterisk = 0;
+    int numAsterisk = 0;
+    for (SelectItem item : selectItems) {
+      if (item instanceof AsteriskColumn) {
+        numAsterisk++;
+      } else {
+        numColExceptforAsterisk++;
+      }
+    }
+    
+    int numColForAsterisk = (numAsterisk == 0)? 0:
+      (singleAnswer.getColumnCount() - numColExceptforAsterisk) / numAsterisk;
+    
+    // obtain the index of grouping and non-grouping attribute indexes.
+    int i = 0;
+    for (SelectItem item : selectItems) {
+      if (item instanceof AsteriskColumn) {
+        for (int j = 0; j < numColForAsterisk; j++) {
+          nongroupingColumnIndxes.add(i);
+          i++;
+        }
+      } else if (item.isAggregateColumn()) {
+        nongroupingColumnIndxes.add(i);
+        i++;
+      } else {
+        i++;
+      }
+    }
   }
 
   public void setValueError(Double valueError) {
@@ -46,74 +119,117 @@ public class QueryResultAccuracyEstimatorFromDifference extends QueryResultAccur
     if (!checkConverge()) {
       return false;
     } else {
-      log.debug("Break condition has reached.");
+      log.debug("The approximate answers differed less than thresholds, "
+          + "and thus, considered to be Accurate.");
       return true;
     }
   }
 
   private boolean checkConverge() {
-    HashMap<List<Object>, List<Object>> newAggregatedMap = new HashMap<>();
-    VerdictSingleResult currentAnswer = answers.get(answers.size() - 1);
-    // query result without asyncAggregate
-    if (currentAnswer.getMetaData() == null || currentAnswer.getMetaData().isAggregate.isEmpty()) {
+    // base condition check
+    if (nongroupingColumnIndxes.size() == 0) {
+      log.debug("No aggregate columns exist. The result is assumed to be exact.");
       return true;
     }
+
+//  // query result without asyncAggregate
+//  if (currentAnswer.getMetaData() == null || currentAnswer.getMetaData().isAggregate.isEmpty()) {
+//    return true;
+//  }
+    
+    // some variables we will use in this function
+    HashMap<List<Object>, List<Object>> newAggregatedMap = new HashMap<>();
+    VerdictSingleResult currentAnswer = answers.get(answers.size() - 1);
+    
     while (currentAnswer.next()) {
-      List<Object> aggregatedValues = new ArrayList<>();
-      List<Object> nonAggregatedValues = new ArrayList<>();
+      List<Object> aggregateValues = new ArrayList<>();
+      List<Object> groupValues = new ArrayList<>();
       // dyoon: this does not seem to handle "SELECT *" correctly resulting in
       // IndexOutOfBoundsException
       // please take a look and apply a proper fix later.
       for (int i = 0; i < currentAnswer.getColumnCount(); i++) {
-        if (currentAnswer.getMetaData().isAggregate.get(i)) {
-          aggregatedValues.add(currentAnswer.getValue(i));
+        if (nongroupingColumnIndxes.contains(i)) {
+//        if (currentAnswer.getMetaData().isAggregate.get(i)) {
+          aggregateValues.add(currentAnswer.getValue(i));
         } else {
-          nonAggregatedValues.add(currentAnswer.getValue(i));
+          groupValues.add(currentAnswer.getValue(i));
         }
       }
-      newAggregatedMap.put(nonAggregatedValues, aggregatedValues);
+      newAggregatedMap.put(groupValues, aggregateValues);
     }
-    aggregatedMap = newAggregatedMap;
+// <<<<<<< HEAD
+// =======
+//     HashMap<List<Object>, List<Object>> prevAggregatedMap = aggregatedMap;
+//     aggregatedMap = newAggregatedMap;
+// >>>>>>> origin/joezhong-fix-312
     currentAnswer.rewind();
-
-    if (answers.size() == 1) {
+    
+    
+    if (answers.size() <= 1) {
+      groupToNonGroupMap = newAggregatedMap;
       return false;
     }
+    
+    // Now actual check starts.
     VerdictSingleResult previousAnswer = answers.get(answers.size() - 2);
 
-    // check if #groupCountError is converged
+    // Check 1: check if #groupCountError is converged
     if (currentAnswer.getRowCount() < previousAnswer.getRowCount() * (1 - groupCountError)
         || currentAnswer.getRowCount() > previousAnswer.getRowCount() * (1 + groupCountError)) {
       return false;
     }
 
+    // Check 2: if aggregate values have converged.
     Boolean isValueConverged = true;
-    for (List<Object> nonAggregatedValues : newAggregatedMap.keySet()) {
-      if (isValueConverged && aggregatedMap.containsKey(nonAggregatedValues)) {
-        List<Object> prevAggregatedValues = aggregatedMap.get(nonAggregatedValues);
-        List<Object> aggregatedValues = newAggregatedMap.get(nonAggregatedValues);
-        for (Object v : aggregatedValues) {
-          int idx = aggregatedValues.indexOf(v);
-          double newValue, oldValue;
-          // if v is Integer type or Double type, it is safe to case to double
-          // Otherwise, if v is BigDecimal type, it needs to be convert to double
-          if (v instanceof BigDecimal) {
-            newValue = ((BigDecimal) v).doubleValue();
-            oldValue = ((BigDecimal) prevAggregatedValues.get(idx)).doubleValue();
-          } else {
-            newValue = (double) v;
-            oldValue = (double) prevAggregatedValues.get(idx);
-          }
-          if (newValue < oldValue * (1 - valueError) || newValue > oldValue * (1 + valueError)) {
+// <<<<<<< HEAD
+    for (List<Object> groupingValues : newAggregatedMap.keySet()) {
+      if (isValueConverged && groupToNonGroupMap.containsKey(groupingValues)) {
+        List<Object> prevAggregatedValues = groupToNonGroupMap.get(groupingValues);
+        List<Object> aggregatedValues = newAggregatedMap.get(groupingValues);
+        
+        for (int idx = 0; idx < aggregatedValues.size(); idx++) {
+          Object prevObj = prevAggregatedValues.get(idx);
+          Object newObj = aggregatedValues.get(idx);
+          
+          double newValue = TypeCasting.toDouble(newObj);
+          double prevValue = TypeCasting.toDouble(prevObj);
+          
+          if (prevValue < newValue * (1 - valueError) 
+              || prevValue > newValue * (1 + valueError)) {
+            log.debug(
+                String.format("Not accurate enough. Prev: %f, New: %f", prevValue, newValue));
+// =======
+//     for (List<Object> nonAggregatedValues : newAggregatedMap.keySet()) {
+//       if (isValueConverged && prevAggregatedMap.containsKey(nonAggregatedValues)) {
+//         List<Object> prevAggregatedValues = prevAggregatedMap.get(nonAggregatedValues);
+//         List<Object> aggregatedValues = aggregatedMap.get(nonAggregatedValues);
+//         for (Object v : aggregatedValues) {
+//           int idx = aggregatedValues.indexOf(v);
+//           double newValue, oldValue;
+//           // if v is Integer type or Double type, it is safe to case to double
+//           // Otherwise, if v is BigDecimal type, it needs to be convert to double
+//           if (v instanceof BigDecimal) {
+//             newValue = ((BigDecimal) v).doubleValue();
+//             oldValue = ((BigDecimal) prevAggregatedValues.get(idx)).doubleValue();
+//           } else {
+//             newValue = (double) v;
+//             oldValue = (double) prevAggregatedValues.get(idx);
+//           }
+//           if (newValue < oldValue * (1 - valueError) || newValue > oldValue * (1 + valueError)) {
+// >>>>>>> origin/joezhong-fix-312
             isValueConverged = false;
             break;
           }
         }
       }
+      
       if (!isValueConverged) {
         break;
       }
     }
+    
+    // replaces the old values with the new values
+    groupToNonGroupMap = newAggregatedMap;
 
     return isValueConverged;
   }

@@ -6,7 +6,7 @@ from
   (
     select
       n_name as nation,
-      substring(o_orderdate,0,4) as o_year,
+      date_format(o_orderdate, '%Y') as o_year,
       l_extendedprice * (1 - l_discount) - ps_supplycost * l_quantity as amount
     from
       lineitem join orders on o_orderkey = l_orderkey

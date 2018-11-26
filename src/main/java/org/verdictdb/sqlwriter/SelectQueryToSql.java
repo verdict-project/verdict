@@ -16,9 +16,25 @@
 
 package org.verdictdb.sqlwriter;
 
-import com.google.common.base.Optional;
-import com.google.common.collect.Sets;
-import org.verdictdb.core.sqlobject.*;
+import java.util.List;
+import java.util.Set;
+
+import org.verdictdb.core.sqlobject.AbstractRelation;
+import org.verdictdb.core.sqlobject.AliasReference;
+import org.verdictdb.core.sqlobject.AliasedColumn;
+import org.verdictdb.core.sqlobject.AsteriskColumn;
+import org.verdictdb.core.sqlobject.BaseColumn;
+import org.verdictdb.core.sqlobject.BaseTable;
+import org.verdictdb.core.sqlobject.ColumnOp;
+import org.verdictdb.core.sqlobject.ConstantColumn;
+import org.verdictdb.core.sqlobject.GroupingAttribute;
+import org.verdictdb.core.sqlobject.JoinTable;
+import org.verdictdb.core.sqlobject.OrderbyAttribute;
+import org.verdictdb.core.sqlobject.SelectItem;
+import org.verdictdb.core.sqlobject.SelectQuery;
+import org.verdictdb.core.sqlobject.SetOperationRelation;
+import org.verdictdb.core.sqlobject.SubqueryColumn;
+import org.verdictdb.core.sqlobject.UnnamedColumn;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBTypeException;
 import org.verdictdb.exception.VerdictDBValueException;
@@ -27,8 +43,8 @@ import org.verdictdb.sqlsyntax.PostgresqlSyntax;
 import org.verdictdb.sqlsyntax.PrestoHiveSyntax;
 import org.verdictdb.sqlsyntax.SqlSyntax;
 
-import java.util.List;
-import java.util.Set;
+import com.google.common.base.Optional;
+import com.google.common.collect.Sets;
 
 public class SelectQueryToSql {
 
@@ -47,6 +63,7 @@ public class SelectQueryToSql {
           "is_null",
           "rand",
           "floor",
+          "hash",
           "interval");
 
   public SelectQueryToSql(SqlSyntax syntax) {
@@ -93,16 +110,20 @@ public class SelectQueryToSql {
     if (column instanceof BaseColumn) {
       BaseColumn base = (BaseColumn) column;
       if (base.getTableSourceAlias() == null) {
-        return base.getColumnName();
+        return quoteName(base.getColumnName());
       }
       if (base.getTableSourceAlias().equals("")) {
         return quoteName(base.getColumnName());
-      } else return base.getTableSourceAlias() + "." + quoteName(base.getColumnName());
+      } else {
+        return base.getTableSourceAlias() + "." + quoteName(base.getColumnName());
+      }
     } else if (column instanceof ConstantColumn) {
       return ((ConstantColumn) column).getValue().toString();
     } else if (column instanceof AsteriskColumn) {
       return "*";
-    } else if (column instanceof ColumnOp) {
+    } 
+    
+    else if (column instanceof ColumnOp) {
       ColumnOp columnOp = (ColumnOp) column;
       if (columnOp.getOpType().equals("avg")) {
         return "avg(" + unnamedColumnToSqlPart(columnOp.getOperand()) + ")";
@@ -275,7 +296,7 @@ public class SelectQueryToSql {
         return withParentheses(columns.get(0)) + " not in (" + temp + ")";
       } else if (columnOp.getOpType().equals("countdistinct")) {
         return "count(distinct " + withParentheses(columnOp.getOperand()) + ")";
-      } else if (columnOp.getOpType().equals("approx_countdistinct")) {
+      } else if (columnOp.getOpType().equals("approx_distinct")) {
         return syntax.getApproximateCountDistinct(withParentheses(columnOp.getOperand()));
       } else if (columnOp.getOpType().equals("substr")) {
         if (columnOp.getOperands().size() == 3) {
@@ -295,6 +316,8 @@ public class SelectQueryToSql {
         }
       } else if (columnOp.getOpType().equals("rand")) {
         return syntax.randFunction();
+      } else if (columnOp.getOpType().equals("hash")) {
+        return syntax.hashFunction(withParentheses(columnOp.getOperand()));
       } else if (columnOp.getOpType().equals("cast")) {
         // MySQL cast as int should be replaced by cast as unsigned
         if (syntax instanceof MysqlSyntax

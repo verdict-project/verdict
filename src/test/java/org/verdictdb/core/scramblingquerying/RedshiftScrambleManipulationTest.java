@@ -16,16 +16,8 @@
 
 package org.verdictdb.core.scramblingquerying;
 
-import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.verdictdb.commons.DatabaseConnectionHelpers;
-import org.verdictdb.commons.VerdictOption;
-import org.verdictdb.connection.JdbcConnection;
-import org.verdictdb.core.scrambling.ScrambleMeta;
-import org.verdictdb.exception.VerdictDBDbmsException;
-import org.verdictdb.metastore.ScrambleMetaStore;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.sql.Connection;
@@ -37,8 +29,16 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.verdictdb.commons.DatabaseConnectionHelpers;
+import org.verdictdb.commons.VerdictOption;
+import org.verdictdb.connection.JdbcConnection;
+import org.verdictdb.core.scrambling.ScrambleMeta;
+import org.verdictdb.exception.VerdictDBDbmsException;
+import org.verdictdb.metastore.ScrambleMetaStore;
 
 /** Created by Dong Young Yoon on 8/16/18. */
 public class RedshiftScrambleManipulationTest {

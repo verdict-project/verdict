@@ -1,14 +1,14 @@
 package org.verdictdb.jdbc41;
 
-import org.verdictdb.VerdictSingleResult;
-import org.verdictdb.commons.DataTypeConverter;
+import static java.sql.Types.INTEGER;
 
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
 
-import static java.sql.Types.INTEGER;
+import org.verdictdb.VerdictSingleResult;
+import org.verdictdb.commons.DataTypeConverter;
 
 /**
  * Created by: Shucheng Zhong on 9/14/18

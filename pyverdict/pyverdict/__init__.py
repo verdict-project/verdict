@@ -19,8 +19,16 @@ import json
 
 __version__ = get_metadata('__version__')
 
-def mysql_context(host, user, password, port=3306):
+__verdictdb_version__ = get_metadata('__verdictdb_version__')
+
+def mysql_context(host, user, password=None, port=3306):
     return VerdictContext.new_mysql_context(host, user, password, port)
+
+def mysql(host, user, password=None, port=3306):
+    return mysql_context(host, user, password, port)
 
 def presto_context(host, catalog, user, password=None, port=8081):
     return VerdictContext.new_presto_context(host, catalog, user, password, port)
+
+def presto(host, catalog, user, password=None, port=8081):
+    return presto_context(host, catalog, user, password, port)

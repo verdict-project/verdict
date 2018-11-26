@@ -16,7 +16,11 @@
 
 package org.verdictdb.sqlwriter;
 
-import com.google.common.base.Joiner;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.core.sqlobject.AsteriskColumn;
@@ -31,15 +35,13 @@ import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBTypeException;
 import org.verdictdb.sqlsyntax.HiveSyntax;
 import org.verdictdb.sqlsyntax.ImpalaSyntax;
+import org.verdictdb.sqlsyntax.MysqlSyntax;
 import org.verdictdb.sqlsyntax.PostgresqlSyntax;
 import org.verdictdb.sqlsyntax.PrestoHiveSyntax;
 import org.verdictdb.sqlsyntax.SparkSyntax;
 import org.verdictdb.sqlsyntax.SqlSyntax;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
+import com.google.common.base.Joiner;
 
 public class CreateTableToSql {
 
@@ -227,6 +229,18 @@ public class CreateTableToSql {
       sql.append("using parquet ");
     }
 
+    // set primary key
+    if (syntax instanceof MysqlSyntax && !query.getPrimaryColumns().isEmpty()) {
+      sql.append("(PRIMARY KEY (");
+      for (String column : query.getPrimaryColumns()) {
+        if (query.getPrimaryColumns().indexOf(column) != query.getPrimaryColumns().size() - 1) {
+          sql.append(String.format("`%s`, ", column));
+        } else {
+          sql.append(String.format("`%s`)) ", column));
+        }
+      }
+    }
+
     if (syntax instanceof PrestoHiveSyntax) {
       sql.append("WITH (");
       sql.append("format = 'orc'");
@@ -252,6 +266,7 @@ public class CreateTableToSql {
     if (syntax instanceof HiveSyntax || syntax instanceof ImpalaSyntax) {
       sql.append("stored as parquet ");
     }
+
 
     // select
     if (syntax.isAsRequiredBeforeSelectInCreateTable()) {

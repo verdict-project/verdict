@@ -16,22 +16,18 @@
 
 package org.verdictdb.jdbc41;
 
-import org.verdictdb.VerdictContext;
-import org.verdictdb.VerdictSingleResult;
-import org.verdictdb.coordinator.ExecutionContext;
-import org.verdictdb.exception.VerdictDBException;
-
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.SQLWarning;
 
+import org.verdictdb.VerdictContext;
 import org.verdictdb.VerdictResultStream;
+import org.verdictdb.VerdictSingleResult;
 import org.verdictdb.commons.VerdictDBLogger;
-import org.verdictdb.parser.VerdictSQLParser;
-import org.verdictdb.parser.VerdictSQLParserBaseVisitor;
-import org.verdictdb.sqlreader.NonValidatingSQLParser;
+import org.verdictdb.coordinator.ExecutionContext;
+import org.verdictdb.exception.VerdictDBException;
 
 public class VerdictStatement implements java.sql.Statement {
 

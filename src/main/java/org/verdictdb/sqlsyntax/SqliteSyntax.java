@@ -124,7 +124,7 @@ public class SqliteSyntax extends SqlSyntax {
   }
 
   @Override
-  public String hashFunction(String column, int upper_bound) {
+  public String hashFunction(String column) {
     return null;
   }
 }

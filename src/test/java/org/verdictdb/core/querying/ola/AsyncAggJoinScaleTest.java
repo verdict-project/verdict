@@ -2,7 +2,6 @@ package org.verdictdb.core.querying.ola;
 
 import static java.sql.Types.BIGINT;
 import static java.sql.Types.DOUBLE;
-import static org.junit.Assert.assertEquals;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -21,7 +20,6 @@ import org.junit.Test;
 import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.connection.StaticMetaData;
 import org.verdictdb.core.execplan.ExecutablePlanRunner;
-import org.verdictdb.core.execplan.ExecutionInfoToken;
 import org.verdictdb.core.querying.AggExecutionNode;
 import org.verdictdb.core.querying.QueryExecutionPlan;
 import org.verdictdb.core.querying.QueryExecutionPlanFactory;
@@ -36,7 +34,6 @@ import org.verdictdb.sqlreader.NonValidatingSQLParser;
 import org.verdictdb.sqlreader.RelationStandardizer;
 import org.verdictdb.sqlsyntax.H2Syntax;
 import org.verdictdb.sqlwriter.QueryToSql;
-import org.verdictdb.sqlwriter.SelectQueryToSql;
 
 public class AsyncAggJoinScaleTest {
 

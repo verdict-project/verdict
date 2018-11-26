@@ -16,6 +16,14 @@
 
 package org.verdictdb.metastore;
 
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.VerdictSingleResult;
@@ -38,13 +46,6 @@ import org.verdictdb.core.sqlobject.SelectItem;
 import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sqlwriter.QueryToSql;
-
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
 
 public class ScrambleMetaStore extends VerdictMetaStore {
 
@@ -145,7 +146,7 @@ public class ScrambleMetaStore extends VerdictMetaStore {
   public void dropAllScrambleTable(BaseTable originalTable) throws VerdictDBException {
     String originalTableSchema = originalTable.getSchemaName();
     String originalTableName = originalTable.getTableName();
-    ScrambleMetaSet metaSet = this.retrieve();
+    ScrambleMetaSet metaSet = retrieve();
 
     for (Iterator<ScrambleMeta> it = metaSet.iterator(); it.hasNext(); ) {
       ScrambleMeta meta = it.next();
@@ -191,6 +192,10 @@ public class ScrambleMetaStore extends VerdictMetaStore {
     conn.execute(sql);
   }
 
+  /**
+   * Removes the metastore table if exists.
+   * @throws VerdictDBException
+   */
   public void remove() throws VerdictDBException {
     // create a schema if not exists
     CreateSchemaQuery createSchemaQuery = new CreateSchemaQuery(storeSchema);
@@ -205,7 +210,7 @@ public class ScrambleMetaStore extends VerdictMetaStore {
   }
 
   /**
-   * This will add on top of existing entries.
+   * This will add on top of existing entries. A new metastore table is created if not exists.
    *
    * @param scrambleMetaSet
    * @throws VerdictDBException
@@ -271,6 +276,8 @@ public class ScrambleMetaStore extends VerdictMetaStore {
     String scrambleTable = meta.getTableName();
     String scrambleMethod = meta.getMethod();
     VerdictTimestamp timestamp = new VerdictTimestamp(new Date());
+//    System.out.println("new date: " + timestamp);
+//    System.out.println("calendar: " + Calendar.getInstance().get(Calendar.MILLISECOND));
     String jsonString = meta.toJsonString();
     query.setValues(
         Arrays.<Object>asList(
@@ -335,13 +342,15 @@ public class ScrambleMetaStore extends VerdictMetaStore {
       Set<Pair<String, String>> addedSet = new HashSet<>();
 
       while (result.next()) {
-        String originalSchema = result.getString(0);
-        String originalTable = result.getString(1);
+//        String originalSchema = result.getString(0);
+//        String originalTable = result.getString(1);
         String scrambleSchema = result.getString(2);
         String scrambleTable = result.getString(3);
-        BaseTable original = new BaseTable(originalSchema, originalTable);
-        BaseTable scramble = new BaseTable(scrambleSchema, scrambleTable);
+//        BaseTable original = new BaseTable(originalSchema, originalTable);
+//        BaseTable scramble = new BaseTable(scrambleSchema, scrambleTable);
         Pair<String, String> pair = ImmutablePair.of(scrambleSchema, scrambleTable);
+        String timestamp = result.getString(4);
+//        System.out.println("added time: " + timestamp);
         String jsonString = result.getString(5);
         if (jsonString.toUpperCase().equals(DELETED)) {
           deletedSet.add(pair);

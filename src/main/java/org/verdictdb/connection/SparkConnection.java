@@ -135,6 +135,11 @@ public class SparkConnection extends DbmsConnection {
   }
 
   @Override
+  public List<String> getPrimaryKey(String schema, String table) throws VerdictDBDbmsException {
+    return null;
+  }
+
+  @Override
   public DbmsQueryResult execute(String sql) throws VerdictDBDbmsException {
     String quoteChars = "'\"";
     List<String> sqls = StringSplitter.splitOnSemicolon(sql, quoteChars);
@@ -147,7 +152,7 @@ public class SparkConnection extends DbmsConnection {
   
   public DbmsQueryResult executeSingle(String sql) throws VerdictDBDbmsException {
     sql = sql.replace(";", "");   // remove semicolons
-    log.debug("Issuing the following query to Spark: " + sql);
+    log.debug("Issues the following query to Spark: " + sql);
 
     try {
       SparkQueryResult srs = null;

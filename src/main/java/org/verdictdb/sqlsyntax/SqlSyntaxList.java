@@ -43,6 +43,7 @@ public class SqlSyntaxList {
 
   public static SqlSyntax getSyntaxFromConnectionString(String connectionString) {
     String dbName = connectionString.split(":")[1];
+    
     SqlSyntax syntax = SqlSyntaxList.getSyntaxFor(dbName);
     if (syntax == null) {
       dbName = connectionString.split(":")[0];

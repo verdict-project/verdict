@@ -16,14 +16,14 @@
 
 package org.verdictdb.core.sqlobject;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.apache.commons.lang3.tuple.Pair;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Example: CRAETE TABLE test1 PARTITION OF test FOR VALUES IN (1);
@@ -48,6 +48,8 @@ public class CreateScrambledTableQuery extends CreateTableQuery {
 
   protected List<String> partitionColumns = new ArrayList<>();
 
+  protected List<String> primaryKeyColumnName = new ArrayList<>();
+
   protected boolean overwrite = false;
 
   protected int blockCount = 1;
@@ -65,6 +67,7 @@ public class CreateScrambledTableQuery extends CreateTableQuery {
       int blockCount,
       int actualBlockCount,
       List<Pair<String, String>> columnMeta,
+      List<String> primaryKeyColumnName,
       boolean createIfNotExists) {
     this.originalSchemaName = originalSchemaName;
     this.originalTableName = originalTableName;
@@ -76,6 +79,7 @@ public class CreateScrambledTableQuery extends CreateTableQuery {
     this.blockCount = blockCount;
     this.actualBlockCount = actualBlockCount;
     this.columnMeta = columnMeta;
+    this.primaryKeyColumnName = primaryKeyColumnName;
     this.overwrite = createIfNotExists;
   }
 

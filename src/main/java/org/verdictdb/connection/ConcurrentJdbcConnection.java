@@ -16,18 +16,18 @@
 
 package org.verdictdb.connection;
 
-import org.apache.commons.lang3.tuple.Pair;
-import org.verdictdb.commons.VerdictDBLogger;
-import org.verdictdb.exception.VerdictDBDbmsException;
-import org.verdictdb.sqlsyntax.SqlSyntax;
-import org.verdictdb.sqlsyntax.SqlSyntaxList;
-
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+
+import org.apache.commons.lang3.tuple.Pair;
+import org.verdictdb.commons.VerdictDBLogger;
+import org.verdictdb.exception.VerdictDBDbmsException;
+import org.verdictdb.sqlsyntax.SqlSyntax;
+import org.verdictdb.sqlsyntax.SqlSyntaxList;
 
 /**
  * Maintains a pool of multiple java.sql.Connections to provide concurrent execution of queries to
@@ -131,6 +131,11 @@ public class ConcurrentJdbcConnection extends DbmsConnection {
     for (JdbcConnection c : connections) {
       c.setDefaultSchema(schema);
     }
+  }
+
+  @Override
+  public List<String> getPrimaryKey(String schema, String table) throws VerdictDBDbmsException {
+    return getNextConnection().getPrimaryKey(schema, table);
   }
 
   @Override

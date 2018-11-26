@@ -16,6 +16,9 @@
 
 package org.verdictdb.core.scrambling;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.core.execplan.ExecutionInfoToken;
@@ -26,9 +29,6 @@ import org.verdictdb.core.sqlobject.CreateScrambledTableQuery;
 import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.core.sqlobject.SqlConvertible;
 import org.verdictdb.exception.VerdictDBException;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /** Created by Dong Young Yoon on 7/17/18. */
 public class CreateScrambledTableNode extends QueryNodeWithPlaceHolders {
@@ -103,17 +103,21 @@ public class CreateScrambledTableNode extends QueryNodeWithPlaceHolders {
     newTableSchemaName = tempTableFullName.getLeft();
     newTableName = tempTableFullName.getRight();
     List<Pair<String, String>> columnMeta = null;
+    List<String> primaryKeyColumnName = null;
     for (ExecutionInfoToken token : tokens) {
       Object val = token.getValue(ScramblingPlan.COLUMN_METADATA_KEY);
       if (val != null) {
         columnMeta = (List<Pair<String, String>>) val;
-        break;
+      } else {
+        val = token.getValue(ScramblingPlan.PRIMARYKEY_METADATA_KEY);
+        if (val != null) {
+          primaryKeyColumnName = (List<String>) val;
+        }
       }
     }
     if (columnMeta == null) {
       throw new VerdictDBException("Column meta is null.");
     }
-
     CreateScrambledTableQuery createQuery =
         new CreateScrambledTableQuery(
             originalSchemaName,
@@ -126,6 +130,7 @@ public class CreateScrambledTableNode extends QueryNodeWithPlaceHolders {
             method.getBlockCount(),
             method.getActualBlockCount(),
             columnMeta,
+            primaryKeyColumnName,
             createIfNotExists);
     for (String col : partitionColumns) {
       createQuery.addPartitionColumn(col);

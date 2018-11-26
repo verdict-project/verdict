@@ -21,7 +21,6 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.commons.lang3.tuple.Triple;
 import org.verdictdb.core.execplan.ExecutableNode;
 import org.verdictdb.core.querying.AggExecutionNode;
 import org.verdictdb.core.querying.CreateTableAsSelectNode;

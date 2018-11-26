@@ -24,16 +24,17 @@ nav:
     - Example VerdictDB App:
       - MySQL: tutorial/examples/mysql.md
       - Apache Spark: tutorial/examples/spark.md
-    - ML-based Analytics: tutorial/advanced.md
+    # - ML-based Analytics: tutorial/advanced.md
   - Reference:
-    - Connecting to Data Sources: reference/connection.md
+    - Connecting to Databases: reference/connection.md
     - VerdictDB JDBC Properties: reference/properties.md
-    - Simple Querying: reference/querying.md
-    - Scrambles:
-      - What is a Scramble?: reference/what_is_scramble.md
-      - Creating/Viewing Scrambles: reference/scrambling.md
-      - Dropping Scrambles: reference/drop_scrambling.md
-    - Select Query Syntax: reference/query_syntax.md
+    # - Simple Querying: reference/querying.md
+    - Creating/Viewing Scrambles: reference/scrambling.md
+    - Dropping Scrambles: reference/drop_scrambling.md
+    # - Scrambles:
+    #   - What is a Scramble?: reference/what_is_scramble.md
+    #   - 
+    - Select-Query Syntax: reference/query_syntax.md
     - Stream Querying: reference/streaming.md
     - Javadoc: reference/javadoc.md
   #   - VerdictDB Queries: reference/supported_queries.md

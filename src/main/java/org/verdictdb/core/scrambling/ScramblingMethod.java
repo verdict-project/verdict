@@ -16,12 +16,12 @@
 
 package org.verdictdb.core.scrambling;
 
+import java.util.List;
+import java.util.Map;
+
 import org.verdictdb.core.querying.ExecutableNodeBase;
 import org.verdictdb.core.sqlobject.AbstractRelation;
 import org.verdictdb.core.sqlobject.UnnamedColumn;
-
-import java.util.List;
-import java.util.Map;
 
 public interface ScramblingMethod {
 
@@ -32,7 +32,8 @@ public interface ScramblingMethod {
       String oldSchemaName,
       String oldTableName,
       String columnMetaTokenKey,
-      String partitionMetaTokenKey);
+      String partitionMetaTokenKey,
+      String primarykeyMetaTokenKey);
   //  StatiticsQueryGenerator getStatisticsQueryGenerator();
 
   // Stage 3 methods

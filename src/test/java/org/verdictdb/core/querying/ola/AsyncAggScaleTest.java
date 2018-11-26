@@ -20,9 +20,6 @@ import org.junit.Test;
 import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.connection.StaticMetaData;
 import org.verdictdb.core.execplan.ExecutablePlanRunner;
-import org.verdictdb.core.execplan.ExecutionInfoToken;
-import org.verdictdb.core.querying.AggExecutionNode;
-import org.verdictdb.core.querying.ExecutableNodeBase;
 import org.verdictdb.core.querying.QueryExecutionPlan;
 import org.verdictdb.core.querying.QueryExecutionPlanFactory;
 import org.verdictdb.core.scrambling.ScrambleMeta;
@@ -36,7 +33,6 @@ import org.verdictdb.sqlreader.NonValidatingSQLParser;
 import org.verdictdb.sqlreader.RelationStandardizer;
 import org.verdictdb.sqlsyntax.H2Syntax;
 import org.verdictdb.sqlwriter.QueryToSql;
-import org.verdictdb.sqlwriter.SelectQueryToSql;
 
 public class AsyncAggScaleTest {
 

@@ -16,13 +16,13 @@
 
 package org.verdictdb.connection;
 
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
-import org.verdictdb.exception.VerdictDBDbmsException;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
+import org.verdictdb.exception.VerdictDBDbmsException;
 
 public class CachedMetaDataProvider implements MetaDataProvider {
 
@@ -105,5 +105,10 @@ public class CachedMetaDataProvider implements MetaDataProvider {
   public void setDefaultSchema(String schema) throws VerdictDBDbmsException {
     metaProvider.setDefaultSchema(schema);
     //    defaultSchema = schema;
+  }
+
+  @Override
+  public List<String> getPrimaryKey(String schema, String table) throws VerdictDBDbmsException {
+    return metaProvider.getPrimaryKey(schema, table);
   }
 }

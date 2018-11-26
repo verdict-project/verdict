@@ -12,8 +12,8 @@ from
   from
     lineitem
 where
-  l_shipdate >= '1994-01-01'
-  and l_shipdate < '1998-01-01'
+  l_shipdate >= date '1994-01-01'
+  and l_shipdate < date '1998-01-01'
 group by l_partkey, l_suppkey) as q20_tmp2_cached
 where
   s_nationkey = n_nationkey

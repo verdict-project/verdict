@@ -37,7 +37,6 @@ import java.util.Map;
 
 import javax.sql.rowset.serial.SerialBlob;
 
-import org.verdictdb.connection.TypeCasting;
 import org.verdictdb.jdbc41.VerdictJdbcArray;
 
 public abstract class AttributeValueRetrievalHelper {

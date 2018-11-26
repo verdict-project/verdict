@@ -16,6 +16,10 @@
 
 package org.verdictdb.sqlreader;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import org.verdictdb.core.sqlobject.ColumnOp;
 import org.verdictdb.core.sqlobject.ConstantColumn;
 import org.verdictdb.core.sqlobject.SelectQuery;
@@ -23,10 +27,6 @@ import org.verdictdb.core.sqlobject.SubqueryColumn;
 import org.verdictdb.core.sqlobject.UnnamedColumn;
 import org.verdictdb.parser.VerdictSQLParser;
 import org.verdictdb.parser.VerdictSQLParserBaseVisitor;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 public class CondGen extends VerdictSQLParserBaseVisitor<UnnamedColumn> {
 
