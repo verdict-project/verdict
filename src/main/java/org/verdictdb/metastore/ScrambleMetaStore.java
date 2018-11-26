@@ -17,6 +17,7 @@
 package org.verdictdb.metastore;
 
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -275,6 +276,8 @@ public class ScrambleMetaStore extends VerdictMetaStore {
     String scrambleTable = meta.getTableName();
     String scrambleMethod = meta.getMethod();
     VerdictTimestamp timestamp = new VerdictTimestamp(new Date());
+//    System.out.println("new date: " + timestamp);
+//    System.out.println("calendar: " + Calendar.getInstance().get(Calendar.MILLISECOND));
     String jsonString = meta.toJsonString();
     query.setValues(
         Arrays.<Object>asList(
@@ -346,6 +349,8 @@ public class ScrambleMetaStore extends VerdictMetaStore {
 //        BaseTable original = new BaseTable(originalSchema, originalTable);
 //        BaseTable scramble = new BaseTable(scrambleSchema, scrambleTable);
         Pair<String, String> pair = ImmutablePair.of(scrambleSchema, scrambleTable);
+        String timestamp = result.getString(4);
+//        System.out.println("added time: " + timestamp);
         String jsonString = result.getString(5);
         if (jsonString.toUpperCase().equals(DELETED)) {
           deletedSet.add(pair);
