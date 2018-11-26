@@ -245,7 +245,6 @@ public class ExecutionContext {
     try {
       while (stream.hasNext()) {
         VerdictSingleResult rs = stream.next();
-        ;
         accEst.add(rs);
         if (accEst.isLastResultAccurate()) {
           return rs;
