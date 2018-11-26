@@ -134,7 +134,7 @@ class PrestoQueryStatusPrinter implements Consumer<QueryStats> {
     if (pb != null) {
       pb.close();
       pb = null;
-      System.err.println("\n");   // supply an extra line break to ensure
+//      System.err.println("\n");   // supply an extra line break to ensure
     }
   }
 
