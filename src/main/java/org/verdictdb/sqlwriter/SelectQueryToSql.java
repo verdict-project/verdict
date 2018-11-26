@@ -296,7 +296,7 @@ public class SelectQueryToSql {
         return withParentheses(columns.get(0)) + " not in (" + temp + ")";
       } else if (columnOp.getOpType().equals("countdistinct")) {
         return "count(distinct " + withParentheses(columnOp.getOperand()) + ")";
-      } else if (columnOp.getOpType().equals("approx_countdistinct")) {
+      } else if (columnOp.getOpType().equals("approx_distinct")) {
         return syntax.getApproximateCountDistinct(withParentheses(columnOp.getOperand()));
       } else if (columnOp.getOpType().equals("substr")) {
         if (columnOp.getOperands().size() == 3) {

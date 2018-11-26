@@ -28,6 +28,7 @@ import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.connection.CachedDbmsConnection;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.DbmsQueryResult;
+import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.connection.SparkConnection;
 import org.verdictdb.core.querying.ExecutableNodeBase;
 import org.verdictdb.core.querying.ola.AsyncAggExecutionNode;
@@ -37,6 +38,7 @@ import org.verdictdb.core.sqlobject.SqlConvertible;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBValueException;
+import org.verdictdb.sqlsyntax.MysqlSyntax;
 import org.verdictdb.sqlwriter.QueryToSql;
 
 public class ExecutableNodeRunner implements Runnable {
@@ -192,19 +194,32 @@ public class ExecutableNodeRunner implements Runnable {
     return false;
   }
 
+  private int getMaxNumberOfRunningNode() {
+    if ((conn instanceof JdbcConnection && conn.getSyntax() instanceof MysqlSyntax)
+        || (conn instanceof CachedDbmsConnection
+          && ((CachedDbmsConnection)conn).getOriginalConnection() instanceof JdbcConnection)
+          && ((CachedDbmsConnection)conn).getOriginalConnection().getSyntax() instanceof MysqlSyntax) {
+      // For MySQL, issue query one by one.
+      if (node instanceof SelectAsyncAggExecutionNode || node instanceof AsyncAggExecutionNode) {
+        return 2;
+      } else {
+        return 1;
+      }
+    } else if (((conn instanceof SparkConnection) || (conn instanceof CachedDbmsConnection
+            && ((CachedDbmsConnection) conn).getOriginalConnection() instanceof SparkConnection))
+            && !(node instanceof SelectAsyncAggExecutionNode)) {
+      // Since abort() does not work for Spark (or I don't know how to do so), we issue query
+      // one by one.
+      return 1;
+    } else {
+      return 10;
+    }
+  }
+
   private void runDependents() {
     synchronized (this) {
       if (doesThisNodeContainAsyncAggExecutionNode()) {
-        int maxNumberOfRunningNode = 10;
-        if (((conn instanceof SparkConnection) ||
-            (conn instanceof CachedDbmsConnection
-                && ((CachedDbmsConnection) conn).getOriginalConnection() instanceof SparkConnection))
-            && !(node instanceof SelectAsyncAggExecutionNode)) {
-          // Since abort() does not work for Spark (or I don't know how to do so), we issue query
-          // one by one.
-          maxNumberOfRunningNode = 1;
-        }
-
+        int maxNumberOfRunningNode = getMaxNumberOfRunningNode();
         int currentlyRunningOrCompleteNodeCount = childRunners.size();
 
         // check the number of currently running nodes

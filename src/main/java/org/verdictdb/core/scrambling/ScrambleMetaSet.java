@@ -17,19 +17,27 @@
 package org.verdictdb.core.scrambling;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
+import java.util.List;
 
-import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
+/**
+ * A set of scrambleMeta items.
+ * 
+ * The internal order of ScrambleMeta items is equal to the insertion order.
+ * @author pyongjoo
+ *
+ */
 public class ScrambleMetaSet implements Serializable, Iterable<ScrambleMeta> {
 
   private static final long serialVersionUID = 5106301901144427405L;
 
-  Map<Pair<String, String>, ScrambleMeta> meta = new HashMap<>();
+  // key: (schema, table) of a scramble
+  // value: meta information
+  List<Pair<Pair<String, String>, ScrambleMeta>> metaSet = new ArrayList<>();
 
   public ScrambleMetaSet() {}
 
@@ -39,6 +47,27 @@ public class ScrambleMetaSet implements Serializable, Iterable<ScrambleMeta> {
       metaset.addScrambleMeta(meta);
     }
     return metaset;
+  }
+  
+  private ScrambleMeta getMetaFor(Pair<String, String> metakey) {
+    for (Pair<Pair<String, String>, ScrambleMeta> item : metaSet) {
+      Pair<String, String> key = item.getKey();
+      ScrambleMeta m = item.getValue();
+      if (key.equals(metakey)) {
+        return m;
+      }
+    }
+    return null;
+  }
+  
+  private boolean doesContain(Pair<String, String> metakey) {
+    for (Pair<Pair<String, String>, ScrambleMeta> item : metaSet) {
+      Pair<String, String> key = item.getKey();
+      if (key.equals(metakey)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**
@@ -50,11 +79,11 @@ public class ScrambleMetaSet implements Serializable, Iterable<ScrambleMeta> {
    * @return
    */
   public String getAggregationBlockColumn(String schemaName, String tableName) {
-    return meta.get(metaKey(schemaName, tableName)).getAggregationBlockColumn();
+    return getSingleMeta(schemaName, tableName).getAggregationBlockColumn();
   }
 
   public ScrambleMeta getSingleMeta(String schemaName, String tableName) {
-    return meta.get(new ImmutablePair<String, String>(schemaName, tableName));
+    return getMetaFor(getMetaKey(schemaName, tableName));
   }
 
   /**
@@ -65,33 +94,33 @@ public class ScrambleMetaSet implements Serializable, Iterable<ScrambleMeta> {
    * @return
    */
   public int getAggregationBlockCount(String schemaName, String tableName) {
-    return meta.get(metaKey(schemaName, tableName)).getAggregationBlockCount();
+    return getSingleMeta(schemaName, tableName).getAggregationBlockCount();
   }
 
   @Deprecated
   public String getSubsampleColumn(String aliasName) {
-    return meta.get(metaKey(aliasName)).getSubsampleColumn();
+    return getMetaFor(metaKey(aliasName)).getSubsampleColumn();
   }
 
   public String getSubsampleColumn(String schemaName, String tableName) {
-    return meta.get(metaKey(schemaName, tableName)).getSubsampleColumn();
+    return getMetaFor(getMetaKey(schemaName, tableName)).getSubsampleColumn();
   }
 
   @Deprecated
   public String getTierColumn(String aliasName) {
-    return meta.get(metaKey(aliasName)).getTierColumn();
+    return getMetaFor(metaKey(aliasName)).getTierColumn();
   }
 
   public String getTierColumn(String schemaName, String tableName) {
-    return meta.get(metaKey(schemaName, tableName)).getTierColumn();
+    return getSingleMeta(schemaName, tableName).getTierColumn();
   }
   
   public String getScramblingMethod(String schemaName, String tableName) {
-    return meta.get(metaKey(schemaName, tableName)).getMethodWithDefault("uniform");
+    return getSingleMeta(schemaName, tableName).getMethodWithDefault("uniform");
   }
   
   public String getHashColumn(String schemaName, String tableName) {
-    return meta.get(metaKey(schemaName, tableName)).getHashColumn();
+    return getSingleMeta(schemaName, tableName).getHashColumn();
   }
 
   /**
@@ -103,7 +132,7 @@ public class ScrambleMetaSet implements Serializable, Iterable<ScrambleMeta> {
   public void addScrambleMeta(ScrambleMeta tablemeta) {
     String schema = tablemeta.getSchemaName();
     String table = tablemeta.getTableName();
-    meta.put(metaKey(schema, table), tablemeta);
+    metaSet.add(Pair.of(getMetaKey(schema, table), tablemeta));
   }
 
   @Deprecated
@@ -121,7 +150,7 @@ public class ScrambleMetaSet implements Serializable, Iterable<ScrambleMeta> {
     //    tableMeta.setInclusionProbabilityColumn(inclusionProbabilityColumn);
     //    tableMeta.setInclusionProbabilityBlockDifferenceColumn(inclusionProbBlockDiffColumn);
     //    tableMeta.setAggregationBlockCount(aggregationBlockCount);
-    meta.put(metaKey(aliasName), tableMeta);
+    metaSet.add(Pair.of(metaKey(aliasName), tableMeta));
   }
 
   public void insertScrambleMetaEntry(
@@ -138,16 +167,16 @@ public class ScrambleMetaSet implements Serializable, Iterable<ScrambleMeta> {
     tableMeta.setSubsampleColumn(subsampleColumn);
     tableMeta.setTierColumn(tierColumn);
     tableMeta.setAggregationBlockCount(aggregationBlockCount);
-    meta.put(metaKey(schemaName, tableName), tableMeta);
+    metaSet.add(Pair.of(getMetaKey(schemaName, tableName), tableMeta));
   }
 
   @Deprecated
   public boolean isScrambled(String aliasName) {
-    return meta.containsKey(metaKey(aliasName));
+    return doesContain(metaKey(aliasName));
   }
 
   public boolean isScrambled(String schemaName, String tableName) {
-    return meta.containsKey(metaKey(schemaName, tableName));
+    return doesContain(getMetaKey(schemaName, tableName));
   }
 
   @Deprecated
@@ -155,16 +184,20 @@ public class ScrambleMetaSet implements Serializable, Iterable<ScrambleMeta> {
     return Pair.of("aliasName", aliasName);
   }
 
-  private Pair<String, String> metaKey(String schemaName, String tableName) {
+  private Pair<String, String> getMetaKey(String schemaName, String tableName) {
     return Pair.of(schemaName, tableName);
   }
 
   @Override
   public Iterator<ScrambleMeta> iterator() {
-    return meta.values().iterator();
+    List<ScrambleMeta> metas = new ArrayList<>();
+    for (Pair<Pair<String, String>, ScrambleMeta> item : metaSet) {
+      metas.add(item.getValue());
+    }
+    return metas.iterator();
   }
 
   public ScrambleMeta getMetaForTable(String schema, String table) {
-    return meta.get(metaKey(schema, table));
+    return getSingleMeta(schema, table);
   }
 }

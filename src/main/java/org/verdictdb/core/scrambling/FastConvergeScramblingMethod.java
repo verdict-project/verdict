@@ -133,7 +133,8 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
       String oldSchemaName,
       String oldTableName,
       String columnMetaTokenKey,
-      String partitionMetaTokenKey) {
+      String partitionMetaTokenKey,
+      String primarykeyMetaTokenKey) {
 
     List<ExecutableNodeBase> statisticsNodes = new ArrayList<>();
 

@@ -52,7 +52,7 @@ public class CreateTableAsSelectNode extends QueryNodeWithPlaceHolders {
   public IdCreator getNamer() {
     return namer;
   }
-  
+
   public void setNamer(IdCreator namer) {
     this.namer = namer;
   }
@@ -61,7 +61,7 @@ public class CreateTableAsSelectNode extends QueryNodeWithPlaceHolders {
     partitionColumns.add(column);
   }
 
-  
+
   /**
    * The namer is used for each token to handle the case that the downstream node passes multiple
    * tokens (e.g., AsyncAggNode).

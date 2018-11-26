@@ -174,11 +174,6 @@ public class MysqlSyntax extends SqlSyntax {
   public String randFunction() {
     return "rand()";
   }
-  
-  @Override
-  public long getRecommendedblockSize() {
-    return (int) 1e6;
-  }
 
   @Override
   public boolean isAsRequiredBeforeSelectInCreateTable() {
@@ -202,6 +197,11 @@ public class MysqlSyntax extends SqlSyntax {
   @Override
   public String getApproximateCountDistinct(String column) {
     return String.format("count(distinct %s)", column);
+  }
+
+  @Override
+  public String getPrimaryKey(String schema, String table) {
+    return String.format("SHOW KEYS FROM %s.%s WHERE Key_name = 'PRIMARY'", schema, table);
   }
 
   /**
@@ -228,4 +228,6 @@ public class MysqlSyntax extends SqlSyntax {
         column, hashPrecision, hashPrecision);
     return f;
   }
+
+
 }

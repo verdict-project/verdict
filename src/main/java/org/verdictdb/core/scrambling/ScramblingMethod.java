@@ -32,7 +32,8 @@ public interface ScramblingMethod {
       String oldSchemaName,
       String oldTableName,
       String columnMetaTokenKey,
-      String partitionMetaTokenKey);
+      String partitionMetaTokenKey,
+      String primarykeyMetaTokenKey);
   //  StatiticsQueryGenerator getStatisticsQueryGenerator();
 
   // Stage 3 methods

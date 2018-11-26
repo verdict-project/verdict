@@ -77,11 +77,6 @@ public class PostgresqlSyntax extends SqlSyntax {
   public String randFunction() {
     return "random()";
   }
-  
-  @Override
-  public long getRecommendedblockSize() {
-    return (int) 1e5;
-  }
 
   @Override
   public String getSchemaCommand() {

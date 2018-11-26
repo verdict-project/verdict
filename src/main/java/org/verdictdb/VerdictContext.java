@@ -39,6 +39,7 @@ import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.metastore.CachedScrambleMetaStore;
 import org.verdictdb.metastore.ScrambleMetaStore;
 import org.verdictdb.metastore.VerdictMetaStore;
+import org.verdictdb.sqlsyntax.MysqlSyntax;
 import org.verdictdb.sqlsyntax.SqlSyntax;
 import org.verdictdb.sqlsyntax.SqlSyntaxList;
 
@@ -142,6 +143,7 @@ public class VerdictContext {
    */
   public static VerdictContext fromConnectionString(String jdbcConnectionString)
       throws VerdictDBException {
+    jdbcConnectionString = removeVerdictKeywordIfExists(jdbcConnectionString);
     if (!attemptLoadDriverClass(jdbcConnectionString)) {
       throw new VerdictDBException(
           String.format(
@@ -149,7 +151,11 @@ public class VerdictContext {
     }
     VerdictOption options = new VerdictOption();
     options.parseConnectionString(jdbcConnectionString);
-    return new VerdictContext(ConcurrentJdbcConnection.create(jdbcConnectionString), options);
+    if (SqlSyntaxList.getSyntaxFromConnectionString(jdbcConnectionString) instanceof MysqlSyntax) {
+      return new VerdictContext(JdbcConnection.create(jdbcConnectionString), options);
+    } else {
+      return new VerdictContext(ConcurrentJdbcConnection.create(jdbcConnectionString), options);
+    }
   }
 
   /**
@@ -163,6 +169,7 @@ public class VerdictContext {
    */
   public static VerdictContext fromConnectionString(String jdbcConnectionString, Properties info)
       throws VerdictDBException {
+    jdbcConnectionString = removeVerdictKeywordIfExists(jdbcConnectionString);
     if (!attemptLoadDriverClass(jdbcConnectionString)) {
       throw new VerdictDBException(
           String.format(
@@ -172,7 +179,11 @@ public class VerdictContext {
     options.parseConnectionString(jdbcConnectionString);
     options.parseProperties(info);
     options.parseConnectionString(jdbcConnectionString);
-    return new VerdictContext(ConcurrentJdbcConnection.create(jdbcConnectionString, info), options);
+    if (SqlSyntaxList.getSyntaxFromConnectionString(jdbcConnectionString) instanceof MysqlSyntax) {
+      return new VerdictContext(JdbcConnection.create(jdbcConnectionString, info), options);
+    } else {
+      return new VerdictContext(ConcurrentJdbcConnection.create(jdbcConnectionString, info), options);
+    }
     //    Connection jdbcConn = DriverManager.getConnection(jdbcConnectionString, info);
     //    return fromJdbcConnection(jdbcConn);
   }
@@ -189,6 +200,7 @@ public class VerdictContext {
    */
   public static VerdictContext fromConnectionString(
       String jdbcConnectionString, String user, String password) throws VerdictDBException {
+    jdbcConnectionString = removeVerdictKeywordIfExists(jdbcConnectionString);
     if (!attemptLoadDriverClass(jdbcConnectionString)) {
       throw new VerdictDBException(
           String.format(
@@ -199,14 +211,39 @@ public class VerdictContext {
     info.setProperty("password", password);
     VerdictOption options = new VerdictOption();
     options.parseConnectionString(jdbcConnectionString);
-    return new VerdictContext(ConcurrentJdbcConnection.create(jdbcConnectionString, info), options);
+    if (SqlSyntaxList.getSyntaxFromConnectionString(jdbcConnectionString) instanceof MysqlSyntax) {
+      return new VerdictContext(JdbcConnection.create(jdbcConnectionString, info), options);
+    } else {
+      return new VerdictContext(ConcurrentJdbcConnection.create(jdbcConnectionString, info), options);
+    }
   }
 
   public static VerdictContext fromConnectionString(
       String jdbcConnectionString, VerdictOption options) throws VerdictDBException {
+    jdbcConnectionString = removeVerdictKeywordIfExists(jdbcConnectionString);
     attemptLoadDriverClass(jdbcConnectionString);
     options.parseConnectionString(jdbcConnectionString);
-    return new VerdictContext(ConcurrentJdbcConnection.create(jdbcConnectionString), options);
+    if (SqlSyntaxList.getSyntaxFromConnectionString(jdbcConnectionString) instanceof MysqlSyntax) {
+      return new VerdictContext(JdbcConnection.create(jdbcConnectionString), options);
+    } else {
+      return new VerdictContext(ConcurrentJdbcConnection.create(jdbcConnectionString), options);
+    }
+  }
+  
+  private static String removeVerdictKeywordIfExists(String connectionString) {
+    String[] tokens = connectionString.split(":");
+    if (tokens[1].equalsIgnoreCase("verdict")) {
+      StringBuilder newConnectionString = new StringBuilder();
+      for (int i = 0; i < tokens.length; i++) {
+        if (i != 1) {
+          newConnectionString.append(tokens[i]);
+        }
+      }
+      connectionString = newConnectionString.toString();
+    } else {
+      // do nothing
+    }
+    return connectionString;
   }
 
   public static VerdictContext fromConnectionString(
@@ -221,7 +258,11 @@ public class VerdictContext {
     info.setProperty("user", user);
     info.setProperty("password", password);
     options.parseConnectionString(jdbcConnectionString);
-    return new VerdictContext(ConcurrentJdbcConnection.create(jdbcConnectionString, info), options);
+    if (SqlSyntaxList.getSyntaxFromConnectionString(jdbcConnectionString) instanceof MysqlSyntax) {
+      return new VerdictContext(JdbcConnection.create(jdbcConnectionString, info), options);
+    } else {
+      return new VerdictContext(ConcurrentJdbcConnection.create(jdbcConnectionString, info), options);
+    }
   }
 
   private static boolean attemptLoadDriverClass(String jdbcConnectionString) {
@@ -293,12 +334,10 @@ public class VerdictContext {
   public ExecutionContext createNewExecutionContext() {
     long execSerialNumber = getNextExecutionSerialNumber();
     ExecutionContext exec = null;
-    try {
-      exec =
-          new ExecutionContext(conn.copy(), metaStore, contextId, execSerialNumber, options.copy());
-    } catch (VerdictDBDbmsException e) {
-      e.printStackTrace();
-    }
+//      exec =
+//          new ExecutionContext(conn.copy(), metaStore, contextId, execSerialNumber, options.copy());
+      // Yongjoo: testing without copy().
+    exec = new ExecutionContext(conn, metaStore, contextId, execSerialNumber, options.copy());
     executionContexts.add(exec);
     return exec;
   }

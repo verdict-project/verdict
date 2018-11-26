@@ -202,11 +202,13 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
         aggroot.getAggMeta().setCubes(Arrays.asList(aggPlan.cubes.get(i)));
 
         // rewrite the select list of the individual aggregate nodes to add tier columns
+        // also agg alias are identified in this function.
         resetTierColumnAliasGeneration();
         addTierColumnsRecursively(copy, aggroot, new HashSet<ExecutableNode>());
 
         // Insert predicates into individual aggregation nodes
-        for (Pair<ExecutableNodeBase, Triple<String, String, String>> a : scrambledNodeAndTableName) {
+        for (Pair<ExecutableNodeBase, Triple<String, String, String>> a 
+            : scrambledNodeAndTableName) {
           ExecutableNodeBase scrambledNode = a.getLeft();
           String schemaName = a.getRight().getLeft();
           String tableName = a.getRight().getMiddle();
@@ -240,7 +242,8 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
       }
 
       // Re-link the subscription relationship for the new AsyncAggNode
-      newRoot = SelectAsyncAggExecutionNode.create(idCreator, individualAggNodes, scrambleMeta, aggNodeBlock);
+      newRoot = SelectAsyncAggExecutionNode.create(
+          idCreator, individualAggNodes, scrambleMeta, aggNodeBlock);
       
     } else {
       // Otherwise, create AsyncAggExeuctionNode instead.
@@ -392,7 +395,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
             || ((ColumnOp) s).getOpType().equals("max")
             || ((ColumnOp) s).getOpType().equals("min")
             || ((ColumnOp) s).getOpType().equals("countdistinct")
-            || ((ColumnOp) s).getOpType().equals("approx_countdistinct")) {
+            || ((ColumnOp) s).getOpType().equals("approx_distinct")) {
           columnOps.add((ColumnOp) s);
         } else {
           itemToCheck.addAll(((ColumnOp) s).getOperands());
@@ -648,7 +651,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
     }
   }
 
-  /*-
+  /**
    * For example, convert
    *
    * 1. avg(price) ---------------------> sum(price) as 'agg0', count(price) as 'agg1'
@@ -733,7 +736,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
                 col.getOpType().equals("count") 
                 || col.getOpType().equals("sum")
                 || col.getOpType().equals("countdistinct")
-                || col.getOpType().equals("approx_countdistinct")) {
+                || col.getOpType().equals("approx_distinct")) {
               
               if (col.getOpType().equals("count")) {
                 if (!meta.getAggColumnAggAliasPair()
@@ -785,7 +788,7 @@ public class AsyncQueryExecutionPlan extends QueryExecutionPlan {
                 }
                 
               } else if (col.getOpType().equals("countdistinct") 
-                  || col.getOpType().equals("approx_countdistinct")) {
+                  || col.getOpType().equals("approx_distinct")) {
                 if (!meta.getAggColumnAggAliasPair()
                     .containsKey(new ImmutablePair<>(col.getOpType(), col.getOperand(0)))) {
                   ColumnOp col1 = new ColumnOp(col.getOpType(), col.getOperand(0));

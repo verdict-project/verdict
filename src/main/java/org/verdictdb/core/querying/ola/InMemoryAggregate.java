@@ -1,4 +1,4 @@
-package org.verdictdb.connection;
+package org.verdictdb.core.querying.ola;
 
 import static java.sql.Types.CHAR;
 import static java.sql.Types.VARCHAR;
@@ -16,6 +16,8 @@ import java.util.List;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.verdictdb.commons.DataTypeConverter;
 import org.verdictdb.commons.VerdictDBLogger;
+import org.verdictdb.connection.DbmsQueryResult;
+import org.verdictdb.connection.JdbcQueryResult;
 import org.verdictdb.core.sqlobject.AbstractRelation;
 import org.verdictdb.core.sqlobject.AliasedColumn;
 import org.verdictdb.core.sqlobject.AsteriskColumn;
@@ -33,7 +35,8 @@ import org.verdictdb.sqlwriter.SelectQueryToSql;
 
 public class InMemoryAggregate {
 
-  private static final String SELECT_ASYNC_AGG_TABLE = "VERDICTDB_SELECTASYNCAGG";
+  private final String SELECT_ASYNC_AGG_TABLE = 
+      String.format("VERDICTDB_SELECTASYNCAGG%s_", RandomStringUtils.randomNumeric(4));
 
   private long selectAsyncAggTableID = 0;
 
@@ -145,6 +148,7 @@ public class InMemoryAggregate {
     DbmsQueryResult dbmsQueryResult = null;
     
     try {
+      log.debug("The following query is issued: " + sql);
       ResultSet rs = stmt.executeQuery(sql);
       dbmsQueryResult = new JdbcQueryResult(rs);
       rs.close();
@@ -159,6 +163,10 @@ public class InMemoryAggregate {
     }
     return dbmsQueryResult;
   }
+  
+  private synchronized String getNextTableName() {
+    return SELECT_ASYNC_AGG_TABLE + selectAsyncAggTableID++;
+  }
 
   public String combineTables(
       String combinedTableName, String newAggTableName, SelectQuery dependentQuery)
@@ -168,7 +176,7 @@ public class InMemoryAggregate {
       return null;
     }
     
-    String tableName = SELECT_ASYNC_AGG_TABLE + selectAsyncAggTableID++;
+    String tableName = getNextTableName();
 
     // check targetTable exists
     if (newAggTableName.equals("")) {
@@ -195,7 +203,7 @@ public class InMemoryAggregate {
               ((AliasedColumn) sel).setColumn(new ColumnOp("max", new BaseColumn(alias)));
             } else if (col instanceof ColumnOp && ((ColumnOp) col).getOpType().equals("min")) {
               ((AliasedColumn) sel).setColumn(new ColumnOp("min", new BaseColumn(alias)));
-            } else {    // count, sum, countdistinct, approx_countdistinct
+            } else {    // count, sum, countdistinct, approx_distinct
               ((AliasedColumn) sel).setColumn(new ColumnOp("sum", new BaseColumn(alias)));
             }
             

@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.AfterClass;
@@ -145,6 +146,58 @@ public class ScrambleMetaStoreTest {
     ScrambleMeta meta =
         metaSet.getMetaForTable(scrambleMeta.getSchemaName(), scrambleMeta.getTableName());
     assertEquals(scrambleMeta, meta);
+  }
+  
+  @Test
+  public void testRetrievalOrder() throws VerdictDBException {
+    DbmsConnection dbmsConnection = JdbcConnection.create(mysqlConn);
+    ScrambleMetaStore metaStore = new ScrambleMetaStore(dbmsConnection, options);
+    
+    ScrambleMeta scrambleMetaA = createHashScrambleMeta();
+    ScrambleMeta scrambleMetaB = createScrambleMeta();
+    
+    // order 1
+    metaStore.remove();
+    metaStore.addToStore(scrambleMetaA);
+    try {   // to give time for timestamp change.
+      TimeUnit.SECONDS.sleep(1);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
+    metaStore.addToStore(scrambleMetaB);
+    
+    ScrambleMetaSet metaSet1 = metaStore.retrieve();
+    int itr = 0;
+    // the one entered first must be retrieved later
+    for (ScrambleMeta meta : metaSet1) {
+      if (itr == 0) {
+        assertEquals(scrambleMetaB, meta);
+      } else {
+        assertEquals(scrambleMetaA, meta);
+      }
+      itr++;
+    }
+    
+    // order 2
+    metaStore.remove();
+    metaStore.addToStore(scrambleMetaB);
+    try {   // to give time for timestamp change.
+      TimeUnit.SECONDS.sleep(1);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
+    metaStore.addToStore(scrambleMetaA);
+    
+    ScrambleMetaSet metaSet2 = metaStore.retrieve();
+    itr = 0;
+    for (ScrambleMeta meta : metaSet2) {
+      if (itr == 0) {
+        assertEquals(scrambleMetaA, meta);
+      } else {
+        assertEquals(scrambleMetaB, meta);
+      }
+      itr++;
+    }
   }
 
   private ScrambleMeta createScrambleMeta() throws VerdictDBValueException {

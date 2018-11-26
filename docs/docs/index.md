@@ -5,10 +5,16 @@
 VerdictDB is a thin, platform-independent, interactive analytics library that works on top of your existing (or backend) database system (e.g., MySQL, PostgreSQL, Redshift, etc.). For platform-independence, VerdictDB makes all communications with the backend database in SQL. For interactive querying, VerdictDB intelligently **infers** the query answers based on the results processed on a part of the original data. Those inferred answers are highly accurate estimators of the exact answers. Furthermore, *even when only exact answers are needed*, VerdictDB can also be useful with its **streaming sql engine**. The streaming sql engine provides interactive-speed feedbacks in the process of computing exact answers. See [this page](/how_it_works/basics) if you want to know more about VerdictDB's internal mechanism.
 
 
+## Workflow Overview
+
+First, users must create a *scramble* for their large table. The scramble is just some table in a special format. Once the scramble is created, VerdictDB performs its unique operations to quickly process aggregate queries involving the large table.
+
+
 ## Contents
 
 1. Getting Started
     - [Quickstart (Java)](/getting_started/quickstart)
+    - [Quickstart (Python)](getting_started/quickstart_python)
     - [Install / Download](/getting_started/install)
     - [What's More](/getting_started/whatsmore)
 1. How VerdictDB works
@@ -23,16 +29,12 @@ VerdictDB is a thin, platform-independent, interactive analytics library that wo
     - Example Applications
         - [MySQL](/tutorial/example/mysql)
         - [Apache Spark](/tutorial/example/spark)
-    - [ML-based Analytics](/tutorial/advanced)
 1. Reference
     - [Connecting to Data Sources](/reference/connection)
     - [VerdictDB JDBC Properties](/reference/properties)
-    - [Simple Querying](/reference/querying)
-    - Scrambles
-        - [What is a Scramble?](/reference/what_is_scramble)
-        - [Creating/Viewing Scrambles](/reference/scrambling)
-        - [Dropping Scrambles](/reference/drop_scrambling)
-    - [Select Query Syntax](/reference/query_syntax)
+    - [Creating/Viewing Scrambles](/reference/scrambling)
+    - [Dropping Scrambles](/reference/drop_scrambling)
+    - [Select-Query Syntax](/reference/query_syntax)
     - [Stream Querying](/reference/streaming)
     - [Javadoc](/reference/javadoc)
 

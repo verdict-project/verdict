@@ -73,7 +73,8 @@
         <antlr4.version>4.5.3</antlr4.version>
         <apache.commons.version>3.5</apache.commons.version>
         <junit.version>4.12</junit.version>
-        <google.guava.version>11.0.2</google.guava.version>
+        <google.guava.version>14.0.1</google.guava.version>
+        <jackson.databind.version>2.6.5</jackson.databind.version>
         <maven.java.version>1.7</maven.java.version>
         <maven.source-plugin.version>3.0.1</maven.source-plugin.version>
         <maven.compiler-plugin.version>3.8.0</maven.compiler-plugin.version>
@@ -81,7 +82,8 @@
         <maven.failsafe.version>2.13</maven.failsafe.version>
         <maven.surefire.version>2.12.4</maven.surefire.version>
         <maven.javadoc.version>2.10.4</maven.javadoc.version>
-        <spark.version>2.1.0</spark.version>
+        <spark.version>2.2.1</spark.version>   <!-- google dataproc default version -->
+        <janino.version>3.0.0</janino.version> <!-- matching version with spark 2.2.1 -->
         <skipTests>false</skipTests>
     </properties>
 
@@ -150,7 +152,7 @@
             </plugin>
         </plugins>
     </build>
-
+    
     <dependencies>
         <dependency>
             <groupId>org.antlr</groupId>
@@ -170,7 +172,7 @@
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>2.6.5</version>
+            <version>${jackson.databind.version}</version>
         </dependency>
         <dependency>
             <groupId>uk.com.robust-it</groupId>
@@ -183,14 +185,19 @@
             <version>1.2.3</version>
         </dependency>
         <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>1.7.25</version>
+            <groupId>org.codehaus.janino</groupId>
+            <artifactId>janino</artifactId>
+            <version>${janino.version}</version>
         </dependency>
         <dependency>
             <groupId>org.codehaus.janino</groupId>
-            <artifactId>janino</artifactId>
-            <version>2.7.8</version>
+            <artifactId>commons-compiler</artifactId>
+            <version>${janino.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.7.16</version>
         </dependency>
         <dependency>
             <groupId>log4j</groupId>
@@ -360,6 +367,12 @@
                                 <exclude>**/SparkTpchSelectQueryCoordinatorTest.java</exclude>
                                 <exclude>**/RedshiftTpchSelectQueryCoordinatorTest.java</exclude>
                                 <exclude>**/ImpalaTpchSelectQueryCoordinatorTest.java</exclude>
+                                <exclude>**/ResultSetMetaDataSparkTest.java</exclude>
+                                <exclude>**/SparkConnectionTest.java</exclude>
+                                <exclude>**/SparkQueryResultTest.java</exclude>
+                                <exclude>**/SparkUniformScramblingCoordinatorTest.java</exclude>
+                                <exclude>**/GroupByNumberTest.java</exclude>
+                                <exclude>**/CreateTableToSqlSparkTest.java</exclude>
                             </excludes>
                             <systemProperties>
                                 <enableTimeout>true</enableTimeout>

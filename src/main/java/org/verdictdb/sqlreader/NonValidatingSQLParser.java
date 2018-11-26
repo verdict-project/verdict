@@ -23,6 +23,7 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.core.sqlobject.AbstractRelation;
 import org.verdictdb.core.sqlobject.CreateScrambleQuery;
+import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.parser.VerdictSQLLexer;
 import org.verdictdb.parser.VerdictSQLParser;
 
@@ -41,8 +42,12 @@ public class NonValidatingSQLParser {
   //  MetaData meta;
 
   public NonValidatingSQLParser() {}
-  //    this.meta = meta;
-  //  }
+  
+  public static SelectQuery toSelectQuery(String sql) {
+    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+    SelectQuery selectQuery = (SelectQuery) sqlToRelation.toRelation(sql);
+    return selectQuery;
+  }
 
   public static VerdictSQLParser parserOf(String text) {
     VerdictDBErrorListener verdictDBErrorListener = new VerdictDBErrorListener();

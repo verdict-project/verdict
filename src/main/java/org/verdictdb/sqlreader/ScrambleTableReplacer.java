@@ -45,6 +45,15 @@ public class ScrambleTableReplacer {
     this.metaSet = metaSet;
   }
 
+  /**
+   * Replaces the tables with their corresponding scrambles if possible.
+   * 
+   * @param query
+   * @return The number of scrambles present in the query. Note that this number not only includes
+   * the scrambles added by replacements but also the scrambles that are directly specified by
+   * users.
+   * @throws VerdictDBValueException
+   */
   public int replaceQuery(SelectQuery query) throws VerdictDBValueException {
     return replaceQuery(query, true, null);
   }
@@ -134,7 +143,8 @@ public class ScrambleTableReplacer {
       BaseTable bt = (BaseTable) table;
       
       for (ScrambleMeta meta : metaSet) {
-        // substitute names with those of the first scrambled table found.
+        // Substitute names with those of the first scrambled table found.
+        // The scramble meta are expected to be retrieved from the recently created ones.
         if (meta.getOriginalSchemaName().equals(bt.getSchemaName())
             && meta.getOriginalTableName().equals(bt.getTableName())
             && meta.getMethodWithDefault("uniform").equalsIgnoreCase("hash")
@@ -152,6 +162,10 @@ public class ScrambleTableReplacer {
                   meta.getTableName()));
 
           break;
+        } else if (meta.getSchemaName().equals(bt.getSchemaName())
+            && meta.getTableName().equals(bt.getTableName())) {
+          // IF the scramble is directly specified.
+          ++replaceCount;
         }
       }
     } else if (table instanceof JoinTable) {
@@ -191,6 +205,10 @@ public class ScrambleTableReplacer {
                   meta.getTableName()));
 
           break;
+        } else if (meta.getSchemaName().equals(bt.getSchemaName())
+            && meta.getTableName().equals(bt.getTableName())) {
+          // IF the scramble is directly specified.
+          ++replaceCount;
         }
       }
     } else if (table instanceof JoinTable) {

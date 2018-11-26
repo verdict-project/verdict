@@ -16,20 +16,13 @@
 
 package org.verdictdb.coordinator;
 
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
-import org.verdictdb.commons.DataTypeConverter;
 import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.commons.VerdictOption;
 import org.verdictdb.connection.DbmsConnection;
-import org.verdictdb.connection.MetaDataProvider;
-import org.verdictdb.connection.StaticMetaData;
 import org.verdictdb.core.execplan.ExecutablePlanRunner;
 import org.verdictdb.core.execplan.ExecutionInfoToken;
 import org.verdictdb.core.execplan.ExecutionTokenQueue;
@@ -48,12 +41,9 @@ import org.verdictdb.core.sqlobject.CreateSchemaQuery;
 import org.verdictdb.core.sqlobject.JoinTable;
 import org.verdictdb.core.sqlobject.SelectItem;
 import org.verdictdb.core.sqlobject.SelectQuery;
-import org.verdictdb.core.sqlobject.SubqueryColumn;
 import org.verdictdb.core.sqlobject.UnnamedColumn;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBValueException;
-import org.verdictdb.sqlreader.NonValidatingSQLParser;
-import org.verdictdb.sqlreader.RelationStandardizer;
 import org.verdictdb.sqlreader.ScrambleTableReplacer;
 
 public class SelectQueryCoordinator implements Coordinator {
@@ -105,16 +95,27 @@ public class SelectQueryCoordinator implements Coordinator {
   public SelectQuery getLastQuery() {
     return lastQuery;
   }
-
+  
   /**
-   * This method should only be used for testing. Use process(String query, QueryContext context)
-   * for actual applications instead.
+   * This method must be used only for testing. Currently, process(SelectQuery selectQuery)
+   * is used instead by ExecutionContext.
+   * @param sql
+   * @return
+   * @throws VerdictDBException
    */
-  public ExecutionResultReader process(String query) throws VerdictDBException {
-    return process(query, null);
+  public ExecutionResultReader process(String sql) throws VerdictDBException {
+    SelectQuery selectQuery = ExecutionContext.standardizeQuery(sql, conn);
+    return process(selectQuery);
+  }
+  
+  /**
+   * The input is assumed to have been standardized.
+   */
+  public ExecutionResultReader process(SelectQuery selectQuery) throws VerdictDBException {
+    return process(selectQuery, null);
   }
 
-  public ExecutionResultReader process(String query, QueryContext context)
+  public ExecutionResultReader process(SelectQuery selectQuery, QueryContext context)
       throws VerdictDBException {
 
     // create scratchpad schema if not exists
@@ -126,15 +127,17 @@ public class SelectQueryCoordinator implements Coordinator {
       CreateSchemaQuery createSchema = new CreateSchemaQuery(scratchpadSchema);
       conn.execute(createSchema);
     }
+    
+    // replaces original tables with scrambles if available
+    SelectQuery fasterQuery = lookforReplacement2Scrambles(selectQuery);
 
     lastQuery = null;
-    SelectQuery selectQuery = standardizeQuery(query);
-    if (selectQuery == null) {
+    if (fasterQuery == null) {
       // this means there are no scrambles available, we should run it as-is
       log.debug("No scrambles available for the query. We will execute it as-is.");
       ExecutionInfoToken token = ExecutionInfoToken.empty();
       ExecutionTokenQueue queue = new ExecutionTokenQueue();
-      token.setKeyValue("queryResult", conn.execute(query));
+      token.setKeyValue("queryResult", conn.execute(selectQuery));
       queue.add(token);
       queue.add(ExecutionInfoToken.successToken());
       return new ExecutionResultReader(queue);
@@ -144,7 +147,7 @@ public class SelectQueryCoordinator implements Coordinator {
     // if the plan does not include any aggregates, it will simply be a parsed structure of the
     // original query.
     QueryExecutionPlan plan =
-        QueryExecutionPlanFactory.create(scratchpadSchema, scrambleMetaSet, selectQuery, context);
+        QueryExecutionPlanFactory.create(scratchpadSchema, scrambleMetaSet, fasterQuery, context);
 
     // convert it to an asynchronous plan
     // if the plan does not include any aggregates, this operation should not alter the original
@@ -162,7 +165,7 @@ public class SelectQueryCoordinator implements Coordinator {
     planRunner = new ExecutablePlanRunner(conn, asyncPlan);
     ExecutionResultReader reader = planRunner.getResultReader();
 
-    lastQuery = selectQuery;
+    lastQuery = fasterQuery;
 
     return reader;
   }
@@ -262,7 +265,7 @@ public class SelectQueryCoordinator implements Coordinator {
             UnnamedColumn col = cols.remove(0);
             if (col instanceof ColumnOp 
                 && (((ColumnOp) col).getOpType().equals("countdistinct")
-                || ((ColumnOp) col).getOpType().equals("approx_countdistinct"))) {
+                || ((ColumnOp) col).getOpType().equals("approx_distinct"))) {
               UnnamedColumn operand = ((ColumnOp) col).getOperand();
               if (operand instanceof BaseColumn) {
                 countDistinctColumn = (BaseColumn) operand;
@@ -319,7 +322,7 @@ public class SelectQueryCoordinator implements Coordinator {
       if (having instanceof ColumnOp
           && ((ColumnOp) having).isCountDistinctAggregate()) {
         containCountDistinctItem = true;
-//        ((ColumnOp) having).replaceAllColumnOpOpType("countdistnct", "approx_countdistinct");
+//        ((ColumnOp) having).replaceAllColumnOpOpType("countdistnct", "approx_distinct");
       }
       if (having instanceof ColumnOp && ((ColumnOp) having).isUniformSampleAggregateColumn()) {
         containAggregatedItem = true;
@@ -331,104 +334,111 @@ public class SelectQueryCoordinator implements Coordinator {
     }
   }
 
-
+//  /**
+//   * This must be used only for testing.
+//   * @param query
+//   * @return
+//   * @throws VerdictDBException
+//   */
+//  private SelectQuery standardizeQuery(String query) throws VerdictDBException {
+//    // parse the query
+//    RelationStandardizer.resetItemID();
+//    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
+//    SelectQuery selectQuery = (SelectQuery) sqlToRelation.toRelation(query);
+//    MetaDataProvider metaData = ExecutionContext.createMetaDataFor(selectQuery, conn);
+//    RelationStandardizer gen = new RelationStandardizer(metaData, conn.getSyntax());
+//    selectQuery = gen.standardize(selectQuery);
+//    
+//    return selectQuery;
+//  }
+  
   /**
-   * Perform two types of operations. First, this method associates proper table aliases. Second, 
-   * this method replaces original tables with corresponding scrambles.
-   * 
+   * Replaces original tables with corresponding scrambles.
    * @param query
    * @return
    * @throws VerdictDBException
    */
-  private SelectQuery standardizeQuery(String query) throws VerdictDBException {
-    // parse the query
-    RelationStandardizer.resetItemID();
-    NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
-    SelectQuery selectQuery = (SelectQuery) sqlToRelation.toRelation(query);
-    MetaDataProvider metaData = createMetaDataFor(selectQuery);
-    RelationStandardizer gen = new RelationStandardizer(metaData, conn.getSyntax());
-    selectQuery = gen.standardize(selectQuery);
-
-    // Ensure that the query does not have unsupported syntax, 
+  private SelectQuery lookforReplacement2Scrambles(SelectQuery query) throws VerdictDBException {
+ // Ensure that the query does not have unsupported syntax, 
     // such as count distinct with other agg. 
     // Otherwise, it will throw to an exception
-    ensureQuerySupport(selectQuery);
+    ensureQuerySupport(query);
 
     // replaces original tables with scrambles
     ScrambleTableReplacer replacer = new ScrambleTableReplacer(scrambleMetaSet);
-    int scrambleCount = replacer.replaceQuery(selectQuery);
+    int scrambleCount = replacer.replaceQuery(query);
     
     // ensure scramble validity
     // Moreover, if the agg is count-distinct, either the specified scramble is of type
     // 'hash scramble' or there must exist a hash scramble created for the specified (original) 
     // table.
-    ensureScrambleCorrectness(selectQuery);
+    ensureScrambleCorrectness(query);
     
     // TODO: Replace count-distinct with approx-count-distinct
     
     
-    return (scrambleCount == 0) ? null : selectQuery;
+    return (scrambleCount == 0) ? null : query;
   }
 
-  private MetaDataProvider createMetaDataFor(SelectQuery relation) throws VerdictDBException {
-    StaticMetaData meta = new StaticMetaData();
-    String defaultSchema = conn.getDefaultSchema();
-    meta.setDefaultSchema(defaultSchema);
-
-    // Extract all tables appeared in the query
-    HashSet<BaseTable> tables = new HashSet<>();
-    List<SelectQuery> queries = new ArrayList<>();
-    queries.add(relation);
-    while (!queries.isEmpty()) {
-      SelectQuery query = queries.get(0);
-      queries.remove(0);
-      for (AbstractRelation t : query.getFromList()) {
-        if (t instanceof BaseTable) tables.add((BaseTable) t);
-        else if (t instanceof SelectQuery) queries.add((SelectQuery) t);
-        else if (t instanceof JoinTable) {
-          for (AbstractRelation join : ((JoinTable) t).getJoinList()) {
-            if (join instanceof BaseTable) tables.add((BaseTable) join);
-            else if (join instanceof SelectQuery) queries.add((SelectQuery) join);
-          }
-        }
-      }
-      if (query.getFilter().isPresent()) {
-        UnnamedColumn where = query.getFilter().get();
-        List<UnnamedColumn> toCheck = new ArrayList<>();
-        toCheck.add(where);
-        while (!toCheck.isEmpty()) {
-          UnnamedColumn col = toCheck.get(0);
-          toCheck.remove(0);
-          if (col instanceof ColumnOp) {
-            toCheck.addAll(((ColumnOp) col).getOperands());
-          } else if (col instanceof SubqueryColumn) {
-            queries.add(((SubqueryColumn) col).getSubquery());
-          }
-        }
-      }
-    }
-
-    // Get table info from cached meta
-    for (BaseTable t : tables) {
-      List<Pair<String, String>> columns;
-      StaticMetaData.TableInfo tableInfo;
-
-      if (t.getSchemaName() == null) {
-        columns = conn.getColumns(defaultSchema, t.getTableName());
-        tableInfo = new StaticMetaData.TableInfo(defaultSchema, t.getTableName());
-      } else {
-        columns = conn.getColumns(t.getSchemaName(), t.getTableName());
-        tableInfo = new StaticMetaData.TableInfo(t.getSchemaName(), t.getTableName());
-      }
-      List<Pair<String, Integer>> colInfo = new ArrayList<>();
-      for (Pair<String, String> col : columns) {
-        colInfo.add(
-            new ImmutablePair<>(
-                col.getLeft(), DataTypeConverter.typeInt(col.getRight().toLowerCase())));
-      }
-      meta.addTableData(tableInfo, colInfo);
-    }
-
-    return meta;
-  }
+//  private MetaDataProvider createMetaDataFor(SelectQuery relation) throws VerdictDBException {
+//    StaticMetaData meta = new StaticMetaData();
+//    String defaultSchema = conn.getDefaultSchema();
+//    meta.setDefaultSchema(defaultSchema);
+//
+//    // Extract all tables appeared in the query
+//    HashSet<BaseTable> tables = new HashSet<>();
+//    List<SelectQuery> queries = new ArrayList<>();
+//    queries.add(relation);
+//    while (!queries.isEmpty()) {
+//      SelectQuery query = queries.get(0);
+//      queries.remove(0);
+//      for (AbstractRelation t : query.getFromList()) {
+//        if (t instanceof BaseTable) tables.add((BaseTable) t);
+//        else if (t instanceof SelectQuery) queries.add((SelectQuery) t);
+//        else if (t instanceof JoinTable) {
+//          for (AbstractRelation join : ((JoinTable) t).getJoinList()) {
+//            if (join instanceof BaseTable) tables.add((BaseTable) join);
+//            else if (join instanceof SelectQuery) queries.add((SelectQuery) join);
+//          }
+//        }
+//      }
+//      if (query.getFilter().isPresent()) {
+//        UnnamedColumn where = query.getFilter().get();
+//        List<UnnamedColumn> toCheck = new ArrayList<>();
+//        toCheck.add(where);
+//        while (!toCheck.isEmpty()) {
+//          UnnamedColumn col = toCheck.get(0);
+//          toCheck.remove(0);
+//          if (col instanceof ColumnOp) {
+//            toCheck.addAll(((ColumnOp) col).getOperands());
+//          } else if (col instanceof SubqueryColumn) {
+//            queries.add(((SubqueryColumn) col).getSubquery());
+//          }
+//        }
+//      }
+//    }
+//
+//    // Get table info from cached meta
+//    for (BaseTable t : tables) {
+//      List<Pair<String, String>> columns;
+//      StaticMetaData.TableInfo tableInfo;
+//
+//      if (t.getSchemaName() == null) {
+//        columns = conn.getColumns(defaultSchema, t.getTableName());
+//        tableInfo = new StaticMetaData.TableInfo(defaultSchema, t.getTableName());
+//      } else {
+//        columns = conn.getColumns(t.getSchemaName(), t.getTableName());
+//        tableInfo = new StaticMetaData.TableInfo(t.getSchemaName(), t.getTableName());
+//      }
+//      List<Pair<String, Integer>> colInfo = new ArrayList<>();
+//      for (Pair<String, String> col : columns) {
+//        colInfo.add(
+//            new ImmutablePair<>(
+//                col.getLeft(), DataTypeConverter.typeInt(col.getRight().toLowerCase())));
+//      }
+//      meta.addTableData(tableInfo, colInfo);
+//    }
+//
+//    return meta;
+//  }
 }

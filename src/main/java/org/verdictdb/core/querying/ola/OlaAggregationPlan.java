@@ -25,7 +25,7 @@ import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.exception.VerdictDBValueException;
 
 /**
- * Plans how to chop a big query into multiple small queries.
+ * Plans how to chop a big query into multiple smaller queries.
  *
  * @author Yongjoo Park
  */

@@ -106,4 +106,9 @@ public class CachedMetaDataProvider implements MetaDataProvider {
     metaProvider.setDefaultSchema(schema);
     //    defaultSchema = schema;
   }
+
+  @Override
+  public List<String> getPrimaryKey(String schema, String table) throws VerdictDBDbmsException {
+    return metaProvider.getPrimaryKey(schema, table);
+  }
 }

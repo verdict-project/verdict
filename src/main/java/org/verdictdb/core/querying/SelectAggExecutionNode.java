@@ -3,11 +3,12 @@ package org.verdictdb.core.querying;
 import java.sql.SQLException;
 import java.util.List;
 
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.connection.DbmsQueryResult;
-import org.verdictdb.connection.InMemoryAggregate;
 import org.verdictdb.core.execplan.ExecutionInfoToken;
+import org.verdictdb.core.querying.ola.InMemoryAggregate;
 import org.verdictdb.core.sqlobject.CreateTableAsSelectQuery;
 import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.core.sqlobject.SqlConvertible;
@@ -29,9 +30,10 @@ public class SelectAggExecutionNode extends AggExecutionNode {
   
   private VerdictDBLogger log;
 
-  private static long selectAggID = 0;
+  private long selectAggID = 0;
 
-  private static final String inMemoryTableName = "VERDICTDB_SELECTAGG";
+  private final String inMemoryTableName =
+      String.format("VERDICTDB_SELECTAGG%s_", RandomStringUtils.randomNumeric(4));
 
   private InMemoryAggregate inMemoryAggregate;
 
@@ -58,6 +60,10 @@ public class SelectAggExecutionNode extends AggExecutionNode {
     CreateTableAsSelectQuery query = (CreateTableAsSelectQuery)super.createQuery(tokens);
     return query.getSelect();
   }
+  
+  private synchronized String getNextTableName() {
+    return inMemoryTableName + selectAggID++;
+  }
 
   @Override
   public ExecutionInfoToken createToken(DbmsQueryResult result) {
@@ -66,11 +72,7 @@ public class SelectAggExecutionNode extends AggExecutionNode {
     token.setKeyValue("dependentQuery", this.selectQuery);
 
     // insert value to in memory database.
-    String tableName;
-    synchronized (SelectAggExecutionNode.class) {
-      tableName = inMemoryTableName + selectAggID;
-      selectAggID++;
-    }
+    String tableName = getNextTableName();
     try {
       inMemoryAggregate.createTable(result, tableName);
     } catch (SQLException e) {

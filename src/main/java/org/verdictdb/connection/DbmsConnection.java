@@ -60,4 +60,6 @@ public abstract class DbmsConnection implements MetaDataProvider {
   public abstract void abort();
 
   public abstract DbmsConnection copy() throws VerdictDBDbmsException;
+
+
 }

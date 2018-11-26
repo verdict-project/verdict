@@ -33,4 +33,6 @@ from (
     ) l3 on l3.l_orderkey = t2.l_orderkey
   ) b
   where (count_suppkey is null) or ((count_suppkey=1) and (l_suppkey = max_suppkey))
-) c group by s_name order by numwait desc, s_name
+) c 
+group by s_name 
+order by s_name desc
