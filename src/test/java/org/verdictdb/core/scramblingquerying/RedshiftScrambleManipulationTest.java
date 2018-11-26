@@ -16,19 +16,6 @@
 
 package org.verdictdb.core.scramblingquerying;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -39,6 +26,20 @@ import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.metastore.ScrambleMetaStore;
+
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /** Created by Dong Young Yoon on 8/16/18. */
 public class RedshiftScrambleManipulationTest {
@@ -311,6 +312,43 @@ public class RedshiftScrambleManipulationTest {
       assertEquals(SCHEMA_NAME, rs.getString(3));
       String scrambleName = rs.getString(4);
       if (scrambleName.equals("orders_scramble9")) {
+        assertEquals("DELETED", rs.getString(6));
+      }
+    }
+  }
+
+  @Test
+  public void DropScrambleWithoutSpecifyingSchemaTest() throws SQLException, InterruptedException {
+    vc.createStatement()
+        .execute(
+            String.format(
+                "CREATE SCRAMBLE %s.orders_scramble10 FROM %s.orders", SCHEMA_NAME, SCHEMA_NAME));
+    vc.setCatalog(SCHEMA_NAME);
+    Statement statement = vc.createStatement();
+    String sql = String.format("DROP SCRAMBLE orders_scramble10", SCHEMA_NAME, SCHEMA_NAME);
+    statement.execute(String.format("USE %s", SCHEMA_NAME));
+    statement.execute(sql);
+
+    // check whether the actual scramble table has been removed
+    sql =
+        String.format(
+            "SELECT COUNT(*) as cnt FROM pg_tables WHERE schemaname = '%s' AND tablename = '%s'",
+            SCHEMA_NAME, "orders_scramble10");
+    ResultSet rs1 = conn.createStatement().executeQuery(sql);
+    if (rs1.next()) {
+      assertEquals(0, rs1.getInt(1));
+    }
+
+    // Check whether the metadata of the dropped scramble table is correctly inserted
+    sql = String.format("SHOW SCRAMBLES");
+    ResultSet rs = vc.createStatement().executeQuery(sql);
+
+    // Check the most up-to-date metadata
+    if (rs.next()) {
+      assertEquals("N/A", rs.getString(1));
+      assertEquals(SCHEMA_NAME, rs.getString(3));
+      String scrambleName = rs.getString(4);
+      if (scrambleName.equals("orders_scramble10")) {
         assertEquals("DELETED", rs.getString(6));
       }
     }
