@@ -34,7 +34,7 @@ public class QueryResultAccuracyEstimatorFromDifference extends QueryResultAccur
   // the values of the result should be within [(1-valueError)*prevValue, (1+valueError)*prevValue]
   // of the previous result.
   // Otherwise, it will fetch next result.
-  private Double valueError = 0.05;
+  private Double valueError = 0.02;
 
   // the #row of the result should be within  [(1-groupCountError)*prev#row,
   // (1+groupCountError)*prev#row] of the previous result.

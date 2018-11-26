@@ -1,4 +1,4 @@
-package org.verdictdb.connection;
+package org.verdictdb.core.querying.ola;
 
 import static java.sql.Types.CHAR;
 import static java.sql.Types.VARCHAR;
@@ -16,6 +16,8 @@ import java.util.List;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.verdictdb.commons.DataTypeConverter;
 import org.verdictdb.commons.VerdictDBLogger;
+import org.verdictdb.connection.DbmsQueryResult;
+import org.verdictdb.connection.JdbcQueryResult;
 import org.verdictdb.core.sqlobject.AbstractRelation;
 import org.verdictdb.core.sqlobject.AliasedColumn;
 import org.verdictdb.core.sqlobject.AsteriskColumn;
