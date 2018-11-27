@@ -217,42 +217,40 @@ public class ExecutableNodeRunner implements Runnable {
   }
 
   private void runDependents() {
-    synchronized (this) {
-      if (doesThisNodeContainAsyncAggExecutionNode()) {
-        int maxNumberOfRunningNode = getMaxNumberOfRunningNode();
-        int currentlyRunningOrCompleteNodeCount = childRunners.size();
+    if (doesThisNodeContainAsyncAggExecutionNode()) {
+      int maxNumberOfRunningNode = getMaxNumberOfRunningNode();
+      int currentlyRunningOrCompleteNodeCount = childRunners.size();
 
-        // check the number of currently running nodes
-        int runningChildCount = 0;
-        for (ExecutableNodeRunner r : childRunners) {
-          if (r.getStatus() == NodeRunningStatus.running) {
-            runningChildCount++;
-          }
+      // check the number of currently running nodes
+      int runningChildCount = 0;
+      for (ExecutableNodeRunner r : childRunners) {
+        if (r.getStatus() == NodeRunningStatus.running) {
+          runningChildCount++;
         }
+      }
 
-        // maintain the number of running nodes to a certain number
-        List<ExecutableNodeBase> childNodes = ((ExecutableNodeBase) node).getSources();
-        int moreToRun = Math.min(
-            maxNumberOfRunningNode - runningChildCount,
-            ((ExecutableNodeBase) node).getSourceCount() - currentlyRunningOrCompleteNodeCount);
-        for (int i = currentlyRunningOrCompleteNodeCount;
-             i < currentlyRunningOrCompleteNodeCount + moreToRun; i++) {
-          ExecutableNodeBase child = childNodes.get(i);
+      // maintain the number of running nodes to a certain number
+      List<ExecutableNodeBase> childNodes = ((ExecutableNodeBase) node).getSources();
+      int moreToRun = Math.min(
+          maxNumberOfRunningNode - runningChildCount,
+          ((ExecutableNodeBase) node).getSourceCount() - currentlyRunningOrCompleteNodeCount);
+      for (int i = currentlyRunningOrCompleteNodeCount;
+          i < currentlyRunningOrCompleteNodeCount + moreToRun; i++) {
+        ExecutableNodeBase child = childNodes.get(i);
 
-          ExecutableNodeRunner runner = child.getRegisteredRunner();
-          boolean started = runner.runThisAndDependents();
-          if (started) {
-            childRunners.add(runner);
-          }
+        ExecutableNodeRunner runner = child.getRegisteredRunner();
+        boolean started = runner.runThisAndDependents();
+        if (started) {
+          childRunners.add(runner);
         }
-      } else {
-        // by default, run every child
-        for (ExecutableNodeBase child : ((ExecutableNodeBase) node).getSources()) {
-          ExecutableNodeRunner runner = child.getRegisteredRunner();
-          boolean started = runner.runThisAndDependents();
-          if (started) {
-            childRunners.add(runner);
-          }
+      }
+    } else {
+      // by default, run every child
+      for (ExecutableNodeBase child : ((ExecutableNodeBase) node).getSources()) {
+        ExecutableNodeRunner runner = child.getRegisteredRunner();
+        boolean started = runner.runThisAndDependents();
+        if (started) {
+          childRunners.add(runner);
         }
       }
     }
@@ -262,7 +260,7 @@ public class ExecutableNodeRunner implements Runnable {
    * A single run of this method consumes all combinations of the tokens in the queue.
    */
   @Override
-  public void run() {
+  public synchronized void run() {
     //    String nodeType = node.getClass().getSimpleName();
     //    int nodeGroupId = ((ExecutableNodeBase) node).getGroupId();
 
@@ -414,7 +412,16 @@ public class ExecutableNodeRunner implements Runnable {
     }
   }
 
-  public ExecutionInfoToken execute(List<ExecutionInfoToken> tokens) throws VerdictDBException {
+  /**
+   * Execute the associated node. This method is synchronized on object level, assuming that
+   * every node has its own associated ExecutableNodeRunner, which is actually the case.
+   * 
+   * @param tokens Contains information from the downstream nodes.
+   * @return Information for the upstream nodes.
+   * @throws VerdictDBException
+   */
+  public ExecutionInfoToken execute(List<ExecutionInfoToken> tokens) 
+      throws VerdictDBException {
     if (tokens.size() > 0 && tokens.get(0).isStatusToken()) {
       return null;
     }

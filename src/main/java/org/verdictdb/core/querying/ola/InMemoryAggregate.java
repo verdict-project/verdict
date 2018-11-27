@@ -35,8 +35,7 @@ import org.verdictdb.sqlwriter.SelectQueryToSql;
 
 public class InMemoryAggregate {
 
-  private final String SELECT_ASYNC_AGG_TABLE = 
-      String.format("VERDICTDB_SELECTASYNCAGG%s_", RandomStringUtils.randomNumeric(4));
+  private final String SELECT_ASYNC_AGG_TABLE = "VERDICTDB_SELECTASYNCAGG";
 
   private long selectAsyncAggTableID = 0;
 

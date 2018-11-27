@@ -3,7 +3,6 @@ package org.verdictdb.core.querying;
 import java.sql.SQLException;
 import java.util.List;
 
-import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.connection.DbmsQueryResult;
@@ -30,10 +29,9 @@ public class SelectAggExecutionNode extends AggExecutionNode {
   
   private VerdictDBLogger log;
 
-  private long selectAggID = 0;
+  private static long selectAggID = 0;
 
-  private final String inMemoryTableName =
-      String.format("VERDICTDB_SELECTAGG%s_", RandomStringUtils.randomNumeric(4));
+  private final static String IN_MEMORY_TABLE_NAME = "VERDICTDB_SELECTAGG_";
 
   private InMemoryAggregate inMemoryAggregate;
 
@@ -61,8 +59,8 @@ public class SelectAggExecutionNode extends AggExecutionNode {
     return query.getSelect();
   }
   
-  private synchronized String getNextTableName() {
-    return inMemoryTableName + selectAggID++;
+  private static synchronized String getNextTableName() {
+    return IN_MEMORY_TABLE_NAME + selectAggID++;
   }
 
   @Override

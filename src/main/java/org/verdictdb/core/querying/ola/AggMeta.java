@@ -36,6 +36,7 @@ import org.verdictdb.core.sqlobject.SelectItem;
 import org.verdictdb.core.sqlobject.UnnamedColumn;
 
 import com.google.common.collect.Sets;
+import com.rits.cloning.Cloner;
 
 /**
  * Stores 
@@ -285,4 +286,9 @@ public class AggMeta implements Serializable {
                .append("tierColumns", tierColumnForScramble.values())
                .build();
   }
+  
+  public AggMeta deepcopy() {
+    return new Cloner().deepClone(this);
+  }
+  
 }
