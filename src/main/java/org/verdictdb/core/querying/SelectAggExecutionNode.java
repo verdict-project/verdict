@@ -3,7 +3,6 @@ package org.verdictdb.core.querying;
 import java.sql.SQLException;
 import java.util.List;
 
-import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.connection.DbmsQueryResult;
@@ -60,10 +59,8 @@ public class SelectAggExecutionNode extends AggExecutionNode {
     return query.getSelect();
   }
   
-  private String getNextTableName() {
-    synchronized (this.getClass()) {
-      return IN_MEMORY_TABLE_NAME + selectAggID++;
-    }
+  private static synchronized String getNextTableName() {
+    return IN_MEMORY_TABLE_NAME + selectAggID++;
   }
 
   @Override

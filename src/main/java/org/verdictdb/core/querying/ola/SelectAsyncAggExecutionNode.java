@@ -16,7 +16,6 @@ import org.verdictdb.core.querying.QueryNodeBase;
 import org.verdictdb.core.querying.SelectAggExecutionNode;
 import org.verdictdb.core.querying.SubscriptionTicket;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
-import org.verdictdb.core.sqlobject.AliasedColumn;
 import org.verdictdb.core.sqlobject.BaseTable;
 import org.verdictdb.core.sqlobject.ColumnOp;
 import org.verdictdb.core.sqlobject.CreateTableAsSelectQuery;
