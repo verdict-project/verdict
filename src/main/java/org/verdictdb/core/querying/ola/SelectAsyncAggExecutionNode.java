@@ -44,9 +44,9 @@ public class SelectAsyncAggExecutionNode extends AsyncAggExecutionNode {
 
   private DbmsQueryResult dbmsQueryResult;
 
-  private List<String> selectQueryColumnAlias = new ArrayList<>();
-
-  private final String asteriskAlias = "verdictdb_asterisk_alias";
+//  private List<String> selectQueryColumnAlias = new ArrayList<>();
+//
+//  private final String asteriskAlias = "verdictdb_asterisk_alias";
 
   private String selectAsyncAggTableName = "";
 
@@ -127,8 +127,8 @@ public class SelectAsyncAggExecutionNode extends AsyncAggExecutionNode {
     }
 
     // share same inMemoryAggregate object with selectAggExecutionNode
-    for (ExecutableNodeBase source:node.getSources()) {
-      ((SelectAggExecutionNode)source).setInMemoryAggregate(node.inMemoryAggregate);
+    for (ExecutableNodeBase source : node.getSources()) {
+      ((SelectAggExecutionNode) source).setInMemoryAggregate(node.inMemoryAggregate);
     }
     return node;
   }
@@ -143,39 +143,38 @@ public class SelectAsyncAggExecutionNode extends AsyncAggExecutionNode {
     String table = (String) token.getValue("tableName");
     SelectQuery dependentQuery = (SelectQuery) token.getValue("dependentQuery");
     
-    // In case multiple answers are already ready, we must synchronize them.
-    // To achieve this, we put the lock using this class.
     if (aggMeta == null) {
       aggMeta = (AggMeta) token.getValue("aggMeta");
     } else {
       AggMeta childAggMeta = (AggMeta) token.getValue("aggMeta");
       updateAggMeta(childAggMeta);
-      token.setKeyValue("aggMeta", aggMeta);
+      token.setKeyValue("aggMeta", aggMeta.deepcopy());
     }
     try {
-      selectAsyncAggTableName = 
+      String combinedTableName = 
           inMemoryAggregate.combineTables(table, selectAsyncAggTableName, dependentQuery);
-      token.setKeyValue("tableName", selectAsyncAggTableName);
+      token.setKeyValue("tableName", combinedTableName);
+      selectAsyncAggTableName = combinedTableName;
 
       // here, the base aggregate functions (e.g., sum(col), count(col)) are composed to
       // reconstruct the original aggregate function (e.g., avg(col) = sum(col) / count(col))
       SelectQuery query = ((CreateTableAsSelectQuery) super.createQuery(tokens)).getSelect();
       dbmsQueryResult = inMemoryAggregate.executeQuery(query);
 
-      List<Boolean> isAggregated = new ArrayList<>();
-      for (SelectItem sel : selectQuery.getSelectList()) {
-        if (sel.isAggregateColumn()) {
-          isAggregated.add(true);
-        } else {
-          isAggregated.add(false);
-        }
-        if (sel instanceof AliasedColumn) {
-          selectQueryColumnAlias.add(((AliasedColumn) sel).getAliasName());
-        } else {
-          selectQueryColumnAlias.add(asteriskAlias);
-        }
-      }
-      dbmsQueryResult.getMetaData().isAggregate = isAggregated;
+//      List<Boolean> isAggregated = new ArrayList<>();
+//      for (SelectItem sel : selectQuery.getSelectList()) {
+//        if (sel.isAggregateColumn()) {
+//          isAggregated.add(true);
+//        } else {
+//          isAggregated.add(false);
+//        }
+//        if (sel instanceof AliasedColumn) {
+//          selectQueryColumnAlias.add(((AliasedColumn) sel).getAliasName());
+//        } else {
+//          selectQueryColumnAlias.add(asteriskAlias);
+//        }
+//      }
+//      dbmsQueryResult.getMetaData().isAggregate = isAggregated;
     } catch (SQLException e) {
       throw new VerdictDBDbmsException(e);
       //        e.printStackTrace();
