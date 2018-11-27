@@ -217,42 +217,40 @@ public class ExecutableNodeRunner implements Runnable {
   }
 
   private void runDependents() {
-    synchronized (this) {
-      if (doesThisNodeContainAsyncAggExecutionNode()) {
-        int maxNumberOfRunningNode = getMaxNumberOfRunningNode();
-        int currentlyRunningOrCompleteNodeCount = childRunners.size();
+    if (doesThisNodeContainAsyncAggExecutionNode()) {
+      int maxNumberOfRunningNode = getMaxNumberOfRunningNode();
+      int currentlyRunningOrCompleteNodeCount = childRunners.size();
 
-        // check the number of currently running nodes
-        int runningChildCount = 0;
-        for (ExecutableNodeRunner r : childRunners) {
-          if (r.getStatus() == NodeRunningStatus.running) {
-            runningChildCount++;
-          }
+      // check the number of currently running nodes
+      int runningChildCount = 0;
+      for (ExecutableNodeRunner r : childRunners) {
+        if (r.getStatus() == NodeRunningStatus.running) {
+          runningChildCount++;
         }
+      }
 
-        // maintain the number of running nodes to a certain number
-        List<ExecutableNodeBase> childNodes = ((ExecutableNodeBase) node).getSources();
-        int moreToRun = Math.min(
-            maxNumberOfRunningNode - runningChildCount,
-            ((ExecutableNodeBase) node).getSourceCount() - currentlyRunningOrCompleteNodeCount);
-        for (int i = currentlyRunningOrCompleteNodeCount;
-             i < currentlyRunningOrCompleteNodeCount + moreToRun; i++) {
-          ExecutableNodeBase child = childNodes.get(i);
+      // maintain the number of running nodes to a certain number
+      List<ExecutableNodeBase> childNodes = ((ExecutableNodeBase) node).getSources();
+      int moreToRun = Math.min(
+          maxNumberOfRunningNode - runningChildCount,
+          ((ExecutableNodeBase) node).getSourceCount() - currentlyRunningOrCompleteNodeCount);
+      for (int i = currentlyRunningOrCompleteNodeCount;
+          i < currentlyRunningOrCompleteNodeCount + moreToRun; i++) {
+        ExecutableNodeBase child = childNodes.get(i);
 
-          ExecutableNodeRunner runner = child.getRegisteredRunner();
-          boolean started = runner.runThisAndDependents();
-          if (started) {
-            childRunners.add(runner);
-          }
+        ExecutableNodeRunner runner = child.getRegisteredRunner();
+        boolean started = runner.runThisAndDependents();
+        if (started) {
+          childRunners.add(runner);
         }
-      } else {
-        // by default, run every child
-        for (ExecutableNodeBase child : ((ExecutableNodeBase) node).getSources()) {
-          ExecutableNodeRunner runner = child.getRegisteredRunner();
-          boolean started = runner.runThisAndDependents();
-          if (started) {
-            childRunners.add(runner);
-          }
+      }
+    } else {
+      // by default, run every child
+      for (ExecutableNodeBase child : ((ExecutableNodeBase) node).getSources()) {
+        ExecutableNodeRunner runner = child.getRegisteredRunner();
+        boolean started = runner.runThisAndDependents();
+        if (started) {
+          childRunners.add(runner);
         }
       }
     }
