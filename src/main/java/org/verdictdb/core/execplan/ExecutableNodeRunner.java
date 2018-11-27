@@ -262,7 +262,7 @@ public class ExecutableNodeRunner implements Runnable {
    * A single run of this method consumes all combinations of the tokens in the queue.
    */
   @Override
-  public void run() {
+  public synchronized void run() {
     //    String nodeType = node.getClass().getSimpleName();
     //    int nodeGroupId = ((ExecutableNodeBase) node).getGroupId();
 
@@ -422,7 +422,7 @@ public class ExecutableNodeRunner implements Runnable {
    * @return Information for the upstream nodes.
    * @throws VerdictDBException
    */
-  public synchronized ExecutionInfoToken execute(List<ExecutionInfoToken> tokens) 
+  public ExecutionInfoToken execute(List<ExecutionInfoToken> tokens) 
       throws VerdictDBException {
     if (tokens.size() > 0 && tokens.get(0).isStatusToken()) {
       return null;
