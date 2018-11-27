@@ -193,27 +193,27 @@ public class SelectAsyncAggExecutionNode extends AsyncAggExecutionNode {
     // Addition check that the query is a query contains Asterisk column that without asyncAggExecutionNode.
     // For instance, query like 'select * from lineitem'. In that case, all the values of isAggregate field
     // are false.
-    if (token.containsKey("queryResult")) {
-      DbmsQueryResult queryResult = (DbmsQueryResult) token.getValue("queryResult");
-      if (queryResult.getColumnCount() != queryResult.getMetaData().isAggregate.size()) {
-        List<Boolean> isAggregate = new ArrayList<>();
-        for (int i = 0; i < queryResult.getColumnCount(); i++) {
-          isAggregate.add(false);
-        }
-        for (int i = 0; i < queryResult.getMetaData().isAggregate.size(); i++) {
-          // If it is not asterisk column, we will find the index of the column in queryResult.
-          if (!selectQueryColumnAlias.get(i).equals(asteriskAlias)) {
-            int idx = 0;
-            // Get the index of the alias name in the columnName field of the queryResult.
-            while (!selectQueryColumnAlias.get(i).equals(queryResult.getColumnName(idx))) {
-              idx++;
-            }
-            isAggregate.set(idx, queryResult.getMetaData().isAggregate.get(i));
-          }
-        }
-        queryResult.getMetaData().isAggregate = isAggregate;
-      }
-    }
+//    if (token.containsKey("queryResult")) {
+//      DbmsQueryResult queryResult = (DbmsQueryResult) token.getValue("queryResult");
+//      if (queryResult.getColumnCount() != queryResult.getMetaData().isAggregate.size()) {
+//        List<Boolean> isAggregate = new ArrayList<>();
+//        for (int i = 0; i < queryResult.getColumnCount(); i++) {
+//          isAggregate.add(false);
+//        }
+//        for (int i = 0; i < queryResult.getMetaData().isAggregate.size(); i++) {
+//          // If it is not asterisk column, we will find the index of the column in queryResult.
+//          if (!selectQueryColumnAlias.get(i).equals(asteriskAlias)) {
+//            int idx = 0;
+//            // Get the index of the alias name in the columnName field of the queryResult.
+//            while (!selectQueryColumnAlias.get(i).equals(queryResult.getColumnName(idx))) {
+//              idx++;
+//            }
+//            isAggregate.set(idx, queryResult.getMetaData().isAggregate.get(i));
+//          }
+//        }
+//        queryResult.getMetaData().isAggregate = isAggregate;
+//      }
+//    }
     return token;
   }
 

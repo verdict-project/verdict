@@ -414,7 +414,16 @@ public class ExecutableNodeRunner implements Runnable {
     }
   }
 
-  public ExecutionInfoToken execute(List<ExecutionInfoToken> tokens) throws VerdictDBException {
+  /**
+   * Execute the associated node. This method is synchronized on object level, assuming that
+   * every node has its own associated ExecutableNodeRunner, which is actually the case.
+   * 
+   * @param tokens Contains information from the downstream nodes.
+   * @return Information for the upstream nodes.
+   * @throws VerdictDBException
+   */
+  public synchronized ExecutionInfoToken execute(List<ExecutionInfoToken> tokens) 
+      throws VerdictDBException {
     if (tokens.size() > 0 && tokens.get(0).isStatusToken()) {
       return null;
     }
