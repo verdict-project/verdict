@@ -84,7 +84,7 @@ scrambling_method_name
 //    ;
 
 drop_scramble_statement
-    : DROP SCRAMBLE scrambled_table=table_name ON original_table=table_name
+    : DROP SCRAMBLE scrambled_table=table_name (ON original_table=table_name)?
     ;
 
 drop_all_scrambles_statement
