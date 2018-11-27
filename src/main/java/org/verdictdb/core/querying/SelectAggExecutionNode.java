@@ -30,10 +30,9 @@ public class SelectAggExecutionNode extends AggExecutionNode {
   
   private VerdictDBLogger log;
 
-  private long selectAggID = 0;
+  private static long selectAggID = 0;
 
-  private final String inMemoryTableName =
-      String.format("VERDICTDB_SELECTAGG%s_", RandomStringUtils.randomNumeric(4));
+  private final static String IN_MEMORY_TABLE_NAME = "VERDICTDB_SELECTAGG_";
 
   private InMemoryAggregate inMemoryAggregate;
 
@@ -61,8 +60,10 @@ public class SelectAggExecutionNode extends AggExecutionNode {
     return query.getSelect();
   }
   
-  private synchronized String getNextTableName() {
-    return inMemoryTableName + selectAggID++;
+  private String getNextTableName() {
+    synchronized (this.getClass()) {
+      return IN_MEMORY_TABLE_NAME + selectAggID++;
+    }
   }
 
   @Override
