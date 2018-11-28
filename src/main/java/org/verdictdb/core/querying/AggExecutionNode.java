@@ -26,6 +26,11 @@ import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.core.sqlobject.SqlConvertible;
 import org.verdictdb.exception.VerdictDBException;
 
+/**
+ * The aliases for aggregate columns are identified and set in 
+ * the AsyncQueryExecutionPlan.createUnfoldSelectlistWithBasicAgg().
+ *
+ */
 public class AggExecutionNode extends CreateTableAsSelectNode {
 
   private static final long serialVersionUID = 6222493718874657695L;
@@ -34,6 +39,25 @@ public class AggExecutionNode extends CreateTableAsSelectNode {
 
   protected AggExecutionNode(IdCreator namer, SelectQuery query) {
     super(namer, query);
+//    // stores the alias names for aggregate columns
+//    List<SelectItem> selectItems = query.getSelectList();
+//    for (SelectItem item : selectItems) {
+//      if (item instanceof AliasedColumn) {
+//        String alias = ((AliasedColumn) item).getAliasName();
+//        UnnamedColumn col = ((AliasedColumn) item).getColumn(); 
+//        if (col instanceof ColumnOp) {
+//          if (((ColumnOp) col).isMinAggregate()) {
+//            aggMeta.addMinAlias(alias);
+//          } else if (((ColumnOp) col).isMaxAggregate()) {
+//            aggMeta.addMaxAlias(alias);
+//          } else if (col.isAggregateColumn()) {
+//            aggMeta.addAggAlias(alias);
+//          }
+//        }
+//      } else {
+//        // this is not expected to happen.
+//      }
+//    }
   }
 
   public static AggExecutionNode create(IdCreator namer, SelectQuery query) {

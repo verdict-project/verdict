@@ -55,16 +55,31 @@ public abstract class SqlSyntax {
   public abstract String randFunction();
   
   /**
-   * Returns a hash value between 0 (inclusive) and upper_bound (exclusive).
+   * This indicates the size of each block. Using a smaller block increases the speed at the cost
+   * of some processing overhead.
+   * @return
+   */
+  public long getRecommendedblockSize() {
+    return (int) 1e6;
+  }
+  
+  
+  /**
+   * Returns a hash value between 0 (inclusive) and 1 (exclusive).
    * 
    * This hash function is supposed to provide good randomization quality. That is,
    * when an arbitrary set of elements are hashed, the distribution should be even.
+   * 
+   * It is important to note that the argument is already quoted column names or values.
    * 
    * @param column The column name
    * @param upper_bound The upper bound
    * @return Hashed integer
    */
-  public abstract String hashFunction(String column, int upper_bound);
+  public abstract String hashFunction(String column);
+  
+  // this indicates 0.00001 precision
+  final protected int hashPrecision = 100000;
 
   public abstract boolean isAsRequiredBeforeSelectInCreateTable();
 
@@ -107,5 +122,9 @@ public abstract class SqlSyntax {
    */
   public String getApproximateCountDistinct(String column) {
     return String.format("count (distinct %s)", column);
+  }
+
+  public String getPrimaryKey(String schema, String table) {
+    return null;
   }
 }

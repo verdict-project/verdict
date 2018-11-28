@@ -1,5 +1,7 @@
 package org.verdictdb.connection;
 
+import static org.junit.Assert.assertEquals;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -13,6 +15,7 @@ import java.util.List;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.exception.VerdictDBDbmsException;
+import org.verdictdb.sqlsyntax.H2Syntax;
 import org.verdictdb.sqlsyntax.HiveSyntax;
 import org.verdictdb.sqlsyntax.MysqlSyntax;
 import org.verdictdb.sqlsyntax.PostgresqlSyntax;
@@ -71,7 +74,7 @@ public class JdbcConnectionTest {
 
   @BeforeClass
   public static void setupH2Database() throws SQLException {
-    final String DB_CONNECTION = "jdbc:h2:mem:testconn;DB_CLOSE_DELAY=-1";
+    final String DB_CONNECTION = "jdbc:h2:mem:jdbctestconn;DB_CLOSE_DELAY=-1";
     final String DB_USER = "";
     final String DB_PASSWORD = "";
     h2Conn = DriverManager.getConnection(DB_CONNECTION, DB_USER, DB_PASSWORD);
@@ -129,6 +132,28 @@ public class JdbcConnectionTest {
       String name = row.get(1).toString();
       jdbc.execute(String.format("INSERT INTO PERSON(id, name) VALUES(%s, '%s')", id, name));
     }
+  }
+  
+  @Test
+  public void testH2Alias() throws VerdictDBDbmsException {
+    List<List<Object>> contents = new ArrayList<>();
+    contents.add(Arrays.<Object>asList(1));
+    contents.add(Arrays.<Object>asList(2));
+    contents.add(Arrays.<Object>asList(3));
+
+    JdbcConnection jdbc = new JdbcConnection(h2Conn, new H2Syntax());
+    String aliasName = "aB c";
+
+    jdbc.execute("CREATE TABLE MYID (\"id\" int)");
+    for (List<Object> row : contents) {
+      String id = row.get(0).toString();
+      jdbc.execute(String.format("INSERT INTO MYID (\"id\") VALUES(%s)", id));
+    }
+    
+    DbmsQueryResult result = jdbc.execute(
+        String.format("select \"id\" as \"%s\" from myid", aliasName));
+    result.next();
+    assertEquals(aliasName, result.getColumnName(0));
   }
 
   @Test

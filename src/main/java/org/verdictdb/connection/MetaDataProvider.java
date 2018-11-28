@@ -16,10 +16,10 @@
 
 package org.verdictdb.connection;
 
+import java.util.List;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.exception.VerdictDBDbmsException;
-
-import java.util.List;
 
 public interface MetaDataProvider {
 
@@ -36,4 +36,6 @@ public interface MetaDataProvider {
   public String getDefaultSchema();
 
   public void setDefaultSchema(String schema) throws VerdictDBDbmsException;
+
+  public List<String> getPrimaryKey(String schema, String table) throws VerdictDBDbmsException;
 }

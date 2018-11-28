@@ -1,5 +1,16 @@
 package org.verdictdb.core.querying;
 
+import static java.sql.Types.BIGINT;
+import static org.junit.Assert.assertEquals;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.BeforeClass;
@@ -11,22 +22,25 @@ import org.verdictdb.core.querying.ola.AsyncAggExecutionNode;
 import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.core.scrambling.UniformScrambler;
-import org.verdictdb.core.sqlobject.*;
+import org.verdictdb.core.sqlobject.AbstractRelation;
+import org.verdictdb.core.sqlobject.AliasReference;
+import org.verdictdb.core.sqlobject.AliasedColumn;
+import org.verdictdb.core.sqlobject.AsteriskColumn;
+import org.verdictdb.core.sqlobject.BaseColumn;
+import org.verdictdb.core.sqlobject.BaseTable;
+import org.verdictdb.core.sqlobject.ColumnOp;
+import org.verdictdb.core.sqlobject.ConstantColumn;
+import org.verdictdb.core.sqlobject.GroupingAttribute;
+import org.verdictdb.core.sqlobject.JoinTable;
+import org.verdictdb.core.sqlobject.OrderbyAttribute;
+import org.verdictdb.core.sqlobject.SelectItem;
+import org.verdictdb.core.sqlobject.SelectQuery;
+import org.verdictdb.core.sqlobject.SubqueryColumn;
+import org.verdictdb.core.sqlobject.UnnamedColumn;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sqlreader.NonValidatingSQLParser;
 import org.verdictdb.sqlreader.RelationStandardizer;
 import org.verdictdb.sqlsyntax.H2Syntax;
-
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import static java.sql.Types.BIGINT;
-import static org.junit.Assert.assertEquals;
 
 /** Tests if a given query is properly converted into execution nodes. */
 public class TpchExecutionPlanTest {
@@ -290,48 +304,48 @@ public class TpchExecutionPlanTest {
     BaseTable base = new BaseTable("tpch", "lineitem", "vt1");
     List<UnnamedColumn> operand1 =
         Arrays.<UnnamedColumn>asList(
-            ConstantColumn.valueOf(1), new BaseColumn("tpch", "lineitem", "vt1", "l_discount"));
+            ConstantColumn.valueOf(1), new BaseColumn("vt1", "l_discount"));
     List<UnnamedColumn> operand2 =
         Arrays.<UnnamedColumn>asList(
-            new BaseColumn("tpch", "lineitem", "vt1", "l_extendedprice"),
+            new BaseColumn("vt1", "l_extendedprice"),
             new ColumnOp("subtract", operand1));
     List<UnnamedColumn> operand3 =
         Arrays.<UnnamedColumn>asList(
-            ConstantColumn.valueOf(1), new BaseColumn("tpch", "lineitem", "vt1", "l_tax"));
+            ConstantColumn.valueOf(1), new BaseColumn("vt1", "l_tax"));
     List<UnnamedColumn> operand4 =
         Arrays.<UnnamedColumn>asList(
             new ColumnOp("multiply", operand2), new ColumnOp("add", operand3));
     List<UnnamedColumn> operand5 =
         Arrays.<UnnamedColumn>asList(
-            new BaseColumn("tpch", "lineitem", "vt1", "l_shipdate"),
+            new BaseColumn("vt1", "l_shipdate"),
             new ColumnOp("date", ConstantColumn.valueOf("'1998-12-01'")));
     SelectQuery expected =
         SelectQuery.create(
             Arrays.<SelectItem>asList(
                 new AliasedColumn(
-                    new BaseColumn("tpch", "lineitem", "vt1", "l_returnflag"), "l_returnflag"),
+                    new BaseColumn("vt1", "l_returnflag"), "l_returnflag"),
                 new AliasedColumn(
-                    new BaseColumn("tpch", "lineitem", "vt1", "l_linestatus"), "l_linestatus"),
+                    new BaseColumn("vt1", "l_linestatus"), "l_linestatus"),
                 new AliasedColumn(
-                    new ColumnOp("sum", new BaseColumn("tpch", "lineitem", "vt1", "l_quantity")),
+                    new ColumnOp("sum", new BaseColumn("vt1", "l_quantity")),
                     "sum_qty"),
                 new AliasedColumn(
                     new ColumnOp(
-                        "sum", new BaseColumn("tpch", "lineitem", "vt1", "l_extendedprice")),
+                        "sum", new BaseColumn("vt1", "l_extendedprice")),
                     "sum_base_price"),
                 new AliasedColumn(
                     new ColumnOp("sum", new ColumnOp("multiply", operand2)), "sum_disc_price"),
                 new AliasedColumn(
                     new ColumnOp("sum", new ColumnOp("multiply", operand4)), "sum_charge"),
                 new AliasedColumn(
-                    new ColumnOp("avg", new BaseColumn("tpch", "lineitem", "vt1", "l_quantity")),
+                    new ColumnOp("avg", new BaseColumn("vt1", "l_quantity")),
                     "avg_qty"),
                 new AliasedColumn(
                     new ColumnOp(
-                        "avg", new BaseColumn("tpch", "lineitem", "vt1", "l_extendedprice")),
+                        "avg", new BaseColumn("vt1", "l_extendedprice")),
                     "avg_price"),
                 new AliasedColumn(
-                    new ColumnOp("avg", new BaseColumn("tpch", "lineitem", "vt1", "l_discount")),
+                    new ColumnOp("avg", new BaseColumn("vt1", "l_discount")),
                     "avg_disc"),
                 new AliasedColumn(new ColumnOp("count", new AsteriskColumn()), "count_order")),
             base,
@@ -407,70 +421,72 @@ public class TpchExecutionPlanTest {
         new ColumnOp(
             "multiply",
             Arrays.<UnnamedColumn>asList(
-                new BaseColumn("tpch", "lineitem", "vt3", "l_extendedprice"),
+                new BaseColumn("vt3", "l_extendedprice"),
                 new ColumnOp(
                     "subtract",
                     Arrays.<UnnamedColumn>asList(
                         ConstantColumn.valueOf(1),
-                        new BaseColumn("tpch", "lineitem", "vt3", "l_discount")))));
+                        new BaseColumn("vt3", "l_discount")))));
     ColumnOp revenue = new ColumnOp("sum", op1);
     SelectQuery expected =
         SelectQuery.create(
             Arrays.<SelectItem>asList(
                 new AliasedColumn(
-                    new BaseColumn("tpch", "lineitem", "vt3", "l_orderkey"), "l_orderkey"),
+                    new BaseColumn("vt3", "l_orderkey"), "l_orderkey"),
                 new AliasedColumn(revenue, "revenue"),
                 new AliasedColumn(
-                    new BaseColumn("tpch", "orders", "vt2", "o_orderdate"), "o_orderdate"),
+                    new BaseColumn("vt2", "o_orderdate"), "o_orderdate"),
                 new AliasedColumn(
-                    new BaseColumn("tpch", "orders", "vt2", "o_shippriority"), "o_shippriority"),
+                    new BaseColumn("vt2", "o_shippriority"), "o_shippriority"),
                 new AliasedColumn(
-                    new BaseColumn("l_orderkey"), AsyncAggExecutionNode.getGroupByAlias() + "0"),
+                    new BaseColumn("vt3", "l_orderkey"), 
+                    AsyncAggExecutionNode.getGroupByAlias() + "0"),
                 new AliasedColumn(
-                    new BaseColumn("o_orderdate"), AsyncAggExecutionNode.getGroupByAlias() + "1"),
+                    new BaseColumn("vt2", "o_orderdate"), 
+                    AsyncAggExecutionNode.getGroupByAlias() + "1"),
                 new AliasedColumn(
-                    new BaseColumn("o_shippriority"),
+                    new BaseColumn("vt2", "o_shippriority"),
                     AsyncAggExecutionNode.getGroupByAlias() + "2"),
                 new AliasedColumn(revenue, AsyncAggExecutionNode.getOrderByAlias() + "0"),
                 new AliasedColumn(
-                    new BaseColumn("tpch", "orders", "vt2", "o_orderdate"),
+                    new BaseColumn("vt2", "o_orderdate"),
                     AsyncAggExecutionNode.getOrderByAlias() + "1")),
             Arrays.asList(customer, orders, lineitem));
     expected.addFilterByAnd(
         new ColumnOp(
             "equal",
             Arrays.<UnnamedColumn>asList(
-                new BaseColumn("tpch", "customer", "vt1", "c_mktsegment"),
+                new BaseColumn("vt1", "c_mktsegment"),
                 ConstantColumn.valueOf("'123'"))));
     expected.addFilterByAnd(
         new ColumnOp(
             "equal",
             Arrays.<UnnamedColumn>asList(
-                new BaseColumn("tpch", "customer", "vt1", "c_custkey"),
-                new BaseColumn("tpch", "orders", "vt2", "o_custkey"))));
+                new BaseColumn("vt1", "c_custkey"),
+                new BaseColumn("vt2", "o_custkey"))));
     expected.addFilterByAnd(
         new ColumnOp(
             "equal",
             Arrays.<UnnamedColumn>asList(
-                new BaseColumn("tpch", "lineitem", "vt3", "l_orderkey"),
-                new BaseColumn("tpch", "orders", "vt2", "o_orderkey"))));
+                new BaseColumn("vt3", "l_orderkey"),
+                new BaseColumn("vt2", "o_orderkey"))));
     expected.addFilterByAnd(
         new ColumnOp(
             "less",
             Arrays.<UnnamedColumn>asList(
-                new BaseColumn("tpch", "orders", "vt2", "o_orderdate"),
+                new BaseColumn("vt2", "o_orderdate"),
                 new ColumnOp("date", ConstantColumn.valueOf("'1998-12-01'")))));
     expected.addFilterByAnd(
         new ColumnOp(
             "greater",
             Arrays.<UnnamedColumn>asList(
-                new BaseColumn("tpch", "lineitem", "vt3", "l_shipdate"),
+                new BaseColumn("vt3", "l_shipdate"),
                 new ColumnOp("date", ConstantColumn.valueOf("'1998-12-01'")))));
     expected.addGroupby(
         Arrays.<GroupingAttribute>asList(
-            new BaseColumn("l_orderkey"),
-            new BaseColumn("o_orderdate"),
-            new BaseColumn("o_shippriority")));
+            new BaseColumn("vt3", "l_orderkey"),
+            new BaseColumn("vt2", "o_orderdate"),
+            new BaseColumn("vt2", "o_shippriority")));
     expected.addOrderby(
         Arrays.<OrderbyAttribute>asList(
             new OrderbyAttribute("revenue", "desc"), new OrderbyAttribute("o_orderdate")));
@@ -528,13 +544,13 @@ public class TpchExecutionPlanTest {
         SelectQuery.create(
             Arrays.<SelectItem>asList(
                 new AliasedColumn(
-                    new BaseColumn("tpch", "orders", "vt1", "o_orderpriority"), "o_orderpriority"),
+                    new BaseColumn("vt1", "o_orderpriority"), "o_orderpriority"),
                 new AliasedColumn(new ColumnOp("count", new AsteriskColumn()), "order_count"),
                 new AliasedColumn(
-                    new BaseColumn("o_orderpriority"),
+                    new BaseColumn("vt1", "o_orderpriority"),
                     AsyncAggExecutionNode.getGroupByAlias() + "0"),
                 new AliasedColumn(
-                    new BaseColumn("tpch", "orders", "vt1", "o_orderpriority"),
+                    new BaseColumn("vt1", "o_orderpriority"),
                     AsyncAggExecutionNode.getOrderByAlias() + "0")),
             orders);
 
@@ -610,76 +626,77 @@ public class TpchExecutionPlanTest {
                 new ColumnOp(
                     "multiply",
                     Arrays.<UnnamedColumn>asList(
-                        new BaseColumn("tpch", "lineitem", "vt3", "l_extendedprice"),
+                        new BaseColumn("vt3", "l_extendedprice"),
                         new ColumnOp(
                             "subtract",
                             Arrays.<UnnamedColumn>asList(
                                 ConstantColumn.valueOf(1),
-                                new BaseColumn("tpch", "lineitem", "vt3", "l_discount")))))));
+                                new BaseColumn("vt3", "l_discount")))))));
     SelectQuery expected =
         SelectQuery.create(
             Arrays.<SelectItem>asList(
-                new AliasedColumn(new BaseColumn("tpch", "nation", "vt5", "n_name"), "n_name"),
+                new AliasedColumn(new BaseColumn("vt5", "n_name"), "n_name"),
                 new AliasedColumn(revenue, "revenue"),
                 new AliasedColumn(
-                    new BaseColumn("n_name"), AsyncAggExecutionNode.getGroupByAlias() + "0"),
+                    new BaseColumn("vt5", "n_name"), 
+                    AsyncAggExecutionNode.getGroupByAlias() + "0"),
                 new AliasedColumn(revenue, AsyncAggExecutionNode.getOrderByAlias() + "0")),
             Arrays.asList(customer, orders, lineitem, supplier, nation, region));
     expected.addFilterByAnd(
         new ColumnOp(
             "equal",
             Arrays.<UnnamedColumn>asList(
-                new BaseColumn("tpch", "customer", "vt1", "c_custkey"),
-                new BaseColumn("tpch", "orders", "vt2", "o_custkey"))));
+                new BaseColumn("vt1", "c_custkey"),
+                new BaseColumn("vt2", "o_custkey"))));
     expected.addFilterByAnd(
         new ColumnOp(
             "equal",
             Arrays.<UnnamedColumn>asList(
-                new BaseColumn("tpch", "lineitem", "vt3", "l_orderkey"),
-                new BaseColumn("tpch", "orders", "vt2", "o_orderkey"))));
+                new BaseColumn("vt3", "l_orderkey"),
+                new BaseColumn("vt2", "o_orderkey"))));
     expected.addFilterByAnd(
         new ColumnOp(
             "equal",
             Arrays.<UnnamedColumn>asList(
-                new BaseColumn("tpch", "lineitem", "vt3", "l_suppkey"),
-                new BaseColumn("tpch", "supplier", "vt4", "s_suppkey"))));
+                new BaseColumn("vt3", "l_suppkey"),
+                new BaseColumn("vt4", "s_suppkey"))));
     expected.addFilterByAnd(
         new ColumnOp(
             "equal",
             Arrays.<UnnamedColumn>asList(
-                new BaseColumn("tpch", "customer", "vt1", "c_nationkey"),
-                new BaseColumn("tpch", "supplier", "vt4", "s_nationkey"))));
+                new BaseColumn("vt1", "c_nationkey"),
+                new BaseColumn("vt4", "s_nationkey"))));
     expected.addFilterByAnd(
         new ColumnOp(
             "equal",
             Arrays.<UnnamedColumn>asList(
-                new BaseColumn("tpch", "supplier", "vt4", "s_nationkey"),
-                new BaseColumn("tpch", "nation", "vt5", "n_nationkey"))));
+                new BaseColumn("vt4", "s_nationkey"),
+                new BaseColumn("vt5", "n_nationkey"))));
     expected.addFilterByAnd(
         new ColumnOp(
             "equal",
             Arrays.<UnnamedColumn>asList(
-                new BaseColumn("tpch", "nation", "vt5", "n_regionkey"),
-                new BaseColumn("tpch", "region", "vt6", "r_regionkey"))));
+                new BaseColumn("vt5", "n_regionkey"),
+                new BaseColumn("vt6", "r_regionkey"))));
     expected.addFilterByAnd(
         new ColumnOp(
             "equal",
             Arrays.<UnnamedColumn>asList(
-                new BaseColumn("tpch", "region", "vt6", "r_name"),
+                new BaseColumn("vt6", "r_name"),
                 ConstantColumn.valueOf("'123'"))));
     expected.addFilterByAnd(
         new ColumnOp(
             "greaterequal",
             Arrays.<UnnamedColumn>asList(
-                new BaseColumn("tpch", "orders", "vt2", "o_orderdate"),
+                new BaseColumn("vt2", "o_orderdate"),
                 new ColumnOp("date", ConstantColumn.valueOf("'1998-12-01'")))));
     expected.addFilterByAnd(
         new ColumnOp(
             "less",
             Arrays.<UnnamedColumn>asList(
-                new BaseColumn("tpch", "orders", "vt2", "o_orderdate"),
+                new BaseColumn("vt2", "o_orderdate"),
                 new ColumnOp("date", ConstantColumn.valueOf("'1998-12-01'")))));
-    expected.addGroupby(new BaseColumn("n_name"));
+    expected.addGroupby(new BaseColumn("vt5", "n_name"));
     expected.addOrderby(new OrderbyAttribute("revenue", "desc"));
     expected.addLimit(ConstantColumn.valueOf(1));
     assertEquals(
@@ -736,27 +753,27 @@ public class TpchExecutionPlanTest {
                         new ColumnOp(
                             "multiply",
                             Arrays.<UnnamedColumn>asList(
-                                new BaseColumn("tpch", "lineitem", "vt1", "l_extendedprice"),
-                                new BaseColumn("tpch", "lineitem", "vt1", "l_discount")))),
+                                new BaseColumn("vt1", "l_extendedprice"),
+                                new BaseColumn("vt1", "l_discount")))),
                     "revenue")),
             lineitem);
     expected.addFilterByAnd(
         new ColumnOp(
             "greaterequal",
             Arrays.<UnnamedColumn>asList(
-                new BaseColumn("tpch", "lineitem", "vt1", "l_shipdate"),
+                new BaseColumn("vt1", "l_shipdate"),
                 new ColumnOp("date", ConstantColumn.valueOf("'1998-12-01'")))));
     expected.addFilterByAnd(
         new ColumnOp(
             "less",
             Arrays.<UnnamedColumn>asList(
-                new BaseColumn("tpch", "lineitem", "vt1", "l_shipdate"),
+                new BaseColumn("vt1", "l_shipdate"),
                 new ColumnOp("date", ConstantColumn.valueOf("'1998-12-01'")))));
     expected.addFilterByAnd(
         new ColumnOp(
             "between",
             Arrays.<UnnamedColumn>asList(
-                new BaseColumn("tpch", "lineitem", "vt1", "l_discount"),
+                new BaseColumn("vt1", "l_discount"),
                 new ColumnOp(
                     "subtract",
                     Arrays.<UnnamedColumn>asList(
@@ -769,7 +786,7 @@ public class TpchExecutionPlanTest {
         new ColumnOp(
             "less",
             Arrays.<UnnamedColumn>asList(
-                new BaseColumn("tpch", "lineitem", "vt1", "l_quantity"),
+                new BaseColumn("vt1", "l_quantity"),
                 ConstantColumn.valueOf("15"))));
     expected.addLimit(ConstantColumn.valueOf(1));
     assertEquals(
@@ -864,13 +881,13 @@ public class TpchExecutionPlanTest {
     SelectQuery subquery =
         SelectQuery.create(
             Arrays.<SelectItem>asList(
-                new AliasedColumn(new BaseColumn("tpch", "vt6", "n_name"), "supp_nation"),
-                new AliasedColumn(new BaseColumn("tpch", "nation", "vt7", "n_name"), "cust_nation"),
+                new AliasedColumn(new BaseColumn("vt6", "n_name"), "supp_nation"),
+                new AliasedColumn(new BaseColumn("vt7", "n_name"), "cust_nation"),
                 new AliasedColumn(
                     new ColumnOp(
                         "substr",
                         Arrays.<UnnamedColumn>asList(
-                            new BaseColumn("tpch", "lineitem", "vt3", "l_shipdate"),
+                            new BaseColumn("vt3", "l_shipdate"),
                             ConstantColumn.valueOf(0),
                             ConstantColumn.valueOf(4))),
                     "l_year"),
@@ -878,44 +895,44 @@ public class TpchExecutionPlanTest {
                     new ColumnOp(
                         "multiply",
                         Arrays.<UnnamedColumn>asList(
-                            new BaseColumn("tpch", "lineitem", "vt3", "l_extendedprice"),
+                            new BaseColumn("vt3", "l_extendedprice"),
                             new ColumnOp(
                                 "subtract",
                                 Arrays.<UnnamedColumn>asList(
                                     ConstantColumn.valueOf(1),
-                                    new BaseColumn("tpch", "lineitem", "vt3", "l_discount"))))),
+                                    new BaseColumn("vt3", "l_discount"))))),
                     "volume")),
             Arrays.asList(supplier, lineitem, orders, customer, nation1, nation2));
     subquery.addFilterByAnd(
         new ColumnOp(
             "equal",
             Arrays.<UnnamedColumn>asList(
-                new BaseColumn("tpch", "supplier", "vt2", "s_suppkey"),
-                new BaseColumn("tpch", "lineitem", "vt3", "l_suppkey"))));
+                new BaseColumn("vt2", "s_suppkey"),
+                new BaseColumn("vt3", "l_suppkey"))));
     subquery.addFilterByAnd(
         new ColumnOp(
             "equal",
             Arrays.<UnnamedColumn>asList(
-                new BaseColumn("tpch", "orders", "vt4", "o_orderkey"),
-                new BaseColumn("tpch", "lineitem", "vt3", "l_orderkey"))));
+                new BaseColumn("vt4", "o_orderkey"),
+                new BaseColumn("vt3", "l_orderkey"))));
     subquery.addFilterByAnd(
         new ColumnOp(
             "equal",
             Arrays.<UnnamedColumn>asList(
-                new BaseColumn("tpch", "customer", "vt5", "c_custkey"),
-                new BaseColumn("tpch", "orders", "vt4", "o_custkey"))));
+                new BaseColumn("vt5", "c_custkey"),
+                new BaseColumn("vt4", "o_custkey"))));
     subquery.addFilterByAnd(
         new ColumnOp(
             "equal",
             Arrays.<UnnamedColumn>asList(
-                new BaseColumn("tpch", "supplier", "vt2", "s_nationkey"),
-                new BaseColumn("tpch", "vt6", "n_nationkey"))));
+                new BaseColumn("vt2", "s_nationkey"),
+                new BaseColumn("vt6", "n_nationkey"))));
     subquery.addFilterByAnd(
         new ColumnOp(
             "equal",
             Arrays.<UnnamedColumn>asList(
-                new BaseColumn("tpch", "customer", "vt5", "c_nationkey"),
-                new BaseColumn("tpch", "nation", "vt7", "n_nationkey"))));
+                new BaseColumn("vt5", "c_nationkey"),
+                new BaseColumn("vt7", "n_nationkey"))));
     subquery.addFilterByAnd(
         new ColumnOp(
             "or",
@@ -926,12 +943,12 @@ public class TpchExecutionPlanTest {
                         new ColumnOp(
                             "equal",
                             Arrays.<UnnamedColumn>asList(
-                                new BaseColumn("tpch", "vt6", "n_name"),
+                                new BaseColumn("vt6", "n_name"),
                                 ConstantColumn.valueOf("':1'"))),
                         new ColumnOp(
                             "equal",
                             Arrays.<UnnamedColumn>asList(
-                                new BaseColumn("tpch", "nation", "vt7", "n_name"),
+                                new BaseColumn("vt7", "n_name"),
                                 ConstantColumn.valueOf("':2'"))))),
                 new ColumnOp(
                     "and",
@@ -939,50 +956,52 @@ public class TpchExecutionPlanTest {
                         new ColumnOp(
                             "equal",
                             Arrays.<UnnamedColumn>asList(
-                                new BaseColumn("tpch", "vt6", "n_name"),
+                                new BaseColumn("vt6", "n_name"),
                                 ConstantColumn.valueOf("':2'"))),
                         new ColumnOp(
                             "equal",
                             Arrays.<UnnamedColumn>asList(
-                                new BaseColumn("tpch", "nation", "vt7", "n_name"),
+                                new BaseColumn("vt7", "n_name"),
                                 ConstantColumn.valueOf("':1'"))))))));
     subquery.addFilterByAnd(
         new ColumnOp(
             "between",
             Arrays.<UnnamedColumn>asList(
-                new BaseColumn("tpch", "lineitem", "vt3", "l_shipdate"),
+                new BaseColumn("vt3", "l_shipdate"),
                 new ColumnOp("date", ConstantColumn.valueOf("'1995-01-01'")),
                 new ColumnOp("date", ConstantColumn.valueOf("'1996-12-31'")))));
     subquery.setAliasName("vt1");
     SelectQuery expected =
         SelectQuery.create(
             Arrays.<SelectItem>asList(
-                new AliasedColumn(new BaseColumn("tpch", "vt1", "supp_nation"), "supp_nation"),
-                new AliasedColumn(new BaseColumn("tpch", "vt1", "cust_nation"), "cust_nation"),
-                new AliasedColumn(new BaseColumn("tpch", "vt1", "l_year"), "l_year"),
+                new AliasedColumn(new BaseColumn("vt1", "supp_nation"), "supp_nation"),
+                new AliasedColumn(new BaseColumn("vt1", "cust_nation"), "cust_nation"),
+                new AliasedColumn(new BaseColumn("vt1", "l_year"), "l_year"),
                 new AliasedColumn(
-                    new ColumnOp("sum", new BaseColumn("tpch", "vt1", "volume")), "revenue"),
+                    new ColumnOp("sum", new BaseColumn("vt1", "volume")), "revenue"),
                 new AliasedColumn(
-                    new BaseColumn("supp_nation"), AsyncAggExecutionNode.getGroupByAlias() + "0"),
+                    new BaseColumn("vt1", "supp_nation"), 
+                    AsyncAggExecutionNode.getGroupByAlias() + "0"),
                 new AliasedColumn(
-                    new BaseColumn("cust_nation"), AsyncAggExecutionNode.getGroupByAlias() + "1"),
+                    new BaseColumn("vt1", "cust_nation"), 
+                    AsyncAggExecutionNode.getGroupByAlias() + "1"),
                 new AliasedColumn(
-                    new BaseColumn("l_year"), AsyncAggExecutionNode.getGroupByAlias() + "2"),
+                    new BaseColumn("vt1", "l_year"), AsyncAggExecutionNode.getGroupByAlias() + "2"),
                 new AliasedColumn(
-                    new BaseColumn("tpch", "vt1", "supp_nation"),
+                    new BaseColumn("vt1", "supp_nation"),
                     AsyncAggExecutionNode.getOrderByAlias() + "0"),
                 new AliasedColumn(
-                    new BaseColumn("tpch", "vt1", "cust_nation"),
+                    new BaseColumn("vt1", "cust_nation"),
                     AsyncAggExecutionNode.getOrderByAlias() + "1"),
                 new AliasedColumn(
-                    new BaseColumn("tpch", "vt1", "l_year"),
+                    new BaseColumn("vt1", "l_year"),
                     AsyncAggExecutionNode.getOrderByAlias() + "2")),
             new BaseTable("placeholderSchema_1_0", "placeholderTable_1_0", "vt1"));
     expected.addGroupby(
         Arrays.<GroupingAttribute>asList(
-            new BaseColumn("supp_nation"),
-            new BaseColumn("cust_nation"),
-            new BaseColumn("l_year")));
+            new BaseColumn("vt1", "supp_nation"),
+            new BaseColumn("vt1", "cust_nation"),
+            new BaseColumn("vt1", "l_year")));
     expected.addOrderby(
         Arrays.<OrderbyAttribute>asList(
             new OrderbyAttribute("supp_nation"),
@@ -1083,87 +1102,89 @@ public class TpchExecutionPlanTest {
         SelectQuery.create(
             Arrays.<SelectItem>asList(
                 new AliasedColumn(
-                    new ColumnOp("year", new BaseColumn("tpch", "orders", "vt5", "o_orderdate")),
+                    new ColumnOp(
+                        "year", 
+                        new BaseColumn("vt5", "o_orderdate")),
                     "o_year"),
                 new AliasedColumn(
                     new ColumnOp(
                         "multiply",
                         Arrays.<UnnamedColumn>asList(
-                            new BaseColumn("tpch", "lineitem", "vt4", "l_extendedprice"),
+                            new BaseColumn("vt4", "l_extendedprice"),
                             new ColumnOp(
                                 "subtract",
                                 Arrays.<UnnamedColumn>asList(
                                     ConstantColumn.valueOf(1),
-                                    new BaseColumn("tpch", "lineitem", "vt4", "l_discount"))))),
+                                    new BaseColumn("vt4", "l_discount"))))),
                     "volume"),
-                new AliasedColumn(new BaseColumn("tpch", "nation", "vt8", "n_name"), "nation")),
+                new AliasedColumn(new BaseColumn("vt8", "n_name"), "nation")),
             Arrays.asList(part, supplier, lineitem, orders, customer, nation1, nation2, region));
     subquery.addFilterByAnd(
         new ColumnOp(
             "equal",
             Arrays.<UnnamedColumn>asList(
-                new BaseColumn("tpch", "part", "vt2", "p_partkey"),
-                new BaseColumn("tpch", "lineitem", "vt4", "l_partkey"))));
+                new BaseColumn("vt2", "p_partkey"),
+                new BaseColumn("vt4", "l_partkey"))));
     subquery.addFilterByAnd(
         new ColumnOp(
             "equal",
             Arrays.<UnnamedColumn>asList(
-                new BaseColumn("tpch", "supplier", "vt3", "s_suppkey"),
-                new BaseColumn("tpch", "lineitem", "vt4", "l_suppkey"))));
+                new BaseColumn("vt3", "s_suppkey"),
+                new BaseColumn("vt4", "l_suppkey"))));
     subquery.addFilterByAnd(
         new ColumnOp(
             "equal",
             Arrays.<UnnamedColumn>asList(
-                new BaseColumn("tpch", "lineitem", "vt4", "l_orderkey"),
-                new BaseColumn("tpch", "orders", "vt5", "o_orderkey"))));
+                new BaseColumn("vt4", "l_orderkey"),
+                new BaseColumn("vt5", "o_orderkey"))));
     subquery.addFilterByAnd(
         new ColumnOp(
             "equal",
             Arrays.<UnnamedColumn>asList(
-                new BaseColumn("tpch", "orders", "vt5", "o_custkey"),
-                new BaseColumn("tpch", "customer", "vt6", "c_custkey"))));
+                new BaseColumn("vt5", "o_custkey"),
+                new BaseColumn("vt6", "c_custkey"))));
     subquery.addFilterByAnd(
         new ColumnOp(
             "equal",
             Arrays.<UnnamedColumn>asList(
-                new BaseColumn("tpch", "customer", "vt6", "c_nationkey"),
-                new BaseColumn("tpch", "vt7", "n_nationkey"))));
+                new BaseColumn("vt6", "c_nationkey"),
+                new BaseColumn("vt7", "n_nationkey"))));
     subquery.addFilterByAnd(
         new ColumnOp(
             "equal",
             Arrays.<UnnamedColumn>asList(
-                new BaseColumn("tpch", "vt7", "n_regionkey"),
-                new BaseColumn("tpch", "region", "vt9", "r_regionkey"))));
+                new BaseColumn("vt7", "n_regionkey"),
+                new BaseColumn("vt9", "r_regionkey"))));
     subquery.addFilterByAnd(
         new ColumnOp(
             "equal",
             Arrays.<UnnamedColumn>asList(
-                new BaseColumn("tpch", "region", "vt9", "r_name"),
+                new BaseColumn("vt9", "r_name"),
                 ConstantColumn.valueOf("'AMERICA'"))));
     subquery.addFilterByAnd(
         new ColumnOp(
             "equal",
             Arrays.<UnnamedColumn>asList(
-                new BaseColumn("tpch", "supplier", "vt3", "s_nationkey"),
-                new BaseColumn("tpch", "nation", "vt8", "n_nationkey"))));
+                new BaseColumn("vt3", "s_nationkey"),
+                new BaseColumn("vt8", "n_nationkey"))));
     subquery.addFilterByAnd(
         new ColumnOp(
             "between",
             Arrays.<UnnamedColumn>asList(
-                new BaseColumn("tpch", "orders", "vt5", "o_orderdate"),
+                new BaseColumn("vt5", "o_orderdate"),
                 ConstantColumn.valueOf("'1995-01-01'"),
                 ConstantColumn.valueOf("'1996-12-31'"))));
     subquery.addFilterByAnd(
         new ColumnOp(
             "equal",
             Arrays.<UnnamedColumn>asList(
-                new BaseColumn("tpch", "part", "vt2", "p_type"),
+                new BaseColumn("vt2", "p_type"),
                 ConstantColumn.valueOf("'ECONOMY BURNISHED NICKEL'"))));
     subquery.setAliasName("vt1");
     SelectQuery expected =
         SelectQuery.create(
             Arrays.<SelectItem>asList(
-                new AliasedColumn(new BaseColumn("tpch", "vt1", "o_year"), "o_year"),
+                new AliasedColumn(new BaseColumn("vt1", "o_year"), "o_year"),
                 new AliasedColumn(
                     new ColumnOp(
                         "sum",
@@ -1173,20 +1194,21 @@ public class TpchExecutionPlanTest {
                                 new ColumnOp(
                                     "equal",
                                     Arrays.<UnnamedColumn>asList(
-                                        new BaseColumn("tpch", "vt1", "nation"),
+                                        new BaseColumn("vt1", "nation"),
                                         ConstantColumn.valueOf("'PERU'"))),
-                                new BaseColumn("tpch", "vt1", "volume"),
+                                new BaseColumn("vt1", "volume"),
                                 ConstantColumn.valueOf(0)))),
                     "numerator"),
                 new AliasedColumn(
-                    new ColumnOp("sum", new BaseColumn("tpch", "vt1", "volume")), "denominator"),
+                    new ColumnOp("sum", new BaseColumn("vt1", "volume")), "denominator"),
                 new AliasedColumn(
-                    new BaseColumn("o_year"), AsyncAggExecutionNode.getGroupByAlias() + "0"),
+                    new BaseColumn("vt1", "o_year"), 
+                    AsyncAggExecutionNode.getGroupByAlias() + "0"),
                 new AliasedColumn(
-                    new BaseColumn("tpch", "vt1", "o_year"),
+                    new BaseColumn("vt1", "o_year"),
                     AsyncAggExecutionNode.getOrderByAlias() + "0")),
             new BaseTable("placeholderSchema_1_0", "placeholderTable_1_0", "vt1"));
-    expected.addGroupby(new BaseColumn("o_year"));
+    expected.addGroupby(new BaseColumn("vt1", "o_year"));
     expected.addOrderby(new OrderbyAttribute("o_year"));
     expected.addLimit(ConstantColumn.valueOf(1));
     assertEquals(
@@ -1272,7 +1294,7 @@ public class TpchExecutionPlanTest {
     AbstractRelation partsupp = new BaseTable("tpch", "partsupp", "vt5");
     AbstractRelation orders = new BaseTable("tpch", "orders", "vt6");
     AbstractRelation nation = new BaseTable("tpch", "nation", "vt7");
-    BaseColumn nationColumn = new BaseColumn("tpch", "nation", "vt7", "n_name");
+    BaseColumn nationColumn = new BaseColumn("vt7", "n_name");
     SelectQuery subquery =
         SelectQuery.create(
             Arrays.<SelectItem>asList(
@@ -1281,7 +1303,7 @@ public class TpchExecutionPlanTest {
                     new ColumnOp(
                         "substr",
                         Arrays.<UnnamedColumn>asList(
-                            new BaseColumn("tpch", "orders", "vt6", "o_orderdate"),
+                            new BaseColumn("vt6", "o_orderdate"),
                             ConstantColumn.valueOf(0),
                             ConstantColumn.valueOf(4))),
                     "o_year"),
@@ -1292,83 +1314,86 @@ public class TpchExecutionPlanTest {
                             new ColumnOp(
                                 "multiply",
                                 Arrays.<UnnamedColumn>asList(
-                                    new BaseColumn("tpch", "lineitem", "vt4", "l_extendedprice"),
+                                    new BaseColumn("vt4", "l_extendedprice"),
                                     new ColumnOp(
                                         "subtract",
                                         Arrays.<UnnamedColumn>asList(
                                             ConstantColumn.valueOf(1),
-                                            new BaseColumn(
-                                                "tpch", "lineitem", "vt4", "l_discount"))))),
+                                            new BaseColumn("vt4", "l_discount"))))),
                             new ColumnOp(
                                 "multiply",
                                 Arrays.<UnnamedColumn>asList(
-                                    new BaseColumn("tpch", "partsupp", "vt5", "ps_supplycost"),
-                                    new BaseColumn("tpch", "lineitem", "vt4", "l_quantity"))))),
+                                    new BaseColumn("vt5", "ps_supplycost"),
+                                    new BaseColumn("vt4", "l_quantity"))))),
                     "amount")),
             Arrays.asList(part, supplier, lineitem, partsupp, orders, nation));
     subquery.addFilterByAnd(
         new ColumnOp(
             "equal",
             Arrays.<UnnamedColumn>asList(
-                new BaseColumn("tpch", "supplier", "vt3", "s_suppkey"),
-                new BaseColumn("tpch", "lineitem", "vt4", "l_suppkey"))));
+                new BaseColumn("vt3", "s_suppkey"),
+                new BaseColumn("vt4", "l_suppkey"))));
     subquery.addFilterByAnd(
         new ColumnOp(
             "equal",
             Arrays.<UnnamedColumn>asList(
-                new BaseColumn("tpch", "partsupp", "vt5", "ps_suppkey"),
-                new BaseColumn("tpch", "lineitem", "vt4", "l_suppkey"))));
+                new BaseColumn("vt5", "ps_suppkey"),
+                new BaseColumn("vt4", "l_suppkey"))));
     subquery.addFilterByAnd(
         new ColumnOp(
             "equal",
             Arrays.<UnnamedColumn>asList(
-                new BaseColumn("tpch", "partsupp", "vt5", "ps_partkey"),
-                new BaseColumn("tpch", "lineitem", "vt4", "l_partkey"))));
+                new BaseColumn("vt5", "ps_partkey"),
+                new BaseColumn("vt4", "l_partkey"))));
     subquery.addFilterByAnd(
         new ColumnOp(
             "equal",
             Arrays.<UnnamedColumn>asList(
-                new BaseColumn("tpch", "part", "vt2", "p_partkey"),
-                new BaseColumn("tpch", "lineitem", "vt4", "l_partkey"))));
+                new BaseColumn("vt2", "p_partkey"),
+                new BaseColumn("vt4", "l_partkey"))));
     subquery.addFilterByAnd(
         new ColumnOp(
             "equal",
             Arrays.<UnnamedColumn>asList(
-                new BaseColumn("tpch", "orders", "vt6", "o_orderkey"),
-                new BaseColumn("tpch", "lineitem", "vt4", "l_orderkey"))));
+                new BaseColumn("vt6", "o_orderkey"),
+                new BaseColumn("vt4", "l_orderkey"))));
     subquery.addFilterByAnd(
         new ColumnOp(
             "equal",
             Arrays.<UnnamedColumn>asList(
-                new BaseColumn("tpch", "supplier", "vt3", "s_nationkey"),
-                new BaseColumn("tpch", "nation", "vt7", "n_nationkey"))));
+                new BaseColumn("vt3", "s_nationkey"),
+                new BaseColumn("vt7", "n_nationkey"))));
     subquery.addFilterByAnd(
         new ColumnOp(
             "like",
             Arrays.<UnnamedColumn>asList(
-                new BaseColumn("tpch", "part", "vt2", "p_name"),
+                new BaseColumn("vt2", "p_name"),
                 ConstantColumn.valueOf("'%:1%'"))));
     subquery.setAliasName("vt1");
     SelectQuery expected =
         SelectQuery.create(
             Arrays.<SelectItem>asList(
-                new AliasedColumn(new BaseColumn("tpch", "vt1", "nation"), "nation"),
-                new AliasedColumn(new BaseColumn("tpch", "vt1", "o_year"), "o_year"),
+                new AliasedColumn(new BaseColumn("vt1", "nation"), "nation"),
+                new AliasedColumn(new BaseColumn("vt1", "o_year"), "o_year"),
                 new AliasedColumn(
-                    new ColumnOp("sum", new BaseColumn("tpch", "vt1", "amount")), "sum_profit"),
+                    new ColumnOp("sum", new BaseColumn("vt1", "amount")), "sum_profit"),
                 new AliasedColumn(
-                    new BaseColumn("nation"), AsyncAggExecutionNode.getGroupByAlias() + "0"),
+                    new BaseColumn("vt1", "nation"), 
+                    AsyncAggExecutionNode.getGroupByAlias() + "0"),
                 new AliasedColumn(
-                    new BaseColumn("o_year"), AsyncAggExecutionNode.getGroupByAlias() + "1"),
+                    new BaseColumn("vt1", "o_year"), 
+                    AsyncAggExecutionNode.getGroupByAlias() + "1"),
                 new AliasedColumn(
-                    new BaseColumn("tpch", "vt1", "nation"),
+                    new BaseColumn("vt1", "nation"),
                     AsyncAggExecutionNode.getOrderByAlias() + "0"),
                 new AliasedColumn(
-                    new BaseColumn("tpch", "vt1", "o_year"),
+                    new BaseColumn("vt1", "o_year"),
                     AsyncAggExecutionNode.getOrderByAlias() + "1")),
             new BaseTable("placeholderSchema_1_0", "placeholderTable_1_0", "vt1"));
     expected.addGroupby(
-        Arrays.<GroupingAttribute>asList(new BaseColumn("nation"), new BaseColumn("o_year")));
+        Arrays.<GroupingAttribute>asList(
+            new BaseColumn("vt1", "nation"),
+            new BaseColumn("vt1", "o_year")));
     expected.addOrderby(
         Arrays.<OrderbyAttribute>asList(
             new OrderbyAttribute("nation"), new OrderbyAttribute("o_year", "desc")));
@@ -1462,42 +1487,49 @@ public class TpchExecutionPlanTest {
                 new ColumnOp(
                     "multiply",
                     Arrays.<UnnamedColumn>asList(
-                        new BaseColumn("tpch", "lineitem", "vt3", "l_extendedprice"),
+                        new BaseColumn("vt3", "l_extendedprice"),
                         new ColumnOp(
                             "subtract",
                             Arrays.<UnnamedColumn>asList(
                                 ConstantColumn.valueOf(1),
-                                new BaseColumn("tpch", "lineitem", "vt3", "l_discount")))))),
+                                new BaseColumn("vt3", "l_discount")))))),
             "revenue");
     SelectQuery expected =
         SelectQuery.create(
             Arrays.<SelectItem>asList(
                 new AliasedColumn(
-                    new BaseColumn("tpch", "customer", "vt1", "c_custkey"), "c_custkey"),
-                new AliasedColumn(new BaseColumn("tpch", "customer", "vt1", "c_name"), "c_name"),
+                    new BaseColumn("vt1", "c_custkey"), "c_custkey"),
+                new AliasedColumn(new BaseColumn("vt1", "c_name"), "c_name"),
                 revenue,
                 new AliasedColumn(
-                    new BaseColumn("tpch", "customer", "vt1", "c_acctbal"), "c_acctbal"),
-                new AliasedColumn(new BaseColumn("tpch", "nation", "vt4", "n_name"), "n_name"),
+                    new BaseColumn("vt1", "c_acctbal"), "c_acctbal"),
+                new AliasedColumn(new BaseColumn("vt4", "n_name"), "n_name"),
                 new AliasedColumn(
-                    new BaseColumn("tpch", "customer", "vt1", "c_address"), "c_address"),
-                new AliasedColumn(new BaseColumn("tpch", "customer", "vt1", "c_phone"), "c_phone"),
+                    new BaseColumn("vt1", "c_address"), "c_address"),
+                new AliasedColumn(new BaseColumn("vt1", "c_phone"), "c_phone"),
                 new AliasedColumn(
-                    new BaseColumn("tpch", "customer", "vt1", "c_comment"), "c_comment"),
+                    new BaseColumn("vt1", "c_comment"), "c_comment"),
                 new AliasedColumn(
-                    new BaseColumn("c_custkey"), AsyncAggExecutionNode.getGroupByAlias() + "0"),
+                    new BaseColumn("vt1", "c_custkey"), 
+                    AsyncAggExecutionNode.getGroupByAlias() + "0"),
                 new AliasedColumn(
-                    new BaseColumn("c_name"), AsyncAggExecutionNode.getGroupByAlias() + "1"),
+                    new BaseColumn("vt1", "c_name"), 
+                    AsyncAggExecutionNode.getGroupByAlias() + "1"),
                 new AliasedColumn(
-                    new BaseColumn("c_acctbal"), AsyncAggExecutionNode.getGroupByAlias() + "2"),
+                    new BaseColumn("vt1", "c_acctbal"), 
+                    AsyncAggExecutionNode.getGroupByAlias() + "2"),
                 new AliasedColumn(
-                    new BaseColumn("c_phone"), AsyncAggExecutionNode.getGroupByAlias() + "3"),
+                    new BaseColumn("vt1", "c_phone"),
+                    AsyncAggExecutionNode.getGroupByAlias() + "3"),
                 new AliasedColumn(
-                    new BaseColumn("n_name"), AsyncAggExecutionNode.getGroupByAlias() + "4"),
+                    new BaseColumn("vt4", "n_name"), 
+                    AsyncAggExecutionNode.getGroupByAlias() + "4"),
                 new AliasedColumn(
-                    new BaseColumn("c_address"), AsyncAggExecutionNode.getGroupByAlias() + "5"),
+                    new BaseColumn("vt1", "c_address"), 
+                    AsyncAggExecutionNode.getGroupByAlias() + "5"),
                 new AliasedColumn(
-                    new BaseColumn("c_comment"), AsyncAggExecutionNode.getGroupByAlias() + "6"),
+                    new BaseColumn("vt1", "c_comment"), 
+                    AsyncAggExecutionNode.getGroupByAlias() + "6"),
                 new AliasedColumn(
                     revenue.getColumn(), AsyncAggExecutionNode.getOrderByAlias() + "0")),
             Arrays.asList(customer, orders, lineitem, nation));
@@ -1505,48 +1537,48 @@ public class TpchExecutionPlanTest {
         new ColumnOp(
             "equal",
             Arrays.<UnnamedColumn>asList(
-                new BaseColumn("tpch", "customer", "vt1", "c_custkey"),
-                new BaseColumn("tpch", "orders", "vt2", "o_custkey"))));
+                new BaseColumn("vt1", "c_custkey"),
+                new BaseColumn("vt2", "o_custkey"))));
     expected.addFilterByAnd(
         new ColumnOp(
             "equal",
             Arrays.<UnnamedColumn>asList(
-                new BaseColumn("tpch", "lineitem", "vt3", "l_orderkey"),
-                new BaseColumn("tpch", "orders", "vt2", "o_orderkey"))));
+                new BaseColumn("vt3", "l_orderkey"),
+                new BaseColumn("vt2", "o_orderkey"))));
     expected.addFilterByAnd(
         new ColumnOp(
             "greaterequal",
             Arrays.<UnnamedColumn>asList(
-                new BaseColumn("tpch", "orders", "vt2", "o_orderdate"),
+                new BaseColumn("vt2", "o_orderdate"),
                 new ColumnOp("date", ConstantColumn.valueOf("'2018-01-01'")))));
     expected.addFilterByAnd(
         new ColumnOp(
             "less",
             Arrays.<UnnamedColumn>asList(
-                new BaseColumn("tpch", "orders", "vt2", "o_orderdate"),
+                new BaseColumn("vt2", "o_orderdate"),
                 new ColumnOp("date", ConstantColumn.valueOf("'2018-01-01'")))));
 
     expected.addFilterByAnd(
         new ColumnOp(
             "equal",
             Arrays.<UnnamedColumn>asList(
-                new BaseColumn("tpch", "lineitem", "vt3", "l_returnflag"),
+                new BaseColumn("vt3", "l_returnflag"),
                 ConstantColumn.valueOf("'R'"))));
     expected.addFilterByAnd(
         new ColumnOp(
             "equal",
             Arrays.<UnnamedColumn>asList(
-                new BaseColumn("tpch", "customer", "vt1", "c_nationkey"),
-                new BaseColumn("tpch", "nation", "vt4", "n_nationkey"))));
+                new BaseColumn("vt1", "c_nationkey"),
+                new BaseColumn("vt4", "n_nationkey"))));
     expected.addGroupby(
         Arrays.<GroupingAttribute>asList(
-            new BaseColumn("c_custkey"),
-            new BaseColumn("c_name"),
-            new BaseColumn("c_acctbal"),
-            new BaseColumn("c_phone"),
-            new BaseColumn("n_name"),
-            new BaseColumn("c_address"),
-            new BaseColumn("c_comment")));
+            new BaseColumn("vt1", "c_custkey"),
+            new BaseColumn("vt1", "c_name"),
+            new BaseColumn("vt1", "c_acctbal"),
+            new BaseColumn("vt1", "c_phone"),
+            new BaseColumn("vt4", "n_name"),
+            new BaseColumn("vt1", "c_address"),
+            new BaseColumn("vt1", "c_comment")));
     expected.addOrderby(new OrderbyAttribute("revenue", "desc"));
     expected.addLimit(ConstantColumn.valueOf(20));
     assertEquals(
@@ -1619,7 +1651,7 @@ public class TpchExecutionPlanTest {
     SelectQuery expected =
         SelectQuery.create(
             Arrays.<SelectItem>asList(
-                new AliasedColumn(new BaseColumn("tpch", "lineitem", "vt2", "l_shipmode"), "vc3"),
+                new AliasedColumn(new BaseColumn("vt2", "l_shipmode"), "vc3"),
                 new AliasedColumn(
                     new ColumnOp(
                         "sum",
@@ -1673,39 +1705,39 @@ public class TpchExecutionPlanTest {
         new ColumnOp(
             "equal",
             Arrays.<UnnamedColumn>asList(
-                new BaseColumn("tpch", "orders", "vt1", "o_orderkey"),
-                new BaseColumn("tpch", "lineitem", "vt2", "l_orderkey"))));
+                new BaseColumn("vt1", "o_orderkey"),
+                new BaseColumn("vt2", "l_orderkey"))));
     expected.addFilterByAnd(
         new ColumnOp(
             "in",
             Arrays.<UnnamedColumn>asList(
-                new BaseColumn("tpch", "lineitem", "vt2", "l_shipmode"),
+                new BaseColumn("vt2", "l_shipmode"),
                 ConstantColumn.valueOf("':1'"),
                 ConstantColumn.valueOf("':2'"))));
     expected.addFilterByAnd(
         new ColumnOp(
             "less",
             Arrays.<UnnamedColumn>asList(
-                new BaseColumn("tpch", "lineitem", "vt2", "l_commitdate"),
-                new BaseColumn("tpch", "lineitem", "vt2", "l_receiptdate"))));
+                new BaseColumn("vt2", "l_commitdate"),
+                new BaseColumn("vt2", "l_receiptdate"))));
 
     expected.addFilterByAnd(
         new ColumnOp(
             "less",
             Arrays.<UnnamedColumn>asList(
-                new BaseColumn("tpch", "lineitem", "vt2", "l_shipdate"),
-                new BaseColumn("tpch", "lineitem", "vt2", "l_commitdate"))));
+                new BaseColumn("vt2", "l_shipdate"),
+                new BaseColumn("vt2", "l_commitdate"))));
     expected.addFilterByAnd(
         new ColumnOp(
             "greaterequal",
             Arrays.<UnnamedColumn>asList(
-                new BaseColumn("tpch", "lineitem", "vt2", "l_receiptdate"),
+                new BaseColumn("vt2", "l_receiptdate"),
                 new ColumnOp("date", ConstantColumn.valueOf("'2018-01-01'")))));
     expected.addFilterByAnd(
         new ColumnOp(
             "less",
             Arrays.<UnnamedColumn>asList(
-                new BaseColumn("tpch", "lineitem", "vt2", "l_receiptdate"),
+                new BaseColumn("vt2", "l_receiptdate"),
                 new ColumnOp("date", ConstantColumn.valueOf("'2018-01-01'")))));
     expected.addGroupby(new AliasReference("vc3"));
     expected.addOrderby(new OrderbyAttribute("vc3"));
@@ -1768,25 +1800,26 @@ public class TpchExecutionPlanTest {
                         new ColumnOp(
                             "equal",
                             Arrays.<UnnamedColumn>asList(
-                                new BaseColumn("tpch", "customer", "vt1", "c_custkey"),
-                                new BaseColumn("tpch", "orders", "vt2", "o_custkey"))),
+                                new BaseColumn("vt1", "c_custkey"),
+                                new BaseColumn("vt2", "o_custkey"))),
                         new ColumnOp(
                             "notlike",
                             Arrays.<UnnamedColumn>asList(
-                                new BaseColumn("tpch", "orders", "vt2", "o_comment"),
+                                new BaseColumn("vt2", "o_comment"),
                                 ConstantColumn.valueOf("'%unusual%accounts%'")))))));
     SelectQuery expected =
         SelectQuery.create(
             Arrays.<SelectItem>asList(
                 new AliasedColumn(
-                    new BaseColumn("tpch", "customer", "vt1", "c_custkey"), "c_custkey"),
+                    new BaseColumn("vt1", "c_custkey"), "c_custkey"),
                 new AliasedColumn(
-                    new ColumnOp("count", new BaseColumn("tpch", "orders", "vt2", "o_orderkey")),
+                    new ColumnOp("count", new BaseColumn("vt2", "o_orderkey")),
                     "c_count"),
                 new AliasedColumn(
-                    new BaseColumn("c_custkey"), AsyncAggExecutionNode.getGroupByAlias() + "0")),
+                    new BaseColumn("vt1", "c_custkey"), 
+                    AsyncAggExecutionNode.getGroupByAlias() + "0")),
             join);
-    expected.addGroupby(new BaseColumn("c_custkey"));
+    expected.addGroupby(new BaseColumn("vt1", "c_custkey"));
     assertEquals(
         expected,
         ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0))
@@ -1855,7 +1888,7 @@ public class TpchExecutionPlanTest {
                                         new ColumnOp(
                                             "like",
                                             Arrays.<UnnamedColumn>asList(
-                                                new BaseColumn("tpch", "part", "vt2", "p_type"),
+                                                new BaseColumn("vt2", "p_type"),
                                                 ConstantColumn.valueOf("'PROMO%'"))),
                                         new ColumnOp(
                                             "multiply",
@@ -1879,7 +1912,7 @@ public class TpchExecutionPlanTest {
                         new ColumnOp(
                             "multiply",
                             Arrays.<UnnamedColumn>asList(
-                                new BaseColumn("tpch", "lineitem", "vt1", "l_extendedprice"),
+                                new BaseColumn("vt1", "l_extendedprice"),
                                 new ColumnOp(
                                     "subtract",
                                     Arrays.<UnnamedColumn>asList(
@@ -1892,19 +1925,19 @@ public class TpchExecutionPlanTest {
         new ColumnOp(
             "equal",
             Arrays.<UnnamedColumn>asList(
-                new BaseColumn("tpch", "lineitem", "vt1", "l_partkey"),
-                new BaseColumn("tpch", "part", "vt2", "p_partkey"))));
+                new BaseColumn("vt1", "l_partkey"),
+                new BaseColumn("vt2", "p_partkey"))));
     expected.addFilterByAnd(
         new ColumnOp(
             "greaterequal",
             Arrays.<UnnamedColumn>asList(
-                new BaseColumn("tpch", "lineitem", "vt1", "l_shipdate"),
+                new BaseColumn("vt1", "l_shipdate"),
                 new ColumnOp("date", ConstantColumn.valueOf("'2018-01-01'")))));
     expected.addFilterByAnd(
         new ColumnOp(
             "less",
             Arrays.<UnnamedColumn>asList(
-                new BaseColumn("tpch", "lineitem", "vt1", "l_shipdate"),
+                new BaseColumn("vt1", "l_shipdate"),
                 new ColumnOp("date", ConstantColumn.valueOf("'2018-01-01'")))));
     expected.addLimit(ConstantColumn.valueOf(1));
     assertEquals(
@@ -1956,37 +1989,37 @@ public class TpchExecutionPlanTest {
         SelectQuery.create(
             Arrays.<SelectItem>asList(
                 new AliasedColumn(
-                    new BaseColumn("tpch", "lineitem", "vt1", "l_suppkey"), "l_suppkey"),
+                    new BaseColumn("vt1", "l_suppkey"), "l_suppkey"),
                 new AliasedColumn(
                     new ColumnOp(
                         "sum",
                         new ColumnOp(
                             "multiply",
                             Arrays.asList(
-                                new BaseColumn("tpch", "lineitem", "vt1", "l_extendedprice"),
+                                new BaseColumn("vt1", "l_extendedprice"),
                                 new ColumnOp(
                                     "subtract",
                                     Arrays.asList(
                                         ConstantColumn.valueOf(1),
-                                        new BaseColumn(
-                                            "tpch", "lineitem", "vt1", "l_discount")))))),
+                                        new BaseColumn("vt1", "l_discount")))))),
                     "s2"),
                 new AliasedColumn(
-                    new BaseColumn("l_suppkey"), AsyncAggExecutionNode.getGroupByAlias() + "0")),
+                    new BaseColumn("vt1", "l_suppkey"), 
+                    AsyncAggExecutionNode.getGroupByAlias() + "0")),
             lineitem);
     expected.addFilterByAnd(
         new ColumnOp(
             "greaterequal",
             Arrays.asList(
-                new BaseColumn("tpch", "lineitem", "vt1", "l_shipdate"),
+                new BaseColumn("vt1", "l_shipdate"),
                 new ColumnOp("date", ConstantColumn.valueOf("'1998-01-01'")))));
     expected.addFilterByAnd(
         new ColumnOp(
             "less",
             Arrays.asList(
-                new BaseColumn("tpch", "lineitem", "vt1", "l_shipdate"),
+                new BaseColumn("vt1", "l_shipdate"),
                 new ColumnOp("date", ConstantColumn.valueOf("'1999-01-01'")))));
-    expected.addGroupby(new BaseColumn("l_suppkey"));
+    expected.addGroupby(new BaseColumn("vt1", "l_suppkey"));
     assertEquals(
         expected,
         ((CreateTableAsSelectNode) queryExecutionPlan.root.getExecutableNodeBaseDependents().get(0))
@@ -2078,8 +2111,8 @@ public class TpchExecutionPlanTest {
                 new ColumnOp(
                     "equal",
                     Arrays.<UnnamedColumn>asList(
-                        new BaseColumn("tpch", "vt4", "l_partkey"),
-                        new BaseColumn("tpch", "vt2", "t_partkey")))));
+                        new BaseColumn("vt4", "l_partkey"),
+                        new BaseColumn("vt2", "t_partkey")))));
     assertEquals(
         join,
         ((CreateTableAsSelectNode)
@@ -2096,14 +2129,14 @@ public class TpchExecutionPlanTest {
         SelectQuery.create(
             Arrays.<SelectItem>asList(
                 new AliasedColumn(
-                    new BaseColumn("tpch", "lineitem", "vt3", "l_partkey"), "t_partkey"),
+                    new BaseColumn("vt3", "l_partkey"), "t_partkey"),
                 new AliasedColumn(
                     new ColumnOp(
                         "multiply",
                         Arrays.asList(
                             ConstantColumn.valueOf(0.2),
                             new ColumnOp(
-                                "avg", new BaseColumn("tpch", "lineitem", "vt3", "l_quantity")))),
+                                "avg", new BaseColumn("vt3", "l_quantity")))),
                     "t_avg_quantity"),
                 new AliasedColumn(
                     new BaseColumn("l_partkey"), AsyncAggExecutionNode.getGroupByAlias() + "0")),
@@ -2192,17 +2225,18 @@ public class TpchExecutionPlanTest {
         SelectQuery.create(
             Arrays.<SelectItem>asList(
                 new AliasedColumn(
-                    new BaseColumn("tpch", "lineitem", "vt4", "l_orderkey"), "l_orderkey"),
+                    new BaseColumn("vt4", "l_orderkey"), "l_orderkey"),
                 new AliasedColumn(
-                    new ColumnOp("sum", new BaseColumn("tpch", "lineitem", "vt4", "l_quantity")),
+                    new ColumnOp("sum", new BaseColumn("vt4", "l_quantity")),
                     "t_sum_quantity"),
                 new AliasedColumn(
-                    new BaseColumn("l_orderkey"), AsyncAggExecutionNode.getGroupByAlias() + "0")),
+                    new BaseColumn("vt4", "l_orderkey"), 
+                    AsyncAggExecutionNode.getGroupByAlias() + "0")),
             new BaseTable("tpch", "lineitem", "vt4"));
-    expected.addGroupby(new BaseColumn("l_orderkey"));
+    expected.addGroupby(new BaseColumn("vt4", "l_orderkey"));
     expected.setAliasName("vt3");
     expected.addFilterByAnd(
-        new ColumnOp("is_not_null", new BaseColumn("tpch", "lineitem", "vt4", "l_orderkey")));
+        new ColumnOp("is_not_null", new BaseColumn("vt4", "l_orderkey")));
 
     assertEquals(
         expected,
@@ -2289,13 +2323,12 @@ public class TpchExecutionPlanTest {
                         new ColumnOp(
                             "multiply",
                             Arrays.<UnnamedColumn>asList(
-                                new BaseColumn("tpch", "lineitem", "vt1", "l_extendedprice"),
+                                new BaseColumn("vt1", "l_extendedprice"),
                                 new ColumnOp(
                                     "subtract",
                                     Arrays.<UnnamedColumn>asList(
                                         ConstantColumn.valueOf(1),
-                                        new BaseColumn(
-                                            "tpch", "lineitem", "vt1", "l_discount")))))),
+                                        new BaseColumn("vt1", "l_discount")))))),
                     "revenue")),
             Arrays.asList(lineitem, part));
     ColumnOp columnOp1 =
@@ -2324,20 +2357,16 @@ public class TpchExecutionPlanTest {
                                                                     "equal",
                                                                     Arrays.<UnnamedColumn>asList(
                                                                         new BaseColumn(
-                                                                            "tpch",
-                                                                            "part",
                                                                             "vt2",
                                                                             "p_partkey"),
                                                                         new BaseColumn(
-                                                                            "tpch",
-                                                                            "lineitem",
                                                                             "vt1",
                                                                             "l_partkey"))),
                                                                 new ColumnOp(
                                                                     "equal",
                                                                     Arrays.<UnnamedColumn>asList(
                                                                         new BaseColumn(
-                                                                            "tpch", "part", "vt2",
+                                                                            "vt2",
                                                                             "p_brand"),
                                                                         ConstantColumn.valueOf(
                                                                             "':1'"))))),
@@ -2345,8 +2374,6 @@ public class TpchExecutionPlanTest {
                                                             "in",
                                                             Arrays.<UnnamedColumn>asList(
                                                                 new BaseColumn(
-                                                                    "tpch",
-                                                                    "part",
                                                                     "vt2",
                                                                     "p_container"),
                                                                 ConstantColumn.valueOf("'SM CASE'"),
@@ -2358,16 +2385,13 @@ public class TpchExecutionPlanTest {
                                                     "greaterequal",
                                                     Arrays.<UnnamedColumn>asList(
                                                         new BaseColumn(
-                                                            "tpch",
-                                                            "lineitem",
                                                             "vt1",
                                                             "l_quantity"),
                                                         ConstantColumn.valueOf(4))))),
                                         new ColumnOp(
                                             "lessequal",
                                             Arrays.<UnnamedColumn>asList(
-                                                new BaseColumn(
-                                                    "tpch", "lineitem", "vt1", "l_quantity"),
+                                                new BaseColumn("vt1", "l_quantity"),
                                                 new ColumnOp(
                                                     "add",
                                                     Arrays.<UnnamedColumn>asList(
@@ -2376,19 +2400,19 @@ public class TpchExecutionPlanTest {
                                 new ColumnOp(
                                     "between",
                                     Arrays.<UnnamedColumn>asList(
-                                        new BaseColumn("tpch", "part", "vt2", "p_size"),
+                                        new BaseColumn("vt2", "p_size"),
                                         ConstantColumn.valueOf(1),
                                         ConstantColumn.valueOf(5))))),
                         new ColumnOp(
                             "in",
                             Arrays.<UnnamedColumn>asList(
-                                new BaseColumn("tpch", "lineitem", "vt1", "l_shipmode"),
+                                new BaseColumn("vt1", "l_shipmode"),
                                 ConstantColumn.valueOf("'AIR'"),
                                 ConstantColumn.valueOf("'AIR REG'"))))),
                 new ColumnOp(
                     "equal",
                     Arrays.<UnnamedColumn>asList(
-                        new BaseColumn("tpch", "lineitem", "vt1", "l_shipinstruct"),
+                        new BaseColumn("vt1", "l_shipinstruct"),
                         ConstantColumn.valueOf("'DELIVER IN PERSON'")))));
     ColumnOp columnOp2 =
         new ColumnOp(
@@ -2416,20 +2440,16 @@ public class TpchExecutionPlanTest {
                                                                     "equal",
                                                                     Arrays.<UnnamedColumn>asList(
                                                                         new BaseColumn(
-                                                                            "tpch",
-                                                                            "part",
                                                                             "vt2",
                                                                             "p_partkey"),
                                                                         new BaseColumn(
-                                                                            "tpch",
-                                                                            "lineitem",
                                                                             "vt1",
                                                                             "l_partkey"))),
                                                                 new ColumnOp(
                                                                     "equal",
                                                                     Arrays.<UnnamedColumn>asList(
                                                                         new BaseColumn(
-                                                                            "tpch", "part", "vt2",
+                                                                            "vt2",
                                                                             "p_brand"),
                                                                         ConstantColumn.valueOf(
                                                                             "':2'"))))),
@@ -2437,8 +2457,6 @@ public class TpchExecutionPlanTest {
                                                             "in",
                                                             Arrays.<UnnamedColumn>asList(
                                                                 new BaseColumn(
-                                                                    "tpch",
-                                                                    "part",
                                                                     "vt2",
                                                                     "p_container"),
                                                                 ConstantColumn.valueOf("'MED BAG'"),
@@ -2450,16 +2468,13 @@ public class TpchExecutionPlanTest {
                                                     "greaterequal",
                                                     Arrays.<UnnamedColumn>asList(
                                                         new BaseColumn(
-                                                            "tpch",
-                                                            "lineitem",
                                                             "vt1",
                                                             "l_quantity"),
                                                         ConstantColumn.valueOf(5))))),
                                         new ColumnOp(
                                             "lessequal",
                                             Arrays.<UnnamedColumn>asList(
-                                                new BaseColumn(
-                                                    "tpch", "lineitem", "vt1", "l_quantity"),
+                                                new BaseColumn("vt1", "l_quantity"),
                                                 new ColumnOp(
                                                     "add",
                                                     Arrays.<UnnamedColumn>asList(
@@ -2468,19 +2483,19 @@ public class TpchExecutionPlanTest {
                                 new ColumnOp(
                                     "between",
                                     Arrays.<UnnamedColumn>asList(
-                                        new BaseColumn("tpch", "part", "vt2", "p_size"),
+                                        new BaseColumn("vt2", "p_size"),
                                         ConstantColumn.valueOf(1),
                                         ConstantColumn.valueOf(10))))),
                         new ColumnOp(
                             "in",
                             Arrays.<UnnamedColumn>asList(
-                                new BaseColumn("tpch", "lineitem", "vt1", "l_shipmode"),
+                                new BaseColumn("vt1", "l_shipmode"),
                                 ConstantColumn.valueOf("'AIR'"),
                                 ConstantColumn.valueOf("'AIR REG'"))))),
                 new ColumnOp(
                     "equal",
                     Arrays.<UnnamedColumn>asList(
-                        new BaseColumn("tpch", "lineitem", "vt1", "l_shipinstruct"),
+                        new BaseColumn("vt1", "l_shipinstruct"),
                         ConstantColumn.valueOf("'DELIVER IN PERSON'")))));
     ColumnOp columnOp3 =
         new ColumnOp(
@@ -2508,20 +2523,16 @@ public class TpchExecutionPlanTest {
                                                                     "equal",
                                                                     Arrays.<UnnamedColumn>asList(
                                                                         new BaseColumn(
-                                                                            "tpch",
-                                                                            "part",
                                                                             "vt2",
                                                                             "p_partkey"),
                                                                         new BaseColumn(
-                                                                            "tpch",
-                                                                            "lineitem",
                                                                             "vt1",
                                                                             "l_partkey"))),
                                                                 new ColumnOp(
                                                                     "equal",
                                                                     Arrays.<UnnamedColumn>asList(
                                                                         new BaseColumn(
-                                                                            "tpch", "part", "vt2",
+                                                                            "vt2",
                                                                             "p_brand"),
                                                                         ConstantColumn.valueOf(
                                                                             "':3'"))))),
@@ -2529,8 +2540,6 @@ public class TpchExecutionPlanTest {
                                                             "in",
                                                             Arrays.<UnnamedColumn>asList(
                                                                 new BaseColumn(
-                                                                    "tpch",
-                                                                    "part",
                                                                     "vt2",
                                                                     "p_container"),
                                                                 ConstantColumn.valueOf("'LG CASE'"),
@@ -2542,16 +2551,13 @@ public class TpchExecutionPlanTest {
                                                     "greaterequal",
                                                     Arrays.<UnnamedColumn>asList(
                                                         new BaseColumn(
-                                                            "tpch",
-                                                            "lineitem",
                                                             "vt1",
                                                             "l_quantity"),
                                                         ConstantColumn.valueOf(6))))),
                                         new ColumnOp(
                                             "lessequal",
                                             Arrays.<UnnamedColumn>asList(
-                                                new BaseColumn(
-                                                    "tpch", "lineitem", "vt1", "l_quantity"),
+                                                new BaseColumn("vt1", "l_quantity"),
                                                 new ColumnOp(
                                                     "add",
                                                     Arrays.<UnnamedColumn>asList(
@@ -2560,19 +2566,19 @@ public class TpchExecutionPlanTest {
                                 new ColumnOp(
                                     "between",
                                     Arrays.<UnnamedColumn>asList(
-                                        new BaseColumn("tpch", "part", "vt2", "p_size"),
+                                        new BaseColumn("vt2", "p_size"),
                                         ConstantColumn.valueOf(1),
                                         ConstantColumn.valueOf(15))))),
                         new ColumnOp(
                             "in",
                             Arrays.<UnnamedColumn>asList(
-                                new BaseColumn("tpch", "lineitem", "vt1", "l_shipmode"),
+                                new BaseColumn("vt1", "l_shipmode"),
                                 ConstantColumn.valueOf("'AIR'"),
                                 ConstantColumn.valueOf("'AIR REG'"))))),
                 new ColumnOp(
                     "equal",
                     Arrays.<UnnamedColumn>asList(
-                        new BaseColumn("tpch", "lineitem", "vt1", "l_shipinstruct"),
+                        new BaseColumn("vt1", "l_shipinstruct"),
                         ConstantColumn.valueOf("'DELIVER IN PERSON'")))));
     expected.addFilterByAnd(
         new ColumnOp(
@@ -2642,36 +2648,38 @@ public class TpchExecutionPlanTest {
         SelectQuery.create(
             Arrays.<SelectItem>asList(
                 new AliasedColumn(
-                    new BaseColumn("tpch", "lineitem", "vt5", "l_partkey"), "l_partkey"),
+                    new BaseColumn("vt5", "l_partkey"), "l_partkey"),
                 new AliasedColumn(
-                    new BaseColumn("tpch", "lineitem", "vt5", "l_suppkey"), "l_suppkey"),
+                    new BaseColumn("vt5", "l_suppkey"), "l_suppkey"),
                 new AliasedColumn(
                     new ColumnOp(
                         "multiply",
                         Arrays.<UnnamedColumn>asList(
                             ConstantColumn.valueOf(0.5),
                             new ColumnOp(
-                                "sum", new BaseColumn("tpch", "lineitem", "vt5", "l_quantity")))),
+                                "sum", new BaseColumn("vt5", "l_quantity")))),
                     "sum_quantity"),
                 new AliasedColumn(
-                    new BaseColumn("l_partkey"), AsyncAggExecutionNode.getGroupByAlias() + "0"),
+                    new BaseColumn("vt5", "l_partkey"), 
+                    AsyncAggExecutionNode.getGroupByAlias() + "0"),
                 new AliasedColumn(
-                    new BaseColumn("l_suppkey"), AsyncAggExecutionNode.getGroupByAlias() + "1")),
+                    new BaseColumn("vt5", "l_suppkey"), 
+                    AsyncAggExecutionNode.getGroupByAlias() + "1")),
             new BaseTable("tpch", "lineitem", "vt5"));
     expected.addFilterByAnd(
         new ColumnOp(
             "greaterequal",
             Arrays.asList(
-                new BaseColumn("tpch", "lineitem", "vt5", "l_shipdate"),
+                new BaseColumn("vt5", "l_shipdate"),
                 ConstantColumn.valueOf("'1994-01-01'"))));
     expected.addFilterByAnd(
         new ColumnOp(
             "less",
             Arrays.asList(
-                new BaseColumn("tpch", "lineitem", "vt5", "l_shipdate"),
+                new BaseColumn("vt5", "l_shipdate"),
                 ConstantColumn.valueOf("'1995-01-01'"))));
-    expected.addGroupby(new BaseColumn("l_partkey"));
-    expected.addGroupby(new BaseColumn("l_suppkey"));
+    expected.addGroupby(new BaseColumn("vt5", "l_partkey"));
+    expected.addGroupby(new BaseColumn("vt5", "l_suppkey"));
     expected.setAliasName("vt4");
     assertEquals(
         expected,
@@ -2883,8 +2891,8 @@ public class TpchExecutionPlanTest {
                 new ColumnOp(
                     "equal",
                     Arrays.<UnnamedColumn>asList(
-                        new BaseColumn("tpch", "vt5", "l_orderkey"),
-                        new BaseColumn("tpch", "vt3", "l_orderkey")))));
+                        new BaseColumn("vt5", "l_orderkey"),
+                        new BaseColumn("vt3", "l_orderkey")))));
     assertEquals(
         join,
         ((CreateTableAsSelectNode)
@@ -3043,7 +3051,7 @@ public class TpchExecutionPlanTest {
                 new ColumnOp(
                     "greater",
                     Arrays.<UnnamedColumn>asList(
-                        new BaseColumn("tpch", "vt2", "avg_acctbal"), ConstantColumn.valueOf(0)))));
+                        new BaseColumn("vt2", "avg_acctbal"), ConstantColumn.valueOf(0)))));
     assertEquals(
         join,
         ((CreateTableAsSelectNode)
@@ -3080,8 +3088,8 @@ public class TpchExecutionPlanTest {
                 new ColumnOp(
                     "equal",
                     Arrays.<UnnamedColumn>asList(
-                        new BaseColumn("tpch", "vt8", "c_custkey"),
-                        new BaseColumn("tpch", "vt6", "o_custkey")))));
+                        new BaseColumn("vt8", "c_custkey"),
+                        new BaseColumn("vt6", "o_custkey")))));
     assertEquals(
         join1,
         ((CreateTableAsSelectNode)
@@ -3144,7 +3152,7 @@ public class TpchExecutionPlanTest {
         SelectQuery.create(
             Arrays.<SelectItem>asList(
                 new AliasedColumn(
-                    new ColumnOp("avg", new BaseColumn("tpch", "lineitem", "vt3", "l_quantity")),
+                    new ColumnOp("avg", new BaseColumn("vt3", "l_quantity")),
                     "quantity_avg")),
             new BaseTable("tpch", "lineitem", "vt3"));
     assertEquals(
@@ -3262,7 +3270,7 @@ public class TpchExecutionPlanTest {
         SelectQuery.create(
             Arrays.<SelectItem>asList(
                 new AliasedColumn(
-                    new BaseColumn("tpch", "lineitem", "vt3", "l_quantity"), "l_quantity")),
+                    new BaseColumn("vt3", "l_quantity"), "l_quantity")),
             new BaseTable("tpch", "lineitem", "vt3"));
     assertEquals(
         expected,

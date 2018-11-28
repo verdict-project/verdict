@@ -1,5 +1,7 @@
 # Stream Querying
 
+*(This feature is experimental and less tested.)*
+
 Stream querying is a feature of VerdictDB that allow users to retrieve results from the query while the query is still processing.
 
 VerdictDB uses scrambles to process the query. In scrambles, original tables are partitioned into many blocks. When processing query, VerdictDB estimates the query, starting from one block and gradually increasing the blocks. The process will finish until covering all blocks(In that case, the results returned by VerdictDB are exactly the same with directly querying from database). Every time the estimation of blocks is done, it will return the result to users. Users can decide whether to have fast but less accurate results or take time to obtain more accurate results.

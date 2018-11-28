@@ -158,7 +158,10 @@ public class VerdictConnectionTest {
 
   private void setupImpala() throws SQLException {
     String connectionString = String.format("jdbc:impala://%s", IMPALA_HOST);
-    String vcConnectionString = String.format("jdbc:verdict:impala://%s", IMPALA_HOST);
+    String impalaMetaSchema = "verdictdbmeta_impala";
+    String vcConnectionString = 
+        String.format("jdbc:verdict:impala://%s;verdictdbmetaschema=%s", 
+            IMPALA_HOST, impalaMetaSchema);
     Connection conn = DriverManager.getConnection(connectionString, IMPALA_USER, IMPALA_PASSWORD);
     Connection vc = DriverManager.getConnection(vcConnectionString, IMPALA_USER, IMPALA_PASSWORD);
     connectionPair = ImmutablePair.of(conn, vc);

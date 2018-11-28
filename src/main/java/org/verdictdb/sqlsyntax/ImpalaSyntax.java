@@ -149,6 +149,7 @@ public class ImpalaSyntax extends SqlSyntax {
     return String.format("ndv(%s)", column);
   }
 
+
   /**
    * The following query returns 4.594682917363407 (4.59 / 100 = 0.0459):
    * 
@@ -167,10 +168,10 @@ public class ImpalaSyntax extends SqlSyntax {
    * Note that the stddev of rand() is sqrt(0.01 * 0.99) = 0.09949874371.
    */
   @Override
-  public String hashFunction(String column, int upper_bound) {
+  public String hashFunction(String column) {
     String f = String.format(
-        "pmod(fnv_hash(%s%s%s), 100) % %d",
-        getQuoteString(), column, getQuoteString(), upper_bound);
+        "pmod(fnv_hash(%s), %d) / %d",
+        column, hashPrecision, hashPrecision);
     return f;
   }
 }

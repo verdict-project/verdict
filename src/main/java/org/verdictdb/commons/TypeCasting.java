@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-package org.verdictdb.connection;
+package org.verdictdb.commons;
 
 import java.math.BigDecimal;
 

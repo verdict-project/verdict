@@ -1,7 +1,14 @@
 package org.verdictdb.coordinator;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
+import static org.junit.Assert.assertEquals;
+
+import java.io.File;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -20,14 +27,8 @@ import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sqlsyntax.MysqlSyntax;
 
-import java.io.File;
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-
-import static org.junit.Assert.assertEquals;
+import com.google.common.base.Charsets;
+import com.google.common.io.Files;
 
 /**
  * Test cases are from
@@ -83,6 +84,8 @@ public class MySqlTpchSelectQueryCoordinatorTest {
     dbmsConn.execute(
         String.format("DROP TABLE IF EXISTS `%s`.`lineitem_scrambled`", MYSQL_DATABASE));
     dbmsConn.execute(String.format("DROP TABLE IF EXISTS `%s`.`orders_scrambled`", MYSQL_DATABASE));
+    dbmsConn.execute(
+        String.format("DROP TABLE IF EXISTS `%s`.`lineitem_hash_scrambled`", MYSQL_DATABASE));
 
     ScramblingCoordinator scrambler =
         new ScramblingCoordinator(dbmsConn, MYSQL_DATABASE, MYSQL_DATABASE, (long) 100);
@@ -91,8 +94,12 @@ public class MySqlTpchSelectQueryCoordinatorTest {
             MYSQL_DATABASE, "lineitem", MYSQL_DATABASE, "lineitem_scrambled", "uniform");
     ScrambleMeta meta2 =
         scrambler.scramble(MYSQL_DATABASE, "orders", MYSQL_DATABASE, "orders_scrambled", "uniform");
+    ScrambleMeta meta3 =
+        scrambler.scramble(
+            MYSQL_DATABASE, "lineitem", MYSQL_DATABASE, "lineitem_hash_scrambled", "hash", "l_orderkey");
     meta.addScrambleMeta(meta1);
     meta.addScrambleMeta(meta2);
+    meta.addScrambleMeta(meta3);
     stmt.execute(String.format("drop schema if exists `%s`", options.getVerdictTempSchemaName()));
     stmt.execute(
         String.format("create schema if not exists `%s`", options.getVerdictTempSchemaName()));
@@ -103,10 +110,12 @@ public class MySqlTpchSelectQueryCoordinatorTest {
     String filename = "query" + queryNum + ".sql";
     File file = new File("src/test/resources/tpch_test_query/" + filename);
     String sql = Files.toString(file, Charsets.UTF_8);
+    
     JdbcConnection jdbcConn = new JdbcConnection(conn, new MysqlSyntax());
     jdbcConn.setOutputDebugMessage(true);
     DbmsConnection dbmsconn = new CachedDbmsConnection(jdbcConn);
     dbmsconn.setDefaultSchema(MYSQL_DATABASE);
+    
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn, options);
     coordinator.setScrambleMetaSet(meta);
     ExecutionResultReader reader = coordinator.process(sql);
@@ -114,6 +123,68 @@ public class MySqlTpchSelectQueryCoordinatorTest {
     ResultSet rs = stmt.executeQuery(sql);
     System.out.println(String.format("Query %d Executed.", queryNum));
     return new ImmutablePair<>(reader, rs);
+  }
+  
+  @Test
+  public void queryCountDistinct1Test() throws VerdictDBException, SQLException, IOException {
+    Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(100);
+    ExecutionResultReader reader = answerPair.getLeft();
+    ResultSet rs = answerPair.getRight();
+    int cnt = 0;
+    while (reader.hasNext()) {
+      DbmsQueryResult dbmsQueryResult = reader.next();
+      cnt++;
+      
+      if (cnt == 10) {
+        while (rs.next()) {
+          dbmsQueryResult.next();
+          assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
+          assertEquals(rs.getString(2), dbmsQueryResult.getString(1));
+          assertEquals(rs.getLong(3), dbmsQueryResult.getLong(2));
+        }
+      }
+    }
+    assertEquals(10, cnt);
+  }
+  
+  @Test
+  public void queryCountDistinct2Test() throws VerdictDBException, SQLException, IOException {
+    Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(101);
+    ExecutionResultReader reader = answerPair.getLeft();
+    ResultSet rs = answerPair.getRight();
+    int cnt = 0;
+    while (reader.hasNext()) {
+      DbmsQueryResult dbmsQueryResult = reader.next();
+      cnt++;
+      
+      if (cnt == 10) {
+        while (rs.next()) {
+          dbmsQueryResult.next();
+          assertEquals(rs.getLong(1), dbmsQueryResult.getLong(0));
+        }
+      }
+    }
+    assertEquals(10, cnt);
+  }
+  
+  @Test
+  public void queryCountDistinct3Test() throws VerdictDBException, SQLException, IOException {
+    Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(102);
+    ExecutionResultReader reader = answerPair.getLeft();
+    ResultSet rs = answerPair.getRight();
+    int cnt = 0;
+    while (reader.hasNext()) {
+      DbmsQueryResult dbmsQueryResult = reader.next();
+      cnt++;
+      
+      if (cnt == 10) {
+        while (rs.next()) {
+          dbmsQueryResult.next();
+          assertEquals(rs.getLong(1), dbmsQueryResult.getLong(0));
+        }
+      }
+    }
+    assertEquals(10, cnt);
   }
 
   @Test

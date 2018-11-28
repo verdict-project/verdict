@@ -1,19 +1,17 @@
 package org.verdictdb.core.querying;
 
+import java.sql.SQLException;
+import java.util.List;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.connection.DbmsQueryResult;
-import org.verdictdb.connection.InMemoryAggregate;
 import org.verdictdb.core.execplan.ExecutionInfoToken;
-import org.verdictdb.core.execplan.ExecutionTokenQueue;
+import org.verdictdb.core.querying.ola.InMemoryAggregate;
 import org.verdictdb.core.sqlobject.CreateTableAsSelectQuery;
 import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.core.sqlobject.SqlConvertible;
 import org.verdictdb.exception.VerdictDBException;
-
-import java.sql.SQLException;
-import java.util.List;
-import java.util.Map;
 
 /**
  *
@@ -33,7 +31,7 @@ public class SelectAggExecutionNode extends AggExecutionNode {
 
   private static long selectAggID = 0;
 
-  private static final String inMemoryTableName = "VERDICTDB_SELECTAGG";
+  private final static String IN_MEMORY_TABLE_NAME = "VERDICTDB_SELECTAGG_";
 
   private InMemoryAggregate inMemoryAggregate;
 
@@ -42,7 +40,8 @@ public class SelectAggExecutionNode extends AggExecutionNode {
   }
 
   public static SelectAggExecutionNode create(AggExecutionNode node) {
-    SelectAggExecutionNode selectAggExecutionNode = new SelectAggExecutionNode(node.namer, node.selectQuery);
+    SelectAggExecutionNode selectAggExecutionNode = 
+        new SelectAggExecutionNode(node.namer, node.selectQuery);
     selectAggExecutionNode.aggMeta = node.aggMeta;
     selectAggExecutionNode.placeholderRecords = node.placeholderRecords;
     selectAggExecutionNode.placeholderTablesinFilter = node.placeholderTablesinFilter;
@@ -59,6 +58,10 @@ public class SelectAggExecutionNode extends AggExecutionNode {
     CreateTableAsSelectQuery query = (CreateTableAsSelectQuery)super.createQuery(tokens);
     return query.getSelect();
   }
+  
+  private static synchronized String getNextTableName() {
+    return IN_MEMORY_TABLE_NAME + selectAggID++;
+  }
 
   @Override
   public ExecutionInfoToken createToken(DbmsQueryResult result) {
@@ -67,15 +70,11 @@ public class SelectAggExecutionNode extends AggExecutionNode {
     token.setKeyValue("dependentQuery", this.selectQuery);
 
     // insert value to in memory database.
-    String tableName;
-    synchronized (SelectAggExecutionNode.class) {
-      tableName = inMemoryTableName + selectAggID;
-      selectAggID++;
-    }
+    String tableName = getNextTableName();
     try {
       inMemoryAggregate.createTable(result, tableName);
     } catch (SQLException e) {
-      e.printStackTrace();
+      throw new RuntimeException(e);
     }
     token.setKeyValue("schemaName", "PUBLIC");
     token.setKeyValue("tableName", tableName);

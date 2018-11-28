@@ -34,7 +34,7 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.apache.commons.lang3.tuple.Pair;
-import org.verdictdb.connection.DbmsConnection;
+import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.core.execplan.ExecutableNode;
 import org.verdictdb.core.execplan.ExecutableNodeRunner;
@@ -73,6 +73,8 @@ public class ExecutableNodeBase implements ExecutableNode, Serializable {
   private UniqueChannelCreator channelCreator = new UniqueChannelCreator(this);
   
   private ExecutableNodeRunner runner;    // for this node itself
+  
+  protected VerdictDBLogger log = VerdictDBLogger.getLogger(this.getClass());
   
 //  private List<ExecutableNodeRunner> childNodeRunners = new ArrayList<>();    // for children
 

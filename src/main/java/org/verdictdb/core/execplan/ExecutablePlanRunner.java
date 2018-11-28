@@ -101,6 +101,9 @@ public class ExecutablePlanRunner {
     for (int gid : groupIds) {
       List<ExecutableNode> nodes = plan.getNodesInGroup(gid);
       for (ExecutableNode n : nodes) {
+        // It is critically that each node is associated with a separate ExecutableNodeRunner.
+        // The execution of the same ExecutableNodeRunner instance is serialized.
+        // See ExecutableNodeRunner.execute() method.
         nodeRunners.add(new ExecutableNodeRunner(conn, n));
       }
     }

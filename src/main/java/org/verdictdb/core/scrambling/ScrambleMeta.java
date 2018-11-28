@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -48,7 +49,8 @@ import java.util.Map.Entry;
   "aggregationBlockCount",
   "tierColumn",
   "numberOfTiers",
-  "method"
+  "method",
+  "hashcolumn"
 })
 public class ScrambleMeta implements Serializable {
 
@@ -76,6 +78,9 @@ public class ScrambleMeta implements Serializable {
 
   // scramble method used
   String method;
+
+  // the column on which a hash function is used (only applicable to hash sampling).
+  String hashColumn;
 
   /**
    * The probability mass function of the sizes of the aggregation blocks for a tier. The key is the
@@ -136,7 +141,8 @@ public class ScrambleMeta implements Serializable {
       String tierColumn,
       int tierCount,
       Map<Integer, List<Double>> cumulativeMassDistributionPerTier,
-      String method)
+      String method,
+      String hashColumn)
       throws VerdictDBValueException {
 
     this(
@@ -151,6 +157,7 @@ public class ScrambleMeta implements Serializable {
         cumulativeMassDistributionPerTier);
 
     this.method = method;
+    this.hashColumn = hashColumn;
   }
 
   public String getAggregationBlockColumn() {
@@ -197,6 +204,30 @@ public class ScrambleMeta implements Serializable {
     return method;
   }
 
+  @JsonIgnore
+  public String getMethodWithDefault(String defaultMethod) {
+    if (method == null) {
+      return defaultMethod;
+    } else {
+      return method;
+    }
+  }
+
+  /**
+   * Checks if this scramble can be used for avg, sum, count, min, or max.
+   *
+   * @return True if it is the case
+   */
+  @JsonIgnore
+  public boolean isMethodCompatibleWithSimpleAggregates() {
+    String m = getMethodWithDefault("uniform");
+    return m.equalsIgnoreCase("uniform") || m.equalsIgnoreCase("fastconverge");
+  }
+
+  public String getHashColumn() {
+    return hashColumn;
+  }
+
   public void setAggregationBlockColumn(String aggregationBlockColumn) {
     this.aggregationBlockColumn = aggregationBlockColumn;
   }
@@ -234,6 +265,14 @@ public class ScrambleMeta implements Serializable {
     this.tableName = tableName;
   }
 
+  public void setMethod(String method) {
+    this.method = method;
+  }
+
+  public void setHashColumn(String hashColumn) {
+    this.hashColumn = hashColumn;
+  }
+
   public void setTierColumn(String tierColumn) {
     this.tierColumn = tierColumn;
   }
@@ -252,6 +291,7 @@ public class ScrambleMeta implements Serializable {
 
   public static ScrambleMeta fromJsonString(String jsonString) {
     ObjectMapper objectMapper = new ObjectMapper();
+    objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
     try {
       ScrambleMeta meta = objectMapper.readValue(jsonString, ScrambleMeta.class);
       return meta;

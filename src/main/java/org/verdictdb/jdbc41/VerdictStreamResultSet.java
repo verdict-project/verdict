@@ -1,17 +1,32 @@
 package org.verdictdb.jdbc41;
 
-import org.apache.commons.lang3.time.FastDateFormat;
-import org.verdictdb.VerdictSingleResult;
-
 import java.io.InputStream;
 import java.io.Reader;
 import java.math.BigDecimal;
 import java.net.URL;
-import java.sql.*;
+import java.sql.Array;
+import java.sql.Blob;
+import java.sql.Clob;
 import java.sql.Date;
-import java.util.*;
+import java.sql.NClob;
+import java.sql.Ref;
+import java.sql.ResultSetMetaData;
+import java.sql.RowId;
+import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
+import java.sql.SQLWarning;
+import java.sql.SQLXML;
+import java.sql.Statement;
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.util.Calendar;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
+
+import org.apache.commons.lang3.time.FastDateFormat;
+import org.verdictdb.VerdictSingleResult;
 
 /**
  * Created by: Shucheng Zhong on 9/12/18

@@ -16,18 +16,35 @@
 
 package org.verdictdb.coordinator;
 
+import static org.verdictdb.coordinator.VerdictSingleResultFromListData.createWithSingleColumn;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.VerdictResultStream;
 import org.verdictdb.VerdictSingleResult;
+import org.verdictdb.commons.DataTypeConverter;
 import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.commons.VerdictOption;
+import org.verdictdb.connection.CachedDbmsConnection;
 import org.verdictdb.connection.DbmsConnection;
+import org.verdictdb.connection.MetaDataProvider;
+import org.verdictdb.connection.StaticMetaData;
 import org.verdictdb.core.resulthandler.ExecutionResultReader;
 import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
+import org.verdictdb.core.sqlobject.AbstractRelation;
 import org.verdictdb.core.sqlobject.BaseTable;
+import org.verdictdb.core.sqlobject.ColumnOp;
 import org.verdictdb.core.sqlobject.CreateScrambleQuery;
+import org.verdictdb.core.sqlobject.JoinTable;
+import org.verdictdb.core.sqlobject.SelectQuery;
+import org.verdictdb.core.sqlobject.SubqueryColumn;
+import org.verdictdb.core.sqlobject.UnnamedColumn;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBTypeException;
@@ -35,15 +52,12 @@ import org.verdictdb.metastore.CachedScrambleMetaStore;
 import org.verdictdb.metastore.ScrambleMetaStore;
 import org.verdictdb.metastore.VerdictMetaStore;
 import org.verdictdb.parser.VerdictSQLParser;
+import org.verdictdb.parser.VerdictSQLParser.IdContext;
 import org.verdictdb.parser.VerdictSQLParserBaseVisitor;
 import org.verdictdb.sqlreader.NonValidatingSQLParser;
 import org.verdictdb.sqlreader.RelationGen;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import static org.verdictdb.coordinator.VerdictSingleResultFromListData.createWithSingleColumn;
+import org.verdictdb.sqlreader.RelationStandardizer;
+import org.verdictdb.sqlsyntax.SqlSyntax;
 
 /**
  * Stores the context for a single query execution. Includes both scrambling query and select query.
@@ -66,7 +80,7 @@ public class ExecutionContext {
 
   private VerdictOption options;
 
-  private enum QueryType {
+  public enum QueryType {
     select,
     scrambling,
     drop_scramble,
@@ -80,8 +94,8 @@ public class ExecutionContext {
   }
 
   /**
-   * @param conn         DbmsConnection
-   * @param contextId    parent's context id
+   * @param conn DbmsConnection
+   * @param contextId parent's context id
    * @param serialNumber serial number of this ExecutionContext
    * @param options
    */
@@ -127,43 +141,130 @@ public class ExecutionContext {
     String bypassSql = checkBypass(query);
     if (bypassSql != null) {
       return executeAsIs(bypassSql);
+    }
+
+    QueryType queryType = identifyQueryType(query);
+
+    if ((queryType != QueryType.select
+            && queryType != QueryType.show_databases
+            && queryType != QueryType.show_tables
+            && queryType != QueryType.describe_table
+            && queryType != QueryType.show_scrambles)
+        && getResult) {
+      throw new VerdictDBException(
+          "Can not issue data manipulation statements with executeQuery().");
+    }
+
+    if (queryType.equals(QueryType.select)) {
+      log.debug("Query type: select");
+      return sqlSelectQuery(query, getResult);
+    }
+
+    // for other types of queries, we invalidate cached metadata for expected data
+    // manipulations
+    if (conn instanceof CachedDbmsConnection) {
+      ((CachedDbmsConnection) conn).clearCache();
+    }
+
+    if (queryType.equals(QueryType.scrambling)) {
+      log.debug("Query type: scrambling");
+      CreateScrambleQuery scrambleQuery = generateScrambleQuery(query);
+      scrambleQuery.checkIfSupported(); // checks the validity; throws an exception if not.
+
+      ScramblingCoordinator scrambler =
+          new ScramblingCoordinator(
+              conn,
+              scrambleQuery.getNewSchema(),
+              options.getVerdictTempSchemaName(),
+              scrambleQuery.getBlockSize());
+
+      // store this metadata to our own metadata db.
+      ScrambleMeta meta = scrambler.scramble(scrambleQuery);
+
+      // Add metadata to metastore
+      ScrambleMetaStore metaStore = new ScrambleMetaStore(conn, options);
+      metaStore.addToStore(meta);
+      refreshScrambleMetaStore();
+      return null;
+
+    } else if (queryType.equals(QueryType.drop_scramble)) {
+      log.debug("Query type: drop_scramble");
+
+      ScrambleMetaStore metaStore = new ScrambleMetaStore(conn, options);
+      Pair<BaseTable, BaseTable> tablePair = getTablePairForDropScramble(query);
+      metaStore.dropScrambleTable(tablePair.getLeft(), tablePair.getRight());
+      return null;
+
+    } else if (queryType.equals(QueryType.drop_all_scrambles)) {
+      log.debug("Query type: drop_all_scrambles");
+
+      ScrambleMetaStore metaStore = new ScrambleMetaStore(conn, options);
+      BaseTable table = getTableForDropAllScramble(query);
+      metaStore.dropAllScrambleTable(table);
+      return null;
+
+    } else if (queryType.equals(QueryType.show_scrambles)) {
+      log.debug("Query type: show_scrambles");
+
+      ScrambleMetaStore metaStore = new ScrambleMetaStore(conn, options);
+      return metaStore.showScrambles();
+
+    } else if (queryType.equals(QueryType.set_default_schema)) {
+      log.debug("Query type: set_default_schema");
+      updateDefaultSchemaFromQuery(query);
+      return null;
+
+    } else if (queryType.equals(QueryType.show_databases)) {
+      log.debug("Query type: show_databases");
+      return generateShowSchemaResultFromQuery();
+
+    } else if (queryType.equals(QueryType.show_tables)) {
+      log.debug("Query type: show_tables");
+      return generateShowTablesResultFromQuery(query);
+
+    } else if (queryType.equals(QueryType.describe_table)) {
+      log.debug("Query type: describe_table");
+      return generateDescribeTableResultFromQuery(query);
+
     } else {
-      QueryType queryType = identifyQueryType(query);
-      if ((queryType != QueryType.select
-          && queryType != QueryType.show_databases
-          && queryType != QueryType.show_tables
-          && queryType != QueryType.describe_table
-          && queryType != QueryType.show_scrambles)
-          && getResult) {
-        throw new VerdictDBException(
-            "Can not issue data manipulation statements with executeQuery().");
-      }
-
-      VerdictResultStream stream = streamsql(query);
-
-      if (stream == null) {
-        return null;
-      }
-      QueryResultAccuracyEstimator accEst = new QueryResultAccuracyEstimatorFromDifference(runningCoordinator);
-      try {
-        while (stream.hasNext()) {
-          VerdictSingleResult rs = stream.next();
-          accEst.add(rs);
-          if (accEst.isLastResultAccurate()) {
-            return rs;
-          }
-        }
-        // return the last result otherwise
-        return accEst.getAnswers().get(accEst.getAnswerCount()-1);
-      } catch (RuntimeException e) {
-        throw e;
-      } finally {
-        stream.close();
-        abort();
-      }
+      throw new VerdictDBTypeException("Unexpected type of query: " + query);
     }
   }
 
+  private VerdictSingleResult sqlSelectQuery(String query, boolean getResult)
+      throws VerdictDBException {
+    SelectQuery selectQuery = standardizeQuery(query);
+    VerdictResultStream stream = streamSelectQuery(selectQuery);
+
+    if (stream == null) {
+      return null;
+    }
+    QueryResultAccuracyEstimator accEst =
+        new QueryResultAccuracyEstimatorFromDifference(selectQuery);
+
+    try {
+      while (stream.hasNext()) {
+        VerdictSingleResult rs = stream.next();
+        accEst.add(rs);
+        if (accEst.isLastResultAccurate()) {
+          return rs;
+        }
+      }
+      // return the last result otherwise
+      return accEst.getAnswers().get(accEst.getAnswerCount() - 1);
+    } catch (RuntimeException e) {
+      throw e;
+    } finally {
+      stream.close();
+      abort();
+    }
+
+    //    SelectQuery selectQuery = standardizeQuery(query);
+    //    return streamSelectQuery(selectQuery);
+
+  }
+
+  // not used for now due to instability (i.e., often fails to achieve the goal).
   private void abortInParallel(VerdictResultStream stream) {
     Thread task = new Thread(new ConcurrentAborter(stream));
     task.start();
@@ -188,96 +289,73 @@ public class ExecutionContext {
     // determines the type of the given query and forward it to an appropriate coordinator.
     QueryType queryType = identifyQueryType(query);
 
-    if (queryType.equals(QueryType.select)) {
-      log.debug("Query type: select");
-      ScrambleMetaSet metaset = metaStore.retrieve();
-      SelectQueryCoordinator coordinator = new SelectQueryCoordinator(conn, metaset, options);
-      runningCoordinator = null;
-
-      ExecutionResultReader reader = coordinator.process(query, queryContext);
-      if (coordinator.getLastQuery() != null) {
-        // this means there are scrambles for the query so that
-        // we need to abort the coordinator at the end.
-        runningCoordinator = coordinator;
-      }
-      VerdictResultStream stream = new VerdictResultStreamFromExecutionResultReader(reader, this);
-
-      return stream;
-    } else if (queryType.equals(QueryType.scrambling)) {
-      log.debug("Query type: scrambling");
-      CreateScrambleQuery scrambleQuery = generateScrambleQuery(query);
-      ScramblingCoordinator scrambler =
-          new ScramblingCoordinator(
-              conn,
-              scrambleQuery.getNewSchema(),
-              options.getVerdictTempSchemaName(),
-              scrambleQuery.getBlockSize());
-
-      if (scrambleQuery.getSize() <= 0 || scrambleQuery.getSize() > 1) {
-        throw new VerdictDBTypeException(
-            String.format(
-                "Scramble size is %f. It must be between 0.0 and 1.0.", scrambleQuery.getSize()));
-      }
-
-      if (scrambleQuery.getBlockSize() == 0) {
-        throw new VerdictDBTypeException(
-            String.format("A scramble block size should be greater than zero."));
-      }
-
-      // store this to our own metadata db.
-      ScrambleMeta meta = scrambler.scramble(scrambleQuery);
-
-      // Add metadata to metastore
-      ScrambleMetaStore metaStore = new ScrambleMetaStore(conn, options);
-      metaStore.addToStore(meta);
-      refreshScrambleMetaStore();
-      return null;
-
-    } else if (queryType.equals(QueryType.drop_scramble)) {
-      log.debug("Query type: drop_scramble");
-
-      ScrambleMetaStore metaStore = new ScrambleMetaStore(conn, options);
-      Pair<BaseTable, BaseTable> tablePair = getTablePairForDropScramble(query);
-      metaStore.dropScrambleTable(tablePair.getLeft(), tablePair.getRight());
-
-      return null;
-    } else if (queryType.equals(QueryType.drop_all_scrambles)) {
-      log.debug("Query type: drop_all_scrambles");
-
-      ScrambleMetaStore metaStore = new ScrambleMetaStore(conn, options);
-      BaseTable table = getTableForDropAllScramble(query);
-      metaStore.dropAllScrambleTable(table);
-
-      return null;
-    } else if (queryType.equals(QueryType.show_scrambles)) {
-      log.debug("Query type: show_scrambles");
-
-      ScrambleMetaStore metaStore = new ScrambleMetaStore(conn, options);
-      return new VerdictResultStreamFromSingleResult(metaStore.showScrambles());
-
-    } else if (queryType.equals(QueryType.set_default_schema)) {
-      log.debug("Query type: set_default_schema");
-      updateDefaultSchemaFromQuery(query);
-      return null;
-
-    } else if (queryType.equals(QueryType.show_databases)) {
-      log.debug("Query type: show_databases");
-      VerdictResultStream stream = generateShowSchemaResultFromQuery();
-      return stream;
-
-    } else if (queryType.equals(QueryType.show_tables)) {
-      log.debug("Query type: show_tables");
-      VerdictResultStream stream = generateShowTablesResultFromQuery(query);
-      return stream;
-
-    } else if (queryType.equals(QueryType.describe_table)) {
-      log.debug("Query type: describe_table");
-      VerdictResultStream stream = generateDescribeTableResultFromQuery(query);
-      return stream;
-
-    } else {
-      throw new VerdictDBTypeException("Unexpected type of query: " + query);
+    if (!queryType.equals(QueryType.select)) {
+      throw new VerdictDBTypeException("Only a select query can be issued to streamsql().");
     }
+
+    SelectQuery selectQuery = standardizeQuery(query);
+    return streamSelectQuery(selectQuery);
+  }
+
+  /**
+   * Returns a stream of answers for the select query .
+   *
+   * @param selectQuery Already standardized select query.
+   * @return
+   * @throws VerdictDBException
+   */
+  private VerdictResultStream streamSelectQuery(SelectQuery selectQuery) throws VerdictDBException {
+    //    selectQuery = standardizeSelectQuery(selectQuery, conn);
+
+    ScrambleMetaSet metaset = metaStore.retrieve();
+    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(conn, metaset, options);
+    runningCoordinator = null;
+
+    ExecutionResultReader reader = coordinator.process(selectQuery, queryContext);
+    if (coordinator.getLastQuery() != null) {
+      // this means there are scrambles for the query so that
+      // we need to abort the coordinator at the end.
+      runningCoordinator = coordinator;
+    }
+    VerdictResultStream stream = new VerdictResultStreamFromExecutionResultReader(reader);
+    return stream;
+  }
+
+  /**
+   * Standardizes a query string into a select query object.
+   *
+   * @param query
+   * @return
+   * @throws VerdictDBException
+   */
+  private SelectQuery standardizeQuery(String query) throws VerdictDBException {
+    return standardizeQuery(query, conn);
+  }
+
+  static SelectQuery standardizeQuery(String query, DbmsConnection conn) throws VerdictDBException {
+    SelectQuery selectQuery = NonValidatingSQLParser.toSelectQuery(query);
+    SelectQuery standardized = standardizeSelectQuery(selectQuery, conn);
+    return standardized;
+  }
+
+  /**
+   * Standardizes a parsed query.
+   *
+   * @param selectQuery
+   * @return
+   * @throws VerdictDBException
+   */
+  static SelectQuery standardizeSelectQuery(SelectQuery selectQuery, DbmsConnection conn)
+      throws VerdictDBException {
+    //    if (selectQuery.isStandardized()) {
+    //      throw new VerdictDBValueException("The query has already been standardized.");
+    //    }
+
+    RelationStandardizer.resetItemID();
+    SqlSyntax syntax = conn.getSyntax();
+    MetaDataProvider metaData = createMetaDataFor(selectQuery, conn);
+    selectQuery = RelationStandardizer.standardizeSelectQuery(selectQuery, metaData, syntax);
+    return selectQuery;
   }
 
   private void refreshScrambleMetaStore() {
@@ -293,7 +371,8 @@ public class ExecutionContext {
           public Pair<BaseTable, BaseTable> visitDrop_scramble_statement(
               VerdictSQLParser.Drop_scramble_statementContext ctx) {
             RelationGen g = new RelationGen();
-            BaseTable originalTable = (BaseTable) g.visit(ctx.original_table);
+            BaseTable originalTable =
+                (ctx.original_table != null) ? (BaseTable) g.visit(ctx.original_table) : null;
             BaseTable scrambleTable = (BaseTable) g.visit(ctx.scrambled_table);
             return ImmutablePair.of(originalTable, scrambleTable);
           }
@@ -315,7 +394,15 @@ public class ExecutionContext {
     return visitor.visit(parser.drop_all_scrambles_statement());
   }
 
+  private String stripQuote(String expr) {
+    if (expr == null) {
+      return null;
+    }
+    return expr.replace("\"", "").replace("`", "").replace("'", "");
+  }
+
   private CreateScrambleQuery generateScrambleQuery(String query) {
+
     VerdictSQLParser parser = NonValidatingSQLParser.parserOf(query);
     VerdictSQLParserBaseVisitor<CreateScrambleQuery> visitor =
         new VerdictSQLParserBaseVisitor<CreateScrambleQuery>() {
@@ -325,18 +412,15 @@ public class ExecutionContext {
             RelationGen g = new RelationGen();
             BaseTable originalTable = (BaseTable) g.visit(ctx.original_table);
             BaseTable scrambleTable = (BaseTable) g.visit(ctx.scrambled_table);
-            String method =
-                (ctx.scrambling_method_name() == null)
-                    ? "uniform"
-                    : ctx.scrambling_method_name()
-                        .getText()
-                        .replace("'", "")
-                        .replace("\"", "")
-                        .replace("`", ""); // remove all types of 'quotes'
+            String method = (ctx.method == null) ? "uniform" : stripQuote(ctx.method.getText());
             double percent =
                 (ctx.percent == null) ? 1.0 : Double.parseDouble(ctx.percent.getText());
             long blocksize =
-                (ctx.blocksize == null) ? (long) 1e6 : Long.parseLong(ctx.blocksize.getText());
+                (ctx.blocksize == null)
+                    ? (long) conn.getSyntax().getRecommendedblockSize()
+                    : Long.parseLong(ctx.blocksize.getText());
+            String hashColumnName =
+                (ctx.hash_column == null) ? null : stripQuote(ctx.hash_column.getText());
 
             CreateScrambleQuery query =
                 new CreateScrambleQuery(
@@ -346,7 +430,8 @@ public class ExecutionContext {
                     originalTable.getTableName(),
                     method,
                     percent,
-                    blocksize);
+                    blocksize,
+                    hashColumnName);
             if (ctx.IF() != null) query.setIfNotExists(true);
             return query;
           }
@@ -356,24 +441,25 @@ public class ExecutionContext {
     return scrambleQuery;
   }
 
-  private VerdictResultStream generateShowSchemaResultFromQuery() throws VerdictDBException {
+  private VerdictSingleResult generateShowSchemaResultFromQuery() throws VerdictDBException {
     List<String> header = Arrays.asList("schema");
     List<String> rows = conn.getSchemas();
     VerdictSingleResultFromListData result = createWithSingleColumn(header, (List) rows);
-    return new VerdictResultStreamFromSingleResult(result);
+    return result;
   }
 
-  private VerdictResultStream generateShowTablesResultFromQuery(String query)
+  private VerdictSingleResult generateShowTablesResultFromQuery(String query)
       throws VerdictDBException {
     VerdictSQLParser parser = NonValidatingSQLParser.parserOf(query);
-    String schema = parser.show_tables_statement().schema.getText();
+    IdContext schemaCtx = parser.show_tables_statement().schema;
+    String schema = (schemaCtx == null) ? conn.getDefaultSchema() : schemaCtx.getText();
     List<String> header = Arrays.asList("table");
     List<String> rows = conn.getTables(schema);
     VerdictSingleResultFromListData result = createWithSingleColumn(header, (List) rows);
-    return new VerdictResultStreamFromSingleResult(result);
+    return result;
   }
 
-  private VerdictResultStream generateDescribeTableResultFromQuery(String query)
+  private VerdictSingleResult generateDescribeTableResultFromQuery(String query)
       throws VerdictDBException {
     VerdictSQLParser parser = NonValidatingSQLParser.parserOf(query);
     VerdictSQLParserBaseVisitor<Pair<String, String>> visitor =
@@ -381,11 +467,12 @@ public class ExecutionContext {
           @Override
           public Pair<String, String> visitDescribe_table_statement(
               VerdictSQLParser.Describe_table_statementContext ctx) {
+            IdContext schemaCtx = ctx.table.schema;
             String table = ctx.table.table.getText();
-            String schema = ctx.table.schema.getText();
-            if (schema == null) {
-              schema = conn.getDefaultSchema();
-            }
+            String schema = (schemaCtx == null) ? conn.getDefaultSchema() : schemaCtx.getText();
+            //        if (schema == null) {
+            //          schema = conn.getDefaultSchema();
+            //        }
             return new ImmutablePair<>(schema, table);
           }
         };
@@ -403,7 +490,7 @@ public class ExecutionContext {
     List<String> header = Arrays.asList("column name", "column type");
     VerdictSingleResultFromListData result =
         new VerdictSingleResultFromListData(header, (List) newColumnInfo);
-    return new VerdictResultStreamFromSingleResult(result);
+    return result;
   }
 
   private void updateDefaultSchemaFromQuery(String query) throws VerdictDBDbmsException {
@@ -413,7 +500,7 @@ public class ExecutionContext {
   }
 
   public void abort() {
-    log.debug("Aborts an ExecutionContext: " + this);
+    log.trace("Aborts an ExecutionContext: " + this);
     if (runningCoordinator != null) {
       Coordinator c = runningCoordinator;
       runningCoordinator = null;
@@ -439,30 +526,17 @@ public class ExecutionContext {
               this.serialNumber);
       List<String> tempTableList = new ArrayList<>();
 
-      List<String> allTempTables = conn.getTables(schema);
+      List<String> allTempTables = null;
+      if (conn instanceof CachedDbmsConnection) {
+        allTempTables = ((CachedDbmsConnection) conn).getTablesWithoutCaching(schema);
+      } else {
+        allTempTables = conn.getTables(schema);
+      }
       for (String tableName : allTempTables) {
         if (tableName.startsWith(tempTablePrefix)) {
           tempTableList.add(tableName);
         }
       }
-
-      //      DbmsQueryResult rs;
-      //      if (conn.getSyntax() instanceof RedshiftSyntax
-      //          || conn.getSyntax() instanceof PostgresqlSyntax) {
-      //        rs =
-      //            conn.execute(
-      //                String.format(
-      //                    "SELECT * FROM information_schema.tables WHERE table_schema = '%s'",
-      // schema));
-      //      } else {
-      //        rs = conn.execute(String.format("show tables in %s", schema));
-      //      }
-      //      while (rs.next()) {
-      //        String tableName = rs.getString(0);
-      //        if (tableName.startsWith(tempTablePrefix)) {
-      //          tempTableList.add(tableName);
-      //        }
-      //      }
 
       for (String tempTable : tempTableList) {
         conn.execute(String.format("DROP TABLE IF EXISTS %s.%s", schema, tempTable));
@@ -472,7 +546,74 @@ public class ExecutionContext {
     }
   }
 
-  private QueryType identifyQueryType(String query) {
+  static MetaDataProvider createMetaDataFor(SelectQuery relation, DbmsConnection conn)
+      throws VerdictDBDbmsException {
+    StaticMetaData meta = new StaticMetaData();
+    String defaultSchema = conn.getDefaultSchema();
+    meta.setDefaultSchema(defaultSchema);
+
+    // Extract all tables that appeared in the query
+    HashSet<BaseTable> tables = new HashSet<>();
+    List<SelectQuery> queries = new ArrayList<>();
+    queries.add(relation);
+    while (!queries.isEmpty()) {
+      SelectQuery query = queries.get(0);
+      queries.remove(0);
+      for (AbstractRelation t : query.getFromList()) {
+        if (t instanceof BaseTable) tables.add((BaseTable) t);
+        else if (t instanceof SelectQuery) queries.add((SelectQuery) t);
+        else if (t instanceof JoinTable) {
+          for (AbstractRelation join : ((JoinTable) t).getJoinList()) {
+            if (join instanceof BaseTable) tables.add((BaseTable) join);
+            else if (join instanceof SelectQuery) queries.add((SelectQuery) join);
+          }
+        }
+      }
+      if (query.getFilter().isPresent()) {
+        UnnamedColumn where = query.getFilter().get();
+        List<UnnamedColumn> toCheck = new ArrayList<>();
+        toCheck.add(where);
+        while (!toCheck.isEmpty()) {
+          UnnamedColumn col = toCheck.get(0);
+          toCheck.remove(0);
+          if (col instanceof ColumnOp) {
+            toCheck.addAll(((ColumnOp) col).getOperands());
+          } else if (col instanceof SubqueryColumn) {
+            queries.add(((SubqueryColumn) col).getSubquery());
+          }
+        }
+      }
+    }
+
+    // Get table info from cached meta
+    for (BaseTable t : tables) {
+      List<Pair<String, String>> columns;
+      StaticMetaData.TableInfo tableInfo;
+
+      if (t.getSchemaName() == null) {
+        columns = conn.getColumns(defaultSchema, t.getTableName());
+        tableInfo = new StaticMetaData.TableInfo(defaultSchema, t.getTableName());
+      } else {
+        columns = conn.getColumns(t.getSchemaName(), t.getTableName());
+        tableInfo = new StaticMetaData.TableInfo(t.getSchemaName(), t.getTableName());
+      }
+      List<Pair<String, Integer>> colInfo = new ArrayList<>();
+      for (Pair<String, String> col : columns) {
+        colInfo.add(
+            new ImmutablePair<>(
+                col.getLeft(), DataTypeConverter.typeInt(col.getRight().toLowerCase())));
+      }
+      meta.addTableData(tableInfo, colInfo);
+    }
+
+    return meta;
+  }
+
+  MetaDataProvider createMetaDataFor(SelectQuery relation) throws VerdictDBException {
+    return createMetaDataFor(relation, conn);
+  }
+
+  public static QueryType identifyQueryType(String query) {
     VerdictSQLParser parser = NonValidatingSQLParser.parserOf(query);
 
     VerdictSQLParserBaseVisitor<QueryType> visitor =

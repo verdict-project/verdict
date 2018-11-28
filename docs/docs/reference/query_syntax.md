@@ -22,6 +22,7 @@ group_expr := regular_expr | alias;
 aggregate_expr := avg(regular_expr)
                 | sum(regular_expr)
                 | count(regular_expr)
+                | count(distinct regular_expr)
                 | min(regular_expr)
                 | max(regular_expr);
 
@@ -31,3 +32,8 @@ regular_expr := unary_func(regular_expr)
 
 op := + | - | * | / | and | or;
 ```
+
+## Note
+
+1. Names and aliases can be quoted either using double quotes or backticks.
+1. Almost all functions can be used (for "unary_func", "binary_func") if those functions are supported by the backend database.

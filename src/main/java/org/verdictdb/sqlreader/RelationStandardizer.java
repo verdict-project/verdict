@@ -16,15 +16,35 @@
 
 package org.verdictdb.sqlreader;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Vector;
+
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.connection.MetaDataProvider;
-import org.verdictdb.core.sqlobject.*;
+import org.verdictdb.core.sqlobject.AbstractRelation;
+import org.verdictdb.core.sqlobject.AliasReference;
+import org.verdictdb.core.sqlobject.AliasedColumn;
+import org.verdictdb.core.sqlobject.AsteriskColumn;
+import org.verdictdb.core.sqlobject.BaseColumn;
+import org.verdictdb.core.sqlobject.BaseTable;
+import org.verdictdb.core.sqlobject.ColumnOp;
+import org.verdictdb.core.sqlobject.ConstantColumn;
+import org.verdictdb.core.sqlobject.GroupingAttribute;
+import org.verdictdb.core.sqlobject.JoinTable;
+import org.verdictdb.core.sqlobject.OrderbyAttribute;
+import org.verdictdb.core.sqlobject.SelectItem;
+import org.verdictdb.core.sqlobject.SelectQuery;
+import org.verdictdb.core.sqlobject.SubqueryColumn;
+import org.verdictdb.core.sqlobject.UnnamedColumn;
 import org.verdictdb.exception.VerdictDBDbmsException;
+import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sqlsyntax.H2Syntax;
 import org.verdictdb.sqlsyntax.SqlSyntax;
 
-import java.util.*;
 
 public class RelationStandardizer {
 
@@ -60,8 +80,7 @@ public class RelationStandardizer {
   private HashMap<String, String> colNameAndTempColAlias = new HashMap<>();
 
   // Since we replace all table alias using our generated alias name, this map will record the table
-  // alias name
-  // we replaced.
+  // alias name we replaced.
   private HashMap<String, String> oldTableAliasMap = new HashMap<>();
 
   public RelationStandardizer(MetaDataProvider meta) {
@@ -71,6 +90,19 @@ public class RelationStandardizer {
   public RelationStandardizer(MetaDataProvider meta, SqlSyntax syntax) {
     this.meta = meta;
     this.syntax = syntax;
+  }
+  
+
+  public static SelectQuery standardizeSelectQuery(
+      SelectQuery selectQuery, 
+      MetaDataProvider metaData,
+      SqlSyntax syntax) 
+      throws VerdictDBException {
+//    MetaDataProvider metaData = createMetaDataFor(selectQuery);
+    RelationStandardizer gen = new RelationStandardizer(metaData, syntax);
+    selectQuery = gen.standardize(selectQuery);
+//    selectQuery.setStandardized();
+    return selectQuery;
   }
 
   /**
@@ -97,23 +129,32 @@ public class RelationStandardizer {
     if (oldTableAliasMap.containsKey(col.getTableSourceAlias())) {
       col.setTableSourceAlias(oldTableAliasMap.get(col.getTableSourceAlias()));
     }
-    if (tableInfoAndAlias.containsValue(col.getTableSourceAlias())) {
-      for (Map.Entry<Pair<String, String>, String> entry : tableInfoAndAlias.entrySet()) {
-        if (entry.getValue().equals(col.getTableSourceAlias())) {
-          col.setSchemaName(entry.getKey().getLeft());
-          col.setTableName(entry.getKey().getRight());
-          break;
-        }
-      }
-    }
+    
+    // Yongjoo: I unsurely commented out these lines, believing that keeping only alias names
+    //          will be enough.
+//    if (tableInfoAndAlias.containsValue(col.getTableSourceAlias())) {
+//      for (Map.Entry<Pair<String, String>, String> entry : tableInfoAndAlias.entrySet()) {
+//        if (entry.getValue().equals(col.getTableSourceAlias())) {
+//          col.setSchemaName(entry.getKey().getLeft());
+//          col.setTableName(entry.getKey().getRight());
+//          break;
+//        }
+//      }
+//    }
+    
+    // When no schema name is specified, the table name of a column is parsed as an alias 
+    // by default; however, the alias name can actually be the name of the table.
     if (col.getSchemaName().equals("")) {
-      col.setSchemaName(meta.getDefaultSchema());
-      if (tableInfoAndAlias.containsKey(
-          new ImmutablePair<>(col.getSchemaName(), col.getTableSourceAlias()))) {
-        col.setTableSourceAlias(
-            tableInfoAndAlias.get(
-                new ImmutablePair<>(col.getSchemaName(), col.getTableSourceAlias())));
+      // Yongjoo: I don't think setting the schema is always safe 
+      // (e.g., a column is from a subquery)
+//      col.setSchemaName(meta.getDefaultSchema());
+      String defaultSchema = meta.getDefaultSchema();
+      Pair<String, String> searchKey = 
+          new ImmutablePair<>(defaultSchema, col.getTableSourceAlias());
+      if (tableInfoAndAlias.containsKey(searchKey)) {
+        col.setTableSourceAlias(tableInfoAndAlias.get(searchKey));
       }
+      
     }
 
     return col;
@@ -213,7 +254,7 @@ public class RelationStandardizer {
     for (SelectItem item : selectItems) {
       if (item instanceof AliasedColumn) {
         AliasedColumn aliasedColumn = (AliasedColumn) item;
-        if (aliasedColumn.getAliasName().equals(col)) {
+        if (aliasedColumn.getAliasName().equals(col.getColumnName())) {
           return aliasedColumn;
         }
       }
@@ -253,7 +294,7 @@ public class RelationStandardizer {
           } else {
             newGroupby.add(column);
           }
-        } else if (((BaseColumn) g).getTableSourceAlias() != null) {
+        } else if (((BaseColumn) g).getTableSourceAlias() != "") {
           // if it is a base column, let's get its current table alias and replace.
           String tableSource = ((BaseColumn) g).getTableSourceAlias();
           String columnName = ((BaseColumn) g).getColumnName();
@@ -312,9 +353,12 @@ public class RelationStandardizer {
   // returns BaseColumn for group-by, AliasReference for order-by
   private GroupingAttribute getGroupOrOrderByColumn(
       String table, String column, boolean isForOrderBy) {
-    if (isForOrderBy)
+    if (isForOrderBy) {
       return (table != null) ? new AliasReference(table, column) : new AliasReference(column);
-    else return (table != null) ? new BaseColumn(table, column) : new BaseColumn(column);
+    }
+    else {
+      return (table != null) ? new BaseColumn(table, column) : new BaseColumn(column);
+    }
   }
 
   // returns BaseColumn for group-by, AliasReference for order-by
@@ -385,6 +429,7 @@ public class RelationStandardizer {
       tableInfoAndAlias.put(
           ImmutablePair.of(bt.getSchemaName(), bt.getTableName()), table.getAliasName().get());
       return new ImmutablePair<>(colName, table);
+      
     } else if (table instanceof JoinTable) {
       List<String> joinColName = new ArrayList<>();
       for (int i = 0; i < ((JoinTable) table).getJoinList().size(); i++) {
@@ -399,6 +444,7 @@ public class RelationStandardizer {
         }
       }
       return new ImmutablePair<>(joinColName, table);
+      
     } else if (table instanceof SelectQuery) {
       List<String> colName = new ArrayList<>();
       RelationStandardizer g = new RelationStandardizer(meta, syntax);
@@ -409,6 +455,7 @@ public class RelationStandardizer {
       String aliasName = table.getAliasName().get();
       table = g.standardize((SelectQuery) table);
       table.setAliasName(aliasName);
+      
       // Invariant: Only Aliased Column or Asterisk Column should appear in the subquery
       for (SelectItem sel : ((SelectQuery) table).getSelectList()) {
         if (sel instanceof AliasedColumn) {
@@ -426,6 +473,7 @@ public class RelationStandardizer {
             colNameAndTableAlias.put(
                 ((AliasedColumn) sel).getAliasName(), table.getAliasName().get());
           colName.add(((AliasedColumn) sel).getAliasName());
+          
         } else if (sel instanceof AsteriskColumn) {
           // put all the columns in the fromlist of subquery to the colNameAndTableAlias
           HashMap<String, String> subqueryColumnList = g.getColNameAndTableAlias();
@@ -453,7 +501,10 @@ public class RelationStandardizer {
   }
 
   public SelectQuery standardize(SelectQuery relationToAlias) throws VerdictDBDbmsException {
+    // From (Source)
     List<AbstractRelation> fromList = setupTableSources(relationToAlias);
+    
+    // Select
     List<SelectItem> selectItemList = replaceSelectList(relationToAlias.getSelectList());
     SelectQuery AliasedRelation = SelectQuery.create(selectItemList, fromList);
 

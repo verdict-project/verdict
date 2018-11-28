@@ -3,7 +3,6 @@ lexer grammar VerdictSQLLexer;
 
 
 // Verdict Keywords
-
 SIZE:                            S I Z E;
 COLUMNS:                         C O L U M N S;
 SHOW:                            S H O W;
@@ -22,6 +21,7 @@ ALL:                             A L L;
 ALTER:                           A L T E R;
 AND:                             A N D;
 ANY:                             A N Y;
+APPROX_DISTINCT:                 A P P R O X '_' D I S T I N C T;
 AS:                              A S;
 ASC:                             A S C;
 ASCII:                           A S C I I;
@@ -102,6 +102,7 @@ GOTO:                            G O T O;
 GRANT:                           G R A N T;
 GROUP:                           G R O U P;
 HASH:                            H A S H;
+HASHCOLUMN:                      H A S H C O L U M N;
 HAVING:                          H A V I N G;
 IDENTITY:                        I D E N T I T Y;
 IDENTITYCOL:                     I D E N T I T Y C O L;
@@ -155,6 +156,7 @@ PRINT:                           P R I N T;
 PROC:                            P R O C;
 PROCEDURE:                       P R O C E D U R E;
 RAISERROR:                       R A I S E R R O R;
+RATIO:                           R A T I O;
 RAWTOHEX:                        R A W T O H E X;
 READ:                            R E A D;
 READTEXT:                        R E A D T E X T;

@@ -1,5 +1,14 @@
 package org.verdictdb.core.scrambling;
 
+import static org.junit.Assert.assertEquals;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -10,15 +19,6 @@ import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.core.execplan.ExecutablePlanRunner;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sqlsyntax.PostgresqlSyntax;
-
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.HashMap;
-import java.util.Map;
-
-import static org.junit.Assert.assertEquals;
 
 public class PostgresUniformScramblingPlanTest {
 

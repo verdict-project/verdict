@@ -11,14 +11,12 @@ public class VerdictResultStreamFromExecutionResultReader implements VerdictResu
 
   ExecutionResultReader reader;
 
-  ExecutionContext execContext;
+//  ExecutionContext execContext;
 
-  public VerdictResultStreamFromExecutionResultReader(
-      ExecutionResultReader reader,
-      ExecutionContext execContext) {
+  public VerdictResultStreamFromExecutionResultReader(ExecutionResultReader reader) {
     super();
     this.reader = reader;
-    this.execContext = execContext;
+//    this.execContext = execContext;
   }
 
   @Override

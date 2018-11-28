@@ -18,7 +18,9 @@ package org.verdictdb.core.sqlobject;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -49,7 +51,7 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
    *   <li>min
    *   <li>max
    *   <li>countdistinct
-   *   <li>approx_countdistinct
+   *   <li>approx_distinct
    *   <li>substr
    *   <li>substring
    *   <li>rand
@@ -57,6 +59,7 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
    *   <li>cast
    *   <li>percentile
    *   <li>mod
+   *   <li>hash: returns a value between 0 and 1
    * </ol>
    *
    * <p>Comparison:
@@ -98,13 +101,13 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
   }
 
   public ColumnOp(String opType, UnnamedColumn operand) {
-    this.operands = Arrays.asList(operand);
     this.opType = opType;
+    this.operands = Arrays.asList(operand);
   }
 
   public ColumnOp(String opType, List<UnnamedColumn> operands) {
-    this.operands = operands;
     this.opType = opType;
+    this.operands = operands;
   }
 
   public UnnamedColumn getOperand() {
@@ -145,6 +148,14 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
 
   public static ColumnOp count() {
     return new ColumnOp("count");
+  }
+  
+  public static ColumnOp countdistinct() {
+    return new ColumnOp("countdistinct");
+  }
+  
+  public static ColumnOp approx_distinct() {
+    return new ColumnOp("approx_distinct");
   }
 
   public static ColumnOp equal(UnnamedColumn column1, UnnamedColumn column2) {
@@ -316,6 +327,10 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
   public static ColumnOp rand() {
     return new ColumnOp("rand");
   }
+  
+  public static ColumnOp hash(UnnamedColumn column) {
+    return new ColumnOp("hash", column);
+  }
 
   public static ColumnOp floor(UnnamedColumn column) {
     return new ColumnOp("floor", column);
@@ -342,27 +357,6 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
   @Override
   public String toString() {
     return ToStringBuilder.reflectionToString(this, ToStringStyle.SHORT_PREFIX_STYLE);
-  }
-
-  public boolean isColumnOpAggregate() {
-    if (this.getOpType().equals("avg")
-        || this.getOpType().equals("sum")
-        || this.getOpType().equals("count")
-        || this.getOpType().equals("max")
-        || this.getOpType().equals("min")) {
-      return true;
-    }
-    boolean aggExists = false;
-    List<UnnamedColumn> ops = this.getOperands();
-    for (UnnamedColumn c : ops) {
-      if (c instanceof ColumnOp) {
-        if (((ColumnOp) c).isColumnOpAggregate()) {
-          aggExists = true;
-          break;
-        }
-      }
-    }
-    return aggExists;
   }
 
   public boolean doesColumnOpContainOpType(String opType) {
@@ -398,7 +392,69 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
       }
     }
   }
+  
+  private boolean doesContainOpIn(Set<String> ops) {
+    if (ops.contains(this.getOpType())) {
+      return true;
+    }
+    boolean aggExists = false;
+    List<UnnamedColumn> operands = this.getOperands();
+    for (UnnamedColumn c : operands) {
+      if (c instanceof ColumnOp) {
+        if (((ColumnOp) c).doesContainOpIn(ops)) {
+          aggExists = true;
+          break;
+        }
+      }
+    }
+    return aggExists;
+  }
+  
+  public boolean isMinAggregate() {
+    Set<String> ops = new HashSet<>(Arrays.asList("min"));
+    return doesContainOpIn(ops);
+  }
+  
+  public boolean isMaxAggregate() {
+    Set<String> ops = new HashSet<>(Arrays.asList("max"));
+    return doesContainOpIn(ops);
+  }
+  
+  public boolean isCountDistinctAggregate() {
+    Set<String> ops = new HashSet<>(Arrays.asList("countdistinct", "approx_distinct"));
+    return doesContainOpIn(ops);
+  }
 
+  public boolean isColumnOpAggregate() {
+    Set<String> ops = new HashSet<>(Arrays.asList(
+            "avg", "sum", "count", "max", "min", "countdistinct", "approx_distinct"));
+    return doesContainOpIn(ops);
+//    if (this.getOpType().equals("avg")
+//        || this.getOpType().equals("sum")
+//        || this.getOpType().equals("count")
+//        || this.getOpType().equals("max")
+//        || this.getOpType().equals("min")
+//        || this.getOpType().equals("countdistinct")
+//        || this.getOpType().equals("approx_distinct")) {
+//      return true;
+//    }
+//    boolean aggExists = false;
+//    List<UnnamedColumn> ops = this.getOperands();
+//    for (UnnamedColumn c : ops) {
+//      if (c instanceof ColumnOp) {
+//        if (((ColumnOp) c).isColumnOpAggregate()) {
+//          aggExists = true;
+//          break;
+//        }
+//      }
+//    }
+//    return aggExists;
+  }
+
+  public boolean isUniformSampleAggregateColumn() {
+    Set<String> ops = new HashSet<>(Arrays.asList("avg", "sum", "count", "max", "min"));
+    return doesContainOpIn(ops);
+  }
 
   @Override
   public boolean isAggregateColumn() {

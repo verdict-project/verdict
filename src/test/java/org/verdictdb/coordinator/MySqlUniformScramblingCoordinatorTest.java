@@ -87,7 +87,8 @@ public class MySqlUniformScramblingCoordinatorTest {
     String scrambleSchema = MYSQL_DATABASE;
     String scratchpadSchema = MYSQL_DATABASE;
     long blockSize = 100;
-    ScramblingCoordinator scrambler = new ScramblingCoordinator(conn, scrambleSchema, scratchpadSchema, blockSize);
+    ScramblingCoordinator scrambler = new ScramblingCoordinator(
+        conn, scrambleSchema, scratchpadSchema, blockSize);
 
     // perform scrambling
     String originalSchema = MYSQL_DATABASE;

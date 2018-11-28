@@ -25,7 +25,7 @@ import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.exception.VerdictDBValueException;
 
 /**
- * Plans how to chop a big query into multiple small queries.
+ * Plans how to chop a big query into multiple smaller queries.
  *
  * @author Yongjoo Park
  */
@@ -71,7 +71,6 @@ public class OlaAggregationPlan {
   // this method is supposed to rely on HyperTableCube's merge method.
   public static OlaAggregationPlan createMergedOlaAggMeta(
       OlaAggregationPlan meta1, OlaAggregationPlan meta2) {
-
     return null;
   }
 

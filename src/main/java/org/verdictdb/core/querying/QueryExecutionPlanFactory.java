@@ -16,6 +16,9 @@
 
 package org.verdictdb.core.querying;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.coordinator.QueryContext;
 import org.verdictdb.core.querying.ola.AsyncAggExecutionNode;
@@ -34,9 +37,6 @@ import org.verdictdb.core.sqlobject.SelectItem;
 import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.core.sqlobject.SubqueryColumn;
 import org.verdictdb.core.sqlobject.UnnamedColumn;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class QueryExecutionPlanFactory {
 

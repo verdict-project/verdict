@@ -206,8 +206,4 @@ public class DataTypeConverter {
     return numericTypes.contains(type);
   }
 
-  //  public static String standardize(String type) {
-  //    // TODO Auto-generated method stub
-  //    return null;
-  //  }
 }
