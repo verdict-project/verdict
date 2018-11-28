@@ -16,15 +16,7 @@
 
 package org.verdictdb.jdbc41;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collection;
-
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.After;
@@ -32,6 +24,15 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collection;
+
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /** Created by Dong Young Yoon on 7/24/18. */
 @RunWith(Parameterized.class)
@@ -79,6 +80,8 @@ public class VerdictConnectionTest {
   private static final String REDSHIFT_USER;
 
   private static final String REDSHIFT_PASSWORD;
+
+  private static final String SCHEMA_NAME = "conn_test_" + RandomStringUtils.randomAlphanumeric(8);
 
   private static final String POSTGRES_HOST;
 
@@ -168,7 +171,9 @@ public class VerdictConnectionTest {
     String connectionString =
         String.format("jdbc:redshift://%s/%s", REDSHIFT_HOST, REDSHIFT_DATABASE);
     String vcConnectionString =
-        String.format("jdbc:verdict:redshift://%s/%s", REDSHIFT_HOST, REDSHIFT_DATABASE);
+        String.format(
+            "jdbc:verdict:redshift://%s/%s;verdictdbmetaschema=%s",
+            REDSHIFT_HOST, REDSHIFT_DATABASE, SCHEMA_NAME);
     Connection conn =
         DriverManager.getConnection(connectionString, REDSHIFT_USER, REDSHIFT_PASSWORD);
     Connection vc =
@@ -199,12 +204,27 @@ public class VerdictConnectionTest {
     boolean closed1 = connectionPair.getLeft().isClosed();
     boolean closed2 = connectionPair.getRight().isClosed();
 
+    if (!database.equals("mysql")) {
+      connectionPair
+          .getLeft()
+          .createStatement()
+          .execute(String.format("DROP SCHEMA IF EXISTS %s CASCADE", SCHEMA_NAME));
+    }
+
     assertFalse(closed1);
     assertFalse(closed2);
   }
 
   @Test
   public void testIsNotValidAfterClose() throws SQLException {
+
+    if (!database.equals("mysql")) {
+      connectionPair
+          .getLeft()
+          .createStatement()
+          .execute(String.format("DROP SCHEMA IF EXISTS %s CASCADE", SCHEMA_NAME));
+    }
+
     connectionPair.getLeft().close();
     connectionPair.getRight().close();
 

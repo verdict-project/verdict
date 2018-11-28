@@ -117,8 +117,8 @@ public class PrestoSpatialQueryTest {
         String.format("jdbc:presto://%s/%s/default", PRESTO_HOST, PRESTO_CATALOG);
     String verdictConnectionString =
         String.format(
-            "jdbc:verdict:presto://%s/%s/default;loglevel=debug",
-            PRESTO_HOST, PRESTO_CATALOG, SCHEMA_NAME);
+            "jdbc:verdict:presto://%s/%s/default;loglevel=debug;verdictdbmetaschema=%s;verdictdbtempschema=%s",
+            PRESTO_HOST, PRESTO_CATALOG, SCHEMA_NAME, SCHEMA_NAME, SCHEMA_NAME);
     conn = DriverManager.getConnection(connectionString, PRESTO_USER, PRESTO_PASSWORD);
     vc = DriverManager.getConnection(verdictConnectionString, PRESTO_USER, PRESTO_PASSWORD);
     conn.createStatement()

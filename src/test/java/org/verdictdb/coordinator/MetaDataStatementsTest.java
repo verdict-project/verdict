@@ -1,21 +1,5 @@
 package org.verdictdb.coordinator;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -35,6 +19,22 @@ import org.verdictdb.sqlsyntax.MysqlSyntax;
 import org.verdictdb.sqlsyntax.PostgresqlSyntax;
 import org.verdictdb.sqlsyntax.RedshiftSyntax;
 import org.verdictdb.sqlsyntax.SqlSyntax;
+
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 @RunWith(Parameterized.class)
 public class MetaDataStatementsTest {
@@ -196,7 +196,9 @@ public class MetaDataStatementsTest {
 
   private static void setupRedshift() throws SQLException, VerdictDBDbmsException, IOException {
     String connectionString =
-        String.format("jdbc:redshift://%s/%s", REDSHIFT_HOST, REDSHIFT_DATABASE);
+        String.format(
+            "jdbc:redshift://%s/%s;verdictdbmetaschema=%s",
+            REDSHIFT_HOST, REDSHIFT_DATABASE, PostgresRedshift_SCHEMA_NAME);
     Connection conn =
         DriverManager.getConnection(connectionString, REDSHIFT_USER, REDSHIFT_PASSWORD);
     JdbcConnection dbmsConn = new JdbcConnection(conn, new RedshiftSyntax());
@@ -208,6 +210,7 @@ public class MetaDataStatementsTest {
         String.format(
             "CREATE TABLE \"%s\".\"%s\"(intcol int, strcol varchar(5))",
             PostgresRedshift_SCHEMA_NAME, TABLE_NAME));
+    options.setVerdictMetaSchemaName(PostgresRedshift_SCHEMA_NAME);
 
     connMap.put("redshift", conn);
     schemaMap.put("redshift", "");
@@ -274,7 +277,7 @@ public class MetaDataStatementsTest {
     DbmsConnection dbmsconn =
         new CachedDbmsConnection(
             new JdbcConnection(connMap.get(database), syntaxMap.get(database)));
-    
+
     VerdictOption option = new VerdictOption();
     final String verdictmeta = 
         "verdictmeta" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
@@ -330,7 +333,7 @@ public class MetaDataStatementsTest {
     DbmsConnection dbmsconn =
         new CachedDbmsConnection(
             new JdbcConnection(connMap.get(database), syntaxMap.get(database)));
-    
+
     VerdictOption option = new VerdictOption();
     final String verdictmeta = 
         "verdictmeta" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
@@ -391,7 +394,7 @@ public class MetaDataStatementsTest {
     DbmsConnection dbmsconn =
         new CachedDbmsConnection(
             new JdbcConnection(connMap.get(database), syntaxMap.get(database)));
-    
+
     VerdictOption option = new VerdictOption();
     final String verdictmeta = 
         "verdictmeta" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();

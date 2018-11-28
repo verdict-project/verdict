@@ -16,25 +16,24 @@
 
 package org.verdictdb.core.scrambling;
 
-import java.io.IOException;
-import java.io.Serializable;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.apache.commons.lang3.builder.ToStringBuilder;
-import org.apache.commons.lang3.builder.ToStringStyle;
-import org.verdictdb.exception.VerdictDBValueException;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
+import org.verdictdb.exception.VerdictDBValueException;
+
+import java.io.IOException;
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 /**
  * Table-specific information
@@ -79,7 +78,7 @@ public class ScrambleMeta implements Serializable {
 
   // scramble method used
   String method;
-  
+
   // the column on which a hash function is used (only applicable to hash sampling).
   String hashColumn;
 
@@ -92,8 +91,7 @@ public class ScrambleMeta implements Serializable {
   Map<Integer, List<Double>> cumulativeDistributionForTier = new HashMap<>();
 
   // subsample column; not used currently
-  @JsonIgnore
-  String subsampleColumn;
+  @JsonIgnore String subsampleColumn;
 
   public ScrambleMeta() {}
 
@@ -205,7 +203,7 @@ public class ScrambleMeta implements Serializable {
   public String getMethod() {
     return method;
   }
-  
+
   @JsonIgnore
   public String getMethodWithDefault(String defaultMethod) {
     if (method == null) {
@@ -214,17 +212,18 @@ public class ScrambleMeta implements Serializable {
       return method;
     }
   }
-  
+
   /**
    * Checks if this scramble can be used for avg, sum, count, min, or max.
+   *
    * @return True if it is the case
    */
   @JsonIgnore
   public boolean isMethodCompatibleWithSimpleAggregates() {
     String m = getMethodWithDefault("uniform");
-    return m.equalsIgnoreCase("uniform") || m.equalsIgnoreCase("fastconverge"); 
+    return m.equalsIgnoreCase("uniform") || m.equalsIgnoreCase("fastconverge");
   }
-  
+
   public String getHashColumn() {
     return hashColumn;
   }
@@ -265,11 +264,11 @@ public class ScrambleMeta implements Serializable {
   public void setTableName(String tableName) {
     this.tableName = tableName;
   }
-  
+
   public void setMethod(String method) {
     this.method = method;
   }
-  
+
   public void setHashColumn(String hashColumn) {
     this.hashColumn = hashColumn;
   }

@@ -16,7 +16,13 @@
 
 package org.verdictdb.core.scramblingquerying;
 
-import static org.junit.Assert.assertEquals;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.verdictdb.commons.DatabaseConnectionHelpers;
+import org.verdictdb.commons.VerdictOption;
+import org.verdictdb.exception.VerdictDBDbmsException;
 
 import java.io.IOException;
 import java.sql.Connection;
@@ -26,13 +32,7 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.verdictdb.commons.DatabaseConnectionHelpers;
-import org.verdictdb.commons.VerdictOption;
-import org.verdictdb.exception.VerdictDBDbmsException;
+import static org.junit.Assert.assertEquals;
 
 /** Created by Dong Young Yoon on 8/16/18. */
 public class RedshiftUniformScramblingQueryTest {
@@ -94,8 +94,8 @@ public class RedshiftUniformScramblingQueryTest {
         String.format("jdbc:redshift://%s/%s", REDSHIFT_HOST, REDSHIFT_DATABASE);
     String verdictConnectionString =
         String.format(
-            "jdbc:verdict:redshift://%s/%s;verdictdbtempschema=%s",
-            REDSHIFT_HOST, REDSHIFT_DATABASE, SCHEMA_NAME);
+            "jdbc:verdict:redshift://%s/%s;verdictdbtempschema=%s;verdictdbmetaschema=%s",
+            REDSHIFT_HOST, REDSHIFT_DATABASE, SCHEMA_NAME, SCHEMA_NAME);
     conn =
         DatabaseConnectionHelpers.setupRedshift(
             connectionString, REDSHIFT_USER, REDSHIFT_PASSWORD, SCHEMA_NAME);

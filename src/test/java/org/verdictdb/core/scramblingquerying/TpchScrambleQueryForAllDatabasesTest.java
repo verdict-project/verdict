@@ -268,8 +268,8 @@ public class TpchScrambleQueryForAllDatabasesTest {
         String.format("jdbc:redshift://%s/%s", REDSHIFT_HOST, REDSHIFT_DATABASE);
     String verdictConnectionString =
         String.format(
-            "jdbc:verdict:redshift://%s/%s;verdictdbtempschema=%s",
-            REDSHIFT_HOST, REDSHIFT_DATABASE, SCHEMA_NAME);
+            "jdbc:verdict:redshift://%s/%s;verdictdbtempschema=%s;verdictdbmetaschema=%s",
+            REDSHIFT_HOST, REDSHIFT_DATABASE, SCHEMA_NAME, SCHEMA_NAME);
     Connection conn =
         DatabaseConnectionHelpers.setupRedshift(
             connectionString, REDSHIFT_USER, REDSHIFT_PASSWORD, SCHEMA_NAME);
