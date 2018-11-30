@@ -19,23 +19,23 @@ Documentation: https://docs.verdictdb.org
 <img src="http://verdictdb.org/image/verdict-for-impala-speedup.png" width="600px" />
 </p>
 
-Verdict brings you Interactive-speed, resource-efficient data analytics.
+VerdictDB brings you Interactive-speed, resource-efficient data analytics.
 
 1. **200x faster by sacrificing only 1% accuracy**
-   Verdict can give you 99% accurate answers for your big data queries in a fraction of the time needed for calculating exact answers. If your data is too big to analyze in a couple of seconds, you will like Verdict.
+   VerdictDB can give you 99% accurate answers for your big data queries in a fraction of the time needed for calculating exact answers. If your data is too big to analyze in a couple of seconds, you will like VerdictDB.
 2. **No change to your database**
-   Verdict is a middleware standing between your application and your database. You can just issue the same queries as before and get approximate answers right away. Of course, Verdict handles exact query processing too.
+   VerdictDB is a middleware standing between your application and your database. You can just issue the same queries as before and get approximate answers right away. Of course, VerdictDB handles exact query processing too.
 3. **Runs on (almost) any database**
-   Verdict can run on any database that supports standard SQL. We already have drivers for Hive, Impala, and MySQL. We’ll soon add drivers for some other popular databases.
+   VerdictDB can run on any database that supports standard SQL. We already have drivers for Hive, Impala, and MySQL. We’ll soon add drivers for some other popular databases.
 4. **Ease of use**
-   Verdict is a client-side library: no servers, no port configurations, no extra user authentication, etc. You can simply make a JDBC connection to Verdict; then, Verdict automatically reads data from your database. Verdict is also shipped with a command-line interface.
+   VerdictDB is a client-side library: no servers, no port configurations, no extra user authentication, etc. You can simply make a JDBC connection to VerdictDB; then, VerdictDB automatically reads data from your database. VerdictDB is also shipped with a command-line interface.
 
-Find more about Verdict at our website: [VerdictDB.org](http://verdictdb.org).
+Find out more about VerdictDB by visiting [VerdictDB.org](http://verdictdb.org).
 
 
 ## Same SQL queries
 
-When you issue standard SQL queries as below, Verdict internally converts the query into an alternative form that runs faster on your database. Verdict quickly returns an approximate answer to the query with an error bound (the true answer is within the error bound).
+When you issue standard SQL queries as below, VerdictDB internally converts the query into an alternative form that runs faster on your database. VerdictDB quickly returns an approximate answer to the query with an error bound (the true answer is within the error bound).
 
 ```sql
 select city, count(*)
@@ -46,7 +46,7 @@ order by count(*)
 limit 10;
 ```
 
-The alternative form includes a *sample table* instead of the original data. However, simiply replacing the original tables (e.g., `big_data_table`) with its sample table could result in largely incorrect answers. Verdict automatically handles such translations so its answers are accurate (1-2% within the exact answers).
+The alternative form includes a *sample table* instead of the original data. However, simiply replacing the original tables (e.g., `big_data_table`) with its sample table could result in largely incorrect answers. VerdictDB automatically handles such translations so its answers are accurate (1-2% within the exact answers).
 
 All you need to do before observing such speedups is creating samples with just a single SQL expression.
 
@@ -61,24 +61,24 @@ create sample of big_data_table;
 <img src="http://verdictdb.org/image/verdict-architecture.png" width="500px" />
 </p>
 
-Verdict supports the standard interface such as JDBC. For Apache Spark, you can simply include Verdict's `jar` file and issue queries to Verdict's SQL context.
+VerdictDB supports the standard interface such as JDBC. For Apache Spark, you can simply include VerdictDB's `jar` file and issue queries to VerdictDB's SQL context.
 
-Due to its support for standard interface, Verdict integrates easily with popular front-end tools, such as Apache Zeppelin, Hue, Jupyter notebooks, and so on.
+Due to its support for standard interface, VerdictDB integrates easily with popular front-end tools, such as Apache Zeppelin, Hue, Jupyter notebooks, and so on.
 
 
 
 ## Download and install
 
-You only need to download a couple of jar files to get started. Verdict does not require "sudo" access or any complicated setup process. Go to [this download page](http://verdictdb.org/download/) to find out the files relevant to your data analytics platforms. We already provide pre-built jar files for Cloudera distributions, MapR distributions, and official Apache Spark. You can also build from the source code using the standard build tool, Apache Maven.
+You only need to download a couple of jar files to get started. VerdictDB does not require "sudo" access or any complicated setup process. Go to [this download page](http://verdictdb.org/download/) to find out the files relevant to your data analytics platforms. We already provide pre-built jar files for Cloudera distributions, MapR distributions, and official Apache Spark. You can also build from the source code using the standard build tool, Apache Maven.
 
 
 
 ## Research
 
-Verdict speeds up **aggregate queries**, for which a tiny fraction of the entire data can be used instead for producing highly accurate answers. There are many theories and optimizations as well we developed and implemented inside Verdict for high accuracy and great efficiency. Visit our [research page](http://verdictdb.org/documentation/research/) and see innovations we make.
+VerdictDB speeds up **aggregate queries**, for which a tiny fraction of the entire data can be used instead for producing highly accurate answers. There are many theories and optimizations as well we developed and implemented inside VerdictDB for high accuracy and great efficiency. Visit our [research page](http://verdictdb.org/documentation/research/) and see innovations we make.
 
 
-## Free for every use
+## Free for all
 
-We maintain Verdict for free under the Apache License so that anyone can benefit from our contributions. If you like our project, please star our Github repository (https://github.com/mozafari/verdict) and send feedback to verdict-user@umich.edu.
+We maintain VerdictDB for free under the Apache License so that anyone can benefit from these contributions. If you like our project, please star our Github repository (https://github.com/mozafari/verdict) and send your feedback to verdict-user@umich.edu.
 
