@@ -80,5 +80,5 @@ VerdictDB speeds up **aggregate queries**, for which a tiny fraction of the enti
 
 ## Free for all
 
-We maintain VerdictDB for free under the Apache License so that anyone can benefit from these contributions. If you like our project, please star our Github repository (https://github.com/mozafari/verdict) and send your feedback to verdict-user@umich.edu.
+We maintain VerdictDB for free under the Apache License so that anyone can benefit from these contributions. If you like our project, please star our Github repository (https://github.com/mozafari/verdictdb) and send your feedback to verdict-user@umich.edu.
 
