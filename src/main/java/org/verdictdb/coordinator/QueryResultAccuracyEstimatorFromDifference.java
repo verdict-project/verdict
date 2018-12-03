@@ -150,7 +150,12 @@ public class QueryResultAccuracyEstimatorFromDifference extends QueryResultAccur
       for (int i = 0; i < currentAnswer.getColumnCount(); i++) {
         if (nongroupingColumnIndxes.contains(i)) {
 //        if (currentAnswer.getMetaData().isAggregate.get(i)) {
-          aggregateValues.add(currentAnswer.getValue(i));
+          // if the aggregate value is null value, we just let it to be 0.
+          if (currentAnswer.getValue(i) == null) {
+            aggregateValues.add(0);
+          } else {
+            aggregateValues.add(currentAnswer.getValue(i));
+          }
         } else {
           groupValues.add(currentAnswer.getValue(i));
         }
