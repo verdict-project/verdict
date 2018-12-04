@@ -8,7 +8,6 @@ import org.verdictdb.commons.VerdictOption;
 import org.verdictdb.connection.CachedDbmsConnection;
 import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.JdbcConnection;
-import org.verdictdb.connection.SparkConnection;
 import org.verdictdb.coordinator.*;
 import org.verdictdb.core.resulthandler.ExecutionResultReader;
 import org.verdictdb.core.scrambling.ScrambleMeta;
@@ -56,7 +55,7 @@ public class VerdictDBSumNullValueTest {
 
   private static final String MYSQL_UESR = "root";
 
-  private static final String MYSQL_PASSWORD = "zhongshucheng123";
+  private static final String MYSQL_PASSWORD = "";
 
   @BeforeClass
   public static void setupMySqlDatabase() throws SQLException, VerdictDBException {
