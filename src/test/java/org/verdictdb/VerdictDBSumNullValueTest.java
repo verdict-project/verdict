@@ -1,28 +1,24 @@
 package org.verdictdb;
 
 import org.apache.commons.lang3.RandomStringUtils;
-import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Row;
-import org.apache.spark.sql.SparkSession;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.commons.DatabaseConnectionHelpers;
 import org.verdictdb.commons.VerdictOption;
+import org.verdictdb.connection.CachedDbmsConnection;
 import org.verdictdb.connection.DbmsConnection;
-import org.verdictdb.connection.DbmsQueryResult;
+import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.connection.SparkConnection;
 import org.verdictdb.coordinator.*;
 import org.verdictdb.core.resulthandler.ExecutionResultReader;
 import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
-import org.verdictdb.core.sqlobject.AbstractRelation;
-import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.exception.VerdictDBException;
-import org.verdictdb.sqlreader.NonValidatingSQLParser;
-import org.verdictdb.sqlreader.RelationStandardizer;
 import org.verdictdb.sqlsyntax.MysqlSyntax;
-import org.verdictdb.sqlwriter.SelectQueryToSql;
+
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -32,46 +28,64 @@ import static org.junit.Assert.assertNull;
  */
 
 public class VerdictDBSumNullValueTest {
+  // lineitem has 10 blocks, orders has 3 blocks;
+  // lineitem join orders has 12 blocks
+  static final int blockSize = 100;
 
   static ScrambleMetaSet meta = new ScrambleMetaSet();
 
-  static final String TEST_SCHEMA =
-      "spark_test_" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
+  static VerdictOption options = new VerdictOption();
 
-  static DbmsConnection conn;
+  static Connection conn;
 
-  static SparkSession spark;
+  private static Statement stmt;
 
-  @BeforeClass
-  public static void setupSpark() throws VerdictDBException {
-    String appname = "sparkTest";
-    spark = DatabaseConnectionHelpers.setupSpark(appname, TEST_SCHEMA);
-    conn = new SparkConnection(spark);
+  private static final String MYSQL_HOST;
 
-    // Create Scramble table
-    conn.execute(String.format("DROP TABLE IF EXISTS `%s`.`lineitem_scrambled`", TEST_SCHEMA));
-    conn.execute(String.format("DROP TABLE IF EXISTS `%s`.`orders_scrambled`", TEST_SCHEMA));
-
-    ScramblingCoordinator scrambler =
-        new ScramblingCoordinator(conn, TEST_SCHEMA, TEST_SCHEMA, (long) 200);
-    ScrambleMeta meta1 =
-        scrambler.scramble(TEST_SCHEMA, "lineitem", TEST_SCHEMA, "lineitem_scrambled", "uniform");
-    ScrambleMeta meta2 =
-        scrambler.scramble(TEST_SCHEMA, "orders", TEST_SCHEMA, "orders_scrambled", "uniform");
-    meta.addScrambleMeta(meta1);
-    meta.addScrambleMeta(meta2);
-
-
+  static {
+    String env = System.getenv("BUILD_ENV");
+    if (env != null && env.equals("GitLab")) {
+      MYSQL_HOST = "mysql";
+    } else {
+      MYSQL_HOST = "localhost";
+    }
   }
 
-  @Before
-  public void setupSchema() {
-    spark.sql(
-        String.format(
-            "drop schema if exists `%s` cascade", VerdictOption.getDefaultTempSchemaName()));
-    spark.sql(
-        String.format(
-            "create schema if not exists `%s`", VerdictOption.getDefaultTempSchemaName()));
+  private static final String MYSQL_DATABASE =
+      "mysql_test_" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
+
+  private static final String MYSQL_UESR = "root";
+
+  private static final String MYSQL_PASSWORD = "zhongshucheng123";
+
+  @BeforeClass
+  public static void setupMySqlDatabase() throws SQLException, VerdictDBException {
+    String mysqlConnectionString =
+        String.format("jdbc:mysql://%s?autoReconnect=true&useSSL=false", MYSQL_HOST);
+    conn =
+        DatabaseConnectionHelpers.setupMySql(
+            mysqlConnectionString, MYSQL_UESR, MYSQL_PASSWORD, MYSQL_DATABASE);
+    conn.setCatalog(MYSQL_DATABASE);
+    stmt = conn.createStatement();
+    stmt.execute(String.format("use `%s`", MYSQL_DATABASE));
+    DbmsConnection dbmsConn = JdbcConnection.create(conn);
+
+    // Create Scramble table
+    dbmsConn.execute(
+        String.format("DROP TABLE IF EXISTS `%s`.`lineitem_scrambled`", MYSQL_DATABASE));
+    dbmsConn.execute(String.format("DROP TABLE IF EXISTS `%s`.`orders_scrambled`", MYSQL_DATABASE));
+    ScramblingCoordinator scrambler =
+        new ScramblingCoordinator(dbmsConn, MYSQL_DATABASE, MYSQL_DATABASE, (long) 100);
+    ScrambleMeta meta1 =
+        scrambler.scramble(
+            MYSQL_DATABASE, "lineitem", MYSQL_DATABASE, "lineitem_scrambled", "uniform");
+    ScrambleMeta meta2 =
+        scrambler.scramble(MYSQL_DATABASE, "orders", MYSQL_DATABASE, "orders_scrambled", "uniform");
+     meta.addScrambleMeta(meta1);
+    meta.addScrambleMeta(meta2);
+    stmt.execute(String.format("drop schema if exists `%s`", options.getVerdictTempSchemaName()));
+    stmt.execute(
+        String.format("create schema if not exists `%s`", options.getVerdictTempSchemaName()));
   }
 
   @Test
@@ -81,10 +95,12 @@ public class VerdictDBSumNullValueTest {
         "select sum(l_extendedprice) from " +
             "%s.lineitem, %s.customer, %s.orders " +
             "where c_mktsegment='AAAAAA' and c_custkey=o_custkey and o_orderkey=l_orderkey",
-        TEST_SCHEMA, TEST_SCHEMA, TEST_SCHEMA);
+        MYSQL_DATABASE, MYSQL_DATABASE, MYSQL_DATABASE);
 
-    DbmsConnection dbmsconn = new SparkConnection(spark);
-    dbmsconn.setDefaultSchema(TEST_SCHEMA);
+    JdbcConnection jdbcConn = new JdbcConnection(conn, new MysqlSyntax());
+    jdbcConn.setOutputDebugMessage(true);
+    DbmsConnection dbmsconn = new CachedDbmsConnection(jdbcConn);
+    dbmsconn.setDefaultSchema(MYSQL_DATABASE);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
 
     coordinator.setScrambleMetaSet(meta);
