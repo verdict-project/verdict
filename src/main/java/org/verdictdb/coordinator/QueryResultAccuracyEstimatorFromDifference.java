@@ -216,12 +216,23 @@ public class QueryResultAccuracyEstimatorFromDifference extends QueryResultAccur
     return isValueConverged;
   }
 
+  /**
+   *
+   * @return True if and only query contains only count or count distinct and doesn't contain group by
+   */
   public boolean checkIfQueryCountOnly() {
+    if (!originalQuery.getGroupby().isEmpty()) {
+      return false;
+    }
     for (SelectItem sel:this.originalQuery.getSelectList()) {
       if (sel instanceof AliasedColumn) {
         UnnamedColumn col = ((AliasedColumn) sel).getColumn();
-        if (!(col instanceof ColumnOp && ((ColumnOp) col).getOpType().equals("count"))) {
+        if (!(col instanceof ColumnOp)) {
           return false;
+        } else {
+          if (!(((ColumnOp)col).isCountDistinctAggregate() || ((ColumnOp)col).isCountAggregate())) {
+            return false;
+          }
         }
       } else {
         return false;

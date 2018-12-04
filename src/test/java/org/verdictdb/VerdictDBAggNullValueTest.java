@@ -1,6 +1,7 @@
 package org.verdictdb;
 
 import org.apache.commons.lang3.RandomStringUtils;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verdictdb.commons.DatabaseConnectionHelpers;
@@ -23,10 +24,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
 /**
- * This test is to check NULL value is returned when no row is selected by sum().
+ * This test is to check NULL value is returned when no row is selected by sum() or avg().
  */
 
-public class VerdictDBSumNullValueTest {
+public class VerdictDBAggNullValueTest {
   // lineitem has 10 blocks, orders has 3 blocks;
   // lineitem join orders has 12 blocks
   static final int blockSize = 100;
@@ -88,10 +89,10 @@ public class VerdictDBSumNullValueTest {
   }
 
   @Test
-  public void test() throws VerdictDBException {
+  public void testAvg() throws VerdictDBException {
     // This query doesn't select any rows.
     String sql = String.format(
-        "select sum(l_extendedprice) from " +
+        "select avg(l_extendedprice) from " +
             "%s.lineitem, %s.customer, %s.orders " +
             "where c_mktsegment='AAAAAA' and c_custkey=o_custkey and o_orderkey=l_orderkey",
         MYSQL_DATABASE, MYSQL_DATABASE, MYSQL_DATABASE);
@@ -118,5 +119,106 @@ public class VerdictDBSumNullValueTest {
       throw e;
     }
 
+  }
+
+  @Test
+  public void testSum() throws VerdictDBException {
+    // This query doesn't select any rows.
+    String sql = String.format(
+        "select sum(l_extendedprice) from " +
+            "%s.lineitem, %s.customer, %s.orders " +
+            "where c_mktsegment='AAAAAA' and c_custkey=o_custkey and o_orderkey=l_orderkey",
+        MYSQL_DATABASE, MYSQL_DATABASE, MYSQL_DATABASE);
+
+    JdbcConnection jdbcConn = new JdbcConnection(conn, new MysqlSyntax());
+    jdbcConn.setOutputDebugMessage(true);
+    DbmsConnection dbmsconn = new CachedDbmsConnection(jdbcConn);
+    dbmsconn.setDefaultSchema(MYSQL_DATABASE);
+    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
+
+    coordinator.setScrambleMetaSet(meta);
+    ExecutionResultReader reader = coordinator.process(sql);
+    VerdictResultStream stream = new VerdictResultStreamFromExecutionResultReader(reader);
+    try {
+      while (stream.hasNext()) {
+        VerdictSingleResult rs = stream.next();
+        rs.next();
+        assertNull(rs.getValue(0));
+        assertEquals(0, rs.getDouble(0), 0);
+        assertEquals(0, rs.getInt(0));
+      }
+    } catch (RuntimeException e) {
+      throw e;
+    }
+  }
+
+  @Test
+  public void testSumAvg() throws VerdictDBException {
+    // This query doesn't select any rows.
+    String sql = String.format(
+        "select sum(l_extendedprice), avg(l_extendedprice) from " +
+            "%s.lineitem, %s.customer, %s.orders " +
+            "where c_mktsegment='AAAAAA' and c_custkey=o_custkey and o_orderkey=l_orderkey",
+        MYSQL_DATABASE, MYSQL_DATABASE, MYSQL_DATABASE);
+
+    JdbcConnection jdbcConn = new JdbcConnection(conn, new MysqlSyntax());
+    jdbcConn.setOutputDebugMessage(true);
+    DbmsConnection dbmsconn = new CachedDbmsConnection(jdbcConn);
+    dbmsconn.setDefaultSchema(MYSQL_DATABASE);
+    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
+
+    coordinator.setScrambleMetaSet(meta);
+    ExecutionResultReader reader = coordinator.process(sql);
+    VerdictResultStream stream = new VerdictResultStreamFromExecutionResultReader(reader);
+    try {
+      while (stream.hasNext()) {
+        VerdictSingleResult rs = stream.next();
+        rs.next();
+        assertNull(rs.getValue(0));
+        assertEquals(0, rs.getDouble(0), 0);
+        assertEquals(0, rs.getInt(0));
+        assertNull(rs.getValue(1));
+        assertEquals(0, rs.getDouble(1), 0);
+        assertEquals(0, rs.getInt(1));
+      }
+    } catch (RuntimeException e) {
+      throw e;
+    }
+  }
+
+  @Test
+  public void testCount() throws VerdictDBException {
+    // This query doesn't select any rows.
+    String sql = String.format(
+        "select count(l_orderkey) from " +
+            "%s.lineitem, %s.customer, %s.orders " +
+            "where c_mktsegment='AAAAAA' and c_custkey=o_custkey and o_orderkey=l_orderkey",
+        MYSQL_DATABASE, MYSQL_DATABASE, MYSQL_DATABASE);
+
+    JdbcConnection jdbcConn = new JdbcConnection(conn, new MysqlSyntax());
+    jdbcConn.setOutputDebugMessage(true);
+    DbmsConnection dbmsconn = new CachedDbmsConnection(jdbcConn);
+    dbmsconn.setDefaultSchema(MYSQL_DATABASE);
+    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
+
+    coordinator.setScrambleMetaSet(meta);
+    ExecutionResultReader reader = coordinator.process(sql);
+    VerdictResultStream stream = new VerdictResultStreamFromExecutionResultReader(reader);
+
+    try {
+      while (stream.hasNext()) {
+        VerdictSingleResult rs = stream.next();
+        rs.next();
+        assertEquals(0, rs.getDouble(0), 0);
+        assertEquals(0, rs.getInt(0));
+      }
+    } catch (RuntimeException e) {
+      throw e;
+    }
+  }
+
+  @AfterClass
+  public static void tearDown() throws SQLException {
+    stmt.execute(String.format("DROP SCHEMA IF EXISTS `%s`", MYSQL_DATABASE));
   }
 }
