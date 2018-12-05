@@ -8,9 +8,7 @@ import java.util.Set;
 
 import org.verdictdb.VerdictSingleResult;
 import org.verdictdb.commons.TypeCasting;
-import org.verdictdb.core.sqlobject.AsteriskColumn;
-import org.verdictdb.core.sqlobject.SelectItem;
-import org.verdictdb.core.sqlobject.SelectQuery;
+import org.verdictdb.core.sqlobject.*;
 
 /**
  * Estimates the difference based on the difference between two consequent result sets.
@@ -150,18 +148,18 @@ public class QueryResultAccuracyEstimatorFromDifference extends QueryResultAccur
       for (int i = 0; i < currentAnswer.getColumnCount(); i++) {
         if (nongroupingColumnIndxes.contains(i)) {
 //        if (currentAnswer.getMetaData().isAggregate.get(i)) {
-          aggregateValues.add(currentAnswer.getValue(i));
+          // if the aggregate value is null value, we just let it to be 0.
+          if (checkIfQueryCountOnly() && currentAnswer.getValue(i) == null) {
+            aggregateValues.add(0);
+          } else {
+            aggregateValues.add(currentAnswer.getValue(i));
+          }
         } else {
           groupValues.add(currentAnswer.getValue(i));
         }
       }
       newAggregatedMap.put(groupValues, aggregateValues);
     }
-// <<<<<<< HEAD
-// =======
-//     HashMap<List<Object>, List<Object>> prevAggregatedMap = aggregatedMap;
-//     aggregatedMap = newAggregatedMap;
-// >>>>>>> origin/joezhong-fix-312
     currentAnswer.rewind();
     
     
@@ -181,7 +179,6 @@ public class QueryResultAccuracyEstimatorFromDifference extends QueryResultAccur
 
     // Check 2: if aggregate values have converged.
     Boolean isValueConverged = true;
-// <<<<<<< HEAD
     for (List<Object> groupingValues : newAggregatedMap.keySet()) {
       if (isValueConverged && groupToNonGroupMap.containsKey(groupingValues)) {
         List<Object> prevAggregatedValues = groupToNonGroupMap.get(groupingValues);
@@ -190,7 +187,11 @@ public class QueryResultAccuracyEstimatorFromDifference extends QueryResultAccur
         for (int idx = 0; idx < aggregatedValues.size(); idx++) {
           Object prevObj = prevAggregatedValues.get(idx);
           Object newObj = aggregatedValues.get(idx);
-          
+          if (prevObj == null || newObj == null) {
+            // if Aggregate column is null, convergence test fails.
+            isValueConverged = false;
+            break;
+          }
           double newValue = TypeCasting.toDouble(newObj);
           double prevValue = TypeCasting.toDouble(prevObj);
           
@@ -198,25 +199,6 @@ public class QueryResultAccuracyEstimatorFromDifference extends QueryResultAccur
               || prevValue > newValue * (1 + valueError)) {
             log.debug(
                 String.format("Not accurate enough. Prev: %f, New: %f", prevValue, newValue));
-// =======
-//     for (List<Object> nonAggregatedValues : newAggregatedMap.keySet()) {
-//       if (isValueConverged && prevAggregatedMap.containsKey(nonAggregatedValues)) {
-//         List<Object> prevAggregatedValues = prevAggregatedMap.get(nonAggregatedValues);
-//         List<Object> aggregatedValues = aggregatedMap.get(nonAggregatedValues);
-//         for (Object v : aggregatedValues) {
-//           int idx = aggregatedValues.indexOf(v);
-//           double newValue, oldValue;
-//           // if v is Integer type or Double type, it is safe to case to double
-//           // Otherwise, if v is BigDecimal type, it needs to be convert to double
-//           if (v instanceof BigDecimal) {
-//             newValue = ((BigDecimal) v).doubleValue();
-//             oldValue = ((BigDecimal) prevAggregatedValues.get(idx)).doubleValue();
-//           } else {
-//             newValue = (double) v;
-//             oldValue = (double) prevAggregatedValues.get(idx);
-//           }
-//           if (newValue < oldValue * (1 - valueError) || newValue > oldValue * (1 + valueError)) {
-// >>>>>>> origin/joezhong-fix-312
             isValueConverged = false;
             break;
           }
@@ -232,5 +214,30 @@ public class QueryResultAccuracyEstimatorFromDifference extends QueryResultAccur
     groupToNonGroupMap = newAggregatedMap;
 
     return isValueConverged;
+  }
+
+  /**
+   *
+   * @return True if and only query contains only count or count distinct and doesn't contain group by
+   */
+  public boolean checkIfQueryCountOnly() {
+    if (!originalQuery.getGroupby().isEmpty()) {
+      return false;
+    }
+    for (SelectItem sel:this.originalQuery.getSelectList()) {
+      if (sel instanceof AliasedColumn) {
+        UnnamedColumn col = ((AliasedColumn) sel).getColumn();
+        if (!(col instanceof ColumnOp)) {
+          return false;
+        } else {
+          if (!(((ColumnOp)col).isCountDistinctAggregate() || ((ColumnOp)col).isCountAggregate())) {
+            return false;
+          }
+        }
+      } else {
+        return false;
+      }
+    }
+    return true;
   }
 }

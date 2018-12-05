@@ -419,7 +419,12 @@ public class ColumnOp implements UnnamedColumn, SelectItem {
     Set<String> ops = new HashSet<>(Arrays.asList("max"));
     return doesContainOpIn(ops);
   }
-  
+
+  public boolean isCountAggregate() {
+    Set<String> ops = new HashSet<>(Arrays.asList("count"));
+    return doesContainOpIn(ops);
+  }
+
   public boolean isCountDistinctAggregate() {
     Set<String> ops = new HashSet<>(Arrays.asList("countdistinct", "approx_distinct"));
     return doesContainOpIn(ops);
