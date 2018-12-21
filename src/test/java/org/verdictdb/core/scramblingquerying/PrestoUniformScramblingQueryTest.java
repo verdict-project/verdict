@@ -33,6 +33,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /** Created by Dong Young Yoon on 8/16/18. */
 @Category(PrestoTests.class)
@@ -130,6 +131,22 @@ public class PrestoUniformScramblingQueryTest {
             String.format(
                 "CREATE SCRAMBLE %s.orders_scramble FROM %s.orders", SCHEMA_NAME, SCHEMA_NAME));
     return conn;
+  }
+
+  @Test
+  public void checkExistingPartitionTest() throws SQLException {
+    String sql = String.format("DESCRIBE %s.orders_scramble", SCHEMA_NAME);
+    ResultSet rs = conn.createStatement().executeQuery(sql);
+    while (rs.next()) {
+      String column = rs.getString(1);
+      String extra = rs.getString(3);
+      if (column.equalsIgnoreCase("o_dummy")) {
+        assertTrue(extra.toLowerCase().contains("partition"));
+      }
+      if (column.equalsIgnoreCase("verdictdbblock")) {
+        assertTrue(extra.toLowerCase().contains("partition"));
+      }
+    }
   }
 
   @Test

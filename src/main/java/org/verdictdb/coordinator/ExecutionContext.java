@@ -16,13 +16,6 @@
 
 package org.verdictdb.coordinator;
 
-import static org.verdictdb.coordinator.VerdictSingleResultFromListData.createWithSingleColumn;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.VerdictResultStream;
@@ -32,6 +25,7 @@ import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.commons.VerdictOption;
 import org.verdictdb.connection.CachedDbmsConnection;
 import org.verdictdb.connection.DbmsConnection;
+import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.connection.MetaDataProvider;
 import org.verdictdb.connection.StaticMetaData;
 import org.verdictdb.core.resulthandler.ExecutionResultReader;
@@ -58,6 +52,13 @@ import org.verdictdb.sqlreader.NonValidatingSQLParser;
 import org.verdictdb.sqlreader.RelationGen;
 import org.verdictdb.sqlreader.RelationStandardizer;
 import org.verdictdb.sqlsyntax.SqlSyntax;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+
+import static org.verdictdb.coordinator.VerdictSingleResultFromListData.createWithSingleColumn;
 
 /**
  * Stores the context for a single query execution. Includes both scrambling query and select query.
@@ -176,7 +177,8 @@ public class ExecutionContext {
               conn,
               scrambleQuery.getNewSchema(),
               options.getVerdictTempSchemaName(),
-              scrambleQuery.getBlockSize());
+              scrambleQuery.getBlockSize(),
+              scrambleQuery.getExistingPartitionColumns());
 
       // store this metadata to our own metadata db.
       ScrambleMeta meta = scrambler.scramble(scrambleQuery);
@@ -422,6 +424,8 @@ public class ExecutionContext {
             String hashColumnName =
                 (ctx.hash_column == null) ? null : stripQuote(ctx.hash_column.getText());
 
+            List<String> existingPartitionColumns = retrievePartitionColumns(originalTable);
+
             CreateScrambleQuery query =
                 new CreateScrambleQuery(
                     scrambleTable.getSchemaName(),
@@ -431,9 +435,31 @@ public class ExecutionContext {
                     method,
                     percent,
                     blocksize,
-                    hashColumnName);
+                    hashColumnName,
+                    existingPartitionColumns);
             if (ctx.IF() != null) query.setIfNotExists(true);
             return query;
+          }
+
+          private List<String> retrievePartitionColumns(BaseTable originalTable) {
+            List<String> partitionColumn = new ArrayList<>();
+            String sql =
+                String.format(
+                    "DESCRIBE %s.%s", originalTable.getSchemaName(), originalTable.getTableName());
+            try {
+              DbmsQueryResult rs = conn.execute(sql);
+              while (rs.next()) {
+                String column = rs.getString(0);
+                String extra = rs.getString(2);
+                if (extra.toLowerCase().contains("partition")) {
+                  partitionColumn.add(column);
+                }
+              }
+            } catch (VerdictDBDbmsException e) {
+              e.printStackTrace();
+            } finally {
+              return partitionColumn;
+            }
           }
         };
 

@@ -1,17 +1,8 @@
 package org.verdictdb.commons;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.List;
-
+import com.google.common.base.Charsets;
+import com.google.common.base.Joiner;
+import com.google.common.io.Files;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.spark.sql.SparkSession;
 import org.postgresql.copy.CopyManager;
@@ -25,9 +16,17 @@ import org.verdictdb.sqlsyntax.PostgresqlSyntax;
 import org.verdictdb.sqlsyntax.PrestoHiveSyntax;
 import org.verdictdb.sqlsyntax.RedshiftSyntax;
 
-import com.google.common.base.Charsets;
-import com.google.common.base.Joiner;
-import com.google.common.io.Files;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 
 public class DatabaseConnectionHelpers {
 
@@ -710,7 +709,7 @@ public class DatabaseConnectionHelpers {
                 + "  \"o_clerk\"          CHAR(15) , "
                 + "  \"o_shippriority\"   INT , "
                 + "  \"o_comment\"        VARCHAR(79), "
-                + "  \"o_dummy\" varchar(10)) ",
+                + "  \"o_dummy\" varchar(10)) WITH (partitioned_by = ARRAY['o_dummy']) ",
             schema));
     stmt.execute(
         String.format(
@@ -1334,16 +1333,16 @@ public class DatabaseConnectionHelpers {
 
     return conn;
   }
-  
+
   public static Connection setupPrestoForDataTypeTest(
-      String connectionString, String user, String password, String schema, String table) 
-          throws SQLException, VerdictDBDbmsException{
+      String connectionString, String user, String password, String schema, String table)
+      throws SQLException, VerdictDBDbmsException {
     Connection conn = DriverManager.getConnection(connectionString, user, password);
     DbmsConnection dbmsConn = new JdbcConnection(conn, new PrestoHiveSyntax());
-    
+
     dbmsConn.execute(String.format("CREATE SCHEMA IF NOT EXISTS \"%s\"", schema));
     dbmsConn.execute(String.format("DROP TABLE IF EXISTS \"%s\".\"%s\"", schema, table));
-    
+
     dbmsConn.execute(
         String.format(
             "CREATE TABLE \"%s\".\"%s\" ("
@@ -1359,20 +1358,20 @@ public class DatabaseConnectionHelpers {
                 + "timestampCol        TIMESTAMP,"
                 + "charCol             CHAR(4),"
                 + "varcharCol          VARCHAR(4))",
-        schema, table));
-    
+            schema, table));
+
     List<String> insertDataList = new ArrayList<>();
-    insertDataList.add("cast(1 as tinyint)");   // tinyint
-    insertDataList.add("true");                 // boolean
-    insertDataList.add("cast(2 as smallint)");  // smallint
-    insertDataList.add("cast(3 as integer)");   // integer
-    insertDataList.add("cast(4 as bigint)");    // bigint
-    insertDataList.add("cast(5.0 as decimal(4,2))");  // decimal
-    insertDataList.add("cast(1.0 as real)");          // real
-    insertDataList.add("cast(1.0 as double)");        // double
+    insertDataList.add("cast(1 as tinyint)"); // tinyint
+    insertDataList.add("true"); // boolean
+    insertDataList.add("cast(2 as smallint)"); // smallint
+    insertDataList.add("cast(3 as integer)"); // integer
+    insertDataList.add("cast(4 as bigint)"); // bigint
+    insertDataList.add("cast(5.0 as decimal(4,2))"); // decimal
+    insertDataList.add("cast(1.0 as real)"); // real
+    insertDataList.add("cast(1.0 as double)"); // double
     insertDataList.add("cast('2018-12-31' as date)"); // date
     insertDataList.add("cast('2018-12-31 00:00:01' as timestamp)"); // timestamp
-    insertDataList.add("cast('ab' as char(4))");      // char
+    insertDataList.add("cast('ab' as char(4))"); // char
     insertDataList.add("cast('abcd' as varchar(4))"); // varchar
 
     dbmsConn.execute(
@@ -1404,7 +1403,7 @@ public class DatabaseConnectionHelpers {
 
   public static Connection setupImpalaForDataTypeTest(
       String connectionString, String user, String password, String schema, String table)
-          throws SQLException, VerdictDBDbmsException {
+      throws SQLException, VerdictDBDbmsException {
     Connection conn = DriverManager.getConnection(connectionString, user, password);
     DbmsConnection dbmsConn = new JdbcConnection(conn, new ImpalaSyntax());
 
