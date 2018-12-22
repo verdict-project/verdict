@@ -117,7 +117,7 @@ public class ScramblingNode extends CreateScrambledTableNode {
     String createIfNotExistsStr = options.get("createIfNotExists");
     String existingPartitionColumnStr = options.get("existingPartitionColumns");
     List<String> existingPartitionColumns =
-        (existingPartitionColumnStr.isEmpty())
+        (existingPartitionColumnStr == null || existingPartitionColumnStr.isEmpty())
             ? new ArrayList<String>()
             : Arrays.asList(existingPartitionColumnStr.split(","));
     boolean createIfNotExists = false;

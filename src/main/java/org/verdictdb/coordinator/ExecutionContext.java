@@ -25,7 +25,6 @@ import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.commons.VerdictOption;
 import org.verdictdb.connection.CachedDbmsConnection;
 import org.verdictdb.connection.DbmsConnection;
-import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.connection.MetaDataProvider;
 import org.verdictdb.connection.StaticMetaData;
 import org.verdictdb.core.resulthandler.ExecutionResultReader;
@@ -424,7 +423,14 @@ public class ExecutionContext {
             String hashColumnName =
                 (ctx.hash_column == null) ? null : stripQuote(ctx.hash_column.getText());
 
-            List<String> existingPartitionColumns = retrievePartitionColumns(originalTable);
+            List<String> existingPartitionColumns = null;
+            try {
+              existingPartitionColumns =
+                  conn.getPartitionColumns(
+                      originalTable.getSchemaName(), originalTable.getTableName());
+            } catch (VerdictDBDbmsException e) {
+              e.printStackTrace();
+            }
 
             CreateScrambleQuery query =
                 new CreateScrambleQuery(
@@ -439,27 +445,6 @@ public class ExecutionContext {
                     existingPartitionColumns);
             if (ctx.IF() != null) query.setIfNotExists(true);
             return query;
-          }
-
-          private List<String> retrievePartitionColumns(BaseTable originalTable) {
-            List<String> partitionColumn = new ArrayList<>();
-            String sql =
-                String.format(
-                    "DESCRIBE %s.%s", originalTable.getSchemaName(), originalTable.getTableName());
-            try {
-              DbmsQueryResult rs = conn.execute(sql);
-              while (rs.next()) {
-                String column = rs.getString(0);
-                String extra = rs.getString(2);
-                if (extra.toLowerCase().contains("partition")) {
-                  partitionColumn.add(column);
-                }
-              }
-            } catch (VerdictDBDbmsException e) {
-              e.printStackTrace();
-            } finally {
-              return partitionColumn;
-            }
           }
         };
 

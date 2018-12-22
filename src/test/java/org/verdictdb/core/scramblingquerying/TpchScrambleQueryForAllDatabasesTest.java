@@ -16,7 +16,19 @@
 
 package org.verdictdb.core.scramblingquerying;
 
-import static org.junit.Assert.fail;
+import com.google.common.base.Charsets;
+import com.google.common.io.Files;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.verdictdb.commons.DatabaseConnectionHelpers;
+import org.verdictdb.commons.VerdictOption;
+import org.verdictdb.exception.VerdictDBDbmsException;
+import org.verdictdb.exception.VerdictDBException;
+import org.verdictdb.jdbc41.VerdictConnection;
 
 import java.io.File;
 import java.io.IOException;
@@ -30,20 +42,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.verdictdb.commons.DatabaseConnectionHelpers;
-import org.verdictdb.commons.VerdictOption;
-import org.verdictdb.exception.VerdictDBDbmsException;
-import org.verdictdb.exception.VerdictDBException;
-import org.verdictdb.jdbc41.VerdictConnection;
-
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
+import static org.junit.Assert.fail;
 
 /** Created by Dong Young Yoon on 7/18/18. */
 @RunWith(Parameterized.class)
@@ -75,7 +74,7 @@ public class TpchScrambleQueryForAllDatabasesTest {
   // TODO: Add support for all four databases
   //  private static final String[] targetDatabases = {"mysql", "impala", "redshift", "postgresql"};
   private static final String[] targetDatabases = {"mysql", "impala", "redshift"};
-//  private static final String[] targetDatabases = {"mysql"};
+  //  private static final String[] targetDatabases = {"mysql"};
 
   public TpchScrambleQueryForAllDatabasesTest(String database, String query) {
     this.database = database;
@@ -184,7 +183,7 @@ public class TpchScrambleQueryForAllDatabasesTest {
           queryCount = TPCH_QUERY_COUNT;
           break;
       }
-      
+
       // query 4, 13, 16, 21 contains count distinct
       for (int query = 1; query <= queryCount; ++query) {
         if (query != 13 && query != 21) {
@@ -203,8 +202,8 @@ public class TpchScrambleQueryForAllDatabasesTest {
       }
 
       // Uncomment below lines to test a specific query
-//      params.clear();
-//      params.add(new Object[] {database, "14"});
+      //      params.clear();
+      //      params.add(new Object[] {database, "14"});
     }
     return params;
   }
@@ -238,7 +237,7 @@ public class TpchScrambleQueryForAllDatabasesTest {
     return conn;
   }
 
-  private static Connection setupImpala() throws SQLException, VerdictDBDbmsException {
+  private static Connection setupImpala() throws SQLException, VerdictDBDbmsException, IOException {
     String connectionString = String.format("jdbc:impala://%s", IMPALA_HOST);
     String verdictConnectionString =
         String.format(

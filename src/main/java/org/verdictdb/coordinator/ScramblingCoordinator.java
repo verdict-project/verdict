@@ -128,7 +128,9 @@ public class ScramblingCoordinator {
     if (blockSize != null) {
       options.put("minScrambleTableBlockSize", String.valueOf(blockSize));
     }
-    options.put("existingPartitionColumns", Joiner.on(",").join(existingPartitionColumns));
+    if (existingPartitionColumns != null) {
+      options.put("existingPartitionColumns", Joiner.on(",").join(existingPartitionColumns));
+    }
   }
 
   public ScrambleMeta scramble(String originalSchema, String originalTable)
