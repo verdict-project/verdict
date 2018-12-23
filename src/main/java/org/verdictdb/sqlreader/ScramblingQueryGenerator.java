@@ -20,8 +20,6 @@ import org.verdictdb.core.sqlobject.CreateScrambleQuery;
 import org.verdictdb.parser.VerdictSQLParser.Create_scramble_statementContext;
 import org.verdictdb.parser.VerdictSQLParser.Table_nameContext;
 
-import java.util.ArrayList;
-
 public class ScramblingQueryGenerator {
 
   public CreateScrambleQuery visit(Create_scramble_statementContext create_scramble_statement) {
@@ -47,8 +45,7 @@ public class ScramblingQueryGenerator {
             method,
             size,
             blocksize,
-            hashColumnName,
-            new ArrayList<String>());
+            hashColumnName);
 
     return query;
   }

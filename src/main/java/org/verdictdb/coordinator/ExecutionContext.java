@@ -168,8 +168,18 @@ public class ExecutionContext {
 
     if (queryType.equals(QueryType.scrambling)) {
       log.debug("Query type: scrambling");
+
       CreateScrambleQuery scrambleQuery = generateScrambleQuery(query);
-      scrambleQuery.checkIfSupported(); // checks the validity; throws an exception if not.
+
+      List<String> existingPartitionColumns =
+          conn.getPartitionColumns(
+              scrambleQuery.getOriginalSchema(), scrambleQuery.getOriginalTable());
+
+      // add existing partition columns
+      scrambleQuery.setExistingPartitionColumns(existingPartitionColumns);
+
+      // checks the validity; throws an exception if not.
+      scrambleQuery.checkIfSupported(conn.getSyntax());
 
       ScramblingCoordinator scrambler =
           new ScramblingCoordinator(
@@ -423,15 +433,6 @@ public class ExecutionContext {
             String hashColumnName =
                 (ctx.hash_column == null) ? null : stripQuote(ctx.hash_column.getText());
 
-            List<String> existingPartitionColumns = null;
-            try {
-              existingPartitionColumns =
-                  conn.getPartitionColumns(
-                      originalTable.getSchemaName(), originalTable.getTableName());
-            } catch (VerdictDBDbmsException e) {
-              e.printStackTrace();
-            }
-
             CreateScrambleQuery query =
                 new CreateScrambleQuery(
                     scrambleTable.getSchemaName(),
@@ -441,8 +442,7 @@ public class ExecutionContext {
                     method,
                     percent,
                     blocksize,
-                    hashColumnName,
-                    existingPartitionColumns);
+                    hashColumnName);
             if (ctx.IF() != null) query.setIfNotExists(true);
             return query;
           }

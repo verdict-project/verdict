@@ -17,6 +17,9 @@
 package org.verdictdb.core.sqlobject;
 
 import org.verdictdb.exception.VerdictDBValueException;
+import org.verdictdb.sqlsyntax.MysqlSyntax;
+import org.verdictdb.sqlsyntax.PostgresqlSyntax;
+import org.verdictdb.sqlsyntax.SqlSyntax;
 
 import java.util.List;
 
@@ -64,8 +67,7 @@ public class CreateScrambleQuery extends CreateTableQuery {
       String method,
       double size,
       long blocksize,
-      String hashColumnName,
-      List<String> existingPartitionColumns) {
+      String hashColumnName) {
     super();
     this.newSchema = newSchema;
     this.newTable = newTable;
@@ -75,6 +77,9 @@ public class CreateScrambleQuery extends CreateTableQuery {
     this.size = size;
     this.blocksize = blocksize;
     this.hashColumnName = hashColumnName;
+  }
+
+  public void setExistingPartitionColumns(List<String> existingPartitionColumns) {
     this.existingPartitionColumns = existingPartitionColumns;
   }
 
@@ -82,8 +87,9 @@ public class CreateScrambleQuery extends CreateTableQuery {
    * Checks if the field values are proper.
    *
    * @return True if this query is logically valid.
+   * @param syntax
    */
-  public void checkIfSupported() throws VerdictDBValueException {
+  public void checkIfSupported(SqlSyntax syntax) throws VerdictDBValueException {
     if (method.equalsIgnoreCase("uniform")
         || method.equalsIgnoreCase("hash")
         || method.equalsIgnoreCase("FastConverge")) {
@@ -112,6 +118,14 @@ public class CreateScrambleQuery extends CreateTableQuery {
           String.format(
               "The scramble block size is set to 0."
                   + "A scramble block size should be greater than zero."));
+    }
+
+    if ((syntax instanceof PostgresqlSyntax || syntax instanceof MysqlSyntax)
+        && existingPartitionColumns != null
+        && !existingPartitionColumns.isEmpty()) {
+      throw new VerdictDBValueException(
+          "Creating a scramble for already partitioned tables in "
+              + "PostgreSQL or MySQL is not supported.");
     }
   }
 
