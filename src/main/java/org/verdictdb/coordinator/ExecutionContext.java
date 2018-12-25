@@ -464,7 +464,7 @@ public class ExecutionContext {
             RelationGen g = new RelationGen();
             CondGen cond = new CondGen();
             BaseTable scrambleTable = (BaseTable) g.visit(ctx.scrambled_table);
-            UnnamedColumn where = (UnnamedColumn) cond.visit(ctx.where);
+            UnnamedColumn where = cond.visit(ctx.where);
 
             scrambleQuery.setNewSchema(scrambleTable.getSchemaName());
             scrambleQuery.setNewTable(scrambleTable.getTableName());
@@ -498,6 +498,8 @@ public class ExecutionContext {
                     : Long.parseLong(ctx.blocksize.getText());
             String hashColumnName =
                 (ctx.hash_column == null) ? null : stripQuote(ctx.hash_column.getText());
+            CondGen cond = new CondGen();
+            UnnamedColumn where = (ctx.where == null ? null : cond.visit(ctx.where));
 
             CreateScrambleQuery query =
                 new CreateScrambleQuery(
@@ -509,7 +511,7 @@ public class ExecutionContext {
                     percent,
                     blocksize,
                     hashColumnName,
-                    null);
+                    where);
             if (ctx.IF() != null) query.setIfNotExists(true);
             return query;
           }

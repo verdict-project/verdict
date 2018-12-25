@@ -16,8 +16,16 @@
 
 package org.verdictdb.core.scramblingquerying;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.verdictdb.commons.DatabaseConnectionHelpers;
+import org.verdictdb.commons.VerdictOption;
+import org.verdictdb.connection.JdbcConnection;
+import org.verdictdb.core.scrambling.ScrambleMeta;
+import org.verdictdb.exception.VerdictDBDbmsException;
+import org.verdictdb.metastore.ScrambleMetaStore;
 
 import java.io.IOException;
 import java.sql.Connection;
@@ -30,16 +38,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.verdictdb.commons.DatabaseConnectionHelpers;
-import org.verdictdb.commons.VerdictOption;
-import org.verdictdb.connection.JdbcConnection;
-import org.verdictdb.core.scrambling.ScrambleMeta;
-import org.verdictdb.exception.VerdictDBDbmsException;
-import org.verdictdb.metastore.ScrambleMetaStore;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /** Created by Dong Young Yoon on 8/16/18. */
 public class RedshiftScrambleManipulationTest {
@@ -352,5 +352,43 @@ public class RedshiftScrambleManipulationTest {
         assertEquals("DELETED", rs.getString(6));
       }
     }
+  }
+
+  @Test
+  public void PartialCreateAndInsertScrambleTest() throws SQLException {
+
+    // drop all scrambled tables first.
+    String sql = String.format("DROP ALL SCRAMBLE %s.orders", SCHEMA_NAME);
+    vc.createStatement().execute(sql);
+
+    vc.createStatement()
+        .execute(
+            String.format(
+                "CREATE SCRAMBLE %s.orders_scramble11 FROM %s.orders WHERE o_totalprice < 10000",
+                SCHEMA_NAME, SCHEMA_NAME));
+
+    ResultSet rs =
+        conn.createStatement()
+            .executeQuery(String.format("SELECT COUNT(*) FROM %s.orders_scramble11", SCHEMA_NAME));
+
+    int rowBefore = 0, rowAfter = 0;
+
+    if (rs.next()) {
+      rowBefore = rs.getInt(1);
+    }
+    assertTrue(rowBefore < 258);
+
+    vc.createStatement()
+        .execute(
+            String.format(
+                "INSERT SCRAMBLE %s.orders_scramble11 WHERE o_totalprice >= 10000", SCHEMA_NAME));
+    rs =
+        conn.createStatement()
+            .executeQuery(String.format("SELECT COUNT(*) FROM %s.orders_scramble11", SCHEMA_NAME));
+
+    if (rs.next()) {
+      rowAfter = rs.getInt(1);
+    }
+    assertEquals(258, rowAfter);
   }
 }

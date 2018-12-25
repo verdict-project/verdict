@@ -40,6 +40,7 @@ import org.verdictdb.core.sqlobject.DropTableQuery;
 import org.verdictdb.core.sqlobject.InsertIntoSelectQuery;
 import org.verdictdb.core.sqlobject.SelectItem;
 import org.verdictdb.core.sqlobject.SelectQuery;
+import org.verdictdb.core.sqlobject.UnnamedColumn;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBValueException;
 import org.verdictdb.sqlwriter.QueryToSql;
@@ -202,6 +203,7 @@ public class ScramblingCoordinator {
             methodName,
             primaryColumn,
             1.0,
+            null,
             customOptions);
     return meta;
   }
@@ -304,6 +306,7 @@ public class ScramblingCoordinator {
             methodName,
             primaryColumn,
             relativeSize,
+            query.getWhere(),
             customOptions);
 
     return meta;
@@ -327,6 +330,7 @@ public class ScramblingCoordinator {
             methodName,
             primaryColumn,
             1.0,
+            null,
             customOptions);
     return meta;
   }
@@ -339,6 +343,7 @@ public class ScramblingCoordinator {
    * @param methodName Either 'uniform' or 'hash'
    * @param primaryColumn Passes hashcolumn for hash sampling.
    * @param relativeSize The ratio of a scramble in comparison to the original table.
+   * @param where condition to be used for creating a scramble
    * @param customOptions
    * @return
    * @throws VerdictDBException
@@ -352,6 +357,7 @@ public class ScramblingCoordinator {
       String methodName,
       String primaryColumn,
       double relativeSize,
+      UnnamedColumn where,
       Map<String, String> customOptions)
       throws VerdictDBException {
 
@@ -420,7 +426,7 @@ public class ScramblingCoordinator {
             originalSchema,
             originalTable,
             scramblingMethod,
-            null,
+            where,
             effectiveOptions);
     ExecutablePlanRunner.runTillEnd(conn, plan);
     log.info(String.format("Finished creating %s.%s", newSchema, newTable));
