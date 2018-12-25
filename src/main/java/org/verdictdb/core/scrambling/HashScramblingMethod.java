@@ -1,10 +1,5 @@
 package org.verdictdb.core.scrambling;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-
 import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.core.querying.ExecutableNodeBase;
@@ -15,8 +10,17 @@ import org.verdictdb.core.sqlobject.ColumnOp;
 import org.verdictdb.core.sqlobject.ConstantColumn;
 import org.verdictdb.core.sqlobject.UnnamedColumn;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
 public class HashScramblingMethod extends ScramblingMethodBase {
-  
+
+  protected String type = "hash";
+
+  private static final long serialVersionUID = 454580102637886507L;
+
   private final String MAIN_TABLE_SOURCE_ALIAS = "t";
 
   private int totalNumberOfblocks = -1;
@@ -24,8 +28,12 @@ public class HashScramblingMethod extends ScramblingMethodBase {
   private int actualNumberOfBlocks = -1;
 
   private static final long EFFECTIVE_TABLE_SIZE_THRESHOLD = 100000;
-  
+
   private String hashColumnName;
+
+  public HashScramblingMethod() {
+    super(0, 0, 0);
+  }
 
   public HashScramblingMethod(
       long blockSize, int maxBlockCount, double relativeSize, String hashColumnName) {
@@ -74,7 +82,7 @@ public class HashScramblingMethod extends ScramblingMethodBase {
       Map<String, Object> metaData, int tier) {
     return calculateBlockCountsAndCumulativeProbabilityDistForTier(metaData, tier);
   }
-  
+
   private List<Double> calculateBlockCountsAndCumulativeProbabilityDistForTier(
       Map<String, Object> metaData, int tier) {
 
@@ -98,12 +106,12 @@ public class HashScramblingMethod extends ScramblingMethodBase {
     // This guards the case when table is empty.
     if (actualNumberOfBlocks == 0) actualNumberOfBlocks = 1;
 
-    blockSize = (long) Math.ceil(effectiveRowCount / (double) actualNumberOfBlocks);
+    long blockSizeToUse = (long) Math.ceil(effectiveRowCount / (double) actualNumberOfBlocks);
 
-    if (blockSize == 0) blockSize = 1; // just a sanity check
-    
+    if (blockSizeToUse == 0) blockSizeToUse = 1; // just a sanity check
+
     // including the ones that will be thrown away due to relative size < 1.0
-    totalNumberOfblocks = (int) Math.ceil(tableSize / (double) blockSize);    
+    totalNumberOfblocks = (int) Math.ceil(tableSize / (double) blockSizeToUse);
 
     List<Double> prob = new ArrayList<>();
     for (int i = 0; i < actualNumberOfBlocks; i++) {
@@ -129,7 +137,7 @@ public class HashScramblingMethod extends ScramblingMethodBase {
 
   @Override
   public UnnamedColumn getBlockExprForTier(int tier, Map<String, Object> metaData) {
-    
+
     calculateBlockCountsAndCumulativeProbabilityDistForTier(metaData, tier);
     BaseColumn hashColumn = new BaseColumn(MAIN_TABLE_SOURCE_ALIAS, hashColumnName);
 
@@ -137,11 +145,9 @@ public class HashScramblingMethod extends ScramblingMethodBase {
         ColumnOp.cast(
             ColumnOp.floor(
                 ColumnOp.multiply(
-                    ColumnOp.hash(hashColumn), 
-                    ConstantColumn.valueOf(totalNumberOfblocks))),
+                    ColumnOp.hash(hashColumn), ConstantColumn.valueOf(totalNumberOfblocks))),
             ConstantColumn.valueOf("int"));
 
     return blockForTierExpr;
   }
-
 }

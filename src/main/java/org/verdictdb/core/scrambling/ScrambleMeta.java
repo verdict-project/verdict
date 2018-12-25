@@ -16,9 +16,11 @@
 
 package org.verdictdb.core.scrambling;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -50,7 +52,8 @@ import java.util.Map.Entry;
   "tierColumn",
   "numberOfTiers",
   "method",
-  "hashcolumn"
+  "hashcolumn",
+  "scramblingMethod"
 })
 public class ScrambleMeta implements Serializable {
 
@@ -78,6 +81,9 @@ public class ScrambleMeta implements Serializable {
 
   // scramble method used
   String method;
+
+  // actual scrambling method obj
+  ScramblingMethodBase scramblingMethod;
 
   // the column on which a hash function is used (only applicable to hash sampling).
   String hashColumn;
@@ -144,6 +150,35 @@ public class ScrambleMeta implements Serializable {
       String method,
       String hashColumn)
       throws VerdictDBValueException {
+    this(
+        scrambleSchemaName,
+        scrambleTableName,
+        originalSchemaName,
+        originalTableName,
+        blockColumn,
+        blockCount,
+        tierColumn,
+        tierCount,
+        cumulativeMassDistributionPerTier);
+
+    this.method = method;
+    this.hashColumn = hashColumn;
+  }
+
+  public ScrambleMeta(
+      String scrambleSchemaName,
+      String scrambleTableName,
+      String originalSchemaName,
+      String originalTableName,
+      String blockColumn,
+      int blockCount,
+      String tierColumn,
+      int tierCount,
+      Map<Integer, List<Double>> cumulativeMassDistributionPerTier,
+      String method,
+      String hashColumn,
+      ScramblingMethodBase scramblingMethod)
+      throws VerdictDBValueException {
 
     this(
         scrambleSchemaName,
@@ -158,6 +193,7 @@ public class ScrambleMeta implements Serializable {
 
     this.method = method;
     this.hashColumn = hashColumn;
+    this.scramblingMethod = scramblingMethod;
   }
 
   public String getAggregationBlockColumn() {
@@ -277,8 +313,17 @@ public class ScrambleMeta implements Serializable {
     this.tierColumn = tierColumn;
   }
 
+  public ScramblingMethod getScramblingMethod() {
+    return scramblingMethod;
+  }
+
+  public void setScramblingMethod(ScramblingMethodBase scramblingMethod) {
+    this.scramblingMethod = scramblingMethod;
+  }
+
   public String toJsonString() {
     ObjectMapper objectMapper = new ObjectMapper();
+    objectMapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
     String jsonString;
     try {
       jsonString = objectMapper.writeValueAsString(this);
@@ -291,6 +336,7 @@ public class ScrambleMeta implements Serializable {
 
   public static ScrambleMeta fromJsonString(String jsonString) {
     ObjectMapper objectMapper = new ObjectMapper();
+    objectMapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
     objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
     try {
       ScrambleMeta meta = objectMapper.readValue(jsonString, ScrambleMeta.class);

@@ -16,10 +16,11 @@
 
 package org.verdictdb.core.scrambling;
 
+import org.verdictdb.core.querying.ExecutableNodeBase;
+import org.verdictdb.core.sqlobject.UnnamedColumn;
+
 import java.util.List;
 import java.util.Map;
-
-import org.verdictdb.core.querying.ExecutableNodeBase;
 
 /**
  * Execution plan for scrambling.
@@ -52,6 +53,16 @@ public class ScramblingPlan extends SimpleTreePlan {
 
   static final String PRIMARYKEY_METADATA_KEY = "scramblingPlan:primarykeyMetaData";
 
+  public static ScramblingPlan create(
+      String newSchemaName,
+      String newTableName,
+      String oldSchemaName,
+      String oldTableName,
+      ScramblingMethod method,
+      Map<String, String> options) {
+    return create(newSchemaName, newTableName, oldSchemaName, oldTableName, method, null, options);
+  }
+
   /**
    * Limitations: <br>
    * Currently, this class only works for the databases that support "CREATE TABLE ... PARTITION BY
@@ -72,6 +83,7 @@ public class ScramblingPlan extends SimpleTreePlan {
       String oldSchemaName,
       String oldTableName,
       ScramblingMethod method,
+      UnnamedColumn predicate,
       Map<String, String> options) {
 
     // create a node for step 1 - column meta data retrieval
@@ -82,13 +94,18 @@ public class ScramblingPlan extends SimpleTreePlan {
     ExecutableNodeBase partitionMetaDataNode =
         PartitionMetadataRetrievalNode.create(oldSchemaName, oldTableName, PARTITION_METADATA_KEY);
     ExecutableNodeBase primaryKeyMetaDataNode =
-        PrimaryKeyMetaDataRetrievalNode.create(oldSchemaName, oldTableName, PRIMARYKEY_METADATA_KEY);
+        PrimaryKeyMetaDataRetrievalNode.create(
+            oldSchemaName, oldTableName, PRIMARYKEY_METADATA_KEY);
 
     // create a node for step 2 - statistics retrieval
     // since uniform scrambling does not return any nodes, the step 3 will be run immediately.
     List<ExecutableNodeBase> statsNodes =
         method.getStatisticsNode(
-            oldSchemaName, oldTableName, COLUMN_METADATA_KEY, PARTITION_METADATA_KEY, PRIMARYKEY_METADATA_KEY);
+            oldSchemaName,
+            oldTableName,
+            COLUMN_METADATA_KEY,
+            PARTITION_METADATA_KEY,
+            PRIMARYKEY_METADATA_KEY);
     for (ExecutableNodeBase n : statsNodes) {
       n.subscribeTo(columnMetaDataNode, 100);
       n.subscribeTo(partitionMetaDataNode, 101);
@@ -98,7 +115,7 @@ public class ScramblingPlan extends SimpleTreePlan {
     // create a node for step 3 - scrambling
     ExecutableNodeBase scramblingNode =
         ScramblingNode.create(
-            newSchemaName, newTableName, oldSchemaName, oldTableName, method, options);
+            newSchemaName, newTableName, oldSchemaName, oldTableName, method, predicate, options);
 
     scramblingNode.subscribeTo(columnMetaDataNode, 100); // for total table size
     scramblingNode.subscribeTo(primaryKeyMetaDataNode, 101);

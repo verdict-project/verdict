@@ -16,13 +16,7 @@
 
 package org.verdictdb.core.scrambling;
 
-import static org.verdictdb.core.scrambling.ScramblingNode.computeConditionalProbabilityDistribution;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-
+import com.google.common.base.Optional;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.commons.DataTypeConverter;
 import org.verdictdb.commons.VerdictDBLogger;
@@ -50,7 +44,12 @@ import org.verdictdb.core.sqlobject.UnnamedColumn;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBValueException;
 
-import com.google.common.base.Optional;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
+import static org.verdictdb.core.scrambling.ScramblingNode.computeConditionalProbabilityDistribution;
 
 /**
  * Policy: 1. Tier 0: tuples containing outlier values. 2. Tier 1: tuples containing rare groups 3.
@@ -69,6 +68,10 @@ import com.google.common.base.Optional;
  * @author Yongjoo Park
  */
 public class FastConvergeScramblingMethod extends ScramblingMethodBase {
+
+  protected String type = "fastconverge";
+
+  private static final long serialVersionUID = 3640705615176207659L;
 
   double p0 = 0.5; // max portion for Tier 0; should be configured dynamically in the future
 
@@ -102,15 +105,21 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
 
   private static final int DEFAULT_MAX_BLOCK_COUNT = 100;
 
+  public FastConvergeScramblingMethod() {
+    super(0, 0, 0);
+  }
+
   public FastConvergeScramblingMethod(long blockSize, String scratchpadSchemaName) {
     super(blockSize, DEFAULT_MAX_BLOCK_COUNT, 1.0);
     this.scratchpadSchemaName = scratchpadSchemaName;
+    this.type = "fastconverge";
   }
 
   public FastConvergeScramblingMethod(
       long blockSize, String scratchpadSchemaName, String primaryColumnName) {
     this(blockSize, scratchpadSchemaName);
     this.primaryColumnName = Optional.of(primaryColumnName);
+    this.type = "fastconverge";
   }
 
   /**

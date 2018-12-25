@@ -16,13 +16,29 @@
 
 package org.verdictdb.core.scrambling;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public abstract class ScramblingMethodBase implements ScramblingMethod {
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
+@JsonSubTypes({
+  @JsonSubTypes.Type(value = UniformScramblingMethod.class, name = "uniform"),
+  @JsonSubTypes.Type(value = FastConvergeScramblingMethod.class, name = "fastconverge"),
+  @JsonSubTypes.Type(value = HashScramblingMethod.class, name = "hash")
+})
+public abstract class ScramblingMethodBase implements ScramblingMethod, Serializable {
+
+  private static final long serialVersionUID = 8767179573855372459L;
 
   protected long blockSize;
+
+  protected String type = "base";
 
   protected final int maxBlockCount;
 
@@ -47,5 +63,14 @@ public abstract class ScramblingMethodBase implements ScramblingMethod {
   @Override
   public List<Double> getStoredCumulativeProbabilityDistributionForTier(int tier) {
     return storedProbDist.get(tier);
+  }
+
+  public int getMaxBlockCount() {
+    return maxBlockCount;
+  }
+
+  @Override
+  public double getRelativeSize() {
+    return relativeSize;
   }
 }

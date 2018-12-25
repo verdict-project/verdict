@@ -16,13 +16,17 @@
 
 package org.verdictdb.sqlwriter;
 
-import java.util.List;
-
+import com.google.common.base.Joiner;
 import org.verdictdb.commons.VerdictTimestamp;
+import org.verdictdb.core.sqlobject.InsertIntoSelectQuery;
 import org.verdictdb.core.sqlobject.InsertValuesQuery;
+import org.verdictdb.core.sqlobject.SelectItem;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sqlsyntax.PrestoSyntax;
 import org.verdictdb.sqlsyntax.SqlSyntax;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class InsertQueryToSql {
 
@@ -30,6 +34,38 @@ public class InsertQueryToSql {
 
   public InsertQueryToSql(SqlSyntax syntax) {
     this.syntax = syntax;
+  }
+
+  public String toSql(InsertIntoSelectQuery query) throws VerdictDBException {
+    StringBuilder sql = new StringBuilder();
+    String schemaName = query.getSchemaName();
+    String tableName = query.getTableName();
+
+    // table
+    sql.append("insert into ");
+    sql.append(quoteName(schemaName));
+    sql.append(".");
+    sql.append(quoteName(tableName));
+
+    SelectQueryToSql selectWriter = new SelectQueryToSql(syntax);
+    List<String> selectItemStrList = new ArrayList<>();
+    for (SelectItem item : query.getSelectQuery().getSelectList()) {
+      selectItemStrList.add(selectWriter.selectItemToSqlPart(item));
+    }
+
+    if (!(selectItemStrList.size() == 1 && selectItemStrList.get(0).equals("*"))) {
+      sql.append("(");
+      sql.append(Joiner.on(",").join(selectItemStrList));
+      sql.append(")");
+    }
+
+    sql.append(" ");
+
+    // select
+    String selectSql = selectWriter.toSql(query.getSelectQuery());
+    sql.append(selectSql);
+
+    return sql.toString();
   }
 
   public String toSql(InsertValuesQuery query) throws VerdictDBException {

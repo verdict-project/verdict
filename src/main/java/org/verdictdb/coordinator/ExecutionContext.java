@@ -47,6 +47,7 @@ import org.verdictdb.metastore.VerdictMetaStore;
 import org.verdictdb.parser.VerdictSQLParser;
 import org.verdictdb.parser.VerdictSQLParser.IdContext;
 import org.verdictdb.parser.VerdictSQLParserBaseVisitor;
+import org.verdictdb.sqlreader.CondGen;
 import org.verdictdb.sqlreader.NonValidatingSQLParser;
 import org.verdictdb.sqlreader.RelationGen;
 import org.verdictdb.sqlreader.RelationStandardizer;
@@ -83,6 +84,7 @@ public class ExecutionContext {
   public enum QueryType {
     select,
     scrambling,
+    insert_scramble,
     drop_scramble,
     drop_all_scrambles,
     set_default_schema,
@@ -198,6 +200,44 @@ public class ExecutionContext {
       refreshScrambleMetaStore();
       return null;
 
+    } else if (queryType.equals(QueryType.insert_scramble)) {
+      log.debug("Query type: insert_scramble");
+
+      ScrambleMetaStore metaStore = new ScrambleMetaStore(conn, options);
+      CreateScrambleQuery scrambleQuery = generateInsertScrambleQuery(query, metaStore);
+
+      ScrambleMeta existingScrambleMeta =
+          metaStore.retrieveExistingScramble(
+              scrambleQuery.getNewSchema(), scrambleQuery.getNewTable());
+
+      if (existingScrambleMeta == null) {
+        throw new VerdictDBException(
+            String.format(
+                "A scramble '%s.%s' does not exist",
+                scrambleQuery.getNewSchema(), scrambleQuery.getNewTable()));
+      }
+
+      if (existingScrambleMeta.getScramblingMethod() == null) {
+        throw new VerdictDBException(
+            String.format(
+                "Scrambling method information on the scramble '%s.%s' does not exist",
+                scrambleQuery.getNewSchema(), scrambleQuery.getNewTable()));
+      }
+
+      // set scrambleQuery for appending data
+      scrambleQuery.setOriginalSchema(existingScrambleMeta.getOriginalSchemaName());
+      scrambleQuery.setOriginalTable(existingScrambleMeta.getOriginalTableName());
+      scrambleQuery.setMethod(existingScrambleMeta.getMethod());
+      scrambleQuery.setHashColumnName(existingScrambleMeta.getHashColumn());
+      scrambleQuery.setScramblingMethod(existingScrambleMeta.getScramblingMethod());
+
+      ScramblingCoordinator scrambler =
+          new ScramblingCoordinator(
+              conn, scrambleQuery.getNewSchema(), options.getVerdictTempSchemaName());
+
+      // append new scramble
+      scrambler.appendScramble(scrambleQuery);
+      return null;
     } else if (queryType.equals(QueryType.drop_scramble)) {
       log.debug("Query type: drop_scramble");
 
@@ -412,6 +452,32 @@ public class ExecutionContext {
     return expr.replace("\"", "").replace("`", "").replace("'", "");
   }
 
+  private CreateScrambleQuery generateInsertScrambleQuery(String query, ScrambleMetaStore store) {
+    VerdictSQLParser parser = NonValidatingSQLParser.parserOf(query);
+
+    VerdictSQLParserBaseVisitor<CreateScrambleQuery> visitor =
+        new VerdictSQLParserBaseVisitor<CreateScrambleQuery>() {
+          @Override
+          public CreateScrambleQuery visitInsert_scramble_statement(
+              VerdictSQLParser.Insert_scramble_statementContext ctx) {
+            CreateScrambleQuery scrambleQuery = new CreateScrambleQuery();
+            RelationGen g = new RelationGen();
+            CondGen cond = new CondGen();
+            BaseTable scrambleTable = (BaseTable) g.visit(ctx.scrambled_table);
+            UnnamedColumn where = (UnnamedColumn) cond.visit(ctx.where);
+
+            scrambleQuery.setNewSchema(scrambleTable.getSchemaName());
+            scrambleQuery.setNewTable(scrambleTable.getTableName());
+            scrambleQuery.setWhere(where);
+
+            return scrambleQuery;
+          }
+        };
+
+    CreateScrambleQuery scrambleQuery = visitor.visit(parser.insert_scramble_statement());
+    return scrambleQuery;
+  }
+
   private CreateScrambleQuery generateScrambleQuery(String query) {
 
     VerdictSQLParser parser = NonValidatingSQLParser.parserOf(query);
@@ -442,7 +508,8 @@ public class ExecutionContext {
                     method,
                     percent,
                     blocksize,
-                    hashColumnName);
+                    hashColumnName,
+                    null);
             if (ctx.IF() != null) query.setIfNotExists(true);
             return query;
           }
@@ -633,6 +700,12 @@ public class ExecutionContext {
           @Override
           public QueryType visitSelect_statement(VerdictSQLParser.Select_statementContext ctx) {
             return QueryType.select;
+          }
+
+          @Override
+          public QueryType visitInsert_scramble_statement(
+              VerdictSQLParser.Insert_scramble_statementContext ctx) {
+            return QueryType.insert_scramble;
           }
 
           @Override

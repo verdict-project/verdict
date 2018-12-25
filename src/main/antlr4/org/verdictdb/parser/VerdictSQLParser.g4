@@ -52,6 +52,7 @@ verdict_statement
     : select_statement
     | stream_select_statement
     | create_scramble_statement
+    | insert_scramble_statement
     | drop_scramble_statement
     | drop_all_scrambles_statement
     | show_scrambles_statement
@@ -72,6 +73,10 @@ create_scramble_statement
       ((SIZE | RATIO) percent=FLOAT)?
       (BLOCKSIZE blocksize=DECIMAL)?
     ;
+
+insert_scramble_statement
+	: INSERT SCRAMBLE scrambled_table=table_name WHERE where=search_condition
+	;
 
 scrambling_method_name
     : config_value

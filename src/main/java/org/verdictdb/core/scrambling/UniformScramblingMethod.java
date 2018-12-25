@@ -16,11 +16,6 @@
 
 package org.verdictdb.core.scrambling;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-
 import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.core.querying.ExecutableNodeBase;
@@ -30,7 +25,16 @@ import org.verdictdb.core.sqlobject.ColumnOp;
 import org.verdictdb.core.sqlobject.ConstantColumn;
 import org.verdictdb.core.sqlobject.UnnamedColumn;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
 public class UniformScramblingMethod extends ScramblingMethodBase {
+
+  protected String type = "uniform";
+
+  private static final long serialVersionUID = 6191110854831260985L;
 
   private final String MAIN_TABLE_SOURCE_ALIAS = "t";
 
@@ -39,6 +43,10 @@ public class UniformScramblingMethod extends ScramblingMethodBase {
   private int actualNumberOfBlocks = -1;
 
   private static final long EFFECTIVE_TABLE_SIZE_THRESHOLD = 100000;
+
+  public UniformScramblingMethod() {
+    super(0, 0, 0);
+  }
 
   public UniformScramblingMethod(long blockSize, int maxBlockCount, double relativeSize) {
     super(blockSize, maxBlockCount, relativeSize);
@@ -91,12 +99,12 @@ public class UniformScramblingMethod extends ScramblingMethodBase {
     // This guards the case when table is empty.
     if (actualNumberOfBlocks == 0) actualNumberOfBlocks = 1;
 
-    blockSize = (long) Math.ceil(effectiveRowCount / (double) actualNumberOfBlocks);
+    long blockSizeToUse = (long) Math.ceil(effectiveRowCount / (double) actualNumberOfBlocks);
 
-    if (blockSize == 0) blockSize = 1; // just a sanity check
-    
+    if (blockSizeToUse == 0) blockSizeToUse = 1; // just a sanity check
+
     // including the ones that will be thrown away due to relative size < 1.0
-    totalNumberOfblocks = (int) Math.ceil(tableSize / (double) blockSize);
+    totalNumberOfblocks = (int) Math.ceil(tableSize / (double) blockSizeToUse);
 
     List<Double> prob = new ArrayList<>();
     for (int i = 0; i < actualNumberOfBlocks; i++) {

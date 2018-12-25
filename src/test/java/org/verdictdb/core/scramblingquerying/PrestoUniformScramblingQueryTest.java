@@ -150,6 +150,17 @@ public class PrestoUniformScramblingQueryTest {
   }
 
   @Test
+  public void insertScrambleTest() throws SQLException {
+    vc.createStatement()
+        .execute(
+            String.format(
+                "INSERT SCRAMBLE %s.orders_scramble WHERE o_totalprice < 10000",
+                SCHEMA_NAME, SCHEMA_NAME));
+
+    System.out.println();
+  }
+
+  @Test
   public void runSimpleAggQueryTest() throws SQLException {
     String sql =
         String.format(
