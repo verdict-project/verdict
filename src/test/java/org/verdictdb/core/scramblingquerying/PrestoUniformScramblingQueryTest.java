@@ -152,17 +152,20 @@ public class PrestoUniformScramblingQueryTest {
   @Test
   public void insertScrambleTest() throws SQLException {
     int rowBefore = 0, rowAfter = 0;
-    ResultSet rs = conn.createStatement().executeQuery("SELECT COUNT(*) FROM orders_scramble");
+    ResultSet rs =
+        conn.createStatement()
+            .executeQuery(String.format("SELECT COUNT(*) FROM %s.orders_scramble", SCHEMA_NAME));
     if (rs.next()) {
       rowBefore = rs.getInt(1);
     }
     vc.createStatement()
         .execute(
             String.format(
-                "INSERT SCRAMBLE %s.orders_scramble WHERE o_totalprice < 10000",
-                SCHEMA_NAME));
+                "INSERT SCRAMBLE %s.orders_scramble WHERE o_totalprice < 10000", SCHEMA_NAME));
 
-    rs = conn.createStatement().executeQuery("SELECT COUNT(*) FROM orders_scramble");
+    rs =
+        conn.createStatement()
+            .executeQuery(String.format("SELECT COUNT(*) FROM %s.orders_scramble", SCHEMA_NAME));
     if (rs.next()) {
       rowAfter = rs.getInt(1);
     }
