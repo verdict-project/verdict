@@ -93,8 +93,14 @@ public class UniformScramblingMethod extends ScramblingMethodBase {
                       + "which may be too small for accurate approximation",
                   effectiveRowCount));
     }
-    actualNumberOfBlocks =
-        (int) Math.min(maxBlockCount, Math.ceil(effectiveRowCount / (double) blockSize));
+
+    // if actualNumberOfBlocks has already been calculated
+    // (i.e., scramble already exists and we are appending),
+    // then we only use those existing blocks without creating new ones.
+    if (actualNumberOfBlocks < 0) {
+      actualNumberOfBlocks =
+          (int) Math.min(maxBlockCount, Math.ceil(effectiveRowCount / (double) blockSize));
+    }
 
     // This guards the case when table is empty.
     if (actualNumberOfBlocks == 0) actualNumberOfBlocks = 1;
