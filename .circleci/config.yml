@@ -111,7 +111,7 @@ jobs:
     # CircleCI maintains a library of pre-built images
     # documented at https://circleci.com/docs/2.0/circleci-images/
     - image: mysql:5.5
-      command: mysqld --innodb_buffer_pool_size=2G --general_log=1 --log_output=/tmp/mysql_general.log --slow_query_log=1 --slow_query_log_file=/tmp/mysql_slow_query.log
+      command: mysqld --innodb_buffer_pool_size=2G --general_log=1 --general_log_file=/tmp/mysql_general.log --slow_query_log=1 --slow_query_log_file=/tmp/mysql_slow_query.log
       environment:
         MYSQL_DATABASE: test
         MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
@@ -164,7 +164,7 @@ jobs:
     # CircleCI maintains a library of pre-built images
     # documented at https://circleci.com/docs/2.0/circleci-images/
     - image: mysql:5.5
-      command: mysqld --innodb_buffer_pool_size=2G --general_log=1 --log_output=/tmp/mysql_general.log --slow_query_log=1 --slow_query_log_file=/tmp/mysql_slow_query.log
+      command: mysqld --innodb_buffer_pool_size=2G --general_log=1 --general_log_file=/tmp/mysql_general.log --slow_query_log=1 --slow_query_log_file=/tmp/mysql_slow_query.log
       environment:
         MYSQL_DATABASE: test
         MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
