@@ -1,13 +1,5 @@
 package org.verdictdb.coordinator;
 
-import static org.junit.Assert.assertEquals;
-
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.Arrays;
-import java.util.List;
-
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.AfterClass;
@@ -19,6 +11,15 @@ import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
+
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.Arrays;
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
 
 public class ImpalaUniformScramblingCoordinatorTest {
 
@@ -41,7 +42,8 @@ public class ImpalaUniformScramblingCoordinatorTest {
   }
 
   @BeforeClass
-  public static void setupImpalaDatabase() throws SQLException, VerdictDBDbmsException {
+  public static void setupImpalaDatabase()
+      throws SQLException, VerdictDBDbmsException, IOException {
     String impalaConnectionString = String.format("jdbc:impala://%s", IMPALA_HOST);
     impalaConn =
         DatabaseConnectionHelpers.setupImpala(

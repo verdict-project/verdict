@@ -16,14 +16,8 @@
 
 package org.verdictdb.coordinator;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-
+import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
 import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.connection.CachedDbmsConnection;
 import org.verdictdb.connection.ConcurrentJdbcConnection;
@@ -41,7 +35,13 @@ import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBValueException;
 import org.verdictdb.sqlwriter.QueryToSql;
 
-import com.google.common.base.Optional;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 // When scrambling, UniformScramblingMethod determines blockSize, blockCount and actualBlockCount
 // as follows:
@@ -77,6 +77,7 @@ public class ScramblingCoordinator {
           put("minScrambleTableBlockSize", "1e6");
           put("createIfNotExists", "false");
           put("maxScrambleTableBlockCount", "100");
+          put("existingPartitionColumns", "");
         }
       };
 
@@ -98,7 +99,7 @@ public class ScramblingCoordinator {
 
   public ScramblingCoordinator(
       DbmsConnection conn, String scrambleSchema, String scratchpadSchema) {
-    this(conn, scrambleSchema, scratchpadSchema, null);
+    this(conn, scrambleSchema, scratchpadSchema, null, null);
   }
 
   public ScramblingCoordinator(
@@ -106,10 +107,29 @@ public class ScramblingCoordinator {
     this.conn = conn;
     this.scratchpadSchema = Optional.fromNullable(scratchpadSchema);
     this.scrambleSchema = Optional.fromNullable(scrambleSchema);
-    options.put("minScrambleTableBlockSize", 
-        String.valueOf(conn.getSyntax().getRecommendedblockSize()));
+    options.put(
+        "minScrambleTableBlockSize", String.valueOf(conn.getSyntax().getRecommendedblockSize()));
     if (blockSize != null) {
       options.put("minScrambleTableBlockSize", String.valueOf(blockSize));
+    }
+  }
+
+  public ScramblingCoordinator(
+      DbmsConnection conn,
+      String scrambleSchema,
+      String scratchpadSchema,
+      Long blockSize,
+      List<String> existingPartitionColumns) {
+    this.conn = conn;
+    this.scratchpadSchema = Optional.fromNullable(scratchpadSchema);
+    this.scrambleSchema = Optional.fromNullable(scrambleSchema);
+    options.put(
+        "minScrambleTableBlockSize", String.valueOf(conn.getSyntax().getRecommendedblockSize()));
+    if (blockSize != null) {
+      options.put("minScrambleTableBlockSize", String.valueOf(blockSize));
+    }
+    if (existingPartitionColumns != null) {
+      options.put("existingPartitionColumns", Joiner.on(",").join(existingPartitionColumns));
     }
   }
 
@@ -226,14 +246,13 @@ public class ScramblingCoordinator {
   }
 
   /**
-   * 
-   * @param originalSchema  Original schema name
-   * @param originalTable   Original table name
-   * @param newSchema       Scramble schema name
-   * @param newTable        Scramble table name
-   * @param methodName      Either 'uniform' or 'hash'
-   * @param primaryColumn   Passes hashcolumn for hash sampling.
-   * @param relativeSize    The ratio of a scramble in comparison to the original table.
+   * @param originalSchema Original schema name
+   * @param originalTable Original table name
+   * @param newSchema Scramble schema name
+   * @param newTable Scramble table name
+   * @param methodName Either 'uniform' or 'hash'
+   * @param primaryColumn Passes hashcolumn for hash sampling.
+   * @param relativeSize The ratio of a scramble in comparison to the original table.
    * @param customOptions
    * @return
    * @throws VerdictDBException
@@ -251,10 +270,10 @@ public class ScramblingCoordinator {
       throws VerdictDBException {
 
     // this check is now performed by ScramblingQuery
-//    // sanity check
-//    if (!scramblingMethods.contains(methodName.toLowerCase())) {
-//      throw new VerdictDBValueException("Not supported scrambling method: " + methodName);
-//    }
+    //    // sanity check
+    //    if (!scramblingMethods.contains(methodName.toLowerCase())) {
+    //      throw new VerdictDBValueException("Not supported scrambling method: " + methodName);
+    //    }
 
     // create a schema if not exists
     if (!conn.getSchemas().contains(newSchema)) {
@@ -281,7 +300,8 @@ public class ScramblingCoordinator {
     if (methodName.equalsIgnoreCase("uniform")) {
       scramblingMethod = new UniformScramblingMethod(blockSize, maxBlockCount, relativeSize);
     } else if (methodName.equalsIgnoreCase("hash")) {
-      scramblingMethod = new HashScramblingMethod(blockSize, maxBlockCount, relativeSize, primaryColumn);
+      scramblingMethod =
+          new HashScramblingMethod(blockSize, maxBlockCount, relativeSize, primaryColumn);
     } else if (methodName.equalsIgnoreCase("FastConverge") && primaryColumn == null) {
       scramblingMethod = new FastConvergeScramblingMethod(blockSize, scratchpadSchema.get());
     } else if (methodName.equalsIgnoreCase("FastConverge") && primaryColumn != null) {
@@ -301,8 +321,9 @@ public class ScramblingCoordinator {
     } else {
       log.info(String.format("Method: %s", methodName.toUpperCase()));
     }
-    log.info(String.format("Relative size: %.6f (or equivalently, %.4f %%)", 
-        relativeSize, relativeSize*100));
+    log.info(
+        String.format(
+            "Relative size: %.6f (or equivalently, %.4f %%)", relativeSize, relativeSize * 100));
 
     ScramblingPlan plan =
         ScramblingPlan.create(

@@ -16,13 +16,6 @@
 
 package org.verdictdb.coordinator;
 
-import static org.verdictdb.coordinator.VerdictSingleResultFromListData.createWithSingleColumn;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.VerdictResultStream;
@@ -58,6 +51,13 @@ import org.verdictdb.sqlreader.NonValidatingSQLParser;
 import org.verdictdb.sqlreader.RelationGen;
 import org.verdictdb.sqlreader.RelationStandardizer;
 import org.verdictdb.sqlsyntax.SqlSyntax;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+
+import static org.verdictdb.coordinator.VerdictSingleResultFromListData.createWithSingleColumn;
 
 /**
  * Stores the context for a single query execution. Includes both scrambling query and select query.
@@ -168,15 +168,26 @@ public class ExecutionContext {
 
     if (queryType.equals(QueryType.scrambling)) {
       log.debug("Query type: scrambling");
+
       CreateScrambleQuery scrambleQuery = generateScrambleQuery(query);
-      scrambleQuery.checkIfSupported(); // checks the validity; throws an exception if not.
+
+      List<String> existingPartitionColumns =
+          conn.getPartitionColumns(
+              scrambleQuery.getOriginalSchema(), scrambleQuery.getOriginalTable());
+
+      // add existing partition columns
+      scrambleQuery.setExistingPartitionColumns(existingPartitionColumns);
+
+      // checks the validity; throws an exception if not.
+      scrambleQuery.checkIfSupported(conn.getSyntax());
 
       ScramblingCoordinator scrambler =
           new ScramblingCoordinator(
               conn,
               scrambleQuery.getNewSchema(),
               options.getVerdictTempSchemaName(),
-              scrambleQuery.getBlockSize());
+              scrambleQuery.getBlockSize(),
+              scrambleQuery.getExistingPartitionColumns());
 
       // store this metadata to our own metadata db.
       ScrambleMeta meta = scrambler.scramble(scrambleQuery);
