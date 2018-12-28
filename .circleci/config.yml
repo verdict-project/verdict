@@ -126,6 +126,7 @@ jobs:
       MAVEN_OPTS: -Xmx3200m
     steps:
     - run: apt-get update; apt-get install -y git
+    - setup_remote_docker
     - checkout
 
     # Set up maven dependencies
@@ -179,6 +180,7 @@ jobs:
       MAVEN_OPTS: -Xmx3200m
     steps:
     - run: apt-get update; apt-get install -y git
+    - setup_remote_docker
     - checkout
 
     # Set up maven dependencies
