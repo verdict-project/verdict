@@ -100,7 +100,7 @@ class VerdictContext:
                 f'jdbc:postgres://{host}:{port}/{dbname}?user={user}'
         else:
             connection_string = \
-                f'jdbc:presto://{host}:{port}/{dbname}?' \
+                f'jdbc:postgres://{host}:{port}/{dbname}?' \
                 f'user={user}&password={password}'
         ins = cls(connection_string)
         created_verdict_contexts.append(ins)
