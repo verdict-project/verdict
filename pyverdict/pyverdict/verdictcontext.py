@@ -1,6 +1,6 @@
 '''
     Copyright 2018 University of Michigan
- 
+
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
     You may obtain a copy of the License at
@@ -37,7 +37,7 @@ class VerdictContext:
     """
     The main Python interface to VerdictDB's Java core.
 
-    All necessary JDBC drivers (i.e., jar files) are already included in the 
+    All necessary JDBC drivers (i.e., jar files) are already included in the
     pyverdict package. These drivers are included in the classpath.
 
     JVM is started on a separate process, which is to prevent KeyboardInterrupt
@@ -45,7 +45,7 @@ class VerdictContext:
 
     Args:
         url: jdbc connection string
-        extra_class_path: The extra classpath used in addition to verdictdb's 
+        extra_class_path: The extra classpath used in addition to verdictdb's
                           jar file. This arg can either be a single str or a
                           list of str; each str is an absolute path
                           to a jar file.
@@ -81,6 +81,26 @@ class VerdictContext:
         else:
             connection_string = \
                 f'jdbc:presto://{host}:{port}/{catalog}?' \
+                f'user={user}&password={password}'
+        ins = cls(connection_string)
+        created_verdict_contexts.append(ins)
+        return ins
+
+    @classmethod
+    def new_postgres_context(
+        cls,
+        dbname,
+        user,
+        password=None,
+        host='127.0.0.1',
+        port=5432,
+    ):
+        if password is None:
+            connection_string = \
+                f'jdbc:postgres://{host}:{port}/{dbname}?user={user}'
+        else:
+            connection_string = \
+                f'jdbc:presto://{host}:{port}/{dbname}?' \
                 f'user={user}&password={password}'
         ins = cls(connection_string)
         created_verdict_contexts.append(ins)
