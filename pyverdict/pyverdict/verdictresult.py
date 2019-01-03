@@ -1,6 +1,6 @@
 '''
     Copyright 2018 University of Michigan
- 
+
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
     You may obtain a copy of the License at
@@ -14,10 +14,12 @@
     limitations under the License.
 '''
 from datetime import date, datetime, timedelta
+import .postgresconverter as PostgresConverter
 import decimal
 import numpy as np
 import pandas as pd
 
+import pdb
 
 class SingleResultSet:
     """Reads the data from the Java SingleResultSet
@@ -89,6 +91,8 @@ class SingleResultSet:
             return cls._read_value_mysql(resultset, index, col_type)
         elif dbtype == 'presto':
             return cls._read_value_presto(resultset, index, col_type)
+        elif dbtype == 'postgresql':
+            return cls._read_value_postgres(resultset, index, col_type)
         else:
             raise NotImplementedError
 
@@ -204,6 +208,80 @@ class SingleResultSet:
         #     return value        # this will return int 0 or int 1
         else:
             return resultset.getValue(index)
+
+    @classmethod
+    def _read_value_postgres(cls, resultset, index, col_type):
+        """Reads the value in a type-sensitive way
+
+        Due to the reliance on the underlying JDBC library, we cannot always
+        distinguish the exact type of the underlying data; we can only set
+        the type according to the type indentifier as indicated by the JDBC
+        library itself.  We note that the following type conversions are taken
+        from psycopg2, the most commonly used python interface for postgres.
+
+        Type conversion rule (Postgres):
+
+        'bigint'                    => int,
+        'bigserial'                 => int,
+        'bit'               => bool => str,
+        'varbit'      => JavaObject => str,
+        'boolean'                   => bool,
+        'box'         => JavaObject => str,
+        'bytea'            => bytes => memoryview,
+        'char'                      => str,
+        'varchar'                   => str,
+        'cidr'        => JavaObject => str,
+        'circle'      => JavaObject => str,
+        'date'        => JavaObject => datetime.date,
+        'float8'                    => float,
+        'inet'        => JavaObject => str,
+        'integer'                   => int,
+        'json'        => JavaObject => dict,
+        'line'        => JavaObject => str,
+        'lseg'        => JavaObject => str,
+        'macaddr'     => JavaObject => str,
+        'macaddr8'    => JavaObject => str,
+        'money'            => float => str,
+        'numeric'                   => decimal.Decimal,
+        'path'        => JavaObject => str,
+        'point'       => JavaObject => str,
+        'polygon'     => JavaObject => str,
+        'real'                      => float,
+        'smallint'                  => int,
+        'smallserial'               => int,
+        'serial'                    => int,
+        'text'                      => str,
+        'time'        => JavaObject => datetime.time,
+        'timestamp'   => JavaObject => datetime.datetime,
+        'uuid'        => JavaObject => str,
+        'xml'         => JavaObject => str,
+        'bit'         => JavaObject => str,
+        'int8'                      => int,
+        'bool'                      => bool,
+        'character'                 => str,
+        'character'                 => str,
+        'int'                       => int,
+        'int4'                      => int,
+        'double'                    => float,
+        'decimal'                   => decimal.Decimal,
+        'float'                     => float,
+        'int2'                      => int,
+        'serial2'                   => int,
+        'serial4'                   => int,
+        'timetz'      => JavaObject => datetime.time,
+        'timestamptz' => JavaObject => datetime.datetime,
+        'serial8'                   => int
+
+        Time-related Java objects are read as py4j.JavaObject by default.
+        To avoid this, we read them as str and convert to an appropriate
+        python object.
+
+        Args
+            resultset: the Java result set currently in process
+            index: zero-based index of the column to read
+            col_type: column type in str
+        """
+        return PostgresConverter.read_value(resultset, index, col_type)
 
     @classmethod
     def _read_all(cls, resultset, verdict_context):
