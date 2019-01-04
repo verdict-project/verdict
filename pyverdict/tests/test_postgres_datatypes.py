@@ -59,6 +59,20 @@ def test_data_types():
         expected_row = expected_rows[i]
         actual_row = rows[i]
         for j in range(len(expected_row)):
+            e = expected_row[j]
+            a = actual_row[j]
+            t = types[j]
+            print(
+                'Expected: %s, actual: %s, type of expected: %s, '
+                'type of actual: %s, coltypename: %s' % (
+                    e,
+                    a,
+                    type(e),
+                    type(a),
+                    t,
+                )
+            )
+
             compare_value(expected_row[j], actual_row[j], types[j])
     tear_down(presto_conn)
 

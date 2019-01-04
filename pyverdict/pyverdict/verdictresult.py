@@ -14,7 +14,7 @@
     limitations under the License.
 '''
 from datetime import date, datetime, timedelta
-import .postgresconverter as PostgresConverter
+from . import postgresconverter as PostgresConverter
 import decimal
 import numpy as np
 import pandas as pd
@@ -291,11 +291,13 @@ class SingleResultSet:
         column_types = []     # column type
         rows = []             # data in the table
 
+        #pdb.set_trace()
         for i in range(column_count):
             heading.append(resultset.getColumnName(i))
             column_inttypes.append(resultset.getColumnType(i))
             column_types.append(resultset.getColumnTypeName(i))
 
+        print('\n\ncolumn types: %s\n' % column_types)
         while (resultset.next()):
             row = []
             for i in range(column_count):

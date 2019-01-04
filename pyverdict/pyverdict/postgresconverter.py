@@ -3,6 +3,8 @@ import psycopg2.tz
 import json
 import dateutil
 
+import pdb
+
 def _bool_to_str(java_obj, idx):
     bool_result = java_obj.getValue(idx)
 
@@ -13,7 +15,12 @@ def _bool_to_str(java_obj, idx):
 
 
 def _java_object_to_str(java_obj, idx):
-    return java_obj.getString(idx)
+    str_val = java_obj.getString(idx)
+
+    try:
+        return json.loads(str_val)
+    except json.decoder.JSONDecodeError:
+        return str_val
 
 
 def _bytes_to_memoryview(java_obj, idx):
@@ -30,6 +37,7 @@ def _float_to_money_str(java_obj, idx):
 
 
 def _str_to_date(java_obj, idx):
+    pdb.set_trace()
     return dateutil.parser.parse(java_obj.getString(idx)).date()
 
 
@@ -66,7 +74,7 @@ def _str_to_datetimetz(java_obj, idx):
 # NOTE: All functions in this map must take two arguments, the first
 # being a JavaObject representing a ResultSet and the second being the index
 # of the column the value to parse resides in in the ResultSet.
-_typename_to_converter_fxn = (
+_typename_to_converter_fxn = {
     'bit': _bool_to_str,
     'varbit': _java_object_to_str,
     'box': _java_object_to_str,
@@ -91,10 +99,14 @@ _typename_to_converter_fxn = (
     'bit': _java_object_to_str,
     'timetz': _str_to_timetz,
     'timestamptz': _str_to_datetimetz,
-)
+    None: _java_object_to_str,
+}
 
 def read_value(resultset, index, col_typename):
     if col_typename in _typename_to_converter_fxn:
+        if resultset.getString(index) is None:
+            return None
+
         return _typename_to_converter_fxn[col_typename](resultset, index)
     else:
         return resultset.getValue(index)

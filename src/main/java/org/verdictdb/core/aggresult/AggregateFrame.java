@@ -45,6 +45,8 @@ public class AggregateFrame implements Serializable {
 
   List<Integer> columnTypes = new ArrayList<>();
 
+  List<String> columnTypeNames = new ArrayList<>();
+
   DbmsQueryResultMetaData dbmsQueryResultMetaData = new DbmsQueryResultMetaData();
 
   Map<AggregateGroup, AggregateMeasures> data = new HashMap<>();
@@ -92,6 +94,7 @@ public class AggregateFrame implements Serializable {
       String col = result.getColumnName(i).toLowerCase();
       colName.add(col);
       columnTypes.add(result.getColumnType(i));
+      columnTypeNames.add(result.getColumnTypeName(i));
       if (aggColumnsSet.contains(col)) {
         orderedAggColumnName.add(col);
         aggColumnIndex.add(i);
