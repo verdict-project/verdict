@@ -65,7 +65,7 @@ import java.util.Set;
 //
 // 4. blockSize = scrambleTableSize / actualBlockCount
 //
-// CREATE TABLE scrmabledTable AS
+// CREATE TABLE scrambledTable AS
 // SELECT * FROM ( SELECT *, rand() * blockCount as verdictdbblock FROM originalTable) t
 // WHERE verdictdbblock < actualBlockCount
 //

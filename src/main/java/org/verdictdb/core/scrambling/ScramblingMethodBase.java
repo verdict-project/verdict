@@ -44,12 +44,21 @@ public abstract class ScramblingMethodBase implements ScramblingMethod, Serializ
 
   protected final double relativeSize; // size relative to original table (0.0 ~ 1.0)
 
-  private final Map<Integer, List<Double>> storedProbDist = new HashMap<>();
+  protected Map<Integer, List<Double>> storedProbDist = new HashMap<>();
 
   public ScramblingMethodBase(long blockSize, int maxBlockCount, double relativeSize) {
     this.blockSize = blockSize;
     this.maxBlockCount = maxBlockCount;
     this.relativeSize = relativeSize;
+  }
+
+  public ScramblingMethodBase(Map<Integer, List<Double>> probDist) {
+    this.storedProbDist = probDist;
+    // uses the first tier prob. dist. to calculate the relative size for now.
+    this.relativeSize = probDist.get(0).get(probDist.get(0).size() - 1);
+    // dyoon: with stored prob. dist. these values are not necessary?
+    this.blockSize = -1;
+    this.maxBlockCount = 1;
   }
 
   long getBlockSize() {

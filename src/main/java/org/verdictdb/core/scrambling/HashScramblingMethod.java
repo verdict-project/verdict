@@ -41,6 +41,11 @@ public class HashScramblingMethod extends ScramblingMethodBase {
     this.hashColumnName = hashColumnName;
   }
 
+  public HashScramblingMethod(Map<Integer, List<Double>> probDist, String hashColumnName) {
+    super(probDist);
+    this.hashColumnName = hashColumnName;
+  }
+
   @Override
   public List<ExecutableNodeBase> getStatisticsNode(
       String oldSchemaName,
@@ -101,30 +106,47 @@ public class HashScramblingMethod extends ScramblingMethodBase {
                   effectiveRowCount));
     }
 
-    // if actualNumberOfBlocks has already been calculated
+    List<Double> prob = new ArrayList<>();
+
+    // if actualNumberOfBlocks and totalNumberOfBlocks have already been calculated
     // (i.e., scramble already exists and we are appending),
     // then we only use those existing blocks without creating new ones.
-    if (actualNumberOfBlocks < 0) {
-      actualNumberOfBlocks =
-          (int) Math.min(maxBlockCount, Math.ceil(effectiveRowCount / (double) blockSize));
+    if (actualNumberOfBlocks < 1 && totalNumberOfblocks < 1) {
+
+      if (!storedProbDist.containsKey(tier)) {
+        actualNumberOfBlocks =
+            (int) Math.min(maxBlockCount, Math.ceil(effectiveRowCount / (double) blockSize));
+
+        // This guards the case when table is empty.
+        if (actualNumberOfBlocks == 0) actualNumberOfBlocks = 1;
+
+        long blockSizeToUse = (long) Math.ceil(effectiveRowCount / (double) actualNumberOfBlocks);
+
+        if (blockSizeToUse == 0) blockSizeToUse = 1; // just a sanity check
+
+        // including the ones that will be thrown away due to relative size < 1.0
+        totalNumberOfblocks = (int) Math.ceil(tableSize / (double) blockSizeToUse);
+
+        for (int i = 0; i < actualNumberOfBlocks; i++) {
+          prob.add((i + 1) / (double) totalNumberOfblocks);
+        }
+
+        storeCumulativeProbabilityDistribution(tier, prob);
+      } else {
+        // if stored prob. dist. exists, we calculate actualNumberOfBlocks and totalNumberOfBlocks
+        // based on prob. dist.
+        prob = storedProbDist.get(tier);
+        actualNumberOfBlocks = prob.size();
+        if (prob.get(actualNumberOfBlocks - 1) == 1.0) {
+          totalNumberOfblocks = actualNumberOfBlocks;
+        } else {
+          double increment = prob.get(0);
+          totalNumberOfblocks = (int) Math.floor(1.0 / increment);
+        }
+      }
+    } else {
+      prob = storedProbDist.get(tier);
     }
-
-    // This guards the case when table is empty.
-    if (actualNumberOfBlocks == 0) actualNumberOfBlocks = 1;
-
-    long blockSizeToUse = (long) Math.ceil(effectiveRowCount / (double) actualNumberOfBlocks);
-
-    if (blockSizeToUse == 0) blockSizeToUse = 1; // just a sanity check
-
-    // including the ones that will be thrown away due to relative size < 1.0
-    totalNumberOfblocks = (int) Math.ceil(tableSize / (double) blockSizeToUse);
-
-    List<Double> prob = new ArrayList<>();
-    for (int i = 0; i < actualNumberOfBlocks; i++) {
-      prob.add((i + 1) / (double) totalNumberOfblocks);
-    }
-
-    storeCumulativeProbabilityDistribution(tier, prob);
 
     return prob;
   }

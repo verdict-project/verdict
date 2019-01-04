@@ -18,6 +18,7 @@ package org.verdictdb.core.scrambling;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
@@ -42,6 +43,7 @@ import java.util.Map.Entry;
  *
  * @author Yongjoo Park
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 @JsonPropertyOrder({
   "schemaName",
   "tableName",
@@ -270,6 +272,10 @@ public class ScrambleMeta implements Serializable {
 
   public void setAggregationBlockCount(int aggregationBlockCount) {
     this.aggregationBlockCount = aggregationBlockCount;
+  }
+
+  public Map<Integer, List<Double>> getCumulativeDistributionForTier() {
+    return cumulativeDistributionForTier;
   }
 
   public void setCumulativeDistributionForTier(

@@ -60,6 +60,10 @@ public class UniformScramblingMethod extends ScramblingMethodBase {
     super(blockSize, 100, 1.0);
   }
 
+  public UniformScramblingMethod(Map<Integer, List<Double>> probDist) {
+    super(probDist);
+  }
+
   @Override
   public List<ExecutableNodeBase> getStatisticsNode(
       String oldSchemaName,
@@ -82,6 +86,7 @@ public class UniformScramblingMethod extends ScramblingMethodBase {
     DbmsQueryResult tableSizeResult =
         (DbmsQueryResult) metaData.get(TableSizeCountNode.class.getSimpleName());
     tableSizeResult.next();
+    // note that this tableSize does not account for filter condition (WHERE clause)
     long tableSize = tableSizeResult.getLong(TableSizeCountNode.TOTAL_COUNT_ALIAS_NAME);
     long effectiveRowCount =
         (relativeSize < 1) ? (long) Math.ceil(tableSize * relativeSize) : tableSize;
@@ -89,35 +94,52 @@ public class UniformScramblingMethod extends ScramblingMethodBase {
       VerdictDBLogger.getLogger(UniformScramblingMethod.class)
           .warn(
               String.format(
-                  "The reduced scramble table will have %d rows, "
+                  "The reduced scramble table will have at most %d rows, "
                       + "which may be too small for accurate approximation",
                   effectiveRowCount));
     }
 
-    // if actualNumberOfBlocks has already been calculated
+    List<Double> prob = new ArrayList<>();
+
+    // if actualNumberOfBlocks and totalNumberOfBlocks have already been calculated
     // (i.e., scramble already exists and we are appending),
     // then we only use those existing blocks without creating new ones.
-    if (actualNumberOfBlocks < 0) {
-      actualNumberOfBlocks =
-          (int) Math.min(maxBlockCount, Math.ceil(effectiveRowCount / (double) blockSize));
+    if (actualNumberOfBlocks < 1 && totalNumberOfblocks < 1) {
+
+      if (!storedProbDist.containsKey(tier)) {
+        actualNumberOfBlocks =
+            (int) Math.min(maxBlockCount, Math.ceil(effectiveRowCount / (double) blockSize));
+
+        // This guards the case when table is empty.
+        if (actualNumberOfBlocks == 0) actualNumberOfBlocks = 1;
+
+        long blockSizeToUse = (long) Math.ceil(effectiveRowCount / (double) actualNumberOfBlocks);
+
+        if (blockSizeToUse == 0) blockSizeToUse = 1; // just a sanity check
+
+        // including the ones that will be thrown away due to relative size < 1.0
+        totalNumberOfblocks = (int) Math.ceil(tableSize / (double) blockSizeToUse);
+
+        for (int i = 0; i < actualNumberOfBlocks; i++) {
+          prob.add((i + 1) / (double) totalNumberOfblocks);
+        }
+
+        storeCumulativeProbabilityDistribution(tier, prob);
+      } else {
+        // if stored prob. dist. exists, we calculate actualNumberOfBlocks and totalNumberOfBlocks
+        // based on prob. dist.
+        prob = storedProbDist.get(tier);
+        actualNumberOfBlocks = prob.size();
+        if (prob.get(actualNumberOfBlocks - 1) == 1.0) {
+          totalNumberOfblocks = actualNumberOfBlocks;
+        } else {
+          double increment = prob.get(0);
+          totalNumberOfblocks = (int) Math.floor(1.0 / increment);
+        }
+      }
+    } else {
+      prob = storedProbDist.get(tier);
     }
-
-    // This guards the case when table is empty.
-    if (actualNumberOfBlocks == 0) actualNumberOfBlocks = 1;
-
-    long blockSizeToUse = (long) Math.ceil(effectiveRowCount / (double) actualNumberOfBlocks);
-
-    if (blockSizeToUse == 0) blockSizeToUse = 1; // just a sanity check
-
-    // including the ones that will be thrown away due to relative size < 1.0
-    totalNumberOfblocks = (int) Math.ceil(tableSize / (double) blockSizeToUse);
-
-    List<Double> prob = new ArrayList<>();
-    for (int i = 0; i < actualNumberOfBlocks; i++) {
-      prob.add((i + 1) / (double) totalNumberOfblocks);
-    }
-
-    storeCumulativeProbabilityDistribution(tier, prob);
 
     return prob;
   }

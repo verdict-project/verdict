@@ -121,6 +121,16 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
     this.type = "fastconverge";
   }
 
+  public FastConvergeScramblingMethod(
+      Map<Integer, List<Double>> probDist, String primaryColumnName) {
+    super(probDist);
+    this.type = "fastconverge";
+    this.primaryColumnName = primaryColumnName;
+    this.tier0CumulProbDist = probDist.get(0);
+    this.tier1CumulProbDist = probDist.get(1);
+    this.tier2CumulProbDist = probDist.get(2);
+  }
+
   /**
    * Computes three nodes. They compute: (1) 0.1% and 99.9% percentiles of numeric columns and the
    * total count, (for this, we compute standard deviations and estimate those percentiles based on

@@ -28,8 +28,12 @@ import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.MetaDataProvider;
 import org.verdictdb.connection.StaticMetaData;
 import org.verdictdb.core.resulthandler.ExecutionResultReader;
+import org.verdictdb.core.scrambling.FastConvergeScramblingMethod;
+import org.verdictdb.core.scrambling.HashScramblingMethod;
 import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
+import org.verdictdb.core.scrambling.ScramblingMethod;
+import org.verdictdb.core.scrambling.UniformScramblingMethod;
 import org.verdictdb.core.sqlobject.AbstractRelation;
 import org.verdictdb.core.sqlobject.BaseTable;
 import org.verdictdb.core.sqlobject.ColumnOp;
@@ -217,10 +221,41 @@ public class ExecutionContext {
                 scrambleQuery.getNewSchema(), scrambleQuery.getNewTable()));
       }
 
+      ScramblingMethod scrambleMethod = null;
       if (existingScrambleMeta.getScramblingMethod() == null) {
+        log.warn(
+            String.format(
+                "Scrambling method information on the scramble '%s.%s' does not exist.",
+                scrambleQuery.getNewSchema(), scrambleQuery.getNewTable()));
+        log.warn(
+            String.format(
+                "Using other existing metadata on the scramble '%s.%s' to "
+                    + "perform scramble appending.",
+                scrambleQuery.getNewSchema(), scrambleQuery.getNewTable()));
+
+        String methodName = existingScrambleMeta.getMethod();
+        if (methodName.equalsIgnoreCase("uniform")) {
+          scrambleMethod =
+              new UniformScramblingMethod(existingScrambleMeta.getCumulativeDistributionForTier());
+        } else if (methodName.equalsIgnoreCase("hash")) {
+          scrambleMethod =
+              new HashScramblingMethod(
+                  existingScrambleMeta.getCumulativeDistributionForTier(),
+                  existingScrambleMeta.getHashColumn());
+        } else if (methodName.equalsIgnoreCase("fastconverge")) {
+          scrambleMethod =
+              new FastConvergeScramblingMethod(
+                  existingScrambleMeta.getCumulativeDistributionForTier(),
+                  existingScrambleMeta.getHashColumn());
+        }
+      } else {
+        scrambleMethod = existingScrambleMeta.getScramblingMethod();
+      }
+
+      if (scrambleMethod == null) {
         throw new VerdictDBException(
             String.format(
-                "Scrambling method information on the scramble '%s.%s' does not exist",
+                "Could not determine scrambling method for '%s.%s'.",
                 scrambleQuery.getNewSchema(), scrambleQuery.getNewTable()));
       }
 
@@ -229,7 +264,7 @@ public class ExecutionContext {
       scrambleQuery.setOriginalTable(existingScrambleMeta.getOriginalTableName());
       scrambleQuery.setMethod(existingScrambleMeta.getMethod());
       scrambleQuery.setHashColumnName(existingScrambleMeta.getHashColumn());
-      scrambleQuery.setScramblingMethod(existingScrambleMeta.getScramblingMethod());
+      scrambleQuery.setScramblingMethod(scrambleMethod);
 
       ScramblingCoordinator scrambler =
           new ScramblingCoordinator(

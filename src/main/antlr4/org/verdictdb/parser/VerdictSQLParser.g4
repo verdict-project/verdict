@@ -76,7 +76,7 @@ create_scramble_statement
     ;
 
 insert_scramble_statement
-	: INSERT SCRAMBLE scrambled_table=table_name WHERE where=search_condition
+	: (APPEND|INSERT) SCRAMBLE scrambled_table=table_name WHERE where=search_condition
 	;
 
 scrambling_method_name
