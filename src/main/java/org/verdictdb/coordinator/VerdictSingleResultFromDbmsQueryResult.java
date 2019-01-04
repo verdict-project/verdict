@@ -87,7 +87,7 @@ public class VerdictSingleResultFromDbmsQueryResult
     }
   }
 
-  public int getColumnTypeName(int index) {
+  public String getColumnTypeName(int index) {
     if (result.isPresent() == false) {
       throw new RuntimeException("An empty result is accessed.");
     } else {

@@ -15,12 +15,7 @@ def _bool_to_str(java_obj, idx):
 
 
 def _java_object_to_str(java_obj, idx):
-    str_val = java_obj.getString(idx)
-
-    try:
-        return json.loads(str_val)
-    except json.decoder.JSONDecodeError:
-        return str_val
+    return java_obj.getString(idx)
 
 
 def _bytes_to_memoryview(java_obj, idx):

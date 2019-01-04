@@ -35,6 +35,8 @@ public class SparkQueryResult extends AttributeValueRetrievalHelper implements D
 
   List<Integer> columnTypes = new ArrayList<>();
 
+  List<String> columnTypeNames = new ArrayList<>();
+
   List<Row> result = new ArrayList<>();
 
   DbmsQueryResultMetaData dbmsQueryResultMetaData = new DbmsQueryResultMetaData();

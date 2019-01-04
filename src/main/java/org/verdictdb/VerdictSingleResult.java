@@ -51,9 +51,11 @@ public abstract class VerdictSingleResult extends AttributeValueRetrievalHelper 
    */
   public abstract int getColumnType(int index);
 
-  public String getColumnTypeName(int index) {
-    return getMetaData().getColumnTypeName(index);
-  }
+  /**
+   * @param index zero-based index
+   * @return string representing the typename of the column
+   */
+  public abstract String getColumnTypeName(int index);
 
   /**
    * set the index before the first one; when next() is called, the index will move to the first

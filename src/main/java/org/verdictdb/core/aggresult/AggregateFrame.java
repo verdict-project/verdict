@@ -88,6 +88,7 @@ public class AggregateFrame implements Serializable {
     List<String> orderedAggColumnName = new ArrayList<>();
     List<String> orderedNonaggColumnName = new ArrayList<>();
     List<Integer> columnTypes = new ArrayList<>();
+    List<String> columnTypeNames = new ArrayList<>();
 
     // Get Ordered column name for nonAgg and Agg
     for (int i = 0; i < result.getColumnCount(); i++) {
@@ -110,6 +111,7 @@ public class AggregateFrame implements Serializable {
 
     AggregateFrame aggregateFrame = new AggregateFrame(colName);
     aggregateFrame.setColumnTypes(columnTypes);
+    aggregateFrame.setColumnTypeNames(columnTypeNames);
     aggregateFrame.dbmsQueryResultMetaData = result.getMetaData();
 
     while (result.next()) {
@@ -136,8 +138,16 @@ public class AggregateFrame implements Serializable {
     this.columnTypes = columnTypes;
   }
 
+  public void setColumnTypeNames(List<String> columnTypeNames) {
+    this.columnTypeNames = columnTypeNames;
+  }
+
   public List<Integer> getColumnTypes() {
     return columnTypes;
+  }
+
+  public List<String> getColumnTypeNames() {
+    return columnTypeNames;
   }
 
   public List<String> getColumnNames() {
