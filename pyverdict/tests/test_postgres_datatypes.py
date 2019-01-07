@@ -64,6 +64,9 @@ def compare_value(expected, actual, coltype):
         assert float(expected) == actual
     elif coltype == 'bytea' and expected is not None:
         assert expected.tobytes() == actual.tobytes()
+    elif coltype in ('timetz', 'timestamptz') and expected is not None:
+        actualWithExpectedTZ = actual.replace(tzinfo=expected.tzinfo)
+        assert expected == actualWithExpectedTZ
     else:
         assert expected == actual
 
