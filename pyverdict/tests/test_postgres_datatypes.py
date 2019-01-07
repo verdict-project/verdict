@@ -27,14 +27,14 @@ test_table = 'test_table'
 
 
 def test_data_types():
-    presto_conn, verdict_conn = setup_sandbox()
+    pgres_conn, verdict_conn = setup_sandbox()
 
     sql = 'SELECT * FROM "%s"."%s" ORDER BY bigintcol' % (
         test_schema,
         test_table,
     )
 
-    cur = presto_conn.cursor()
+    cur = pgres_conn.cursor()
     cur.execute(sql)
     expected_rows = cur.fetchall()
     print(expected_rows)
@@ -59,36 +59,16 @@ def test_data_types():
         expected_row = expected_rows[i]
         actual_row = rows[i]
         for j in range(len(expected_row)):
-            e = expected_row[j]
-            a = actual_row[j]
-            t = types[j]
-            print(
-                'Expected: %s, actual: %s, type of expected: %s, '
-                'type of actual: %s, coltypename: %s' % (
-                    e,
-                    a,
-                    type(e),
-                    type(a),
-                    t,
-                )
-            )
-
             compare_value(expected_row[j], actual_row[j], types[j])
-    tear_down(presto_conn)
+
+    tear_down(pgres_conn)
 
 
 def compare_value(expected, actual, coltype):
     if coltype == 'decimal' and expected is not None:
         assert float(expected) == actual
-    elif coltype == "timestamp" and expected is not None:
-        # Presto's official Python driver follows the server's time zone while
-        # JDBC driver follows the client's time zone.
-        # To reconcile this, we change the Python driver's value to the client
-        # time zone. We assume that the server is using 'UTC'.
-        parsed = datetime.strptime(expected, "%Y-%m-%d %H:%M:%S.%f")
-        local = parsed.replace(tzinfo=timezone.utc).astimezone(tz=None)
-        expected = local.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
-        assert expected == actual
+    elif coltype == 'bytea' and expected is not None:
+        assert expected.tobytes() == actual.tobytes()
     else:
         assert expected == actual
 
@@ -180,7 +160,7 @@ def get_create_table_str(test_schema, test_table):
 def get_insert_real_data_str(test_schema, test_table):
     return '''
         INSERT INTO "%s"."%s" VALUES (
-            1, 1, '1', '1011', true, '((1,1), (2,2))', '1', '1234', '1234',
+            1, 1, '1', '1011', true, '((1.5,1), (2,2))', '1', '1234', '1234',
             '10', '((1,1),2)', '2018-12-31', 1.0, '88.99.0.0/16', 1,
             '{"2":1}', '{1,2,3}', '((1,1),(2,2))',
             '08002b:010203', '08002b:0102030405', '12.34', 1.0, '((1,1))', '(1,1)',
@@ -217,7 +197,6 @@ def get_insert_sentinel_data_str(test_schema, test_table):
 def tear_down(pgres_conn):
     cur = pgres_conn.cursor()
     cur.execute('DROP SCHEMA IF EXISTS "%s" CASCADE' % test_schema)
-    cur.fetchall()
 
 
 def verdict_connect(host, port, dbname, user):
@@ -239,4 +218,3 @@ def psycopg2_connect(host, port, dbname, usr):
         user=usr,
     )
 
-test_data_types()

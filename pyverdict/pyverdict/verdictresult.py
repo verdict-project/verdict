@@ -291,13 +291,17 @@ class SingleResultSet:
         column_types = []     # column type
         rows = []             # data in the table
 
-        #pdb.set_trace()
+        get_column_type_name_fxn = None
+        if verdict_context.get_dbtype() == 'postgresql':
+            get_column_type_name_fxn = resultset.getColumnTypeNamePy
+        else:
+            get_column_type_name_fxn = resultset.getColumnTypeName
+
         for i in range(column_count):
             heading.append(resultset.getColumnName(i))
             column_inttypes.append(resultset.getColumnType(i))
-            column_types.append(resultset.getColumnTypeName(i))
+            column_types.append(get_column_type_name_fxn(i))
 
-        print('\n\ncolumn types: %s\n' % column_types)
         while (resultset.next()):
             row = []
             for i in range(column_count):

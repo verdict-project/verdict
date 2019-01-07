@@ -87,7 +87,7 @@ public class VerdictSingleResultFromDbmsQueryResult
     }
   }
 
-  public String getColumnTypeName(int index) {
+  public String getColumnTypeNamePy(int index) {
     if (result.isPresent() == false) {
       throw new RuntimeException("An empty result is accessed.");
     } else {

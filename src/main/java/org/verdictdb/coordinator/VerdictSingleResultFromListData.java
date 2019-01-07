@@ -107,7 +107,7 @@ public class VerdictSingleResultFromListData extends VerdictSingleResult {
     }
   }
 
-  public String getColumnTypeName(int index) {
+  public String getColumnTypeNamePy(int index) {
     return DataTypeConverter.typeName(getColumnType(index));
   }
 

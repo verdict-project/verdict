@@ -51,11 +51,17 @@ public abstract class VerdictSingleResult extends AttributeValueRetrievalHelper 
    */
   public abstract int getColumnType(int index);
 
+  public String getColumnTypeName(int index) {
+    int typeInt = getColumnType(index);
+    return DataTypeConverter.typeName(typeInt);
+  }
+
   /**
    * @param index zero-based index
-   * @return string representing the typename of the column
+   * @return
+   * NOTE: This is to be used by pyverdict to get more robust column type names
    */
-  public abstract String getColumnTypeName(int index);
+  public abstract String getColumnTypeNamePy(int index);
 
   /**
    * set the index before the first one; when next() is called, the index will move to the first
