@@ -19,9 +19,6 @@ import pyverdict
 import psycopg2
 import uuid
 
-
-import pdb
-
 test_schema = 'pyverdict_postgres_datatype_test_schema' + str(uuid.uuid4())[:3]
 test_table = 'test_table'
 

@@ -19,8 +19,6 @@ import decimal
 import numpy as np
 import pandas as pd
 
-import pdb
-
 class SingleResultSet:
     """Reads the data from the Java SingleResultSet
 
