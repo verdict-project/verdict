@@ -65,6 +65,9 @@ def compare_value(expected, actual, coltype):
     elif coltype == 'bytea' and expected is not None:
         assert expected.tobytes() == actual.tobytes()
     elif coltype in ('timetz', 'timestamptz') and expected is not None:
+        # The JDBC uses the client timezone which may not match the timezone
+        # used by the DB.  To remedy this, we take the tzinfo of the result
+        # given by psycopg2 and hackily check equality.
         actualWithExpectedTZ = actual.replace(tzinfo=expected.tzinfo)
         assert expected == actualWithExpectedTZ
     else:
