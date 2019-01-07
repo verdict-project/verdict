@@ -92,16 +92,22 @@ class VerdictContext:
         dbname,
         user,
         password=None,
-        host='127.0.0.1',
+        host='localhost',
         port=5432,
     ):
-        if password is None:
-            connection_string = \
-                f'jdbc:postgres://{host}:{port}/{dbname}?user={user}'
-        else:
-            connection_string = \
-                f'jdbc:postgres://{host}:{port}/{dbname}?' \
-                f'user={user}&password={password}'
+
+        passwordStr = ''
+        if password is not None:
+            passwordStr = '&password=%s' % password
+
+        connection_string = 'jdbc:postgresql://%s:%s/%s?user=%s%s' % (
+            host,
+            port,
+            dbname,
+            user,
+            passwordStr
+        )
+
         ins = cls(connection_string)
         created_verdict_contexts.append(ins)
         return ins

@@ -137,11 +137,8 @@ class TestClass:
         result = verdict_conn.sql_raw_result(verdict_sql)
         types = result.types()
         rows = result.rows()
-        # print(int_types)
-        # print(types)
         print('verdict query: ' + str(verdict_sql))
         print('result: ' + str(rows))
-        # print([type(x) for x in rows[0]])
 
         cur = pgres_conn.cursor()
         cur.execute(regular_sql)
