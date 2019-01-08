@@ -100,11 +100,11 @@ def compare_value(expected, actual):
 
 
 def setup_sandbox():
-    url = 'salat2.eecs.umich.edu'
-    port = 9050
+    host, port = os.environ['VERDICTDB_TEST_IMPALA_HOST'].split(':')
+    port = int(port)
 
     # create table and populate data
-    impala_conn = impala_connect(url, port)
+    impala_conn = impala_connect(host, port)
     cur = impala_conn.cursor()
 
     # Setup schema
@@ -122,7 +122,7 @@ def setup_sandbox():
 
     cur.close()
 
-    verdict_conn = verdict_connect(url, port)
+    verdict_conn = verdict_connect(host, port)
 
     return (impala_conn, verdict_conn)
 
@@ -140,7 +140,6 @@ def verdict_connect(host, port):
     return pyverdict.VerdictContext(
         connection_string,
         verdictdbmetaschema=TEST_META_SCHEMA_NAME,
-        #verdictdbtempschema=TEST_TEMP_SCHEMA_NAME,
     )
 
 
