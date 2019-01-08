@@ -1,6 +1,6 @@
 '''
     Copyright 2018 University of Michigan
- 
+
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
     You may obtain a copy of the License at
@@ -14,6 +14,7 @@
     limitations under the License.
 '''
 from datetime import date, datetime, timedelta
+from .datatype_converters.impala_converter import ImpalaConverter
 import decimal
 import numpy as np
 import pandas as pd
@@ -89,6 +90,8 @@ class SingleResultSet:
             return cls._read_value_mysql(resultset, index, col_type)
         elif dbtype == 'presto':
             return cls._read_value_presto(resultset, index, col_type)
+        elif dbtype == 'impala':
+            return ImpalaConverter.read_value(resultset, index, col_type)
         else:
             raise NotImplementedError
 
