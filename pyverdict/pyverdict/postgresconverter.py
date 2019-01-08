@@ -188,7 +188,7 @@ def _xml_to_str(java_obj, idx):
 
 
 # NOTE: All functions in this map must take two arguments, the first
-# being a JavaObject representing a ResultSet and the second being the index
+# being a JavaObject representing a ResultSet, and the second being the index
 # of the column the value to parse resides in in the ResultSet.
 _typename_to_converter_fxn = {
     'bit': _bool_to_str,
