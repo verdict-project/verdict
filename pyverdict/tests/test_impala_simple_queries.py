@@ -18,6 +18,8 @@ import impala.dbapi
 import uuid
 import os
 
+TEST_META_SCHEMA_NAME = 'pyverdict_impala_meta_schema'
+
 test_schema = 'pyverdict_impala_simple_query_test_schema' + str(uuid.uuid4())[:3]
 test_table = 'test_table'
 test_scramble = 'test_scramble'
@@ -37,35 +39,24 @@ def setup_module():
 
     cur = impala_conn.cursor()
 
-    cur.execute('DROP SCHEMA IF EXISTS "%s" CASCADE' % test_schema)
-    cur.execute('CREATE SCHEMA IF NOT EXISTS "%s"' % test_schema)
+    cur.execute('DROP SCHEMA IF EXISTS %s CASCADE' % test_schema)
+    cur.execute('CREATE SCHEMA IF NOT EXISTS %s' % test_schema)
     cur.execute(get_create_table_str())
 
     cur.execute(get_insert_into_table_str())
     cur.close()
 
-    verdict_conn = verdict_connect(host, port, dbname, user)
+    verdict_conn = verdict_connect(host, port)
     verdict_conn.sql(get_create_scramble_str())
 
 
-def psycopg2_connect(host, port, dbname, usr):
-    return psycopg2.connect(
-        host=host,
-        port=port,
-        dbname=dbname,
-        user=usr,
+def verdict_connect(host, port):
+    connection_string = 'jdbc:impala://%s:%s' % (host, port,)
+
+    return pyverdict.VerdictContext(
+        connection_string,
+        verdictdbmetaschema=TEST_META_SCHEMA_NAME,
     )
-
-
-def verdict_connect(host, port, dbname, user):
-    connection_string = 'jdbc:impalaql://%s:%s/%s?user=%s' % (
-        host,
-        port,
-        dbname,
-        user,
-    )
-
-    return pyverdict.VerdictContext(connection_string)
 
 
 def get_create_table_str():
@@ -102,13 +93,12 @@ def get_create_scramble_str():
 
 def teardown_module(module):
     cur = impala_conn.cursor()
-    cur.execute('DROP SCHEMA IF EXISTS "%s" CASCADE' % test_schema)
+    cur.execute('DROP SCHEMA IF EXISTS %s CASCADE' % test_schema)
     cur.close()
     impala_conn.close()
 
 
 class TestClass:
-
     def test_simple_bypass_count(self):
         sql = 'select count(*) from {}.{}'.format(test_schema, test_table)
         self.compare_bypass_query_result(sql)
@@ -187,5 +177,4 @@ class TestClass:
         assert actual is not None
         assert expected * 1.2 >= actual
         assert expected * 0.8 <= actual
-
 
