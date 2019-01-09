@@ -363,6 +363,7 @@ jobs:
       - restore_cache:
           keys:
           - verdict-dependencies-{{ checksum "pom.xml" }}
+      - run: conda create --name py36 python=3.6
       - run: pwd; ls;
       - run: cd pyverdict; pip install impyla pytest PyMySQL presto-python-client; python setup.py install;
       # - run: cd pyverdict; pwd; ls;
