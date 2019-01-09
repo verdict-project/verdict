@@ -16,13 +16,6 @@
 
 package org.verdictdb.metastore;
 
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.VerdictSingleResult;
@@ -45,6 +38,13 @@ import org.verdictdb.core.sqlobject.SelectItem;
 import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sqlwriter.QueryToSql;
+
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 
 public class ScrambleMetaStore extends VerdictMetaStore {
 
@@ -294,6 +294,61 @@ public class ScrambleMetaStore extends VerdictMetaStore {
             timestamp,
             jsonString));
     return query;
+  }
+
+  /**
+   * Return scramble meta for an existing scramble
+   *
+   * @param schema schema for an existing scramble
+   * @param table table name for an existing scramble
+   * @return ScrambleMeta object for an existing scramble
+   */
+  public ScrambleMeta retrieveExistingScramble(String schema, String table) {
+
+    try {
+      String storeTable = METASTORE_TABLE_NAME;
+
+      List<String> existingSchemas = conn.getSchemas();
+      if (!existingSchemas.contains(storeSchema)) {
+        return null;
+      }
+
+      List<String> existingTables = conn.getTables(storeSchema);
+      if (!existingTables.contains(storeTable)) {
+        return null;
+      }
+
+      // now ready to retrieve
+      String tableAlias = "t";
+      SelectQuery query =
+          SelectQuery.create(
+              Arrays.<SelectItem>asList(
+                  new BaseColumn(tableAlias, ORIGINAL_SCHEMA_COLUMN),
+                  new BaseColumn(tableAlias, ORIGINAL_TABLE_COLUMN),
+                  new BaseColumn(tableAlias, SCRAMBLE_SCHEMA_COLUMN),
+                  new BaseColumn(tableAlias, SCRAMBLE_TABLE_COLUMN),
+                  new BaseColumn(tableAlias, ADDED_AT_COLUMN),
+                  new BaseColumn(tableAlias, DATA_COLUMN)),
+              new BaseTable(storeSchema, storeTable, tableAlias));
+      query.addOrderby(new OrderbyAttribute(ADDED_AT_COLUMN, "desc"));
+      String sql = QueryToSql.convert(conn.getSyntax(), query);
+      DbmsQueryResult result = conn.execute(sql);
+
+      while (result.next()) {
+        String scrambleSchema = result.getString(2);
+        String scrambleTable = result.getString(3);
+        Pair<String, String> pair = ImmutablePair.of(scrambleSchema, scrambleTable);
+        String jsonString = result.getString(5);
+        if (scrambleSchema.equals(schema) && scrambleTable.equals(table)) {
+          return jsonString.toUpperCase().equals(DELETED)
+              ? null
+              : ScrambleMeta.fromJsonString(jsonString);
+        }
+      }
+    } catch (VerdictDBException e) {
+      e.printStackTrace();
+    }
+    return null;
   }
 
   /**

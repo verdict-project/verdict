@@ -16,6 +16,7 @@
 
 package org.verdictdb.core.sqlobject;
 
+import org.verdictdb.core.scrambling.ScramblingMethod;
 import org.verdictdb.exception.VerdictDBValueException;
 import org.verdictdb.sqlsyntax.MysqlSyntax;
 import org.verdictdb.sqlsyntax.PostgresqlSyntax;
@@ -51,8 +52,14 @@ public class CreateScrambleQuery extends CreateTableQuery {
   /** the number of tuples for each block */
   private long blocksize;
 
-  /** The column (if present) used for hashed sampling. */
+  /** The column (if present) used for hashed sampling */
   private String hashColumnName = null;
+
+  /** the condition that will be used to create a scramble */
+  private UnnamedColumn where = null;
+
+  /** the scrambling method */
+  private ScramblingMethod scramblingMethod = null;
 
   /** Existing partition columns in the original table */
   private List<String> existingPartitionColumns;
@@ -67,7 +74,8 @@ public class CreateScrambleQuery extends CreateTableQuery {
       String method,
       double size,
       long blocksize,
-      String hashColumnName) {
+      String hashColumnName,
+      UnnamedColumn where) {
     super();
     this.newSchema = newSchema;
     this.newTable = newTable;
@@ -77,6 +85,7 @@ public class CreateScrambleQuery extends CreateTableQuery {
     this.size = size;
     this.blocksize = blocksize;
     this.hashColumnName = hashColumnName;
+    this.where = where;
   }
 
   public void setExistingPartitionColumns(List<String> existingPartitionColumns) {
@@ -185,8 +194,28 @@ public class CreateScrambleQuery extends CreateTableQuery {
     this.size = size;
   }
 
+  public long getBlocksize() {
+    return blocksize;
+  }
+
   public void setHashColumnName(String hashColumnName) {
     this.hashColumnName = hashColumnName;
+  }
+
+  public UnnamedColumn getWhere() {
+    return where;
+  }
+
+  public void setWhere(UnnamedColumn where) {
+    this.where = where;
+  }
+
+  public ScramblingMethod getScramblingMethod() {
+    return scramblingMethod;
+  }
+
+  public void setScramblingMethod(ScramblingMethod scramblingMethod) {
+    this.scramblingMethod = scramblingMethod;
   }
 
   public List<String> getExistingPartitionColumns() {

@@ -16,24 +16,49 @@
 
 package org.verdictdb.core.scrambling;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public abstract class ScramblingMethodBase implements ScramblingMethod {
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
+@JsonSubTypes({
+  @JsonSubTypes.Type(value = UniformScramblingMethod.class, name = "uniform"),
+  @JsonSubTypes.Type(value = FastConvergeScramblingMethod.class, name = "fastconverge"),
+  @JsonSubTypes.Type(value = HashScramblingMethod.class, name = "hash")
+})
+public abstract class ScramblingMethodBase implements ScramblingMethod, Serializable {
+
+  private static final long serialVersionUID = 8767179573855372459L;
 
   protected long blockSize;
+
+  protected String type = "base";
 
   protected final int maxBlockCount;
 
   protected final double relativeSize; // size relative to original table (0.0 ~ 1.0)
 
-  private final Map<Integer, List<Double>> storedProbDist = new HashMap<>();
+  protected Map<Integer, List<Double>> storedProbDist = new HashMap<>();
 
   public ScramblingMethodBase(long blockSize, int maxBlockCount, double relativeSize) {
     this.blockSize = blockSize;
     this.maxBlockCount = maxBlockCount;
     this.relativeSize = relativeSize;
+  }
+
+  public ScramblingMethodBase(Map<Integer, List<Double>> probDist) {
+    this.storedProbDist = probDist;
+    // uses the first tier prob. dist. to calculate the relative size for now.
+    this.relativeSize = probDist.get(0).get(probDist.get(0).size() - 1);
+    // dyoon: with stored prob. dist. these values are not necessary?
+    this.blockSize = -1;
+    this.maxBlockCount = 1;
   }
 
   long getBlockSize() {
@@ -47,5 +72,14 @@ public abstract class ScramblingMethodBase implements ScramblingMethod {
   @Override
   public List<Double> getStoredCumulativeProbabilityDistributionForTier(int tier) {
     return storedProbDist.get(tier);
+  }
+
+  public int getMaxBlockCount() {
+    return maxBlockCount;
+  }
+
+  @Override
+  public double getRelativeSize() {
+    return relativeSize;
   }
 }
