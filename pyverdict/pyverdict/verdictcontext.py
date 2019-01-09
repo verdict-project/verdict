@@ -74,19 +74,42 @@ class VerdictContext:
         self._gateway.close()
 
     @classmethod
-    def new_mysql_context(cls, host, user, password=None, port=3306):
+    def new_mysql_context(
+        cls,
+        host,
+        user,
+        password=None,
+        port=3306,
+        verdictdbmetaschema=None,
+        verdictdbtempschema=None,
+    ):
         if password is None:
             connection_string = \
                 f'jdbc:mysql://{host}:{port}?user={user}'
         else:
             connection_string = \
                 f'jdbc:mysql://{host}:{port}?user={user}&password={password}'
-        ins = cls(connection_string)
+
+        ins = cls(
+            connection_string,
+            verdictdbmetaschema=verdictdbmetaschema,
+            verdictdbtempschema=verdictdbtempschema,
+        )
+
         created_verdict_contexts.append(ins)
         return ins
 
     @classmethod
-    def new_presto_context(cls, host, catalog, user, password=None, port=8081):
+    def new_presto_context(
+        cls,
+        host,
+        catalog,
+        user,
+        password=None,
+        port=8081,
+        verdictdbmetaschema=None,
+        verdictdbtempschema=None,
+    ):
         if password is None:
             connection_string = \
                 f'jdbc:presto://{host}:{port}/{catalog}?user={user}'
@@ -94,9 +117,54 @@ class VerdictContext:
             connection_string = \
                 f'jdbc:presto://{host}:{port}/{catalog}?' \
                 f'user={user}&password={password}'
-        ins = cls(connection_string)
+
+        ins = cls(
+            connection_string,
+            verdictdbmetaschema=verdictdbmetaschema,
+            verdictdbtempschema=verdictdbtempschema,
+        )
+
         created_verdict_contexts.append(ins)
         return ins
+
+    @classmethod
+    def new_impala_context(
+        cls,
+        host,
+        port,
+        schema=None,
+        username=None,
+        password=None,
+        verdictdbmetaschema=None,
+        verdictdbtempschema=None,
+    ):
+        connection_string = 'jdbc:impala://%s:%s%s%s'
+
+        schema_str = ''
+        if schema is not None:
+            schema_str = '/%s' % schema
+
+        username_str = ''
+        if username is not None:
+            username_str = 'UID=%s;' % username
+        password_str = ''
+        if password is not None:
+            password_str = 'PWD=%s;' % password
+
+        pre_params_str = '%s%s' % (username_str, password_str)
+
+        params_str = ''
+        if len(pre_params_str) > 0:
+            params_str = ';%s' % pre_params_str
+
+        instance = cls(
+            connection_string % (host, str(port), schema_str, params_str),
+            verdictdbmetaschema=verdictdbmetaschema,
+            verdictdbtempschema=verdictdbtempschema,
+        )
+        created_verdict_contexts.append(instance)
+
+        return instance
 
     def set_loglevel(self, level):
         self._context.setLoglevel(level)
