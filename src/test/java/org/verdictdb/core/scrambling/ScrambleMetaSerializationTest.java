@@ -1,14 +1,14 @@
 package org.verdictdb.core.scrambling;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.Test;
+import org.verdictdb.exception.VerdictDBValueException;
 
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.Test;
-import org.verdictdb.exception.VerdictDBValueException;
+import static org.junit.Assert.assertEquals;
 
 public class ScrambleMetaSerializationTest {
 
@@ -48,8 +48,8 @@ public class ScrambleMetaSerializationTest {
         "{\"schemaName\":\"new_schema\",\"tableName\":\"New_Table\","
             + "\"originalSchemaName\":\"Original_Schema\",\"originalTableName\":\"origiNAL_TABLE\","
             + "\"aggregationBlockColumn\":\"verdictDBblock\",\"aggregationBlockCount\":3,"
-            + "\"tierColumn\":\"VerdictTIER\",\"numberOfTiers\":2,"
-            + "\"method\":null,\"hashColumn\":null,"
+            + "\"tierColumn\":\"VerdictTIER\",\"numberOfTiers\":2,\"method\":null,"
+            + "\"scramblingMethod\":null,\"hashColumn\":null,"
             + "\"cumulativeDistributions\":{\"0\":[0.3,0.6,1.0],\"1\":[0.2,0.5,1.0]}}";
     return jsonString;
   }

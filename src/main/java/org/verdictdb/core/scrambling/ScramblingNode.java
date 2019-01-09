@@ -56,6 +56,7 @@ public class ScramblingNode extends CreateScrambledTableNode {
       ScramblingMethod method,
       String tierColumnName,
       String blockColumnName,
+      UnnamedColumn predicate,
       List<String> existingPartitionColumns,
       boolean createIfNotExists) {
 
@@ -67,6 +68,7 @@ public class ScramblingNode extends CreateScrambledTableNode {
         method,
         tierColumnName,
         blockColumnName,
+        predicate,
         existingPartitionColumns,
         createIfNotExists);
   }
@@ -87,6 +89,17 @@ public class ScramblingNode extends CreateScrambledTableNode {
       String oldSchemaName,
       String oldTableName,
       ScramblingMethod method,
+      Map<String, String> options) {
+    return create(newSchemaName, newTableName, oldSchemaName, oldTableName, method, null, options);
+  }
+
+  public static ScramblingNode create(
+      final String newSchemaName,
+      final String newTableName,
+      String oldSchemaName,
+      String oldTableName,
+      ScramblingMethod method,
+      UnnamedColumn predicate,
       Map<String, String> options) {
 
     IdCreator idCreator =
@@ -131,6 +144,7 @@ public class ScramblingNode extends CreateScrambledTableNode {
         method,
         tierColumnName,
         blockColumnName,
+        predicate,
         existingPartitionColumns,
         createIfNotExists);
   }
@@ -244,7 +258,7 @@ public class ScramblingNode extends CreateScrambledTableNode {
     //        SelectQuery.create(
     //            selectItems,
     //            new BaseTable(oldSchemaName, oldTableName, MAIN_TABLE_SOURCE_ALIAS_NAME));
-    SelectQuery scramblingQuery = SelectQuery.create(selectItems, tableSource);
+    SelectQuery scramblingQuery = SelectQuery.create(selectItems, tableSource, predicate);
 
     return scramblingQuery;
   }

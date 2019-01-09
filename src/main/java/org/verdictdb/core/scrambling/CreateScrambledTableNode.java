@@ -25,6 +25,7 @@ import org.verdictdb.core.querying.QueryNodeWithPlaceHolders;
 import org.verdictdb.core.sqlobject.CreateScrambledTableQuery;
 import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.core.sqlobject.SqlConvertible;
+import org.verdictdb.core.sqlobject.UnnamedColumn;
 import org.verdictdb.exception.VerdictDBException;
 
 import java.util.ArrayList;
@@ -55,6 +56,8 @@ public class CreateScrambledTableNode extends QueryNodeWithPlaceHolders {
 
   protected ScramblingMethod method;
 
+  protected UnnamedColumn predicate;
+
   public CreateScrambledTableNode(IdCreator namer, SelectQuery query) {
     super(namer, query);
     this.namer = namer;
@@ -68,6 +71,7 @@ public class CreateScrambledTableNode extends QueryNodeWithPlaceHolders {
       ScramblingMethod method,
       String tierColumnName,
       String blockColumnName,
+      UnnamedColumn predicate,
       List<String> existingPartitionColumns,
       boolean createIfNotExists) {
     super(namer, query);
@@ -77,6 +81,7 @@ public class CreateScrambledTableNode extends QueryNodeWithPlaceHolders {
     this.method = method;
     this.tierColumnName = tierColumnName;
     this.blockColumnName = blockColumnName;
+    this.predicate = predicate;
     this.partitionColumns.addAll(existingPartitionColumns);
     this.createIfNotExists = createIfNotExists;
   }

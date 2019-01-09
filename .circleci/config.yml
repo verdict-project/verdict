@@ -111,7 +111,7 @@ jobs:
     # CircleCI maintains a library of pre-built images
     # documented at https://circleci.com/docs/2.0/circleci-images/
     - image: mysql:5.5
-      command: mysqld --innodb_buffer_pool_size=2G
+      command: mysqld --innodb_buffer_pool_size=2G --general_log=1 --general_log_file=/tmp/mysql_general.log --slow_query_log=1 --slow_query_log_file=/tmp/mysql_slow_query.log
       environment:
         MYSQL_DATABASE: test
         MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
@@ -126,6 +126,7 @@ jobs:
       MAVEN_OPTS: -Xmx3200m
     steps:
     - run: apt-get update; apt-get install -y git
+    - setup_remote_docker
     - checkout
 
     # Set up maven dependencies
@@ -164,7 +165,7 @@ jobs:
     # CircleCI maintains a library of pre-built images
     # documented at https://circleci.com/docs/2.0/circleci-images/
     - image: mysql:5.5
-      command: mysqld --innodb_buffer_pool_size=2G
+      command: mysqld --innodb_buffer_pool_size=2G --general_log=1 --general_log_file=/tmp/mysql_general.log --slow_query_log=1 --slow_query_log_file=/tmp/mysql_slow_query.log
       environment:
         MYSQL_DATABASE: test
         MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
@@ -179,6 +180,7 @@ jobs:
       MAVEN_OPTS: -Xmx3200m
     steps:
     - run: apt-get update; apt-get install -y git
+    - setup_remote_docker
     - checkout
 
     # Set up maven dependencies
