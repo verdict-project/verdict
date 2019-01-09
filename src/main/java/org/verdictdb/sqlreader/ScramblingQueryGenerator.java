@@ -45,7 +45,8 @@ public class ScramblingQueryGenerator {
             method,
             size,
             blocksize,
-            hashColumnName);
+            hashColumnName,
+            null);
 
     return query;
   }
