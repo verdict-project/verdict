@@ -363,11 +363,11 @@ jobs:
       - restore_cache:
           keys:
           - verdict-dependencies-{{ checksum "pom.xml" }}
-      - run: conda create --name py36 python=3.6
       - run: pwd; ls;
+      - run: conda create --name py36 python=3.6; source py36/bin/activate; pip install impyla pytest python-dateutil; cd pyverdict; python setup.py install; pytest tests/test_impala*;
       - run: cd pyverdict; pip install impyla pytest PyMySQL presto-python-client; python setup.py install;
       # - run: cd pyverdict; pwd; ls;
-      - run: cd pyverdict; pytest;
+      - run: cd pyverdict; pytest --ignore tests/test_impala*;
       - save_cache:
           paths:
             - ~/.m2
