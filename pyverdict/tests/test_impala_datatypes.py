@@ -21,7 +21,6 @@ import uuid
 import math
 
 TEST_META_SCHEMA_NAME = 'pyverdict_impala_meta_schema'
-TEST_TEMP_SCHEMA_NAME = 'pyverdict_impala_temp_schema'
 
 TEST_SCHEMA_NAME = 'pyverdict_impala_datatype_test_schema' + str(uuid.uuid4())[:3]
 TEST_TABLE_NAME = 'test_table'
