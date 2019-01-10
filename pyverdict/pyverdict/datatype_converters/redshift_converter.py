@@ -6,8 +6,13 @@ import dateutil.tz
 
 NUM_MINUTES_IN_DAY = 1440
 
+utc_offset_min = None
 _utc_offset_timedelta = datetime.datetime.now(dateutil.tz.tzlocal()).utcoffset()
-utc_offset_min = (_utc_offset_timedelta.seconds // 60) - NUM_MINUTES_IN_DAY
+
+if _utc_offset_timedelta.days >= 0:
+    utc_offset_min = _utc_offset_timedelta.seconds // 60
+else:
+    utc_offset_min = (_utc_offset_timedelta.seconds // 60) - NUM_MINUTES_IN_DAY
 
 def _str_to_datetime(java_obj, idx):
     return dateutil.parser.parse(java_obj.getString(idx))
