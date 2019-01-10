@@ -14,6 +14,7 @@
     limitations under the License.
 '''
 from datetime import date, datetime, timedelta
+from .datatype_converters.impala_converter import ImpalaConverter
 import decimal
 import numpy as np
 import pandas as pd
@@ -91,6 +92,8 @@ class SingleResultSet:
             return cls._read_value_presto(resultset, index, col_type)
         elif dbtype == 'redshift':
             return resultset.getValue(index)
+        elif dbtype == 'impala':
+            return ImpalaConverter.read_value(resultset, index, col_type)
         else:
             raise NotImplementedError
 

@@ -1,6 +1,6 @@
 '''
     Copyright 2018 University of Michigan
- 
+
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
     You may obtain a copy of the License at
@@ -82,6 +82,7 @@ setuptools.setup(
     install_requires=[
         'py4j >= 0.10.7',
         'numpy >= 1.9',
-        'pandas >= 0.23'
+        'pandas >= 0.23',
+        'python-dateutil >= 2.7.5',
     ]
 )
