@@ -325,7 +325,7 @@ class VerdictContext:
         verdictdbmetaschema,
         verdictdbtempschema,
     ):
-        properties = self._get_properties(
+        verdict_options = self._get_verdict_options(
             gateway,
             verdictdbmetaschema,
             verdictdbtempschema,
@@ -341,14 +341,32 @@ class VerdictContext:
                 url,
                 user,
                 password,
-                properties,
+                verdict_options,
             )
 
         else:
             return gateway.jvm.org.verdictdb.VerdictContext.fromConnectionString(
                 url,
-                properties,
+                verdict_options,
             )
+
+
+    def _get_verdict_options(
+        self,
+        gateway,
+        verdictdbmetaschema,
+        verdictdbtempschema,
+    ):
+        verdict_options = gateway.jvm.org.verdictdb.commons.VerdictOption()
+        verdict_options.parseProperties(
+            self._get_properties(
+                gateway,
+                verdictdbmetaschema,
+                verdictdbtempschema,
+            )
+        )
+
+        return verdict_options
 
 
     def _get_properties(

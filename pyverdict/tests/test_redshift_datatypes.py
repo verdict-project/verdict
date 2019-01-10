@@ -30,7 +30,6 @@ def test_data_types_real():
 
 
 def test_data_types_sentinel():
-    return
     _test_data(_get_insert_sentinel_data_str())
 
 
@@ -83,6 +82,7 @@ def _check_types_same(redshift_conn, verdict_conn):
     expected_types = [
         type(x) for x in expected_rows[0]
     ]
+    print('Type names: %s' % (types))
     print('expected types: %s' % (expected_types,))
 
     # Now test
