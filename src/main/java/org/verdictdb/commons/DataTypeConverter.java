@@ -31,6 +31,7 @@ import static java.sql.Types.DISTINCT;
 import static java.sql.Types.DOUBLE;
 import static java.sql.Types.FLOAT;
 import static java.sql.Types.INTEGER;
+import static java.sql.Types.JAVA_OBJECT;
 import static java.sql.Types.LONGNVARCHAR;
 import static java.sql.Types.LONGVARBINARY;
 import static java.sql.Types.LONGVARCHAR;
@@ -81,6 +82,7 @@ public class DataTypeConverter {
     intToStringMap.put(DISTINCT, "distinct");
     intToStringMap.put(FLOAT, "float");
     intToStringMap.put(INTEGER, "integer");
+    intToStringMap.put(JAVA_OBJECT, "java_object");
     intToStringMap.put(LONGNVARCHAR, "longnvarchar");
     intToStringMap.put(LONGVARBINARY, "longvarbinary");
     intToStringMap.put(LONGVARCHAR, "longvarJdchar");

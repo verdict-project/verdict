@@ -51,15 +51,12 @@ class VerdictContext:
                           to a jar file.
     """
 
-<<<<<<< HEAD
-    def __init__(self, url, extra_class_path=None, user=None, password=None):
-        self._gateway = self._get_gateway(extra_class_path)
-        self._context = self._get_context(self._gateway, url, user, password)
-=======
     def __init__(
         self,
         url,
         extra_class_path=None,
+        user=None,
+        password=None,
         verdictdbmetaschema=None,
         verdictdbtempschema=None,
     ):
@@ -67,11 +64,12 @@ class VerdictContext:
         self._context = self._get_context(
             self._gateway,
             url,
+            user,
+            password,
             verdictdbmetaschema,
             verdictdbtempschema,
         )
 
->>>>>>> jrectorb-feature-pyverdict-impala
         self._dbtype = self._get_dbtype(url)
         self._url = url
 
@@ -134,7 +132,6 @@ class VerdictContext:
         return ins
 
     @classmethod
-<<<<<<< HEAD
     def new_redshift_context(cls, host, port, dbname='', user=None, password=None):
         pre_connection_string = 'jdbc:redshift://%s:%s%s'
 
@@ -145,7 +142,11 @@ class VerdictContext:
         connection_string = pre_connection_string % (host, str(port), dbname_str)
 
         instance = cls(connection_string, user=user, password=password)
-=======
+        created_verdict_contexts.append(instance)
+
+        return instance
+
+    @classmethod
     def new_impala_context(
         cls,
         host,
@@ -180,10 +181,37 @@ class VerdictContext:
             verdictdbmetaschema=verdictdbmetaschema,
             verdictdbtempschema=verdictdbtempschema,
         )
->>>>>>> jrectorb-feature-pyverdict-impala
+
         created_verdict_contexts.append(instance)
 
         return instance
+
+
+    @classmethod
+    def new_postgres_context(
+        cls,
+        dbname,
+        user,
+        password=None,
+        host='localhost',
+        port=5432,
+    ):
+
+        passwordStr = ''
+        if password is not None:
+            passwordStr = '&password=%s' % password
+
+        connection_string = 'jdbc:postgresql://%s:%s/%s?user=%s%s' % (
+            host,
+            port,
+            dbname,
+            user,
+            passwordStr
+        )
+
+        ins = cls(connection_string)
+        created_verdict_contexts.append(ins)
+        return ins
 
     def set_loglevel(self, level):
         self._context.setLoglevel(level)
@@ -288,8 +316,15 @@ class VerdictContext:
     def _get_verdictdb_version(self):
         return verdictcommon.get_verdictdb_version()
 
-
-    def _get_context(self, gateway, url, user, password):
+    def _get_context(
+        self,
+        gateway,
+        url,
+        user,
+        password,
+        verdictdbmetaschema,
+        verdictdbtempschema,
+    ):
         properties = self._get_properties(
             gateway,
             verdictdbmetaschema,

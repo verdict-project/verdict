@@ -86,6 +86,11 @@ public class AggregateFrameQueryResult extends AttributeValueRetrievalHelper
   }
 
   @Override
+  public String getColumnTypeName(int index) {
+    return aggregateFrame.getColumnTypeNames().get(index); 
+  }
+
+  @Override
   public boolean next() {
     if (it.hasNext()) {
       currentEntry = (Map.Entry) it.next();

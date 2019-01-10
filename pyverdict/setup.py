@@ -83,6 +83,7 @@ setuptools.setup(
         'py4j >= 0.10.7',
         'numpy >= 1.9',
         'pandas >= 0.23',
+        'psycopg2 >= 2.7.6',
         'python-dateutil >= 2.7.5',
     ]
 )
