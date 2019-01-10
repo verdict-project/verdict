@@ -49,14 +49,14 @@ def test_mysql_factory_method():
     verdict = VerdictContext.new_mysql_context(host, user, password)
     print(verdict.sql('show schemas'))
 
-#def test_mysql_init_method():
-#    host = 'localhost'
-#    port = 3306
-#    user = 'root'
-#    password = ''
-#
-#    verdict = pyverdict.mysql_context(host, user, password)
-#    print(verdict.sql('show schemas'))
+def test_mysql_init_method():
+    host = 'localhost'
+    port = 3306
+    user = 'root'
+    password = ''
+
+    verdict = pyverdict.mysql_context(host, user, password)
+    print(verdict.sql('show schemas'))
 
 def test_postgres_factory_method():
     host = 'localhost'

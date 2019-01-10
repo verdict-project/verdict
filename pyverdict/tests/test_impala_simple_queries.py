@@ -96,6 +96,7 @@ def teardown_module(module):
     cur.execute('DROP SCHEMA IF EXISTS %s CASCADE' % test_schema)
     cur.close()
     impala_conn.close()
+    verdict_conn.close()
 
 
 class TestClass:
