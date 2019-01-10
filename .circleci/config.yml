@@ -366,6 +366,8 @@ jobs:
           keys:
           - verdict-dependencies-{{ checksum "pom.xml" }}
       - run: pwd; ls;
+      - run: cd pyverdict; pip install pytest psycopg2 python-dateutil PyMySQL presto-python-client; python setup.py install;
+      - run: cd pyverdict; pytest --ignore=tests/test_impala_simple_queries.py --ignore=tests/test_impala_datatypes.py;
       # NOTE: To test the impala connector we ought compare the results of
       # verdict impala queries to that of the python impala API.  However,
       # the python impala API, impyla, currently does not support python 3.7.
@@ -376,9 +378,7 @@ jobs:
       - run: source activate py36; pip install impyla pytest; 
       - run: source activate py36; cd pyverdict; python setup.py install; pytest tests/test_impala*; 
       # - run: cd pyverdict; pwd; ls;
-      - run: cd pyverdict; pip install pytest psycopg2 python-dateutil PyMySQL presto-python-client; python setup.py install;
-      - run: cd pyverdict; pytest tests/test_verdictcontext.py;
-        #- run: cd pyverdict; pytest --ignore=tests/test_impala_simple_queries.py --ignore=tests/test_impala_datatypes.py;
+      #- run: cd pyverdict; pytest tests/test_verdictcontext.py;
       - save_cache:
           paths:
             - ~/.m2
