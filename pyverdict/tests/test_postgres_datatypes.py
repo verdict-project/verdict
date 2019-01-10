@@ -56,7 +56,7 @@ def test_data_types():
         for j in range(len(expected_row)):
             compare_value(expected_row[j], actual_row[j], types[j])
 
-    tear_down(pgres_conn)
+    tear_down(pgres_conn, verdict_conn)
 
 
 def compare_value(expected, actual, coltype):
@@ -195,9 +195,10 @@ def get_insert_sentinel_data_str(test_schema, test_table):
     )
 
 
-def tear_down(pgres_conn):
+def tear_down(pgres_conn, verdict_conn):
     cur = pgres_conn.cursor()
     cur.execute('DROP SCHEMA IF EXISTS "%s" CASCADE' % test_schema)
+    verdict_conn.close()
 
 
 def verdict_connect(host, port, dbname, user):

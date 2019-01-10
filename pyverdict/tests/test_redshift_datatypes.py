@@ -42,6 +42,7 @@ def _test_data(insertSQLStr):
 
     redshift_conn = setup_sandbox(host, port, username, password)
 
+    verdict_conn = None
     try:
         verdict_conn = verdict_connect(host, port, username, password)
 
@@ -52,7 +53,7 @@ def _test_data(insertSQLStr):
         _check_types_same(redshift_conn, verdict_conn)
 
     finally:
-        tear_down(redshift_conn)
+        tear_down(redshift_conn, verdict_conn)
 
 
 def _check_types_same(redshift_conn, verdict_conn):
@@ -133,11 +134,14 @@ def setup_sandbox(host, port, username, password):
     return redshift_conn
 
 
-def tear_down(redshift_conn):
+def tear_down(redshift_conn, verdict_conn):
     cur = redshift_conn.cursor()
     cur.execute('DROP SCHEMA IF EXISTS %s CASCADE' % TEST_SCHEMA_NAME)
     cur.close()
     redshift_conn.close()
+
+    if verdict_conn is not None:
+        verdict_conn.close()
 
 
 def verdict_connect(host, port, username, password):

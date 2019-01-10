@@ -43,7 +43,7 @@ def _test_data(insertSQLStr):
 
     _check_types_same(impala_conn, verdict_conn)
 
-    tear_down(impala_conn)
+    tear_down(impala_conn, verdict_conn)
 
 
 def _check_types_same(impala_conn, verdict_conn):
@@ -126,11 +126,12 @@ def setup_sandbox():
     return (impala_conn, verdict_conn)
 
 
-def tear_down(impala_conn):
+def tear_down(impala_conn, verdict_conn):
     cur = impala_conn.cursor()
     cur.execute('DROP SCHEMA IF EXISTS %s CASCADE' % TEST_SCHEMA_NAME)
     cur.close()
     impala_conn.close()
+    verdict_conn.close()
 
 
 def verdict_connect(host, port):
