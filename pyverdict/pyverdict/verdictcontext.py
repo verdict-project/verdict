@@ -72,10 +72,16 @@ class VerdictContext:
 
         self._dbtype = self._get_dbtype(url)
         self._url = url
+        self.is_closed = False
 
     def close(self):
-        self._context.close()
-        self._gateway.close()
+        if not self.is_closed:
+            self._context.close()
+            self._gateway.close()
+
+            self.is_closed = True
+
+        return
 
     @classmethod
     def new_mysql_context(
