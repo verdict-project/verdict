@@ -1,6 +1,6 @@
 '''
     Copyright 2018 University of Michigan
- 
+
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
     You may obtain a copy of the License at
@@ -37,7 +37,7 @@ class VerdictContext:
     """
     The main Python interface to VerdictDB's Java core.
 
-    All necessary JDBC drivers (i.e., jar files) are already included in the 
+    All necessary JDBC drivers (i.e., jar files) are already included in the
     pyverdict package. These drivers are included in the classpath.
 
     JVM is started on a separate process, which is to prevent KeyboardInterrupt
@@ -45,15 +45,15 @@ class VerdictContext:
 
     Args:
         url: jdbc connection string
-        extra_class_path: The extra classpath used in addition to verdictdb's 
+        extra_class_path: The extra classpath used in addition to verdictdb's
                           jar file. This arg can either be a single str or a
                           list of str; each str is an absolute path
                           to a jar file.
     """
 
-    def __init__(self, url, extra_class_path=None):
+    def __init__(self, url, extra_class_path=None, user=None, password=None):
         self._gateway = self._get_gateway(extra_class_path)
-        self._context = self._get_context(self._gateway, url)
+        self._context = self._get_context(self._gateway, url, user, password)
         self._dbtype = self._get_dbtype(url)
         self._url = url
 
@@ -85,6 +85,21 @@ class VerdictContext:
         ins = cls(connection_string)
         created_verdict_contexts.append(ins)
         return ins
+
+    @classmethod
+    def new_redshift_context(cls, host, port, dbname='', user=None, password=None):
+        pre_connection_string = 'jdbc:redshift://%s:%s%s'
+
+        dbname_str = ''
+        if len(dbname) > 0:
+            dbname_str = '/%s' % dbname
+
+        connection_string = pre_connection_string % (host, str(port), dbname_str)
+
+        instance = cls(connection_string, user=user, password=password)
+        created_verdict_contexts.append(instance)
+
+        return instance
 
     def set_loglevel(self, level):
         self._context.setLoglevel(level)
@@ -189,5 +204,19 @@ class VerdictContext:
     def _get_verdictdb_version(self):
         return verdictcommon.get_verdictdb_version()
 
-    def _get_context(self, gateway, url):
-        return gateway.jvm.org.verdictdb.VerdictContext.fromConnectionString(url)
+    def _get_context(self, gateway, url, user, password):
+        if user is not None or password is not None:
+            if user is None:
+                raise ValueError('Username must be provided when a password is')
+            if password is None:
+                raise ValueError('Password must be provided when a username is')
+
+            return gateway.jvm.org.verdictdb.VerdictContext.fromConnectionString(
+                url,
+                user,
+                password,
+            )
+
+        else:
+            return gateway.jvm.org.verdictdb.VerdictContext.fromConnectionString(url)
+
