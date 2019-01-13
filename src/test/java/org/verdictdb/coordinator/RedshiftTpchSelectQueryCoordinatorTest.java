@@ -602,9 +602,19 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
     dbmsConn.setDefaultSchema(REDSHIFT_SCHEMA);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsConn, options);
     coordinator.setScrambleMetaSet(meta);
+    ResultSet rs = stmt.executeQuery(sql);
+
+    if (queryNum >= 100) {
+      sql = sql.replaceAll("lineitem", "lineitem_hash_scrambled");
+    } else {
+      sql = sql.replaceAll("lineitem", "lineitem_scrambled");
+    }
+    if (queryNum != 4) {
+      sql = sql.replaceAll("orders", "orders_scrambled");
+    }
+
     ExecutionResultReader reader = coordinator.process(sql);
 
-    ResultSet rs = stmt.executeQuery(sql);
     return new ImmutablePair<>(reader, rs);
   }
 
