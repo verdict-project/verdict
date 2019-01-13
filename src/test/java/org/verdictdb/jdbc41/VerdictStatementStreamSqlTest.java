@@ -5,16 +5,8 @@
  */
 package org.verdictdb.jdbc41;
 
-import static org.junit.Assert.assertEquals;
-
-import java.io.File;
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-
+import com.google.common.base.Charsets;
+import com.google.common.io.Files;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -24,8 +16,15 @@ import org.junit.Test;
 import org.verdictdb.commons.DatabaseConnectionHelpers;
 import org.verdictdb.exception.VerdictDBException;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
+import java.io.File;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+
+import static org.junit.Assert.assertEquals;
 
 public class VerdictStatementStreamSqlTest {
 
@@ -88,6 +87,12 @@ public class VerdictStatementStreamSqlTest {
     stmt.execute(String.format("use %s", MYSQL_DATABASE));
     vstmt.execute(String.format("use %s", MYSQL_DATABASE));
     ResultSet rs = stmt.executeQuery(sql);
+    if (queryNum >= 100) {
+      sql = sql.replaceAll("lineitem", "lineitem_hash_scrambled");
+    } else {
+      sql = sql.replaceAll("lineitem", "lineitem_scrambled");
+    }
+    sql = sql.replaceAll("orders", "orders_scrambled");
     ResultSet vrs = ((VerdictStatement) vstmt).executeQuery("STREAM " + sql);
     System.out.println(String.format("Query %d Executed.", queryNum));
     return new ImmutablePair<>(vrs, rs);
@@ -125,7 +130,7 @@ public class VerdictStatementStreamSqlTest {
         assertEquals(rs.getDouble(10), vrs.getDouble(11), 1e-5);
       }
     }
-    //assertEquals(10, blockSeq);
+    // assertEquals(10, blockSeq);
   }
 
   @Test

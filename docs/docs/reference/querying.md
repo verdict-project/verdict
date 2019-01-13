@@ -12,14 +12,14 @@ We describe them in more detail below.
 
 ## VerdictDB's JDBC Driver
 
-Suppose we aim to query the average price of the items in the `sales` table, i.e., `select avg(price) from sales`. Then, issuing the query in a traditional way to the VerdictDB's JDBC interface returns an approximate answer by default.
+Suppose we aim to query the average price of the items in the `sales` table, i.e., `select avg(price) from sales`. Then, issuing the query with `sales_scramble` table in a traditional way to the VerdictDB's JDBC interface returns an approximate answer.
 
 The below code shows an example.
 
 ```java
 Connection verdict = DriverManager.getConnection("jdbc:verdict:mysql://localhost", "root", "rootpassword");
 Statement stmt = verdict.createStatement();
-ResultSet rs = stmt.executeQuery("select avg(price) from sales");
+ResultSet rs = stmt.executeQuery("select avg(price) from sales_scramble");
 ```
 
 !!! note "Note: Direct querying to the backend"
@@ -33,7 +33,7 @@ Issuing a query using `VerdictContext.sql()` method returns a single approximate
 ```java
 String connectionString = "jdbc:mysql://localhost?user=root&password=rootpassword";
 VerdictContext verdict = VerdictContext.fromJdbcConnectionString(connectionString);
-VerdictSingleResult rs = verdict.sql("select avg(price) from sales");
+VerdictSingleResult rs = verdict.sql("select avg(price) from sales_scramble");
 ```
 
 !!! note

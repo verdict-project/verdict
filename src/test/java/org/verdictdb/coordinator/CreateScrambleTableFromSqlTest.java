@@ -322,8 +322,9 @@ public class CreateScrambleTableFromSqlTest {
 
     String countOriginalSql =
         String.format(
-            "SELECT COUNT(*) FROM %s.lineitem LIMIT 1",
-            DatabaseConnectionHelpers.COMMON_SCHEMA_NAME);
+            "SELECT COUNT(*) FROM %s.lineitem_uniform_scramble LIMIT 1", TEMP_SCHEMA_NAME);
+
+    //            DatabaseConnectionHelpers.COMMON_SCHEMA_NAME);
 
     ScrambleMetaSet scrambleMetaSet = store.retrieve();
     SelectQueryCoordinator coordinator =
@@ -363,9 +364,8 @@ public class CreateScrambleTableFromSqlTest {
     stmt.execute(createScrambleSql);
 
     String countOriginalSql =
-        String.format(
-            "SELECT COUNT(*) FROM %s.lineitem LIMIT 1",
-            DatabaseConnectionHelpers.COMMON_SCHEMA_NAME);
+        String.format("SELECT COUNT(*) FROM %s.lineitem_fc_scramble LIMIT 1", TEMP_SCHEMA_NAME);
+    //            DatabaseConnectionHelpers.COMMON_SCHEMA_NAME);
 
     ScrambleMetaSet scrambleMetaSet = store.retrieve();
     SelectQueryCoordinator coordinator =
