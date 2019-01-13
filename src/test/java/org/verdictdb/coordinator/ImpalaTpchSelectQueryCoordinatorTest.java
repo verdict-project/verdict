@@ -111,11 +111,19 @@ public class ImpalaTpchSelectQueryCoordinatorTest {
         new CachedDbmsConnection(new JdbcConnection(impalaConn, new ImpalaSyntax()));
     dbmsconn.setDefaultSchema(IMPALA_DATABASE);
 
+    ResultSet rs = stmt.executeQuery(sql);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     coordinator.setScrambleMetaSet(meta);
+
+    if (queryNum >= 100) {
+      sql = sql.replaceAll("lineitem", "lineitem_hash_scrambled");
+    } else {
+      sql = sql.replaceAll("lineitem", "lineitem_scrambled");
+    }
+    sql = sql.replaceAll("orders", "orders_scrambled");
+
     ExecutionResultReader reader = coordinator.process(sql);
 
-    ResultSet rs = stmt.executeQuery(sql);
     return new ImmutablePair<>(reader, rs);
   }
 
