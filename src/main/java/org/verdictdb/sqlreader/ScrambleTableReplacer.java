@@ -140,7 +140,7 @@ public class ScrambleTableReplacer {
       BaseTable bt = (BaseTable) table;
 
       for (ScrambleMeta meta : metaSet) {
-        // Substitute names with those of the first scrambled table found.
+        // Detects scrambled tables.
         // The scramble meta are expected to be retrieved from the recently created ones.
         if (meta.getSchemaName().equals(bt.getSchemaName())
             && meta.getTableName().equals(bt.getTableName())
@@ -189,7 +189,7 @@ public class ScrambleTableReplacer {
       BaseTable bt = (BaseTable) table;
 
       for (ScrambleMeta meta : metaSet) {
-        // substitute names with those of the first scrambled table found.
+        // Detects scrambled tables.
         if (meta.getSchemaName().equals(bt.getSchemaName())
             && meta.getTableName().equals(bt.getTableName())
             && meta.isMethodCompatibleWithSimpleAggregates()) {

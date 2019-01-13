@@ -604,7 +604,9 @@ public class RedshiftTpchSelectQueryCoordinatorTest {
     coordinator.setScrambleMetaSet(meta);
     ResultSet rs = stmt.executeQuery(sql);
 
-    if (queryNum >= 100) {
+    if (queryNum == 4) {
+      // do nothing
+    } else if (queryNum >= 100) {
       sql = sql.replaceAll("lineitem", "lineitem_hash_scrambled");
     } else {
       sql = sql.replaceAll("lineitem", "lineitem_scrambled");

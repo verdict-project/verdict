@@ -1,7 +1,5 @@
 package org.verdictdb.coordinator;
 
-import static org.junit.Assert.assertEquals;
-
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -25,6 +23,8 @@ import org.verdictdb.sqlreader.NonValidatingSQLParser;
 import org.verdictdb.sqlreader.RelationStandardizer;
 import org.verdictdb.sqlsyntax.MysqlSyntax;
 import org.verdictdb.sqlwriter.SelectQueryToSql;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * Test cases are from
@@ -100,13 +100,16 @@ public class SparkTpchSelectQueryCoordinatorTest {
             + " l_returnflag, "
             + " l_linestatus ";
 
+    String newSql = sql.replaceAll("lineitem", "lineitem_scrambled");
+    newSql = newSql.replaceAll("orders", "orders_scrambled");
+
     DbmsConnection dbmsconn = new SparkConnection(spark);
     dbmsconn.setDefaultSchema(TEST_SCHEMA);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
 
     coordinator.setScrambleMetaSet(meta);
     //    coordinator.setDefaultSchema("test");
-    ExecutionResultReader reader = coordinator.process(sql);
+    ExecutionResultReader reader = coordinator.process(newSql);
 
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
@@ -183,13 +186,16 @@ public class SparkTpchSelectQueryCoordinatorTest {
             + "o_orderdate "
             + "limit 10";
 
+    String newSql = sql.replaceAll("lineitem", "lineitem_scrambled");
+    newSql = newSql.replaceAll("orders", "orders_scrambled");
+
     DbmsConnection dbmsconn = new SparkConnection(spark);
     dbmsconn.setDefaultSchema(TEST_SCHEMA);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
 
     coordinator.setScrambleMetaSet(meta);
     //    coordinator.setDefaultSchema("test");
-    ExecutionResultReader reader = coordinator.process(sql);
+    ExecutionResultReader reader = coordinator.process(newSql);
 
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
@@ -236,13 +242,16 @@ public class SparkTpchSelectQueryCoordinatorTest {
             + "order by "
             + "o_orderpriority ";
 
+    String newSql = sql.replaceAll("lineitem", "lineitem_scrambled");
+    newSql = newSql.replaceAll("orders", "orders_scrambled");
+
     DbmsConnection dbmsconn = new SparkConnection(spark);
     dbmsconn.setDefaultSchema(TEST_SCHEMA);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
 
     coordinator.setScrambleMetaSet(meta);
     //    coordinator.setDefaultSchema("test");
-    ExecutionResultReader reader = coordinator.process(sql);
+    ExecutionResultReader reader = coordinator.process(newSql);
 
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
@@ -295,13 +304,16 @@ public class SparkTpchSelectQueryCoordinatorTest {
             + "order by "
             + "revenue desc ";
 
+    String newSql = sql.replaceAll("lineitem", "lineitem_scrambled");
+    newSql = newSql.replaceAll("orders", "orders_scrambled");
+
     DbmsConnection dbmsconn = new SparkConnection(spark);
     dbmsconn.setDefaultSchema(TEST_SCHEMA);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
 
     coordinator.setScrambleMetaSet(meta);
     //    coordinator.setDefaultSchema("test");
-    ExecutionResultReader reader = coordinator.process(sql);
+    ExecutionResultReader reader = coordinator.process(newSql);
 
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
@@ -343,13 +355,16 @@ public class SparkTpchSelectQueryCoordinatorTest {
             + "and l_discount between 0.04 - 0.02 and 0.04 + 0.02 "
             + "and l_quantity < 15 ";
 
+    String newSql = sql.replaceAll("lineitem", "lineitem_scrambled");
+    newSql = newSql.replaceAll("orders", "orders_scrambled");
+
     DbmsConnection dbmsconn = new SparkConnection(spark);
     dbmsconn.setDefaultSchema(TEST_SCHEMA);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
 
     coordinator.setScrambleMetaSet(meta);
     //    coordinator.setDefaultSchema("test");
-    ExecutionResultReader reader = coordinator.process(sql);
+    ExecutionResultReader reader = coordinator.process(newSql);
 
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
@@ -420,13 +435,16 @@ public class SparkTpchSelectQueryCoordinatorTest {
             + "cust_nation, "
             + "l_year ";
 
+    String newSql = sql.replaceAll("lineitem", "lineitem_scrambled");
+    newSql = newSql.replaceAll("orders", "orders_scrambled");
+
     DbmsConnection dbmsconn = new SparkConnection(spark);
     dbmsconn.setDefaultSchema(TEST_SCHEMA);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
 
     coordinator.setScrambleMetaSet(meta);
     //    coordinator.setDefaultSchema("test");
-    ExecutionResultReader reader = coordinator.process(sql);
+    ExecutionResultReader reader = coordinator.process(newSql);
 
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
@@ -490,13 +508,16 @@ public class SparkTpchSelectQueryCoordinatorTest {
             + "order by\n"
             + "  o_year";
 
+    String newSql = sql.replaceAll("lineitem", "lineitem_scrambled");
+    newSql = newSql.replaceAll("orders", "orders_scrambled");
+
     DbmsConnection dbmsconn = new SparkConnection(spark);
     dbmsconn.setDefaultSchema(TEST_SCHEMA);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
 
     coordinator.setScrambleMetaSet(meta);
     //    coordinator.setDefaultSchema("test");
-    ExecutionResultReader reader = coordinator.process(sql);
+    ExecutionResultReader reader = coordinator.process(newSql);
 
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
@@ -558,13 +579,16 @@ public class SparkTpchSelectQueryCoordinatorTest {
             + "  nation,\n"
             + "  o_year desc";
 
+    String newSql = sql.replaceAll("lineitem", "lineitem_scrambled");
+    newSql = newSql.replaceAll("orders", "orders_scrambled");
+
     DbmsConnection dbmsconn = new SparkConnection(spark);
     dbmsconn.setDefaultSchema(TEST_SCHEMA);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
 
     coordinator.setScrambleMetaSet(meta);
     //    coordinator.setDefaultSchema("test");
-    ExecutionResultReader reader = coordinator.process(sql);
+    ExecutionResultReader reader = coordinator.process(newSql);
 
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
@@ -629,13 +653,16 @@ public class SparkTpchSelectQueryCoordinatorTest {
             + "order by "
             + "revenue desc ";
 
+    String newSql = sql.replaceAll("lineitem", "lineitem_scrambled");
+    newSql = newSql.replaceAll("orders", "orders_scrambled");
+
     DbmsConnection dbmsconn = new SparkConnection(spark);
     dbmsconn.setDefaultSchema(TEST_SCHEMA);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
 
     coordinator.setScrambleMetaSet(meta);
     //    coordinator.setDefaultSchema("test");
-    ExecutionResultReader reader = coordinator.process(sql);
+    ExecutionResultReader reader = coordinator.process(newSql);
 
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
@@ -695,13 +722,16 @@ public class SparkTpchSelectQueryCoordinatorTest {
             + "order by "
             + "l_shipmode ";
 
+    String newSql = sql.replaceAll("lineitem", "lineitem_scrambled");
+    newSql = newSql.replaceAll("orders", "orders_scrambled");
+
     DbmsConnection dbmsconn = new SparkConnection(spark);
     dbmsconn.setDefaultSchema(TEST_SCHEMA);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
 
     coordinator.setScrambleMetaSet(meta);
     //    coordinator.setDefaultSchema("test");
-    ExecutionResultReader reader = coordinator.process(sql);
+    ExecutionResultReader reader = coordinator.process(newSql);
 
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
@@ -742,13 +772,16 @@ public class SparkTpchSelectQueryCoordinatorTest {
             + "c_custkey "
             + "order by c_custkey";
 
+    String newSql = sql.replaceAll("lineitem", "lineitem_scrambled");
+    newSql = newSql.replaceAll("orders", "orders_scrambled");
+
     DbmsConnection dbmsconn = new SparkConnection(spark);
     dbmsconn.setDefaultSchema(TEST_SCHEMA);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
 
     coordinator.setScrambleMetaSet(meta);
     //    coordinator.setDefaultSchema("test");
-    ExecutionResultReader reader = coordinator.process(sql);
+    ExecutionResultReader reader = coordinator.process(newSql);
 
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
@@ -790,13 +823,16 @@ public class SparkTpchSelectQueryCoordinatorTest {
             + "and l_shipdate >= date '1992-01-01' "
             + "and l_shipdate < date '1998-01-01' ";
 
+    String newSql = sql.replaceAll("lineitem", "lineitem_scrambled");
+    newSql = newSql.replaceAll("orders", "orders_scrambled");
+
     DbmsConnection dbmsconn = new SparkConnection(spark);
     dbmsconn.setDefaultSchema(TEST_SCHEMA);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
 
     coordinator.setScrambleMetaSet(meta);
     //    coordinator.setDefaultSchema("test");
-    ExecutionResultReader reader = coordinator.process(sql);
+    ExecutionResultReader reader = coordinator.process(newSql);
 
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
@@ -844,13 +880,16 @@ public class SparkTpchSelectQueryCoordinatorTest {
             + "order by "
             + "l_suppkey";
 
+    String newSql = sql.replaceAll("lineitem", "lineitem_scrambled");
+    newSql = newSql.replaceAll("orders", "orders_scrambled");
+
     DbmsConnection dbmsconn = new SparkConnection(spark);
     dbmsconn.setDefaultSchema(TEST_SCHEMA);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
 
     coordinator.setScrambleMetaSet(meta);
     //    coordinator.setDefaultSchema("test");
-    ExecutionResultReader reader = coordinator.process(sql);
+    ExecutionResultReader reader = coordinator.process(newSql);
 
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
@@ -908,13 +947,16 @@ public class SparkTpchSelectQueryCoordinatorTest {
             + ") a \n"
             + "where quantity > t_avg_quantity";
 
+    String newSql = sql.replaceAll("lineitem", "lineitem_scrambled");
+    newSql = newSql.replaceAll("orders", "orders_scrambled");
+
     DbmsConnection dbmsconn = new SparkConnection(spark);
     dbmsconn.setDefaultSchema(TEST_SCHEMA);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
 
     coordinator.setScrambleMetaSet(meta);
     //    coordinator.setDefaultSchema("test");
-    ExecutionResultReader reader = coordinator.process(sql);
+    ExecutionResultReader reader = coordinator.process(newSql);
 
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
@@ -980,13 +1022,16 @@ public class SparkTpchSelectQueryCoordinatorTest {
             + "  o_totalprice desc,\n"
             + "  o_orderdate \n";
 
+    String newSql = sql.replaceAll("lineitem", "lineitem_scrambled");
+    newSql = newSql.replaceAll("orders", "orders_scrambled");
+
     DbmsConnection dbmsconn = new SparkConnection(spark);
     dbmsconn.setDefaultSchema(TEST_SCHEMA);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
 
     coordinator.setScrambleMetaSet(meta);
     //    coordinator.setDefaultSchema("test");
-    ExecutionResultReader reader = coordinator.process(sql);
+    ExecutionResultReader reader = coordinator.process(newSql);
 
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
@@ -1050,13 +1095,16 @@ public class SparkTpchSelectQueryCoordinatorTest {
             + "and l_shipinstruct = 'DELIVER IN PERSON' "
             + ") ";
 
+    String newSql = sql.replaceAll("lineitem", "lineitem_scrambled");
+    newSql = newSql.replaceAll("orders", "orders_scrambled");
+
     DbmsConnection dbmsconn = new SparkConnection(spark);
     dbmsconn.setDefaultSchema(TEST_SCHEMA);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
 
     coordinator.setScrambleMetaSet(meta);
     //    coordinator.setDefaultSchema("test");
-    ExecutionResultReader reader = coordinator.process(sql);
+    ExecutionResultReader reader = coordinator.process(newSql);
 
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
@@ -1108,13 +1156,16 @@ public class SparkTpchSelectQueryCoordinatorTest {
             + "  group by s_name\n"
             + "order by s_name";
 
+    String newSql = sql.replaceAll("lineitem", "lineitem_scrambled");
+    newSql = newSql.replaceAll("orders", "orders_scrambled");
+
     DbmsConnection dbmsconn = new SparkConnection(spark);
     dbmsconn.setDefaultSchema(TEST_SCHEMA);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
 
     coordinator.setScrambleMetaSet(meta);
     //    coordinator.setDefaultSchema("test");
-    ExecutionResultReader reader = coordinator.process(sql);
+    ExecutionResultReader reader = coordinator.process(newSql);
 
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
@@ -1182,13 +1233,16 @@ public class SparkTpchSelectQueryCoordinatorTest {
             + "group by s_name "
             + "order by numwait desc, s_name ";
 
+    String newSql = sql.replaceAll("lineitem", "lineitem_scrambled");
+    newSql = newSql.replaceAll("orders", "orders_scrambled");
+
     DbmsConnection dbmsconn = new SparkConnection(spark);
     dbmsconn.setDefaultSchema(TEST_SCHEMA);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
 
     coordinator.setScrambleMetaSet(meta);
     //    coordinator.setDefaultSchema("test");
-    ExecutionResultReader reader = coordinator.process(sql);
+    ExecutionResultReader reader = coordinator.process(newSql);
 
     NonValidatingSQLParser sqlToRelation = new NonValidatingSQLParser();
     AbstractRelation relation = sqlToRelation.toRelation(sql);
