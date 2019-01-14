@@ -94,10 +94,10 @@ def _check_types_same(redshift_conn, verdict_conn):
         expected_row = expected_rows[i]
         actual_row = rows[i]
         for j in range(len(expected_row)):
-            compare_value(expected_row[j], actual_row[j])
+            compare_value(expected_row[j], actual_row[j], types[i])
 
 
-def compare_value(expected, actual):
+def compare_value(expected, actual, col_type_name):
     if isinstance(expected, bytes):
         if isinstance(actual, bytes):
             assert expected == actual
@@ -105,6 +105,10 @@ def compare_value(expected, actual):
             assert int.from_bytes(expected, byteorder='big') == actual
     elif isinstance(expected, float):
         assert math.isclose(expected, actual, rel_tol=5e-05)
+    elif col_type_name in ('timetz', 'timestamptz'):
+        # We must depend on the timezone returned by the JDBC, so simply
+        # ignore equality test in this case.
+        pass
     else:
         assert expected == actual
 
