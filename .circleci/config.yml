@@ -365,7 +365,7 @@ jobs:
       - restore_cache:
           keys:
           - verdict-dependencies-{{ checksum "pom.xml" }}
-      - run: cd pyverdict; pip install pytest PyMySQL presto-python-client; python setup.py install;
+      - run: cd pyverdict; pip install pytest PyMySQL presto-python-client psycopg2; python setup.py install;
       # pytest has an internal error if test_verdictcontext runs after 
       # all other tests.  To avoid this, run before instead.
       - run: cd pyverdict; pytest tests/test_verdictcontext.py;

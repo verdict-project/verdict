@@ -1,14 +1,8 @@
 from .converter_base import DatatypeConverterBase
-import psycopg2.tz
 import json
 import datetime
 import dateutil
 import dateutil.tz
-
-NUM_MINUTES_IN_DAY = 1440
-
-_utc_offset_timedelta = datetime.datetime.now(dateutil.tz.tzlocal()).utcoffset()
-utc_offset_min = (_utc_offset_timedelta.seconds // 60) - NUM_MINUTES_IN_DAY
 
 def _get_num_list_corr_types(str_nums):
     result = []
@@ -160,11 +154,7 @@ def _str_to_time(java_obj, idx):
 
 
 def _get_base_timezone():
-    return psycopg2.tz.FixedOffsetTimezone(
-        offset=utc_offset_min,
-        name=None,
-    )
-
+    return dateutil.tz.tzlocal()
 
 def _str_to_timetz(java_obj, idx):
     result = _str_to_time(java_obj, idx)
