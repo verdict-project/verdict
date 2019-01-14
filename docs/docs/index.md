@@ -33,6 +33,7 @@ First, users must create a *scramble* for their large table. The scramble is jus
     - [Connecting to Data Sources](/reference/connection)
     - [VerdictDB JDBC Properties](/reference/properties)
     - [Creating/Viewing Scrambles](/reference/scrambling)
+    - [Appending Scrambles](/reference/append_scrambling)
     - [Dropping Scrambles](/reference/drop_scrambling)
     - [Select-Query Syntax](/reference/query_syntax)
     - [Stream Querying](/reference/streaming)
