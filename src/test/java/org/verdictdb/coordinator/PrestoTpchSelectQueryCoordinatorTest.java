@@ -1,15 +1,7 @@
 package org.verdictdb.coordinator;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
-import java.io.File;
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-
+import com.google.common.base.Charsets;
+import com.google.common.io.Files;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -30,8 +22,15 @@ import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sqlsyntax.PrestoHiveSyntax;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
+import java.io.File;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 @Category(PrestoTests.class)
 public class PrestoTpchSelectQueryCoordinatorTest {
@@ -79,8 +78,7 @@ public class PrestoTpchSelectQueryCoordinatorTest {
     DbmsConnection dbmsConn = JdbcConnection.create(conn);
 
     // Create Scramble table
-    dbmsConn.execute(
-        String.format("DROP TABLE IF EXISTS %s.lineitem_scrambled", PRESTO_SCHEMA));
+    dbmsConn.execute(String.format("DROP TABLE IF EXISTS %s.lineitem_scrambled", PRESTO_SCHEMA));
     dbmsConn.execute(String.format("DROP TABLE IF EXISTS %s.orders_scrambled", PRESTO_SCHEMA));
     dbmsConn.execute(
         String.format("DROP TABLE IF EXISTS %s.lineitem_hash_scrambled", PRESTO_SCHEMA));
@@ -94,7 +92,12 @@ public class PrestoTpchSelectQueryCoordinatorTest {
         scrambler.scramble(PRESTO_SCHEMA, "orders", PRESTO_SCHEMA, "orders_scrambled", "uniform");
     ScrambleMeta meta3 =
         scrambler.scramble(
-            PRESTO_SCHEMA, "lineitem", PRESTO_SCHEMA, "lineitem_hash_scrambled", "hash", "l_orderkey");
+            PRESTO_SCHEMA,
+            "lineitem",
+            PRESTO_SCHEMA,
+            "lineitem_hash_scrambled",
+            "hash",
+            "l_orderkey");
     meta.addScrambleMeta(meta1);
     meta.addScrambleMeta(meta2);
     meta.addScrambleMeta(meta3);
@@ -109,11 +112,19 @@ public class PrestoTpchSelectQueryCoordinatorTest {
     jdbcConn.setOutputDebugMessage(true);
     DbmsConnection dbmsconn = new CachedDbmsConnection(jdbcConn);
     dbmsconn.setDefaultSchema(PRESTO_SCHEMA);
+    ResultSet rs = stmt.executeQuery(sql);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn, options);
     coordinator.setScrambleMetaSet(meta);
+
+    if (queryNum >= 100) {
+      sql = sql.replaceAll("lineitem", "lineitem_hash_scrambled");
+    } else {
+      sql = sql.replaceAll("lineitem", "lineitem_scrambled");
+    }
+    sql = sql.replaceAll("orders", "orders_scrambled");
+
     ExecutionResultReader reader = coordinator.process(sql);
 
-    ResultSet rs = stmt.executeQuery(sql);
     System.out.println(String.format("Query %d Executed.", queryNum));
     return new ImmutablePair<>(reader, rs);
   }
@@ -197,7 +208,7 @@ public class PrestoTpchSelectQueryCoordinatorTest {
     }
     assertEquals(10, cnt);
   }
-  
+
   @Test
   public void queryCountDistinct4Test() throws VerdictDBException, SQLException, IOException {
     Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(103);

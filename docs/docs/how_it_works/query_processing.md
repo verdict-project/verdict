@@ -11,7 +11,7 @@ For description, we use the following example query:
 select product, avg(sales_price) as avg_price
 from (
   select product, price * (1 - discount) as sales_price
-  from sales_table
+  from sales_table_scramble
   where order_date between date '2018-01-01' and date '2018-01-31'
 ) t
 group by product
