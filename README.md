@@ -13,7 +13,7 @@ Documentation: https://docs.verdictdb.org
 
 
 
-# Same SQL, Same DB, 100x-200x Faster Analytjjjjics
+# Same SQL, Same DB, 100x-200x Faster Analytics
 
 <p align="center">
 <img src="http://verdictdb.org/image/verdict-for-impala-speedup.png" width="600px" />
