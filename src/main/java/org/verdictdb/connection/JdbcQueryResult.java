@@ -32,6 +32,8 @@ public class JdbcQueryResult extends AttributeValueRetrievalHelper implements Db
 
   List<Integer> columnTypes = new ArrayList<>();
 
+  List<String> columnTypeNames = new ArrayList<>();
+
   //  ResultSet resultSet;
 
   List<List<Object>> result = new ArrayList<>();
@@ -54,6 +56,7 @@ public class JdbcQueryResult extends AttributeValueRetrievalHelper implements Db
     for (int i = 0; i < columnCount; i++) {
       columnNames.add(meta.getColumnLabel(i + 1));
       columnTypes.add(meta.getColumnType(i + 1));
+      columnTypeNames.add(meta.getColumnTypeName(i + 1));
       precision.add(meta.getPrecision(i + 1));
       scale.add(meta.getScale(i + 1));
       columnDisplaySize.add(meta.getColumnDisplaySize(i + 1));
@@ -102,6 +105,11 @@ public class JdbcQueryResult extends AttributeValueRetrievalHelper implements Db
   @Override
   public int getColumnType(int index) {
     return columnTypes.get(index);
+  }
+
+  @Override
+  public String getColumnTypeName(int index) {
+    return columnTypeNames.get(index);
   }
 
   @Override

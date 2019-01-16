@@ -365,10 +365,20 @@ jobs:
       - restore_cache:
           keys:
           - verdict-dependencies-{{ checksum "pom.xml" }}
-      - run: pwd; ls;
-      - run: cd pyverdict; pip install pytest PyMySQL presto-python-client; python setup.py install;
-      # - run: cd pyverdict; pwd; ls;
-      - run: cd pyverdict; pytest;
+      - run: cd pyverdict; pip install pytest PyMySQL presto-python-client psycopg2; python setup.py install;
+      # pytest has an internal error if test_verdictcontext runs after 
+      # all other tests.  To avoid this, run before instead.
+      - run: cd pyverdict; pytest tests/test_verdictcontext.py;
+      - run: cd pyverdict; pytest --ignore=tests/test_impala_simple_queries.py --ignore=tests/test_impala_datatypes.py --ignore=tests/test_verdictcontext.py;
+      # NOTE: To test the impala connector we ought compare the results of
+      # verdict impala queries to that of the python impala API.  However,
+      # the python impala API, impyla, currently does not support python 3.7.
+      # Thus, to properly test the impala connector, we downgrade to python 3.6
+      # for the impala tests via another venv, then run all other non-impala 
+      # tests using python 3.7.
+      - run: conda create --name py36 python=3.6; 
+      - run: source activate py36; pip install impyla pytest; 
+      - run: source activate py36; cd pyverdict; python setup.py install; pytest tests/test_impala*; 
       - save_cache:
           paths:
             - ~/.m2

@@ -1,6 +1,6 @@
 '''
     Copyright 2018 University of Michigan
- 
+
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
     You may obtain a copy of the License at
@@ -49,7 +49,7 @@ def test_data_types():
         for j in range(len(expected_row)):
             compare_value(expected_row[j], actual_row[j])
 
-    tear_down(mysql_conn)
+    tear_down(mysql_conn, verdict_conn)
 
 
 def compare_value(expected, actual):
@@ -142,11 +142,12 @@ def setup_sandbox():
     return (mysql_conn, verdict_conn)
 
 
-def tear_down(mysql_conn):
+def tear_down(mysql_conn, verdict_conn):
     cur = mysql_conn.cursor()
     cur.execute('DROP SCHEMA IF EXISTS ' + test_schema)
     cur.close()
     mysql_conn.close()
+    verdict_conn.close()
 
 
 def verdict_connect(host, port, usr, pwd):

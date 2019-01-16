@@ -57,6 +57,12 @@ public interface DbmsQueryResult extends Serializable {
   public int getColumnType(int index);
 
   /**
+   * @param index zero-based index
+   * @return
+   */
+  public String getColumnTypeName(int index);
+
+  /**
    * set the index before the first one; when next() is called, the index will move to the first
    * row.
    */

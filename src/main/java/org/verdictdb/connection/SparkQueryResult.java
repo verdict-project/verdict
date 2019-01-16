@@ -35,6 +35,8 @@ public class SparkQueryResult extends AttributeValueRetrievalHelper implements D
 
   List<Integer> columnTypes = new ArrayList<>();
 
+  List<String> columnTypeNames = new ArrayList<>();
+
   List<Row> result = new ArrayList<>();
 
   DbmsQueryResultMetaData dbmsQueryResultMetaData = new DbmsQueryResultMetaData();
@@ -55,6 +57,7 @@ public class SparkQueryResult extends AttributeValueRetrievalHelper implements D
       int type = SparkDataTypeConverter.typeInt(structField.dataType());
       columnTypes.add(type);
       columnClassName.add(SparkDataTypeConverter.typeClassName(type));
+      columnTypeNames.add(structField.dataType().typeName());
     }
     dbmsQueryResultMetaData.isNullable = nullable;
     dbmsQueryResultMetaData.columnClassName = columnClassName;
@@ -79,6 +82,11 @@ public class SparkQueryResult extends AttributeValueRetrievalHelper implements D
   @Override
   public int getColumnType(int index) {
     return columnTypes.get(index);
+  }
+
+  @Override
+  public String getColumnTypeName(int index) {
+    return columnTypeNames.get(index);
   }
 
   @Override

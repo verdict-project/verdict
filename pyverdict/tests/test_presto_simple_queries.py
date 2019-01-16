@@ -1,6 +1,6 @@
 '''
     Copyright 2018 University of Michigan
- 
+
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
     You may obtain a copy of the License at
@@ -84,6 +84,7 @@ def teardown_module(module):
     cur.fetchall()
     cur.execute('DROP SCHEMA IF EXISTS {}'.format(test_schema))
     cur.fetchall()
+    verdict_conn.close()
 
 
 class TestClass:
@@ -176,4 +177,4 @@ class TestClass:
         assert actual is not None
         assert expected * 1.2 >= actual
         assert expected * 0.8 <= actual
-        
+
