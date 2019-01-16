@@ -39,10 +39,10 @@ def postgres_context(host, port, dbname, user, password=None):
 def postgres(host, port, dbname, user, password=None):
     return postgres_context(host, port, dbname, user, password)
 
-def presto_context(host, catalog, user, password=None, port=8081):
+def presto_context(host, catalog, user, password=None, port=8080):
     return VerdictContext.new_presto_context(host, catalog, user, password, port)
 
-def presto(host, catalog, user, password=None, port=8081):
+def presto(host, catalog, user, password=None, port=8080):
     return presto_context(host, catalog, user, password, port)
 
 def redshift(host, port, dbname='', user=None, password=None):

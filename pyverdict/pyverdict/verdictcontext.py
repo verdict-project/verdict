@@ -116,7 +116,7 @@ class VerdictContext:
         catalog,
         user,
         password=None,
-        port=8081,
+        port=8080,
         verdictdbmetaschema=None,
         verdictdbtempschema=None,
     ):
