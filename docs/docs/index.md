@@ -12,9 +12,38 @@ First, users must create a *scramble* for their large table. The scramble is jus
 
 ## Contents
 
-1. Getting Started
-    - [Quickstart (Java)](/getting_started/quickstart)
-    - [Quickstart (Python)](getting_started/quickstart_python)
+1. Documentation
+    - [Quickstart](/documentation/quickstart)
+        - [Python Quickstart](/documentation/quickstart/quickstart_python)
+        - [Java Quickstart](/documentation/quickstart/quickstart_java)
+    - Step-by-step tutorial
+        - [Python Step-by-step Tutorial](/documentation/step_by_step_tutorial/step_by_step_python.md)
+        - [Java Step-by-step Tutorial](/documentation/step_by_step_tutorial/step_by_step_java.md)
+    - Connecting to databases
+        - [Python Connection](/documentation/connecting_to_databases/connecting_python.md)
+        - [Java Connection](/documentation/connecting_to_databases/connecting_java.md)
+    - [Suppored queries](/documentation/supported_queries)
+1. Reference
+    - Query Syntax
+        - [Connecting to Databases](/reference/connection)
+        - [VerdictDB JDBC Properties](/reference/properties)
+        - [Simple Querying](/reference/querying)
+        - [Creating/Viewing Scrambles](/reference/scrambling)
+        - [Appending Scrambles](/reference/append_scrambling)
+        - [Dropping Scrambles](/reference/drop_scrambling)
+        - [Select-Query Syntax](/reference/query_syntax)
+        - [Stream Querying](/reference/streaming)
+    - [Setting up TPC-H dataset](/tutorial/tpch)
+    - [Javadoc](/reference/javadoc)
+    - [Pydoc](/reference/pyverdict)
+1. How it works
+    - [Basics](/how_it_works/basics)
+    - [Architecture](/how_it_works/architecture)
+    - [Query Processing](/how_it_works/query_processing)
+
+
+<!-- 1. Getting Started
+    - [Quickstart](/getting_started/quickstart)
     - [Install / Download](/getting_started/install)
     - [What's More](/getting_started/whatsmore)
 1. How VerdictDB works
@@ -30,7 +59,7 @@ First, users must create a *scramble* for their large table. The scramble is jus
         - [MySQL](/tutorial/example/mysql)
         - [Apache Spark](/tutorial/example/spark)
 1. Reference
-    - [Connecting to Data Sources](/reference/connection)
+    - [Connecting to Databases](/reference/connection)
     - [VerdictDB JDBC Properties](/reference/properties)
     - [Creating/Viewing Scrambles](/reference/scrambling)
     - [Appending Scrambles](/reference/append_scrambling)
@@ -38,6 +67,7 @@ First, users must create a *scramble* for their large table. The scramble is jus
     - [Select-Query Syntax](/reference/query_syntax)
     - [Stream Querying](/reference/streaming)
     - [Javadoc](/reference/javadoc)
+    - [PyVerdict Doc](/reference/pyverdict) -->
 
 
 

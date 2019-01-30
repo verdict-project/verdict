@@ -6,38 +6,51 @@ copyright: 'Copyright &copy; 2018 The University of Michigan'
 # Pages
 nav:
   - Home: index.md
-  - Getting Started:
-    - Quickstart (Java): getting_started/quickstart.md
-    - Quickstart (Python): getting_started/quickstart_python.md
-    - Download / Install: getting_started/install.md
-    - What's More: getting_started/whatsmore.md
-    # - Result Structure: getting_started/results.md
+  - Documentation:
+    - Quickstart:
+        - Python Quickstart: documentation/quickstart/quickstart_python.md
+        - Java Quickstart: documentation/quickstart/quickstart_java.md
+    - Step-by-step Tutorial:
+        - Python Step-by-step Tutorial: documentation/step_by_step_tutorial/step_by_step_python.md
+        - Java Step-by-step Tutorial: documentation/step_by_step_tutorial/step_by_step_java.md
+    - Connecting to Databases:
+        - Python Connection: documentation/connecting_to_databases/connecting_python.md
+        - Java Connection: documentation/connecting_to_databases/connecting_java.md
+  # - Getting Started:
+  #   - Quickstart: getting_started/quickstart.md
+  #   - Download / Install: getting_started/install.md
+  #   - What's More: getting_started/whatsmore.md
+  #   # - Result Structure: getting_started/results.md
+  # - Tutorial:
+  #   - Setup Databases (optional):
+  #     - MySQL: tutorial/setup/mysql.md
+  #     - Apache Spark: tutorial/setup/spark.md
+  #   # - Load TPC-H Data: tutorial/tpch.md
+  #   - Example VerdictDB App:
+  #     - MySQL: tutorial/examples/mysql.md
+  #     - Apache Spark: tutorial/examples/spark.md
+  #   # - ML-based Analytics: tutorial/advanced.md
+
+  - Reference:
+    - Query Syntax:
+      - Connecting to Databases: reference/connection.md
+      - VerdictDB JDBC Properties: reference/properties.md
+      # - Simple Querying: reference/querying.md
+      - Creating/Viewing Scrambles: reference/scrambling.md
+      - Appending Scrambles: reference/append_scrambling.md
+      - Dropping Scrambles: reference/drop_scrambling.md
+      # - Scrambles:
+      #   - What is a Scramble?: reference/what_is_scramble.md
+      #   -
+      - Select-Query Syntax: reference/query_syntax.md
+      - Stream Querying: reference/streaming.md
+    - Setting up TPC-H dataset: tutorial/tpch.md
+    - Javadoc: reference/javadoc.md
+    - PyVerdict Doc: reference/pyverdict.md
   - How it works:
     - Basics: how_it_works/basics.md
     - Architecture: how_it_works/architecture.md
     - Query Processing: how_it_works/query_processing.md
-  - Tutorial:
-    - Setup Databases (optional):
-      - MySQL: tutorial/setup/mysql.md
-      - Apache Spark: tutorial/setup/spark.md
-    - Load TPC-H Data: tutorial/tpch.md
-    - Example VerdictDB App:
-      - MySQL: tutorial/examples/mysql.md
-      - Apache Spark: tutorial/examples/spark.md
-    # - ML-based Analytics: tutorial/advanced.md
-  - Reference:
-    - Connecting to Databases: reference/connection.md
-    - VerdictDB JDBC Properties: reference/properties.md
-    # - Simple Querying: reference/querying.md
-    - Creating/Viewing Scrambles: reference/scrambling.md
-    - Appending Scrambles: reference/append_scrambling.md
-    - Dropping Scrambles: reference/drop_scrambling.md
-    # - Scrambles:
-    #   - What is a Scramble?: reference/what_is_scramble.md
-    #   - 
-    - Select-Query Syntax: reference/query_syntax.md
-    - Stream Querying: reference/streaming.md
-    - Javadoc: reference/javadoc.md
   #   - VerdictDB Queries: reference/supported_queries.md
 
 # Appearance
@@ -99,3 +112,4 @@ markdown_extensions:
   - pymdownx.tasklist:
       custom_checkbox: true
   - pymdownx.tilde
+  - pymdownx.superfences
