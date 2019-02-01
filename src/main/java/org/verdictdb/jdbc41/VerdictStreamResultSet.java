@@ -874,7 +874,9 @@ public class VerdictStreamResultSet extends VerdictResultSet {
     try {
       // on the first call
       if (queryResult == null && (!hasReadAllQueryResults || !queryResults.isEmpty())) {
-        queryResult = queryResults.take();
+        synchronized (queryResults) {
+          queryResult = queryResults.take();
+        }
         lastQueryResultIndex++;
       }
       boolean hasMore = queryResult.next();
@@ -885,6 +887,7 @@ public class VerdictStreamResultSet extends VerdictResultSet {
         return false;
       } else {
         synchronized (queryResults) {
+          System.out.println("Please don't stuck\n");
           queryResult = queryResults.take();
         }
         lastQueryResultIndex++;
