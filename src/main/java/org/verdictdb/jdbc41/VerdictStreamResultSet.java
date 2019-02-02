@@ -886,10 +886,7 @@ public class VerdictStreamResultSet extends VerdictResultSet {
       } else if (queryResults.peek() == null && hasReadAllQueryResults) {
         return false;
       } else {
-        synchronized (queryResults) {
-          System.out.println("Please don't stuck\n");
-          queryResult = queryResults.take();
-        }
+        queryResult = queryResults.take();
         lastQueryResultIndex++;
         return next();
       }
