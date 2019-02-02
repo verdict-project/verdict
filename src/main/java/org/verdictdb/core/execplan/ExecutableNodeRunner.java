@@ -499,7 +499,9 @@ public class ExecutableNodeRunner implements Runnable {
   boolean areAllSuccess(List<ExecutionInfoToken> tokens) {
     for (ExecutionInfoToken t : tokens) {
       if (t.isSuccessToken()) {
-        successSourceCount++;
+        synchronized ((Object) successSourceCount) {
+          successSourceCount++;
+        }
         log.trace(String.format("Success count of %s: %d", node.toString(), successSourceCount));
       } else {
         return false;
