@@ -7,15 +7,15 @@ copyright: 'Copyright &copy; 2018 The University of Michigan'
 nav:
   - Home: index.md
   - Documentation:
-    - Quickstart:
-        - Python Quickstart: documentation/quickstart/quickstart_python.md
-        - Java Quickstart: documentation/quickstart/quickstart_java.md
-    - Step-by-step Tutorial:
-        - Python Step-by-step Tutorial: documentation/step_by_step_tutorial/step_by_step_python.md
-        - Java Step-by-step Tutorial: documentation/step_by_step_tutorial/step_by_step_java.md
-    - Connecting to Databases:
-        - Python Connection: documentation/connecting_to_databases/connecting_python.md
-        - Java Connection: documentation/connecting_to_databases/connecting_java.md
+    - Quickstart: documentation/quickstart/quickstart.md
+        # - Python Quickstart: documentation/quickstart/quickstart_python.md
+        # - Java Quickstart: documentation/quickstart/quickstart_java.md
+    - Step-by-step Tutorial: documentation/step_by_step_tutorial/step_by_step.md
+        # - Python Step-by-step Tutorial: documentation/step_by_step_tutorial/step_by_step_python.md
+        # - Java Step-by-step Tutorial: documentation/step_by_step_tutorial/step_by_step_java.md
+    - Connecting to Databases: documentation/connecting_to_databases/connecting.md
+        # - Python Connection: documentation/connecting_to_databases/connecting_python.md
+        # - Java Connection: documentation/connecting_to_databases/connecting_java.md
   # - Getting Started:
   #   - Quickstart: getting_started/quickstart.md
   #   - Download / Install: getting_started/install.md

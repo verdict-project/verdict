@@ -3,8 +3,12 @@
 We will install VerdictDB, create sample, and issue a simple query to VerdictDB. In this Quickstart Guide, we will use MySQL for VerdictDB's backend database. See [Connecting to Databases](/reference/connection/) for the examples of connecting to other databases.
 
 ##Installation
+
+###Java
 Create an [empty Maven project](https://maven.apache.org/guides/getting-started/maven-in-five-minutes.html) and
 place the verdictdb dependency in the `<dependencies>` of your pom.xml.
+
+###Python
 
 ```
 <dependency>
