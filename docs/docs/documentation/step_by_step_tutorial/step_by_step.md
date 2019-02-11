@@ -1,9 +1,8 @@
-# Quickstart Guide
+#Step-by-step Tutorial
 
 We will install VerdictDB, create a connection, and issue a simple query to VerdictDB. In this Quickstart Guide, we will use MySQL for VerdictDB's backend database. See [Connecting to Databases](/reference/connection/) for the examples of connecting to other databases.
 
-
-## Install
+##Installation
 
 ### Java
 Create an [empty Maven project](https://maven.apache.org/guides/getting-started/maven-in-five-minutes.html) and
@@ -43,10 +42,9 @@ pip install pyverdict
 pip install pymysql
 ```
 
-
-## Insert Data
-
+##Create Table and Insert Data
 We will first generate small data to play with. Suppose MySQL is set up as described [here](/tutorial/setup/mysql/).
+
 
 ```java tab='Java'
 Connection mysqlConn =
@@ -99,9 +97,7 @@ for i in range(1000):
 cur.close()
 ```
 
-
-## Test VerdictDB
-
+##Create Sample
 Create a JDBC connection to VerdictDB. It may take a few seconds to launch the VerdictDB JVM in `PyVerdict`.
 
 ```java tab='Java'
@@ -129,6 +125,7 @@ vstmt.execute("CREATE SCRAMBLE myschema.sales_scrambled from myschema.sales");
 verdict_conn.sql('CREATE SCRAMBLE myschema.sales_scrambled from myschema.sales')
 ```
 
+##Run Queries
 Run a regular query to the original table. In `PyVerdict`, The query result is stored in a pandas DataFrame. The values may vary.
 
 ```java tab='Java'
@@ -152,10 +149,8 @@ df = verdict_conn.sql(
 # 2    milk  24.97005988023952
 ```
 
-Internally, VerdictDB rewrites the above query to use the scramble. It is equivalent to explicitly specifying the scramble in the `FROM` clause of the above query.
-
-
 ## Complete Example Script
+
 
 
 ```java tab='Java'
