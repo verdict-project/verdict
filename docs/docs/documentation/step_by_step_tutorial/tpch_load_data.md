@@ -337,7 +337,7 @@ CREATE TABLE IF NOT EXISTS nation (
   `n_dummy`      VARCHAR(10))
   ROW FORMAT DELIMITED FIELDS TERMINATED BY '|'
   STORED AS TEXTFILE
-  LOCATION '/tmp/tpch1g/nation/nation';
+  LOCATION '/tmp/tpch1g/nation/';
 
 -- region
 CREATE TABLE IF NOT EXISTS region (
@@ -347,7 +347,7 @@ CREATE TABLE IF NOT EXISTS region (
   `r_dummy`      VARCHAR(10))
   ROW FORMAT DELIMITED FIELDS TERMINATED BY '|'
   STORED AS TEXTFILE
-  LOCATION '/tmp/tpch1g/region/region';
+  LOCATION '/tmp/tpch1g/region/';
 
 
 -- supplier
@@ -362,7 +362,7 @@ CREATE TABLE IF NOT EXISTS supplier (
   `s_dummy` varchar(10))
   ROW FORMAT DELIMITED FIELDS TERMINATED BY '|'
   STORED AS TEXTFILE
-  LOCATION '/tmp/tpch1g/supplier/supplier';
+  LOCATION '/tmp/tpch1g/supplier/';
 
 
 -- customer
@@ -378,7 +378,7 @@ CREATE TABLE IF NOT EXISTS customer (
   `c_dummy`       VARCHAR(10))
   ROW FORMAT DELIMITED FIELDS TERMINATED BY '|'
   STORED AS TEXTFILE
-  LOCATION '/tmp/tpch1g/customer/customer';
+  LOCATION '/tmp/tpch1g/customer/';
 
 
 -- part
@@ -395,7 +395,7 @@ CREATE TABLE IF NOT EXISTS part (
   `p_dummy`       VARCHAR(10))
   ROW FORMAT DELIMITED FIELDS TERMINATED BY '|'
   STORED AS TEXTFILE
-  LOCATION '/tmp/tpch1g/part/part';
+  LOCATION '/tmp/tpch1g/part/';
 
 -- partsupp
 CREATE TABLE IF NOT EXISTS partsupp (
@@ -407,7 +407,7 @@ CREATE TABLE IF NOT EXISTS partsupp (
   `ps_dummy`       VARCHAR(10))
   ROW FORMAT DELIMITED FIELDS TERMINATED BY '|'
   STORED AS TEXTFILE
-  LOCATION '/tmp/tpch1g/partsupp/partsupp';
+  LOCATION '/tmp/tpch1g/partsupp/';
 
 -- orders
 CREATE TABLE IF NOT EXISTS orders (
@@ -423,7 +423,7 @@ CREATE TABLE IF NOT EXISTS orders (
   `o_dummy`          VARCHAR(10))
    ROW FORMAT DELIMITED FIELDS TERMINATED BY '|'
    STORED AS TEXTFILE
-   LOCATION '/tmp/tpch1g/orders/orders';
+   LOCATION '/tmp/tpch1g/orders/';
 
 -- lineitem
 CREATE TABLE IF NOT EXISTS lineitem (
@@ -446,7 +446,7 @@ CREATE TABLE IF NOT EXISTS lineitem (
   `l_dummy`             VARCHAR(10))
   ROW FORMAT DELIMITED FIELDS TERMINATED BY '|'
   STORED AS TEXTFILE
-  LOCATION '/tmp/tpch1g/lineitem/lineitem';
+  LOCATION '/tmp/tpch1g/lineitem/';
 ```
 
 
