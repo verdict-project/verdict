@@ -21,7 +21,7 @@ First, users must create a *scramble* for their large table. The scramble is jus
         - TPC-H Application
             - [Setup Databases](/documentation/step_by_step_tutorial/setup)
             - [Load TPC-H Data](/documentation/step_by_step_tutorial/tpch_load_data)
-            - [Example VerdictDB App](/documentation/step_by_step_tutorial/verdictdb_ex)
+            - [Example VerdictDB Application with TPC-H](/documentation/step_by_step_tutorial/verdictdb_ex)
         <!-- - [Python Step-by-step Tutorial](/documentation/step_by_step_tutorial/step_by_step_python.md) -->
         <!-- - [Java Step-by-step Tutorial](/documentation/step_by_step_tutorial/step_by_step_java.md) -->
     - [Connecting to databases](/documentation/connecting_to_databases/connecting)

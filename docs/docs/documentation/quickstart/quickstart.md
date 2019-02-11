@@ -62,12 +62,12 @@ verdict_conn.sql('CREATE SCRAMBLE myschema.sales_scrambled from myschema.sales')
 
 
 ##Run Queries
-Run a regular query to the original table. In `PyVerdict`, The query result is stored in a pandas DataFrame. The values may vary.
+Run a regular query to the scrambled table to obtain approximated results. In `PyVerdict`, The query result is stored in a pandas DataFrame. The values may vary.
 
 ```java tab='Java'
 ResultSet rs = vstmt.executeQuery(
     "SELECT product, AVG(price) "+
-    "FROM myschema.sales " +
+    "FROM myschema.sales_scrambled " +
     "GROUP BY product " +
     "ORDER BY product");
 ```
@@ -75,12 +75,15 @@ ResultSet rs = vstmt.executeQuery(
 ```python tab='Python'
 df = verdict_conn.sql(
     "SELECT product, AVG(price) " +
-    "FROM myschema.sales " +
+    "FROM myschema.sales_scrambled " +
     "GROUP BY product " +
     "ORDER BY product")
-# df
-#   product                 a2
-# 0     egg  34.82142857142857
-# 1   juice  44.96363636363636
-# 2    milk  24.97005988023952
 ```
+
+<!-- The query result
+```
+ product          avg(price)
+     egg  34.82142857142857
+   juice  44.96363636363636
+    milk  24.97005988023952
+``` -->

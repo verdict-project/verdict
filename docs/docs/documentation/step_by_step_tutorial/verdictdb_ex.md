@@ -1,4 +1,4 @@
-# Example VerdictDB Application
+# Example VerdictDB Application with TPC-H
 
 ## VerdictDB on MySQL
 
@@ -114,7 +114,7 @@ After the scrambled table being created, VerdictDB will automatically utilize th
 The example application can execute one very simple aggregation query with and without VerdictDB and compare their performance:
 
 ```SQL
-SELECT avg(l_extendedprice) FROM tpch1g.lineitem
+SELECT avg(l_extendedprice) FROM tpch1g.lineitem_scramble
 ```
 
 To run this query with/without VerdictDB, you can simply run the following command:
@@ -179,7 +179,7 @@ Also, replace the existing dependency list with
 ```scala
 libraryDependencies ++= Seq(
   scalaTest % Test,
-  "org.verdictdb" % "verdictdb-core" % "0.5.5",
+  "org.verdictdb" % "verdictdb-core" % "0.5.8",
   "org.apache.spark" %% "spark-core" % "2.3.1" % "provided",
   "org.apache.spark" %% "spark-sql" % "2.3.1" % "provided"
 )
