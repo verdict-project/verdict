@@ -1,52 +1,10 @@
-# Quickstart Guide
+#Step-by-step Tutorial
 
-We will install VerdictDB, create a connection, and issue a simple query to VerdictDB. In this Quickstart Guide, we will use MySQL for VerdictDB's backend database. See [Connecting to Databases](/reference/connection/) for the examples of connecting to other databases.
+We will install VerdictDB, create a connection, and issue a simple query to VerdictDB. In this Quickstart Guide, we will use MySQL for VerdictDB's backend database. See [Connecting to Databases](/reference/connection/) for the examples of connecting to other databases. Please read the [Installation](/documentation/quickstart/quickstart/#installation) step in our [Quickstart](/documentation/quickstart/quickstart/) document for installation of VerdictDB in Java and Python before following this tutorial.
 
-
-## Install
-
-### Java
-Create an [empty Maven project](https://maven.apache.org/guides/getting-started/maven-in-five-minutes.html) and
-place the verdictdb dependency in the `<dependencies>` of your pom.xml.
-
-### Python
-`pyverdict` is distributed with [PyPI](https://pypi.org/project/pyverdict/). No installation of VerdictDB is required.
-
-To insert data into MySQL in Python without `pyverdict`, we could use [pymysql](https://pymysql.readthedocs.io/en/latest/).
-
-!!! warn "Note: Prerequisites"
-    `pyverdict` requires [miniconda](https://conda.io/docs/user-guide/install/index.html) for Python 3.7,
-    which can be installed for local users (i.e., without sudo access).
-
-
-```xml tab='Java'
-<dependency>
-    <groupId>org.verdictdb</groupId>
-    <artifactId>verdictdb-core</artifactId>
-    <version>{{verdictdb.version}}</version>
-</dependency>
-
-<!-- To use MySQL, add the following entry as well: -->
-<dependency>
-    <groupId>mysql</groupId>
-    <artifactId>mysql-connector-java</artifactId>
-    <version>5.1.46</version>
-</dependency>
-```
-
-```bash tab='Python'
-pip install pyverdict
-# use the following line for upgrading:
-# pip install pyverdict --upgrade
-
-# install pymysql to use MySQL
-pip install pymysql
-```
-
-
-## Insert Data
-
+##Create Table and Insert Data
 We will first generate small data to play with. Suppose MySQL is set up as described [here](/tutorial/setup/mysql/).
+
 
 ```java tab='Java'
 Connection mysqlConn =
@@ -99,9 +57,7 @@ for i in range(1000):
 cur.close()
 ```
 
-
-## Test VerdictDB
-
+##Create Sample
 Create a JDBC connection to VerdictDB. It may take a few seconds to launch the VerdictDB JVM in `PyVerdict`.
 
 ```java tab='Java'
@@ -129,12 +85,13 @@ vstmt.execute("CREATE SCRAMBLE myschema.sales_scrambled from myschema.sales");
 verdict_conn.sql('CREATE SCRAMBLE myschema.sales_scrambled from myschema.sales')
 ```
 
-Run a regular query to the original table. In `PyVerdict`, The query result is stored in a pandas DataFrame. The values may vary.
+##Run Queries
+Run a regular query to the scrambled table to obtain approximated results. In `PyVerdict`, The query result is stored in a pandas DataFrame. The values may vary.
 
 ```java tab='Java'
 ResultSet rs = vstmt.executeQuery(
     "SELECT product, AVG(price) "+
-    "FROM myschema.sales " +
+    "FROM myschema.sales_scrambled " +
     "GROUP BY product " +
     "ORDER BY product");
 ```
@@ -142,20 +99,13 @@ ResultSet rs = vstmt.executeQuery(
 ```python tab='Python'
 df = verdict_conn.sql(
     "SELECT product, AVG(price) " +
-    "FROM myschema.sales " +
+    "FROM myschema.sales_scrambled " +
     "GROUP BY product " +
     "ORDER BY product")
-# df
-#   product                 a2
-# 0     egg  34.82142857142857
-# 1   juice  44.96363636363636
-# 2    milk  24.97005988023952
 ```
 
-Internally, VerdictDB rewrites the above query to use the scramble. It is equivalent to explicitly specifying the scramble in the `FROM` clause of the above query.
-
-
 ## Complete Example Script
+
 
 
 ```java tab='Java'
@@ -198,7 +148,7 @@ public class FirstVerdictDBExample {
 
     ResultSet rs = vstmt.executeQuery(
         "SELECT product, AVG(price) "+
-        "FROM myschema.sales " +
+        "FROM myschema.sales_scrambled " +
         "GROUP BY product " +
         "ORDER BY product");
     ```
@@ -257,7 +207,7 @@ verdict_conn.sql('CREATE SCRAMBLE myschema.sales_scrambled from myschema.sales')
 # run query
 df = verdict_conn.sql(
     "SELECT product, AVG(price) " +
-    "FROM myschema.sales " +
+    "FROM myschema.sales_scrambled " +
     "GROUP BY product " +
     "ORDER BY product")
 ```

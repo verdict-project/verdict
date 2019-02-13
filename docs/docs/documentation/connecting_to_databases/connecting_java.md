@@ -1,7 +1,6 @@
-# Connecting to Databases
+# Connecting to Databases (Java)
 
 VerdictDB can process the data stored in a SQL-supported database; therefore, no data migration is required outside your database. VerdictDB works with them by performing its operations in SQL.
-
 
 ## Supported Databases
 
@@ -21,7 +20,6 @@ VerdictDB can process the data stored in a SQL-supported database; therefore, no
 | Presto          | Supported                 | Supported                 |
 | Spark           | &ge; 2.0                  | Not Supported             |
 
-
 ## Making a Connection in Java
 
 VerdictDB offers the standard JDBC interface. If the `verdict` keyword appears after `jdbc:`, Java uses VerdictDB
@@ -37,17 +35,3 @@ Connection vc = DriverManager.getConnection("connection_string", "user", "passwo
 1. Presto:      `"jdbc:verdict:presto://localhost:8080/default"`
 
 For more details on configuration options, see [this page](/reference/properties/).
-
-## Making a Connection in PyVerdict
-
-`pyverdict` offers simple APIs to make connections to backend databases. A `pyverdict.VerdictContext` object is returned after making a connection. Unique methods are offered for different types of databases. 
-
-1. MySQL:       `pyverdict.mysql(host, user, password=None, port=3306)`
-1. PostgreSQL:  `pyverdict.postgres(host, port, dbname, user, password=None)`
-1. Redshift:    `pyverdict.redshift(host, port, dbname='', user=None, password=None)`
-1. Impala:      `pyverdict.impala(host, port, schema=None, user=None, password=None)`
-1. Presto:      `pyverdict.presto(host, catalog, user, password=None, port=8081)`
-
-### Apache Spark
-
-*(Documentation not ready)*
