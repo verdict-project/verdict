@@ -12,7 +12,7 @@ First, users must create a *scramble* for their large table. The scramble is jus
 
 ## Contents
 
-1. Documentation
+1. Tutorial
     - [Quickstart](/documentation/quickstart/quickstart)
         <!-- - [Python Quickstart](/documentation/quickstart/quickstart_python) -->
         <!-- - [Java Quickstart](/documentation/quickstart/quickstart_java) -->
@@ -30,8 +30,8 @@ First, users must create a *scramble* for their large table. The scramble is jus
     - [Suppored queries](/documentation/supported_queries)
 1. Reference
     - Query Syntax
-        - [Connecting to Databases](/reference/connection)
         - [VerdictDB JDBC Properties](/reference/properties)
+        <!-- - [Connecting to Databases](/reference/connection) -->
         - [Simple Querying](/reference/querying)
         - [Creating/Viewing Scrambles](/reference/scrambling)
         - [Appending Scrambles](/reference/append_scrambling)

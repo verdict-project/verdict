@@ -6,7 +6,7 @@ copyright: 'Copyright &copy; 2018 The University of Michigan'
 # Pages
 nav:
   - Home: index.md
-  - Documentation:
+  - Tutorial:
     - Quickstart: documentation/quickstart/quickstart.md
         # - Python Quickstart: documentation/quickstart/quickstart_python.md
         # - Java Quickstart: documentation/quickstart/quickstart_java.md
@@ -38,7 +38,7 @@ nav:
 
   - Reference:
     - Query Syntax:
-      - Connecting to Databases: reference/connection.md
+      # - Connecting to Databases: reference/connection.md
       - VerdictDB JDBC Properties: reference/properties.md
       # - Simple Querying: reference/querying.md
       - Creating/Viewing Scrambles: reference/scrambling.md
