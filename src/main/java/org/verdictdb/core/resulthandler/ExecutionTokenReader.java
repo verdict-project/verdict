@@ -61,7 +61,7 @@ public class ExecutionTokenReader
       return false;
     }
 
-    synchronized (queueBuffer) {
+    synchronized (this) {
       if (queueBuffer == null) {
         takeOne();
         return hasNext();
@@ -81,7 +81,7 @@ public class ExecutionTokenReader
       return null;
     }
 
-    synchronized (queueBuffer) {
+    synchronized (this) {
       if (queueBuffer == null) {
         takeOne();
         return next();
