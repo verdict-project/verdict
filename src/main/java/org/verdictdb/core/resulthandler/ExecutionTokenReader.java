@@ -61,9 +61,11 @@ public class ExecutionTokenReader
       return false;
     }
 
-    if (queueBuffer == null) {
-      takeOne();
-      return hasNext();
+    synchronized (queueBuffer) {
+      if (queueBuffer == null) {
+        takeOne();
+        return hasNext();
+      }
     }
 
     if (queueBuffer.isStatusToken()) {
@@ -79,9 +81,11 @@ public class ExecutionTokenReader
       return null;
     }
 
-    if (queueBuffer == null) {
-      takeOne();
-      return next();
+    synchronized (queueBuffer) {
+      if (queueBuffer == null) {
+        takeOne();
+        return next();
+      }
     }
 
     if (queueBuffer.isStatusToken()) {

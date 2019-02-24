@@ -502,7 +502,7 @@ public class ExecutableNodeRunner implements Runnable {
         synchronized ((Object) successSourceCount) {
           successSourceCount++;
         }
-        log.trace(String.format("Success count of %s: %d", node.toString(), successSourceCount));
+        log.debug(String.format("Success count of %s: %d", node.toString(), successSourceCount));
       } else {
         return false;
       }
