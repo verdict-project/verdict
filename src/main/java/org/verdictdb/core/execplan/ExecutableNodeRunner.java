@@ -273,7 +273,7 @@ public class ExecutableNodeRunner implements Runnable {
 
     // no dependency exists
     if (node.getSourceQueues().size() == 0) {
-      log.trace(String.format("No dependency exists. Simply run %s", node.toString()));
+      log.debug(String.format("No dependency exists. Simply run %s", node.toString()));
       try {
         executeAndBroadcast(Arrays.<ExecutionInfoToken>asList());
         broadcastAndTriggerRun(ExecutionInfoToken.successToken());
@@ -333,7 +333,7 @@ public class ExecutableNodeRunner implements Runnable {
 
       // actual processing
       try {
-        log.trace(
+        log.debug(
             String.format("Main processing starts for %s with token: %s", node.toString(), tokens));
         executeAndBroadcast(tokens);
       } catch (Exception e) {
@@ -507,7 +507,7 @@ public class ExecutableNodeRunner implements Runnable {
         synchronized ((Object) successSourceCount) {
           successSourceCount++;
         }
-        log.trace(String.format("Success count of %s: %d", node.toString(), successSourceCount));
+        log.debug(String.format("Success count of %s: %d", node.toString(), successSourceCount));
       } else {
         return false;
       }

@@ -197,7 +197,7 @@ public class JdbcConnection extends DbmsConnection {
   }
 
   public DbmsQueryResult executeSingle(String sql) throws VerdictDBDbmsException {
-    log.trace("Issues the following query to DBMS: " + sql);
+    log.info("Issues the following query to DBMS: " + sql);
 
     try {
       Statement stmt = conn.createStatement();

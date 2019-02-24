@@ -147,7 +147,7 @@ public class InMemoryAggregate {
     DbmsQueryResult dbmsQueryResult = null;
     
     try {
-      log.trace("The following query is issued: " + sql);
+      log.debug("The following query is issued: " + sql);
       ResultSet rs = stmt.executeQuery(sql);
       dbmsQueryResult = new JdbcQueryResult(rs);
       rs.close();
@@ -226,7 +226,7 @@ public class InMemoryAggregate {
       copy.addGroupby(groupList);
       String sql = selectQueryToSql.toSql(copy);
       
-      log.trace("Issues the following query to an in-memory db: " + sql);
+      log.debug("Issues the following query to an in-memory db: " + sql);
       
       Statement stmt = conn.createStatement();
       stmt.execute(String.format("CREATE TABLE %s AS %s", tableName, sql));
