@@ -31,6 +31,7 @@ import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.connection.SparkConnection;
 import org.verdictdb.core.querying.ExecutableNodeBase;
+import org.verdictdb.core.querying.SelectAggExecutionNode;
 import org.verdictdb.core.querying.ola.AsyncAggExecutionNode;
 import org.verdictdb.core.querying.ola.SelectAsyncAggExecutionNode;
 import org.verdictdb.core.querying.simplifier.ConsolidatedExecutionNode;
@@ -272,12 +273,12 @@ public class ExecutableNodeRunner implements Runnable {
 
     // no dependency exists
     if (node.getSourceQueues().size() == 0) {
-      log.debug(String.format("No dependency exists. Simply run %s", node.toString()));
+      log.trace(String.format("No dependency exists. Simply run %s", node.toString()));
       try {
         executeAndBroadcast(Arrays.<ExecutionInfoToken>asList());
         broadcastAndTriggerRun(ExecutionInfoToken.successToken());
         markComplete();
-        //        clearRunningTask();
+        //clearRunningTask();
         return;
       } catch (Exception e) {
         if (noNeedToRun()) {
@@ -318,7 +319,7 @@ public class ExecutableNodeRunner implements Runnable {
       if (areAllSuccess(tokens)) {
         log.trace(String.format("All dependent nodes are finished for %s", node.toString()));
         broadcastAndTriggerRun(ExecutionInfoToken.successToken());
-        //        clearRunningTask();
+        //clearRunningTask();
         markComplete();
         return;
       }
@@ -332,7 +333,7 @@ public class ExecutableNodeRunner implements Runnable {
 
       // actual processing
       try {
-        log.debug(
+        log.trace(
             String.format("Main processing starts for %s with token: %s", node.toString(), tokens));
         executeAndBroadcast(tokens);
       } catch (Exception e) {
@@ -373,7 +374,7 @@ public class ExecutableNodeRunner implements Runnable {
   }
 
   void broadcastAndTriggerRun(ExecutionInfoToken token) {
-    if (noNeedToRun()) {
+    if (noNeedToRun() && !areAllStatusTokens(Arrays.asList(token))) {
       log.trace(
           String.format(
               "This node (%s) has been aborted. Do not broadcast: %s", this.toString(), token));
@@ -389,6 +390,10 @@ public class ExecutableNodeRunner implements Runnable {
         logger.trace(String.format("  -> %s", dest.toString()));
       }
       //      logger.trace(token.toString());
+    }
+
+    if (node instanceof SelectAggExecutionNode && areAllSuccess(Arrays.asList(token))) {
+      status = NodeRunningStatus.completed;
     }
 
     for (ExecutableNode dest : node.getSubscribers()) {
@@ -502,7 +507,7 @@ public class ExecutableNodeRunner implements Runnable {
         synchronized ((Object) successSourceCount) {
           successSourceCount++;
         }
-        log.debug(String.format("Success count of %s: %d", node.toString(), successSourceCount));
+        log.trace(String.format("Success count of %s: %d", node.toString(), successSourceCount));
       } else {
         return false;
       }
