@@ -38,10 +38,10 @@ public class ExecutionTokenQueue implements Serializable {
     return internalQueue.poll();
   }
 
-  public ExecutionInfoToken take() {
+  public synchronized ExecutionInfoToken take() {
     try {
 //      return internalQueue.takeFirst();
-      ExecutionInfoToken t = internalQueue.poll(5, TimeUnit.MINUTES);
+      ExecutionInfoToken t = internalQueue.poll(1, TimeUnit.MINUTES);
       if (t == null) {
         throw new RuntimeException("The internal token was unavailable for a long time for an unknown reasons.");
       }
