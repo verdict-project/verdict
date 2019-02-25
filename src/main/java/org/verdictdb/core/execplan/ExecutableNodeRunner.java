@@ -352,7 +352,7 @@ public class ExecutableNodeRunner implements Runnable {
     }
   }
 
-  List<ExecutionInfoToken> retrieve() {
+  synchronized List<ExecutionInfoToken> retrieve() {
     Map<Integer, ExecutionTokenQueue> sourceChannelAndQueues = node.getSourceQueues();
 
     for (ExecutionTokenQueue queue : sourceChannelAndQueues.values()) {
