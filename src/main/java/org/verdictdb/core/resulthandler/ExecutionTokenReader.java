@@ -42,7 +42,7 @@ public class ExecutionTokenReader
     return this;
   }
 
-  public void takeOne() {
+  public synchronized void takeOne() {
     log.trace("Attempts to take a result.");
     queueBuffer = queue.take();
 
@@ -56,7 +56,7 @@ public class ExecutionTokenReader
   }
 
   @Override
-  public boolean hasNext() {
+  public synchronized boolean hasNext() {
     if (queue == null) {
       return false;
     }
@@ -76,7 +76,7 @@ public class ExecutionTokenReader
   }
 
   @Override
-  public ExecutionInfoToken next() {
+  public synchronized ExecutionInfoToken next() {
     if (queue == null) {
       return null;
     }
