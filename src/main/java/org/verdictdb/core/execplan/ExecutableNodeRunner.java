@@ -202,7 +202,7 @@ public class ExecutableNodeRunner implements Runnable {
           && ((CachedDbmsConnection)conn).getOriginalConnection().getSyntax() instanceof MysqlSyntax) {
       // For MySQL, issue query one by one.
       if (node instanceof SelectAsyncAggExecutionNode || node instanceof AsyncAggExecutionNode) {
-        return 2;
+        return 1;
       } else {
         return 1;
       }
@@ -393,7 +393,7 @@ public class ExecutableNodeRunner implements Runnable {
       //      logger.trace(token.toString());
     }
 
-    if (node instanceof SelectAggExecutionNode && areAllSuccess(Arrays.asList(token))) {
+    if (node instanceof SelectAggExecutionNode && areAllStatusTokens(Arrays.asList(token))) {
       status = NodeRunningStatus.completed;
     }
 
@@ -406,6 +406,7 @@ public class ExecutableNodeRunner implements Runnable {
       ExecutableNodeRunner runner = dest.getRegisteredRunner();
       if (runner != null) {
         //        runner.runOnThread();
+        log.debug("Broadcast: status " + status);
         runner.runThisAndDependents(); // this is needed due to async node.
       }
     }
