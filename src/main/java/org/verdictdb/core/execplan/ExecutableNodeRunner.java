@@ -301,6 +301,7 @@ public class ExecutableNodeRunner implements Runnable {
       // this function will be called again whenever a child node completes.
       List<ExecutionInfoToken> tokens = retrieve();
       if (tokens == null) {
+        log.debug("Not enough source nodes are finished, loop terminates");
         //        markInitiated();
         clearRunningTask();
         return;
@@ -503,13 +504,13 @@ public class ExecutableNodeRunner implements Runnable {
 
   boolean areAllSuccess(List<ExecutionInfoToken> tokens) {
     for (ExecutionInfoToken t : tokens) {
-      if (t.isSuccessToken()) {
-        synchronized ((Object) successSourceCount) {
-          successSourceCount++;
-        }
-        log.debug(String.format("Success count of %s: %d", node.toString(), successSourceCount));
-      } else {
-        return false;
+          if (t.isSuccessToken()) {
+            synchronized ((Object) successSourceCount) {
+              successSourceCount++;
+            }
+            log.debug(String.format("Success count of %s: %d", node.toString(), successSourceCount));
+          } else {
+            return false;
       }
     }
 

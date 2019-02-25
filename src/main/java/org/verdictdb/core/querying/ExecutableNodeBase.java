@@ -203,7 +203,7 @@ public class ExecutableNodeBase implements ExecutableNode, Serializable {
   // runner methods
   @Override
   public void getNotified(ExecutableNode source, ExecutionInfoToken token) {
-    //    System.out.println("get notified: " + source + " " + token);
+    log.debug("get notified: " + source + " " + token);
     for (Pair<ExecutableNodeBase, Integer> a : sources) {
       if (source.equals(a.getLeft())) {
         int channel = a.getRight();
