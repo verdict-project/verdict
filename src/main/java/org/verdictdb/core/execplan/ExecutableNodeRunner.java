@@ -51,6 +51,8 @@ public class ExecutableNodeRunner implements Runnable {
 
   int dependentCount;
 
+  int executionCount = 0;
+
 //  private boolean isAborted = false;
 
   /**
@@ -223,11 +225,17 @@ public class ExecutableNodeRunner implements Runnable {
 
       // check the number of currently running nodes
       int runningChildCount = 0;
+      int completedChildCount = 0;
       for (ExecutableNodeRunner r : childRunners) {
         if (r.getStatus() == NodeRunningStatus.running) {
           runningChildCount++;
+        } else if (r.getStatus() == NodeRunningStatus.completed) {
+          completedChildCount++;
         }
       }
+      log.debug(String.format(
+          "Running child: %d, Completed Child: %d, Success token received: %d",
+          runningChildCount, completedChildCount, successSourceCount));
 
       // maintain the number of running nodes to a certain number
       List<ExecutableNodeBase> childNodes = ((ExecutableNodeBase) node).getSources();
@@ -393,6 +401,12 @@ public class ExecutableNodeRunner implements Runnable {
 
     for (ExecutableNode dest : node.getSubscribers()) {
       ExecutionInfoToken copiedToken = token.deepcopy();
+      if (areAllStatusTokens(Arrays.asList(copiedToken))
+          && node.getRegisteredRunner().getStatus()!=NodeRunningStatus.completed) {
+        node.getRegisteredRunner().status = NodeRunningStatus.completed;
+      } else if (areAllStatusTokens(Arrays.asList(copiedToken))) {
+        log.debug("Broadcast success token");
+      }
       dest.getNotified(node, copiedToken);
 
       // signal the runner of the broadcasted node so that its associated runner performs
@@ -473,6 +487,9 @@ public class ExecutableNodeRunner implements Runnable {
       }
     }
 
+    synchronized ((Object)executionCount) {
+      executionCount++;
+    }
     return token;
   }
 
@@ -507,6 +524,7 @@ public class ExecutableNodeRunner implements Runnable {
     }
 
     if (successSourceCount == dependentCount) {
+      log.debug(String.format("Success: %d, execution count: %d", successSourceCount, executionCount));
       return true;
     } else {
       return false;
