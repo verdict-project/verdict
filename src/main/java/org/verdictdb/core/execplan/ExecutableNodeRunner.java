@@ -305,7 +305,7 @@ public class ExecutableNodeRunner implements Runnable {
         return;
       }
 
-      log.trace(String.format("Attempts to process %s (%s)", node.toString(), status));
+      log.debug(String.format("Attempts to process %s (%s)", node.toString(), status));
 
       ExecutionInfoToken failureToken = getFailureTokenIfExists(tokens);
       if (failureToken != null) {
@@ -500,7 +500,7 @@ public class ExecutableNodeRunner implements Runnable {
     for (ExecutionInfoToken t : tokens) {
       if (t.isSuccessToken()) {
         successSourceCount++;
-        log.trace(String.format("Success count of %s: %d", node.toString(), successSourceCount));
+        log.debug(String.format("Success count of %s: %d", node.toString(), successSourceCount));
       } else {
         return false;
       }
