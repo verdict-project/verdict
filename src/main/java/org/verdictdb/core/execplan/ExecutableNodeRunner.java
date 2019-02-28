@@ -52,6 +52,8 @@ public class ExecutableNodeRunner implements Runnable {
 
   int dependentCount;
 
+  int executionCount = 0;
+
 //  private boolean isAborted = false;
 
   /**
@@ -224,11 +226,17 @@ public class ExecutableNodeRunner implements Runnable {
 
       // check the number of currently running nodes
       int runningChildCount = 0;
+      int completedChildCount = 0;
       for (ExecutableNodeRunner r : childRunners) {
         if (r.getStatus() == NodeRunningStatus.running) {
           runningChildCount++;
+        } else if (r.getStatus() == NodeRunningStatus.completed) {
+          completedChildCount++;
         }
       }
+      log.trace(String.format(
+          "Running child: %d, Completed Child: %d, Success token received: %d",
+          runningChildCount, completedChildCount, successSourceCount));
 
       // maintain the number of running nodes to a certain number
       List<ExecutableNodeBase> childNodes = ((ExecutableNodeBase) node).getSources();
@@ -273,7 +281,7 @@ public class ExecutableNodeRunner implements Runnable {
 
     // no dependency exists
     if (node.getSourceQueues().size() == 0) {
-      log.debug(String.format("No dependency exists. Simply run %s", node.toString()));
+      log.trace(String.format("No dependency exists. Simply run %s", node.toString()));
       try {
         executeAndBroadcast(Arrays.<ExecutionInfoToken>asList());
         broadcastAndTriggerRun(ExecutionInfoToken.successToken());
@@ -301,7 +309,7 @@ public class ExecutableNodeRunner implements Runnable {
       // this function will be called again whenever a child node completes.
       List<ExecutionInfoToken> tokens = retrieve();
       if (tokens == null) {
-        log.debug("Not enough source nodes are finished, loop terminates");
+        log.trace("Not enough source nodes are finished, loop terminates");
         //        markInitiated();
         clearRunningTask();
         return;
@@ -334,7 +342,7 @@ public class ExecutableNodeRunner implements Runnable {
 
       // actual processing
       try {
-        log.debug(
+        log.trace(
             String.format("Main processing starts for %s with token: %s", node.toString(), tokens));
         executeAndBroadcast(tokens);
       } catch (Exception e) {
@@ -399,6 +407,12 @@ public class ExecutableNodeRunner implements Runnable {
 
     for (ExecutableNode dest : node.getSubscribers()) {
       ExecutionInfoToken copiedToken = token.deepcopy();
+      if (areAllStatusTokens(Arrays.asList(copiedToken))
+          && node.getRegisteredRunner().getStatus()!=NodeRunningStatus.completed) {
+        node.getRegisteredRunner().status = NodeRunningStatus.completed;
+      } else if (areAllStatusTokens(Arrays.asList(copiedToken))) {
+        log.trace("Broadcast success token");
+      }
       dest.getNotified(node, copiedToken);
 
       // signal the runner of the broadcasted node so that its associated runner performs
@@ -406,7 +420,7 @@ public class ExecutableNodeRunner implements Runnable {
       ExecutableNodeRunner runner = dest.getRegisteredRunner();
       if (runner != null) {
         //        runner.runOnThread();
-        log.debug("Broadcast: status " + status);
+        log.trace("Broadcast: status " + status);
         runner.runThisAndDependents(); // this is needed due to async node.
       }
     }
@@ -480,6 +494,9 @@ public class ExecutableNodeRunner implements Runnable {
       }
     }
 
+    synchronized ((Object)executionCount) {
+      executionCount++;
+    }
     return token;
   }
 
@@ -509,13 +526,14 @@ public class ExecutableNodeRunner implements Runnable {
             synchronized ((Object) successSourceCount) {
               successSourceCount++;
             }
-            log.debug(String.format("Success count of %s: %d", node.toString(), successSourceCount));
+            log.trace(String.format("Success count of %s: %d", node.toString(), successSourceCount));
           } else {
             return false;
-      }
+          }
     }
 
     if (successSourceCount == dependentCount) {
+      log.trace(String.format("Success: %d, execution count: %d", successSourceCount, executionCount));
       return true;
     } else {
       return false;
