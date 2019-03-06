@@ -39,7 +39,7 @@ Also, replace the existing dependency list with
 ```scala
 libraryDependencies ++= Seq(
   scalaTest % Test,
-  "org.verdictdb" % "verdictdb-core" % "0.5.5",
+  "org.verdictdb" % "verdictdb-core" % "0.5.8",
   "org.apache.spark" %% "spark-core" % "2.3.1" % "provided",
   "org.apache.spark" %% "spark-sql" % "2.3.1" % "provided"
 )

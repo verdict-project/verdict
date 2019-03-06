@@ -107,6 +107,10 @@ public class VerdictSingleResultFromListData extends VerdictSingleResult {
     }
   }
 
+  public String getColumnTypeNamePy(int index) {
+    return DataTypeConverter.typeName(getColumnType(index));
+  }
+
   public long getRowCount() {
     if (result.isPresent() == false) {
       return 0;

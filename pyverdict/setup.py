@@ -1,6 +1,6 @@
 '''
     Copyright 2018 University of Michigan
- 
+
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
     You may obtain a copy of the License at
@@ -20,7 +20,7 @@ import re
 import subprocess
 from build_lib import build_and_copy
 
-pyverdict_version = '0.1.3.0'
+pyverdict_version = '0.1.3.1'
 
 
 def get_verdict_jar(lib_dir):
@@ -82,6 +82,7 @@ setuptools.setup(
     install_requires=[
         'py4j >= 0.10.7',
         'numpy >= 1.9',
-        'pandas >= 0.23'
+        'pandas >= 0.23',
+        'python-dateutil >= 2.7.5',
     ]
 )

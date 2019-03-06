@@ -16,20 +16,19 @@
 
 package org.verdictdb.core.sqlobject;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
+import com.google.common.base.Optional;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
-import com.google.common.base.Optional;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class SelectQuery extends AbstractRelation implements SqlConvertible {
-  
-//  private boolean isStandardized;
+
+  //  private boolean isStandardized;
 
   private static final long serialVersionUID = -4830209213341883527L;
 
@@ -57,7 +56,9 @@ public class SelectQuery extends AbstractRelation implements SqlConvertible {
       sel.addSelectItem(c);
     }
     sel.addTableSource(relation);
-    sel.filter = Optional.of(predicate);
+    if (predicate != null) {
+      sel.filter = Optional.of(predicate);
+    }
     return sel;
   }
 
@@ -235,14 +236,14 @@ public class SelectQuery extends AbstractRelation implements SqlConvertible {
   public String toString() {
     return ToStringBuilder.reflectionToString(this, ToStringStyle.SHORT_PREFIX_STYLE);
   }
-  
-//  public boolean isStandardized() {
-//    return isStandardized;
-//  }
-//  
-//  public void setStandardized() {
-//    isStandardized = true;
-//  }
+
+  //  public boolean isStandardized() {
+  //    return isStandardized;
+  //  }
+  //
+  //  public void setStandardized() {
+  //    isStandardized = true;
+  //  }
 
   // deep copy the select list
   public SelectQuery selectListDeepCopy() {

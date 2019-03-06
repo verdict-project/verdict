@@ -8,7 +8,7 @@ Documentation: https://docs.verdictdb.org
 [![Build Status](https://circleci.com/gh/mozafari/verdictdb/tree/master.svg?style=shield&circle-token=16a7386340ff7022b21ce007434f8caa2fa97aec)](https://circleci.com/gh/mozafari/verdictdb/tree/master)
 [![Code Coverage](https://codecov.io/gh/mozafari/verdictdb/branch/master/graph/badge.svg)](https://codecov.io/gh/mozafari/verdictdb)
 [![JDK](https://img.shields.io/badge/JDK-7,%208-green.svg)]()
-[![Maven Central](https://img.shields.io/maven-central/v/org.apache.maven/apache-maven.svg)](https://mvnrepository.com/artifact/org.verdictdb/verdictdb-core/0.5.4)
+[![Maven Central](https://img.shields.io/maven-central/v/org.apache.maven/apache-maven.svg)](https://search.maven.org/artifact/org.verdictdb/verdictdb-core)
 [![Gitter](https://img.shields.io/gitter/room/nwjs/nw.js.svg)](https://gitter.im/verdictdb/chat)
 
 
@@ -35,23 +35,23 @@ Find out more about VerdictDB by visiting [VerdictDB.org](http://verdictdb.org).
 
 ## Same SQL queries
 
-When you issue standard SQL queries as below, VerdictDB internally converts the query into an alternative form that runs faster on your database. VerdictDB quickly returns an approximate answer to the query with an error bound (the true answer is within the error bound).
+When you issue standard SQL queries as below, VerdictDB quickly returns an approximate answer to the query with an error bound (the true answer is within the error bound).
 
 ```sql
 select city, count(*)
-from big_data_table
+from big_data_table_sample
 where arbitrary_attr like '%what i want%'
 group by city
 order by count(*)
 limit 10;
 ```
 
-The alternative form includes a *sample table* instead of the original data. However, simiply replacing the original tables (e.g., `big_data_table`) with its sample table could result in largely incorrect answers. VerdictDB automatically handles such translations so its answers are accurate (1-2% within the exact answers).
+A user may run the above query without VerdictDB. However, simply replacing the original tables (e.g., `big_data_table`) with its sample table could result in largely incorrect answers when the query is executed directly on the database. VerdictDB automatically handles such translations so its answers are accurate (1-2% within the exact answers).
 
-All you need to do before observing such speedups is creating samples with just a single SQL expression.
+All you need to do before observing such speedups is creating samples (which we call `scrambles` in VerdictDB) with just a single SQL expression.
 
 ```sql
-create sample of big_data_table;
+CREATE SCRAMBLE big_data_table_sample FROM big_data_table;
 ```
 
 

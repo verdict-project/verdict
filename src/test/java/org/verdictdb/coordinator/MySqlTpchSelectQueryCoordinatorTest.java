@@ -1,14 +1,7 @@
 package org.verdictdb.coordinator;
 
-import static org.junit.Assert.assertEquals;
-
-import java.io.File;
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-
+import com.google.common.base.Charsets;
+import com.google.common.io.Files;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -27,8 +20,14 @@ import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sqlsyntax.MysqlSyntax;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
+import java.io.File;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * Test cases are from
@@ -96,7 +95,12 @@ public class MySqlTpchSelectQueryCoordinatorTest {
         scrambler.scramble(MYSQL_DATABASE, "orders", MYSQL_DATABASE, "orders_scrambled", "uniform");
     ScrambleMeta meta3 =
         scrambler.scramble(
-            MYSQL_DATABASE, "lineitem", MYSQL_DATABASE, "lineitem_hash_scrambled", "hash", "l_orderkey");
+            MYSQL_DATABASE,
+            "lineitem",
+            MYSQL_DATABASE,
+            "lineitem_hash_scrambled",
+            "hash",
+            "l_orderkey");
     meta.addScrambleMeta(meta1);
     meta.addScrambleMeta(meta2);
     meta.addScrambleMeta(meta3);
@@ -110,21 +114,28 @@ public class MySqlTpchSelectQueryCoordinatorTest {
     String filename = "query" + queryNum + ".sql";
     File file = new File("src/test/resources/tpch_test_query/" + filename);
     String sql = Files.toString(file, Charsets.UTF_8);
-    
+
     JdbcConnection jdbcConn = new JdbcConnection(conn, new MysqlSyntax());
     jdbcConn.setOutputDebugMessage(true);
     DbmsConnection dbmsconn = new CachedDbmsConnection(jdbcConn);
     dbmsconn.setDefaultSchema(MYSQL_DATABASE);
-    
-    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn, options);
-    coordinator.setScrambleMetaSet(meta);
-    ExecutionResultReader reader = coordinator.process(sql);
 
     ResultSet rs = stmt.executeQuery(sql);
+
+    SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn, options);
+    coordinator.setScrambleMetaSet(meta);
+    if (queryNum >= 100) {
+      sql = sql.replaceAll("lineitem", "lineitem_hash_scrambled");
+    } else {
+      sql = sql.replaceAll("lineitem", "lineitem_scrambled");
+    }
+    sql = sql.replaceAll("orders", "orders_scrambled");
+    ExecutionResultReader reader = coordinator.process(sql);
+
     System.out.println(String.format("Query %d Executed.", queryNum));
     return new ImmutablePair<>(reader, rs);
   }
-  
+
   @Test
   public void queryCountDistinct1Test() throws VerdictDBException, SQLException, IOException {
     Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(100);
@@ -134,7 +145,7 @@ public class MySqlTpchSelectQueryCoordinatorTest {
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
       cnt++;
-      
+
       if (cnt == 10) {
         while (rs.next()) {
           dbmsQueryResult.next();
@@ -146,7 +157,7 @@ public class MySqlTpchSelectQueryCoordinatorTest {
     }
     assertEquals(10, cnt);
   }
-  
+
   @Test
   public void queryCountDistinct2Test() throws VerdictDBException, SQLException, IOException {
     Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(101);
@@ -156,7 +167,7 @@ public class MySqlTpchSelectQueryCoordinatorTest {
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
       cnt++;
-      
+
       if (cnt == 10) {
         while (rs.next()) {
           dbmsQueryResult.next();
@@ -166,7 +177,7 @@ public class MySqlTpchSelectQueryCoordinatorTest {
     }
     assertEquals(10, cnt);
   }
-  
+
   @Test
   public void queryCountDistinct3Test() throws VerdictDBException, SQLException, IOException {
     Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(102);
@@ -176,7 +187,7 @@ public class MySqlTpchSelectQueryCoordinatorTest {
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
       cnt++;
-      
+
       if (cnt == 10) {
         while (rs.next()) {
           dbmsQueryResult.next();

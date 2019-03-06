@@ -1,13 +1,5 @@
 package org.verdictdb.coordinator;
 
-import static org.junit.Assert.assertEquals;
-
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.Arrays;
-import java.util.List;
-
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.AfterClass;
@@ -19,6 +11,15 @@ import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
+
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.Arrays;
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
 
 public class ImpalaHashScramblingCoordinatorTest {
 
@@ -41,7 +42,8 @@ public class ImpalaHashScramblingCoordinatorTest {
   }
 
   @BeforeClass
-  public static void setupImpalaDatabase() throws SQLException, VerdictDBDbmsException {
+  public static void setupImpalaDatabase()
+      throws SQLException, VerdictDBDbmsException, IOException {
     String impalaConnectionString = String.format("jdbc:impala://%s", IMPALA_HOST);
     impalaConn =
         DatabaseConnectionHelpers.setupImpala(
@@ -75,7 +77,8 @@ public class ImpalaHashScramblingCoordinatorTest {
     testScramblingCoordinator("orders", "o_orderkey");
   }
 
-  public void testScramblingCoordinator(String tablename, String columnname) throws VerdictDBException {
+  public void testScramblingCoordinator(String tablename, String columnname)
+      throws VerdictDBException {
     JdbcConnection conn = JdbcConnection.create(impalaConn);
     //    conn.setOutputDebugMessage(true);
 
@@ -90,7 +93,8 @@ public class ImpalaHashScramblingCoordinatorTest {
     String originalTable = tablename;
     String scrambledTable = tablename + "_scrambled";
     conn.execute(String.format("drop table if exists %s.%s", IMPALA_DATABASE, scrambledTable));
-    scrambler.scramble(originalSchema, originalTable, originalSchema, scrambledTable, "hash", columnname);
+    scrambler.scramble(
+        originalSchema, originalTable, originalSchema, scrambledTable, "hash", columnname);
 
     // tests
     List<Pair<String, String>> originalColumns = conn.getColumns(IMPALA_DATABASE, originalTable);
@@ -127,5 +131,4 @@ public class ImpalaHashScramblingCoordinatorTest {
     assertEquals(0, result.getInt(0));
     // assertEquals((int) Math.ceil(result2.getInt(0) / (float) blockSize) - 1, result.getInt(1));
   }
-
 }

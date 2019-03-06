@@ -57,6 +57,13 @@ public abstract class VerdictSingleResult extends AttributeValueRetrievalHelper 
   }
 
   /**
+   * @param index zero-based index
+   * @return
+   * NOTE: This is to be used by pyverdict to get more robust column type names
+   */
+  public abstract String getColumnTypeNamePy(int index);
+
+  /**
    * set the index before the first one; when next() is called, the index will move to the first
    * row.
    */

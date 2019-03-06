@@ -12,6 +12,7 @@ SCRAMBLE:                        S C R A M B L E;
 SCRAMBLES:                       S C R A M B L E S;
 STREAM:                          S T R E A M;
 GET:                             G E T;
+APPEND:                          A P P E N D;
 
 
 

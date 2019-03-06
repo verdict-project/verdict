@@ -1,6 +1,6 @@
 '''
     Copyright 2018 University of Michigan
- 
+
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
     You may obtain a copy of the License at
@@ -69,6 +69,7 @@ def teardown_module(module):
     cur.execute('DROP SCHEMA IF EXISTS ' + test_schema)
     cur.close()
     mysql_conn.close()
+    verdict_conn.close()
 
 
 class TestClass:
