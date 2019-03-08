@@ -1,20 +1,5 @@
 package org.verdictdb.coordinator;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
-
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -36,12 +21,27 @@ import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.metastore.ScrambleMetaStore;
 
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 /** Created by Dong Young Yoon on 7/26/18. */
 @RunWith(Parameterized.class)
 public class CreateScrambleTableFromSqlTest {
 
   private static final String[] targetDatabases = {"mysql", "impala", "redshift", "postgresql"};
-//    private static final String[] targetDatabases = {"mysql"};
+  //  private static final String[] targetDatabases = {"mysql"};
 
   private static Map<String, Pair<Connection, Connection>> connections = new HashMap<>();
 
@@ -134,7 +134,7 @@ public class CreateScrambleTableFromSqlTest {
     connections.put("mysql", ImmutablePair.of(conn, vc));
   }
 
-  private static void setupImpala() throws VerdictDBDbmsException, SQLException {
+  private static void setupImpala() throws VerdictDBDbmsException, SQLException, IOException {
     String connectionString =
         String.format("jdbc:impala://%s", DatabaseConnectionHelpers.IMPALA_HOST);
     String vcConnectionString =
@@ -322,7 +322,9 @@ public class CreateScrambleTableFromSqlTest {
 
     String countOriginalSql =
         String.format(
-            "SELECT COUNT(*) FROM %s.lineitem LIMIT 1", DatabaseConnectionHelpers.COMMON_SCHEMA_NAME);
+            "SELECT COUNT(*) FROM %s.lineitem_uniform_scramble LIMIT 1", TEMP_SCHEMA_NAME);
+
+    //            DatabaseConnectionHelpers.COMMON_SCHEMA_NAME);
 
     ScrambleMetaSet scrambleMetaSet = store.retrieve();
     SelectQueryCoordinator coordinator =
@@ -362,8 +364,8 @@ public class CreateScrambleTableFromSqlTest {
     stmt.execute(createScrambleSql);
 
     String countOriginalSql =
-        String.format(
-            "SELECT COUNT(*) FROM %s.lineitem LIMIT 1", DatabaseConnectionHelpers.COMMON_SCHEMA_NAME);
+        String.format("SELECT COUNT(*) FROM %s.lineitem_fc_scramble LIMIT 1", TEMP_SCHEMA_NAME);
+    //            DatabaseConnectionHelpers.COMMON_SCHEMA_NAME);
 
     ScrambleMetaSet scrambleMetaSet = store.retrieve();
     SelectQueryCoordinator coordinator =

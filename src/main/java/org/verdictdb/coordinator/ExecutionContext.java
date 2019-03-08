@@ -16,13 +16,6 @@
 
 package org.verdictdb.coordinator;
 
-import static org.verdictdb.coordinator.VerdictSingleResultFromListData.createWithSingleColumn;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.VerdictResultStream;
@@ -35,8 +28,12 @@ import org.verdictdb.connection.DbmsConnection;
 import org.verdictdb.connection.MetaDataProvider;
 import org.verdictdb.connection.StaticMetaData;
 import org.verdictdb.core.resulthandler.ExecutionResultReader;
+import org.verdictdb.core.scrambling.FastConvergeScramblingMethod;
+import org.verdictdb.core.scrambling.HashScramblingMethod;
 import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
+import org.verdictdb.core.scrambling.ScramblingMethod;
+import org.verdictdb.core.scrambling.UniformScramblingMethod;
 import org.verdictdb.core.sqlobject.AbstractRelation;
 import org.verdictdb.core.sqlobject.BaseTable;
 import org.verdictdb.core.sqlobject.ColumnOp;
@@ -54,10 +51,18 @@ import org.verdictdb.metastore.VerdictMetaStore;
 import org.verdictdb.parser.VerdictSQLParser;
 import org.verdictdb.parser.VerdictSQLParser.IdContext;
 import org.verdictdb.parser.VerdictSQLParserBaseVisitor;
+import org.verdictdb.sqlreader.CondGen;
 import org.verdictdb.sqlreader.NonValidatingSQLParser;
 import org.verdictdb.sqlreader.RelationGen;
 import org.verdictdb.sqlreader.RelationStandardizer;
 import org.verdictdb.sqlsyntax.SqlSyntax;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+
+import static org.verdictdb.coordinator.VerdictSingleResultFromListData.createWithSingleColumn;
 
 /**
  * Stores the context for a single query execution. Includes both scrambling query and select query.
@@ -83,6 +88,7 @@ public class ExecutionContext {
   public enum QueryType {
     select,
     scrambling,
+    insert_scramble,
     drop_scramble,
     drop_all_scrambles,
     set_default_schema,
@@ -168,15 +174,26 @@ public class ExecutionContext {
 
     if (queryType.equals(QueryType.scrambling)) {
       log.debug("Query type: scrambling");
+
       CreateScrambleQuery scrambleQuery = generateScrambleQuery(query);
-      scrambleQuery.checkIfSupported(); // checks the validity; throws an exception if not.
+
+      List<String> existingPartitionColumns =
+          conn.getPartitionColumns(
+              scrambleQuery.getOriginalSchema(), scrambleQuery.getOriginalTable());
+
+      // add existing partition columns
+      scrambleQuery.setExistingPartitionColumns(existingPartitionColumns);
+
+      // checks the validity; throws an exception if not.
+      scrambleQuery.checkIfSupported(conn.getSyntax());
 
       ScramblingCoordinator scrambler =
           new ScramblingCoordinator(
               conn,
               scrambleQuery.getNewSchema(),
               options.getVerdictTempSchemaName(),
-              scrambleQuery.getBlockSize());
+              scrambleQuery.getBlockSize(),
+              scrambleQuery.getExistingPartitionColumns());
 
       // store this metadata to our own metadata db.
       ScrambleMeta meta = scrambler.scramble(scrambleQuery);
@@ -187,6 +204,75 @@ public class ExecutionContext {
       refreshScrambleMetaStore();
       return null;
 
+    } else if (queryType.equals(QueryType.insert_scramble)) {
+      log.debug("Query type: insert_scramble");
+
+      ScrambleMetaStore metaStore = new ScrambleMetaStore(conn, options);
+      CreateScrambleQuery scrambleQuery = generateInsertScrambleQuery(query, metaStore);
+
+      ScrambleMeta existingScrambleMeta =
+          metaStore.retrieveExistingScramble(
+              scrambleQuery.getNewSchema(), scrambleQuery.getNewTable());
+
+      if (existingScrambleMeta == null) {
+        throw new VerdictDBException(
+            String.format(
+                "A scramble '%s.%s' does not exist",
+                scrambleQuery.getNewSchema(), scrambleQuery.getNewTable()));
+      }
+
+      ScramblingMethod scrambleMethod = null;
+      if (existingScrambleMeta.getScramblingMethod() == null) {
+        log.warn(
+            String.format(
+                "Scrambling method information on the scramble '%s.%s' does not exist.",
+                scrambleQuery.getNewSchema(), scrambleQuery.getNewTable()));
+        log.warn(
+            String.format(
+                "Using other existing metadata on the scramble '%s.%s' to "
+                    + "perform scramble appending.",
+                scrambleQuery.getNewSchema(), scrambleQuery.getNewTable()));
+
+        String methodName = existingScrambleMeta.getMethod();
+        if (methodName.equalsIgnoreCase("uniform")) {
+          scrambleMethod =
+              new UniformScramblingMethod(existingScrambleMeta.getCumulativeDistributionForTier());
+        } else if (methodName.equalsIgnoreCase("hash")) {
+          scrambleMethod =
+              new HashScramblingMethod(
+                  existingScrambleMeta.getCumulativeDistributionForTier(),
+                  existingScrambleMeta.getHashColumn());
+        } else if (methodName.equalsIgnoreCase("fastconverge")) {
+          scrambleMethod =
+              new FastConvergeScramblingMethod(
+                  existingScrambleMeta.getCumulativeDistributionForTier(),
+                  existingScrambleMeta.getHashColumn());
+        }
+      } else {
+        scrambleMethod = existingScrambleMeta.getScramblingMethod();
+      }
+
+      if (scrambleMethod == null) {
+        throw new VerdictDBException(
+            String.format(
+                "Could not determine scrambling method for '%s.%s'.",
+                scrambleQuery.getNewSchema(), scrambleQuery.getNewTable()));
+      }
+
+      // set scrambleQuery for appending data
+      scrambleQuery.setOriginalSchema(existingScrambleMeta.getOriginalSchemaName());
+      scrambleQuery.setOriginalTable(existingScrambleMeta.getOriginalTableName());
+      scrambleQuery.setMethod(existingScrambleMeta.getMethod());
+      scrambleQuery.setHashColumnName(existingScrambleMeta.getHashColumn());
+      scrambleQuery.setScramblingMethod(scrambleMethod);
+
+      ScramblingCoordinator scrambler =
+          new ScramblingCoordinator(
+              conn, scrambleQuery.getNewSchema(), options.getVerdictTempSchemaName());
+
+      // append new scramble
+      scrambler.appendScramble(scrambleQuery);
+      return null;
     } else if (queryType.equals(QueryType.drop_scramble)) {
       log.debug("Query type: drop_scramble");
 
@@ -401,6 +487,32 @@ public class ExecutionContext {
     return expr.replace("\"", "").replace("`", "").replace("'", "");
   }
 
+  private CreateScrambleQuery generateInsertScrambleQuery(String query, ScrambleMetaStore store) {
+    VerdictSQLParser parser = NonValidatingSQLParser.parserOf(query);
+
+    VerdictSQLParserBaseVisitor<CreateScrambleQuery> visitor =
+        new VerdictSQLParserBaseVisitor<CreateScrambleQuery>() {
+          @Override
+          public CreateScrambleQuery visitInsert_scramble_statement(
+              VerdictSQLParser.Insert_scramble_statementContext ctx) {
+            CreateScrambleQuery scrambleQuery = new CreateScrambleQuery();
+            RelationGen g = new RelationGen();
+            CondGen cond = new CondGen();
+            BaseTable scrambleTable = (BaseTable) g.visit(ctx.scrambled_table);
+            UnnamedColumn where = cond.visit(ctx.where);
+
+            scrambleQuery.setNewSchema(scrambleTable.getSchemaName());
+            scrambleQuery.setNewTable(scrambleTable.getTableName());
+            scrambleQuery.setWhere(where);
+
+            return scrambleQuery;
+          }
+        };
+
+    CreateScrambleQuery scrambleQuery = visitor.visit(parser.insert_scramble_statement());
+    return scrambleQuery;
+  }
+
   private CreateScrambleQuery generateScrambleQuery(String query) {
 
     VerdictSQLParser parser = NonValidatingSQLParser.parserOf(query);
@@ -421,6 +533,8 @@ public class ExecutionContext {
                     : Long.parseLong(ctx.blocksize.getText());
             String hashColumnName =
                 (ctx.hash_column == null) ? null : stripQuote(ctx.hash_column.getText());
+            CondGen cond = new CondGen();
+            UnnamedColumn where = (ctx.where == null ? null : cond.visit(ctx.where));
 
             CreateScrambleQuery query =
                 new CreateScrambleQuery(
@@ -431,7 +545,8 @@ public class ExecutionContext {
                     method,
                     percent,
                     blocksize,
-                    hashColumnName);
+                    hashColumnName,
+                    where);
             if (ctx.IF() != null) query.setIfNotExists(true);
             return query;
           }
@@ -622,6 +737,12 @@ public class ExecutionContext {
           @Override
           public QueryType visitSelect_statement(VerdictSQLParser.Select_statementContext ctx) {
             return QueryType.select;
+          }
+
+          @Override
+          public QueryType visitInsert_scramble_statement(
+              VerdictSQLParser.Insert_scramble_statementContext ctx) {
+            return QueryType.insert_scramble;
           }
 
           @Override

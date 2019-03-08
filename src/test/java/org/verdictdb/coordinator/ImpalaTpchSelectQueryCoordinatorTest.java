@@ -1,14 +1,7 @@
 package org.verdictdb.coordinator;
 
-import static org.junit.Assert.assertEquals;
-
-import java.io.File;
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-
+import com.google.common.base.Charsets;
+import com.google.common.io.Files;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -27,8 +20,14 @@ import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sqlsyntax.ImpalaSyntax;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
+import java.io.File;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+
+import static org.junit.Assert.assertEquals;
 
 public class ImpalaTpchSelectQueryCoordinatorTest {
 
@@ -57,7 +56,7 @@ public class ImpalaTpchSelectQueryCoordinatorTest {
   }
 
   @BeforeClass
-  public static void setupImpalaDatabase() throws SQLException, VerdictDBException {
+  public static void setupImpalaDatabase() throws SQLException, VerdictDBException, IOException {
     String impalaConnectionString = String.format("jdbc:impala://%s", IMPALA_HOST);
     impalaConn =
         DatabaseConnectionHelpers.setupImpala(
@@ -112,11 +111,19 @@ public class ImpalaTpchSelectQueryCoordinatorTest {
         new CachedDbmsConnection(new JdbcConnection(impalaConn, new ImpalaSyntax()));
     dbmsconn.setDefaultSchema(IMPALA_DATABASE);
 
+    ResultSet rs = stmt.executeQuery(sql);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn);
     coordinator.setScrambleMetaSet(meta);
+
+    if (queryNum >= 100) {
+      sql = sql.replaceAll("lineitem", "lineitem_hash_scrambled");
+    } else {
+      sql = sql.replaceAll("lineitem", "lineitem_scrambled");
+    }
+    sql = sql.replaceAll("orders", "orders_scrambled");
+
     ExecutionResultReader reader = coordinator.process(sql);
 
-    ResultSet rs = stmt.executeQuery(sql);
     return new ImmutablePair<>(reader, rs);
   }
 

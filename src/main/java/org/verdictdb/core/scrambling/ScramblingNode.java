@@ -16,12 +16,6 @@
 
 package org.verdictdb.core.scrambling;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.core.execplan.ExecutionInfoToken;
@@ -36,6 +30,13 @@ import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.core.sqlobject.SqlConvertible;
 import org.verdictdb.core.sqlobject.UnnamedColumn;
 import org.verdictdb.exception.VerdictDBException;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 /**
  * The last stage of scramling process: creates a new table based on some statistics.
@@ -55,6 +56,8 @@ public class ScramblingNode extends CreateScrambledTableNode {
       ScramblingMethod method,
       String tierColumnName,
       String blockColumnName,
+      UnnamedColumn predicate,
+      List<String> existingPartitionColumns,
       boolean createIfNotExists) {
 
     super(
@@ -65,6 +68,8 @@ public class ScramblingNode extends CreateScrambledTableNode {
         method,
         tierColumnName,
         blockColumnName,
+        predicate,
+        existingPartitionColumns,
         createIfNotExists);
   }
 
@@ -85,6 +90,17 @@ public class ScramblingNode extends CreateScrambledTableNode {
       String oldTableName,
       ScramblingMethod method,
       Map<String, String> options) {
+    return create(newSchemaName, newTableName, oldSchemaName, oldTableName, method, null, options);
+  }
+
+  public static ScramblingNode create(
+      final String newSchemaName,
+      final String newTableName,
+      String oldSchemaName,
+      String oldTableName,
+      ScramblingMethod method,
+      UnnamedColumn predicate,
+      Map<String, String> options) {
 
     IdCreator idCreator =
         new IdCreator() {
@@ -92,17 +108,17 @@ public class ScramblingNode extends CreateScrambledTableNode {
           public String generateAliasName() {
             return null; // we don't need this method
           }
-  
+
           @Override
           public String generateAliasName(String keyword) {
             return null; // we don't need this method
           }
-  
+
           @Override
           public int generateSerialNumber() {
             return 0;
           }
-  
+
           @Override
           public Pair<String, String> generateTempTableName() {
             return Pair.of(newSchemaName, newTableName);
@@ -112,6 +128,11 @@ public class ScramblingNode extends CreateScrambledTableNode {
     String tierColumnName = options.get("tierColumnName");
     String blockColumnName = options.get("blockColumnName");
     String createIfNotExistsStr = options.get("createIfNotExists");
+    String existingPartitionColumnStr = options.get("existingPartitionColumns");
+    List<String> existingPartitionColumns =
+        (existingPartitionColumnStr == null || existingPartitionColumnStr.isEmpty())
+            ? new ArrayList<String>()
+            : Arrays.asList(existingPartitionColumnStr.split(","));
     boolean createIfNotExists = false;
     if (createIfNotExistsStr != null && createIfNotExistsStr.equals("true")) {
       createIfNotExists = true;
@@ -123,6 +144,8 @@ public class ScramblingNode extends CreateScrambledTableNode {
         method,
         tierColumnName,
         blockColumnName,
+        predicate,
+        existingPartitionColumns,
         createIfNotExists);
   }
 
@@ -149,6 +172,9 @@ public class ScramblingNode extends CreateScrambledTableNode {
     List<UnnamedColumn> tierPredicates = method.getTierExpressions(metaData);
     int tierCount = tierPredicates.size() + 1;
 
+    // partition columns should be added just before block column
+    List<BaseColumn> partitionColumnsToAdd = new ArrayList<>();
+
     // composed select item expressions will be added to this list
     List<SelectItem> selectItems = new ArrayList<>();
     @SuppressWarnings("unchecked")
@@ -157,7 +183,11 @@ public class ScramblingNode extends CreateScrambledTableNode {
     final String mainTableAlias = method.getMainTableAlias();
     for (Pair<String, String> nameAndType : columnNamesAndTypes) {
       String name = nameAndType.getLeft();
-      selectItems.add(new BaseColumn(mainTableAlias, name));
+      if (partitionColumns.contains(name)) {
+        partitionColumnsToAdd.add(new BaseColumn(mainTableAlias, name));
+      } else {
+        selectItems.add(new BaseColumn(mainTableAlias, name));
+      }
     }
 
     // compose tier expression
@@ -176,10 +206,12 @@ public class ScramblingNode extends CreateScrambledTableNode {
     }
     selectItems.add(new AliasedColumn(tierExpr, tierColumnName));
 
+    // add existing partition columns at the end
+    selectItems.addAll(partitionColumnsToAdd);
+
     // compose block expression
     UnnamedColumn blockExpr = null;
     List<UnnamedColumn> blockOperands = new ArrayList<>();
-
 
     for (int i = 0; i < tierCount; i++) {
       UnnamedColumn blockForTierExpr = method.getBlockExprForTier(i, metaData);
@@ -208,7 +240,6 @@ public class ScramblingNode extends CreateScrambledTableNode {
         blockOperands.add(ColumnOp.equal(tierExpr, ConstantColumn.valueOf(i)));
       }
       blockOperands.add(blockForTierExpr);
-
     }
 
     // use a simple (non-nested) case expression when there is only a single tier
@@ -227,7 +258,7 @@ public class ScramblingNode extends CreateScrambledTableNode {
     //        SelectQuery.create(
     //            selectItems,
     //            new BaseTable(oldSchemaName, oldTableName, MAIN_TABLE_SOURCE_ALIAS_NAME));
-    SelectQuery scramblingQuery = SelectQuery.create(selectItems, tableSource);
+    SelectQuery scramblingQuery = SelectQuery.create(selectItems, tableSource, predicate);
 
     return scramblingQuery;
   }

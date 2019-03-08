@@ -31,8 +31,11 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /** Created by Dong Young Yoon on 8/16/18. */
 @Category(PrestoTests.class)
@@ -130,6 +133,60 @@ public class PrestoUniformScramblingQueryTest {
             String.format(
                 "CREATE SCRAMBLE %s.orders_scramble FROM %s.orders", SCHEMA_NAME, SCHEMA_NAME));
     return conn;
+  }
+
+  @Test
+  public void checkExistingPartitionTest() throws SQLException {
+    String sql = String.format("DESCRIBE %s.orders_scramble", SCHEMA_NAME);
+    ResultSet rs = conn.createStatement().executeQuery(sql);
+    Map<String, String> results = new HashMap<>();
+    while (rs.next()) {
+      String column = rs.getString(1);
+      String extra = rs.getString(3);
+      results.put(column, extra);
+      if (column.equalsIgnoreCase("o_dummy")) {
+        assertTrue(extra.toLowerCase().contains("partition"));
+      }
+      if (column.equalsIgnoreCase("verdictdbblock")) {
+        assertTrue(extra.toLowerCase().contains("partition"));
+      }
+    }
+    assertTrue(results.containsKey("o_dummy"));
+    assertTrue(results.containsKey("verdictdbblock"));
+    assertTrue(results.get("o_dummy").toLowerCase().contains("partition"));
+    assertTrue(results.get("verdictdbblock").toLowerCase().contains("partition"));
+
+    // all verdictdbblock must be 0
+    sql = String.format("SELECT verdictdbblock FROM %s.orders_scramble", SCHEMA_NAME);
+    rs = conn.createStatement().executeQuery(sql);
+    while (rs.next()) {
+      int val = rs.getInt(1);
+      assertEquals(0, val);
+    }
+  }
+
+  @Test
+  public void insertScrambleTest() throws SQLException {
+    int rowBefore = 0, rowAfter = 0;
+    ResultSet rs =
+        conn.createStatement()
+            .executeQuery(String.format("SELECT COUNT(*) FROM %s.orders_scramble", SCHEMA_NAME));
+    if (rs.next()) {
+      rowBefore = rs.getInt(1);
+    }
+    vc.createStatement()
+        .execute(
+            String.format(
+                "INSERT SCRAMBLE %s.orders_scramble WHERE o_totalprice < 10000", SCHEMA_NAME));
+
+    rs =
+        conn.createStatement()
+            .executeQuery(String.format("SELECT COUNT(*) FROM %s.orders_scramble", SCHEMA_NAME));
+    if (rs.next()) {
+      rowAfter = rs.getInt(1);
+    }
+
+    assertTrue(rowAfter > rowBefore);
   }
 
   @Test

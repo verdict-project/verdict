@@ -1,17 +1,8 @@
 package org.verdictdb.commons;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.List;
-
+import com.google.common.base.Charsets;
+import com.google.common.base.Joiner;
+import com.google.common.io.Files;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.spark.sql.SparkSession;
 import org.postgresql.copy.CopyManager;
@@ -25,9 +16,17 @@ import org.verdictdb.sqlsyntax.PostgresqlSyntax;
 import org.verdictdb.sqlsyntax.PrestoHiveSyntax;
 import org.verdictdb.sqlsyntax.RedshiftSyntax;
 
-import com.google.common.base.Charsets;
-import com.google.common.base.Joiner;
-import com.google.common.io.Files;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 
 public class DatabaseConnectionHelpers {
 
@@ -262,7 +261,7 @@ public class DatabaseConnectionHelpers {
 
   public static Connection setupImpala(
       String connectionString, String user, String password, String schema)
-      throws SQLException, VerdictDBDbmsException {
+      throws SQLException, VerdictDBDbmsException, IOException {
 
     Connection conn = DriverManager.getConnection(connectionString, user, password);
     DbmsConnection dbmsConn = JdbcConnection.create(conn);
@@ -273,14 +272,14 @@ public class DatabaseConnectionHelpers {
     // Create tables
     dbmsConn.execute(
         String.format(
-            "CREATE EXTERNAL TABLE IF NOT EXISTS `%s`.`nation` ("
+            "CREATE TABLE IF NOT EXISTS `%s`.`nation` ("
                 + "  `n_nationkey`  INT, "
                 + "  `n_name`       STRING, "
                 + "  `n_regionkey`  INT, "
                 + "  `n_comment`    STRING, "
-                + "  `n_dummy`      STRING) "
-                + "ROW FORMAT DELIMITED FIELDS TERMINATED BY '|'"
-                + "LOCATION '/tmp/tpch_test_data/nation'",
+                + "  `n_dummy`      STRING) ",
+            //                + "ROW FORMAT DELIMITED FIELDS TERMINATED BY '|'",
+            //                + "LOCATION '/tmp/tpch_test_data/nation'",
             schema));
     dbmsConn.execute(
         String.format(
@@ -288,9 +287,9 @@ public class DatabaseConnectionHelpers {
                 + "  `r_regionkey`  INT, "
                 + "  `r_name`       STRING, "
                 + "  `r_comment`    STRING, "
-                + "  `r_dummy`      STRING) "
-                + "ROW FORMAT DELIMITED FIELDS TERMINATED BY '|'"
-                + "LOCATION '/tmp/tpch_test_data/region'",
+                + "  `r_dummy`      STRING) ",
+            //                + "ROW FORMAT DELIMITED FIELDS TERMINATED BY '|'",
+            //                + "LOCATION '/tmp/tpch_test_data/region'",
             schema));
     dbmsConn.execute(
         String.format(
@@ -304,9 +303,9 @@ public class DatabaseConnectionHelpers {
                 + "  `p_container`   STRING, "
                 + "  `p_retailprice` DECIMAL(15,2) , "
                 + "  `p_comment`     STRING, "
-                + "  `p_dummy`       STRING) "
-                + "ROW FORMAT DELIMITED FIELDS TERMINATED BY '|'"
-                + "LOCATION '/tmp/tpch_test_data/part'",
+                + "  `p_dummy`       STRING) ",
+            //                + "ROW FORMAT DELIMITED FIELDS TERMINATED BY '|'"
+            //                + "LOCATION '/tmp/tpch_test_data/part'",
             schema));
     dbmsConn.execute(
         String.format(
@@ -318,9 +317,9 @@ public class DatabaseConnectionHelpers {
                 + "  `s_phone`       STRING , "
                 + "  `s_acctbal`     DECIMAL(15,2) , "
                 + "  `s_comment`     STRING, "
-                + "  `s_dummy`       STRING) "
-                + "ROW FORMAT DELIMITED FIELDS TERMINATED BY '|'"
-                + "LOCATION '/tmp/tpch_test_data/supplier'",
+                + "  `s_dummy`       STRING) ",
+            //                + "ROW FORMAT DELIMITED FIELDS TERMINATED BY '|'"
+            //                + "LOCATION '/tmp/tpch_test_data/supplier'",
             schema));
     dbmsConn.execute(
         String.format(
@@ -330,9 +329,9 @@ public class DatabaseConnectionHelpers {
                 + "  `ps_availqty`    INT , "
                 + "  `ps_supplycost`  DECIMAL(15,2)  , "
                 + "  `ps_comment`     STRING, "
-                + "  `ps_dummy`       STRING) "
-                + "ROW FORMAT DELIMITED FIELDS TERMINATED BY '|'"
-                + "LOCATION '/tmp/tpch_test_data/partsupp'",
+                + "  `ps_dummy`       STRING) ",
+            //                + "ROW FORMAT DELIMITED FIELDS TERMINATED BY '|'"
+            //                + "LOCATION '/tmp/tpch_test_data/partsupp'",
             schema));
     dbmsConn.execute(
         String.format(
@@ -345,9 +344,9 @@ public class DatabaseConnectionHelpers {
                 + "  `c_acctbal`     DECIMAL(15,2)   , "
                 + "  `c_mktsegment`  STRING , "
                 + "  `c_comment`     STRING, "
-                + "  `c_dummy`       STRING) "
-                + "ROW FORMAT DELIMITED FIELDS TERMINATED BY '|'"
-                + "LOCATION '/tmp/tpch_test_data/customer'",
+                + "  `c_dummy`       STRING) ",
+            //                + "ROW FORMAT DELIMITED FIELDS TERMINATED BY '|'"
+            //                + "LOCATION '/tmp/tpch_test_data/customer'",
             schema));
     dbmsConn.execute(
         String.format(
@@ -361,9 +360,9 @@ public class DatabaseConnectionHelpers {
                 + "  `o_clerk`          STRING , "
                 + "  `o_shippriority`   INT, "
                 + "  `o_comment`        STRING, "
-                + "  `o_dummy`          STRING) "
-                + "ROW FORMAT DELIMITED FIELDS TERMINATED BY '|'"
-                + "LOCATION '/tmp/tpch_test_data/orders'",
+                + "  `o_dummy`          STRING) ",
+            //                + "ROW FORMAT DELIMITED FIELDS TERMINATED BY '|'"
+            //                + "LOCATION '/tmp/tpch_test_data/orders'",
             schema));
     dbmsConn.execute(
         String.format(
@@ -384,11 +383,20 @@ public class DatabaseConnectionHelpers {
                 + "  `l_shipinstruct` STRING , "
                 + "  `l_shipmode`     STRING , "
                 + "  `l_comment`      STRING, "
-                + "  `l_dummy`        STRING) "
-                + "ROW FORMAT DELIMITED FIELDS TERMINATED BY '|'"
-                + "LOCATION '/tmp/tpch_test_data/lineitem'",
+                + "  `l_dummy`        STRING) ",
+            //                + "ROW FORMAT DELIMITED FIELDS TERMINATED BY '|'"
+            //                + "LOCATION '/tmp/tpch_test_data/lineitem'",
             schema));
 
+    // load data use insert
+    loadImpalaData(schema, "nation", conn);
+    loadImpalaData(schema, "region", conn);
+    loadImpalaData(schema, "part", conn);
+    loadImpalaData(schema, "supplier", conn);
+    loadImpalaData(schema, "customer", conn);
+    loadImpalaData(schema, "partsupp", conn);
+    loadImpalaData(schema, "orders", conn);
+    loadImpalaData(schema, "lineitem", conn);
     return conn;
   }
 
@@ -569,8 +577,59 @@ public class DatabaseConnectionHelpers {
     return conn;
   }
 
-  static void loadPrestoData(String schema, String table, Connection conn)
-      throws IOException, VerdictDBDbmsException, SQLException {
+  private static void loadImpalaData(String schema, String table, Connection conn)
+      throws IOException, SQLException {
+    File file =
+        new File(String.format("src/test/resources/tpch_test_data/%s/%s.tbl", table, table));
+    ResultSet rs =
+        conn.createStatement().executeQuery(String.format("DESCRIBE %s.%s", schema, table));
+    List<Boolean> quotedNeeded = new ArrayList<>();
+    List<Boolean> isDate = new ArrayList<>();
+    while (rs.next()) {
+      String columnType = rs.getString(2).toLowerCase();
+      if (columnType.equals("integer")
+          || columnType.equals("numeric")
+          || columnType.contains("double")
+          || columnType.contains("decimal")
+          || columnType.contains("bigint")
+          || columnType.equals("int")) {
+        quotedNeeded.add(false);
+      } else quotedNeeded.add(true);
+      if (columnType.contains("date")) {
+        isDate.add(true);
+      } else isDate.add(false);
+    }
+
+    StringBuilder concat = new StringBuilder();
+    String content = Files.toString(file, Charsets.UTF_8);
+    for (String row : content.split("\n")) {
+      String[] values = row.split("\\|");
+      StringBuilder rowBuilder = new StringBuilder();
+      for (int i = 0; i < values.length - 1; i++) {
+        if (quotedNeeded.get(i)) {
+          rowBuilder.append(isDate.get(i) ? "date " : "").append(getQuoted(values[i])).append(",");
+        } else {
+          rowBuilder.append(values[i]).append(",");
+        }
+      }
+      for (int i = 0; i < quotedNeeded.size() - values.length + 1; ++i) {
+        if (i < quotedNeeded.size() - values.length) {
+          rowBuilder.append("'',");
+        } else {
+          rowBuilder.append("''");
+        }
+      }
+      row = rowBuilder.toString();
+      if (concat.toString().equals("")) {
+        concat.append("(").append(row).append(")");
+      } else concat.append(",").append("(").append(row).append(")");
+    }
+    conn.createStatement()
+        .execute(String.format("insert into %s.%s values %s", schema, table, concat.toString()));
+  }
+
+  private static void loadPrestoData(String schema, String table, Connection conn)
+      throws IOException, SQLException {
     String concat = "";
     File file =
         new File(String.format("src/test/resources/tpch_test_data/%s/%s.tbl", table, table));
@@ -620,7 +679,7 @@ public class DatabaseConnectionHelpers {
 
   public static Connection setupPresto(
       String connectionString, String user, String password, String schema)
-      throws VerdictDBDbmsException, SQLException, IOException {
+      throws SQLException, IOException {
 
     Connection conn = DriverManager.getConnection(connectionString, user, password);
 
@@ -710,7 +769,7 @@ public class DatabaseConnectionHelpers {
                 + "  \"o_clerk\"          CHAR(15) , "
                 + "  \"o_shippriority\"   INT , "
                 + "  \"o_comment\"        VARCHAR(79), "
-                + "  \"o_dummy\" varchar(10)) ",
+                + "  \"o_dummy\" varchar(10)) WITH (partitioned_by = ARRAY['o_dummy']) ",
             schema));
     stmt.execute(
         String.format(
@@ -1334,16 +1393,16 @@ public class DatabaseConnectionHelpers {
 
     return conn;
   }
-  
+
   public static Connection setupPrestoForDataTypeTest(
-      String connectionString, String user, String password, String schema, String table) 
-          throws SQLException, VerdictDBDbmsException{
+      String connectionString, String user, String password, String schema, String table)
+      throws SQLException, VerdictDBDbmsException {
     Connection conn = DriverManager.getConnection(connectionString, user, password);
     DbmsConnection dbmsConn = new JdbcConnection(conn, new PrestoHiveSyntax());
-    
+
     dbmsConn.execute(String.format("CREATE SCHEMA IF NOT EXISTS \"%s\"", schema));
     dbmsConn.execute(String.format("DROP TABLE IF EXISTS \"%s\".\"%s\"", schema, table));
-    
+
     dbmsConn.execute(
         String.format(
             "CREATE TABLE \"%s\".\"%s\" ("
@@ -1359,20 +1418,20 @@ public class DatabaseConnectionHelpers {
                 + "timestampCol        TIMESTAMP,"
                 + "charCol             CHAR(4),"
                 + "varcharCol          VARCHAR(4))",
-        schema, table));
-    
+            schema, table));
+
     List<String> insertDataList = new ArrayList<>();
-    insertDataList.add("cast(1 as tinyint)");   // tinyint
-    insertDataList.add("true");                 // boolean
-    insertDataList.add("cast(2 as smallint)");  // smallint
-    insertDataList.add("cast(3 as integer)");   // integer
-    insertDataList.add("cast(4 as bigint)");    // bigint
-    insertDataList.add("cast(5.0 as decimal(4,2))");  // decimal
-    insertDataList.add("cast(1.0 as real)");          // real
-    insertDataList.add("cast(1.0 as double)");        // double
+    insertDataList.add("cast(1 as tinyint)"); // tinyint
+    insertDataList.add("true"); // boolean
+    insertDataList.add("cast(2 as smallint)"); // smallint
+    insertDataList.add("cast(3 as integer)"); // integer
+    insertDataList.add("cast(4 as bigint)"); // bigint
+    insertDataList.add("cast(5.0 as decimal(4,2))"); // decimal
+    insertDataList.add("cast(1.0 as real)"); // real
+    insertDataList.add("cast(1.0 as double)"); // double
     insertDataList.add("cast('2018-12-31' as date)"); // date
     insertDataList.add("cast('2018-12-31 00:00:01' as timestamp)"); // timestamp
-    insertDataList.add("cast('ab' as char(4))");      // char
+    insertDataList.add("cast('ab' as char(4))"); // char
     insertDataList.add("cast('abcd' as varchar(4))"); // varchar
 
     dbmsConn.execute(
@@ -1404,7 +1463,7 @@ public class DatabaseConnectionHelpers {
 
   public static Connection setupImpalaForDataTypeTest(
       String connectionString, String user, String password, String schema, String table)
-          throws SQLException, VerdictDBDbmsException {
+      throws SQLException, VerdictDBDbmsException {
     Connection conn = DriverManager.getConnection(connectionString, user, password);
     DbmsConnection dbmsConn = new JdbcConnection(conn, new ImpalaSyntax());
 

@@ -19,6 +19,7 @@ package org.verdictdb.sqlwriter;
 import org.verdictdb.core.sqlobject.CreateSchemaQuery;
 import org.verdictdb.core.sqlobject.CreateTableQuery;
 import org.verdictdb.core.sqlobject.DropTableQuery;
+import org.verdictdb.core.sqlobject.InsertIntoSelectQuery;
 import org.verdictdb.core.sqlobject.InsertValuesQuery;
 import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.core.sqlobject.SetOperationRelation;
@@ -50,6 +51,9 @@ public class QueryToSql {
     } else if (query instanceof InsertValuesQuery) {
       InsertQueryToSql tosql = new InsertQueryToSql(syntax);
       return tosql.toSql((InsertValuesQuery) query);
+    } else if (query instanceof InsertIntoSelectQuery) {
+      InsertQueryToSql tosql = new InsertQueryToSql(syntax);
+      return tosql.toSql((InsertIntoSelectQuery) query);
     } else if (query instanceof SetOperationRelation) {
       SetOperationToSql tosql = new SetOperationToSql(syntax);
       return tosql.toSql((SetOperationRelation) query);

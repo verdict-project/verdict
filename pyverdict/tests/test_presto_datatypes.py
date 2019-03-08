@@ -1,6 +1,6 @@
 '''
     Copyright 2018 University of Michigan
- 
+
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
     You may obtain a copy of the License at
@@ -48,7 +48,7 @@ def test_data_types():
         actual_row = rows[i]
         for j in range(len(expected_row)):
             compare_value(expected_row[j], actual_row[j], types[j])
-    tear_down(presto_conn)
+    tear_down(presto_conn, verdict_conn)
 
 def compare_value(expected, actual, coltype):
     if coltype == 'decimal' and expected is not None:
@@ -140,12 +140,13 @@ def setup_sandbox():
     verdict_conn = verdict_connect(host, port, catalog, user)
     return (presto_conn, verdict_conn)
 
-def tear_down(presto_conn):
+def tear_down(presto_conn, verdict_conn):
     cur = presto_conn.cursor()
     cur.execute("DROP TABLE IF EXISTS {}.{}".format(test_schema, test_table))
     cur.fetchall()
     cur.execute('DROP SCHEMA IF EXISTS {}'.format(test_schema))
     cur.fetchall()
+    verdict_conn.close()
 
 def verdict_connect(host, port, catalog, usr):
     connection_string = \

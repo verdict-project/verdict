@@ -16,13 +16,6 @@
 
 package org.verdictdb.core.scrambling;
 
-import static org.verdictdb.core.scrambling.ScramblingNode.computeConditionalProbabilityDistribution;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.commons.DataTypeConverter;
 import org.verdictdb.commons.VerdictDBLogger;
@@ -50,7 +43,12 @@ import org.verdictdb.core.sqlobject.UnnamedColumn;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBValueException;
 
-import com.google.common.base.Optional;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
+import static org.verdictdb.core.scrambling.ScramblingNode.computeConditionalProbabilityDistribution;
 
 /**
  * Policy: 1. Tier 0: tuples containing outlier values. 2. Tier 1: tuples containing rare groups 3.
@@ -70,6 +68,10 @@ import com.google.common.base.Optional;
  */
 public class FastConvergeScramblingMethod extends ScramblingMethodBase {
 
+  protected String type = "fastconverge";
+
+  private static final long serialVersionUID = 3640705615176207659L;
+
   double p0 = 0.5; // max portion for Tier 0; should be configured dynamically in the future
 
   double p1 =
@@ -77,7 +79,7 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
 
   static final double OUTLIER_STDDEV_MULTIPLIER = 3.09;
 
-  Optional<String> primaryColumnName = Optional.absent();
+  private String primaryColumnName = null;
 
   private String scratchpadSchemaName;
 
@@ -102,15 +104,31 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
 
   private static final int DEFAULT_MAX_BLOCK_COUNT = 100;
 
+  public FastConvergeScramblingMethod() {
+    super(0, 0, 0);
+  }
+
   public FastConvergeScramblingMethod(long blockSize, String scratchpadSchemaName) {
     super(blockSize, DEFAULT_MAX_BLOCK_COUNT, 1.0);
     this.scratchpadSchemaName = scratchpadSchemaName;
+    this.type = "fastconverge";
   }
 
   public FastConvergeScramblingMethod(
       long blockSize, String scratchpadSchemaName, String primaryColumnName) {
     this(blockSize, scratchpadSchemaName);
-    this.primaryColumnName = Optional.of(primaryColumnName);
+    this.primaryColumnName = primaryColumnName;
+    this.type = "fastconverge";
+  }
+
+  public FastConvergeScramblingMethod(
+      Map<Integer, List<Double>> probDist, String primaryColumnName) {
+    super(probDist);
+    this.type = "fastconverge";
+    this.primaryColumnName = primaryColumnName;
+    this.tier0CumulProbDist = probDist.get(0);
+    this.tier1CumulProbDist = probDist.get(1);
+    this.tier2CumulProbDist = probDist.get(2);
   }
 
   /**
@@ -154,17 +172,17 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
     statisticsNodes.add(op);
 
     // primary group's distribution checking
-    if (primaryColumnName.isPresent()) {
+    if (primaryColumnName != null) {
       TempIdCreatorInScratchpadSchema idCreator =
           new TempIdCreatorInScratchpadSchema(scratchpadSchemaName);
       LargeGroupListNode ll =
           new LargeGroupListNode(
-              idCreator, oldSchemaName, oldTableName, primaryColumnName.get(), blockSize);
+              idCreator, oldSchemaName, oldTableName, primaryColumnName, blockSize);
       // subscribed to 'pc' to obtain count(*) of the table, which is used to infer
       // appropriate sampling ratio.
       ll.subscribeTo(pc, 0);
 
-      LargeGroupSizeNode ls = new LargeGroupSizeNode(primaryColumnName.get());
+      LargeGroupSizeNode ls = new LargeGroupSizeNode(primaryColumnName);
       ll.registerSubscriber(ls.getSubscriptionTicket());
       //      ls.subscribeTo(ll, 0);
 
@@ -249,7 +267,7 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
     // from schemaName.tableName t1 left join largeGroupSchema.largeGroupTable t2
     //   on t1.primaryGroup = t2.primaryGroup
     UnnamedColumn tier1Predicate;
-    if (!primaryColumnName.isPresent()) {
+    if (primaryColumnName == null) {
       tier1Predicate = ColumnOp.equal(ConstantColumn.valueOf(0), ConstantColumn.valueOf(1));
     } else {
       String rightTableSourceAlias = FastConvergeScramblingMethod.RIGHT_TABLE_SOURCE_ALIAS_NAME;
@@ -360,7 +378,7 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
     int totalNumberOfblocks = tableSizeAndBlockNumber.getRight();
     long evenBlockSize = calcuteEvenBlockSize(totalNumberOfblocks, tableSize);
 
-    if (!primaryColumnName.isPresent()) {
+    if (primaryColumnName == null) {
       while (cumulProbDist.size() < totalNumberOfblocks) {
         cumulProbDist.add(1.0);
       }
@@ -486,7 +504,7 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
   @Override
   public AbstractRelation getScramblingSource(
       String originalSchema, String originalTable, Map<String, Object> metaData) {
-    if (primaryColumnName.isPresent()) {
+    if (primaryColumnName != null) {
       @SuppressWarnings("unchecked")
       Pair<String, String> fullTableName =
           (Pair<String, String>) metaData.get(LargeGroupListNode.class.getSimpleName());
@@ -504,7 +522,7 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
               Arrays.asList(JoinTable.JoinType.leftouter),
               Arrays.<UnnamedColumn>asList(
                   ColumnOp.equal(
-                      new BaseColumn(MAIN_TABLE_SOURCE_ALIAS_NAME, primaryColumnName.get()),
+                      new BaseColumn(MAIN_TABLE_SOURCE_ALIAS_NAME, primaryColumnName),
                       new BaseColumn(
                           RIGHT_TABLE_SOURCE_ALIAS_NAME,
                           LargeGroupListNode.PRIMARY_GROUP_RENAME))));
@@ -575,7 +593,7 @@ class PercentilesAndCountNode extends QueryNodeBase {
 
   private String partitionMetaTokenKey;
 
-  private Optional<String> primaryColumnName;
+  private String primaryColumnName;
 
   public static final String AVG_PREFIX = "verdictdbavg";
 
@@ -588,7 +606,7 @@ class PercentilesAndCountNode extends QueryNodeBase {
       String tableName,
       String columnMetaTokenKey,
       String partitionMetaTokenKey,
-      Optional<String> primaryColumnName) {
+      String primaryColumnName) {
     super(-1, null);
     this.schemaName = schemaName;
     this.tableName = tableName;
@@ -626,7 +644,7 @@ class PercentilesAndCountNode extends QueryNodeBase {
     // compose a select list
     List<SelectItem> selectList = new ArrayList<>();
     for (String col : numericColumns) {
-      if (primaryColumnName.isPresent() && col.equals(primaryColumnName.get())) {
+      if (primaryColumnName != null && col.equals(primaryColumnName)) {
         continue;
       }
 

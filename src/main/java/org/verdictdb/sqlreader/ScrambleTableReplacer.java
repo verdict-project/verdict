@@ -16,8 +16,6 @@
 
 package org.verdictdb.sqlreader;
 
-import java.util.List;
-
 import org.apache.commons.lang3.tuple.Triple;
 import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.coordinator.SelectQueryCoordinator;
@@ -29,6 +27,8 @@ import org.verdictdb.core.sqlobject.BaseTable;
 import org.verdictdb.core.sqlobject.JoinTable;
 import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.exception.VerdictDBValueException;
+
+import java.util.List;
 
 /** Created by Dong Young Yoon on 7/31/18. */
 public class ScrambleTableReplacer {
@@ -47,11 +47,11 @@ public class ScrambleTableReplacer {
 
   /**
    * Replaces the tables with their corresponding scrambles if possible.
-   * 
+   *
    * @param query
    * @return The number of scrambles present in the query. Note that this number not only includes
-   * the scrambles added by replacements but also the scrambles that are directly specified by
-   * users.
+   *     the scrambles added by replacements but also the scrambles that are directly specified by
+   *     users.
    * @throws VerdictDBValueException
    */
   public int replaceQuery(SelectQuery query) throws VerdictDBValueException {
@@ -59,34 +59,32 @@ public class ScrambleTableReplacer {
   }
 
   private int replaceQuery(
-      SelectQuery query, 
-      boolean doReset, 
-      Triple<Boolean, Boolean, BaseColumn> outerInspectionInfo) 
-          throws VerdictDBValueException {
-    if (doReset) { 
+      SelectQuery query, boolean doReset, Triple<Boolean, Boolean, BaseColumn> outerInspectionInfo)
+      throws VerdictDBValueException {
+    if (doReset) {
       replaceCount = 0;
     }
-    
+
     // check select list
-    Triple<Boolean, Boolean, BaseColumn> inspectionInfo = 
+    Triple<Boolean, Boolean, BaseColumn> inspectionInfo =
         SelectQueryCoordinator.inspectAggregatesInSelectList(query);
     boolean containAggregatedItem = inspectionInfo.getLeft();
     boolean containCountDistinctItem = inspectionInfo.getMiddle();
     BaseColumn countDistinctColumn = inspectionInfo.getRight();
-    
+
     if (containCountDistinctItem && countDistinctColumn == null) {
-      throw new VerdictDBValueException("A base column is not found "
-          + "inside the count-distinct function.");
+      throw new VerdictDBValueException(
+          "A base column is not found " + "inside the count-distinct function.");
     }
-    
+
     // this is to handle the case that an outer query includes aggregate functions,
     // the current query is simply a projection.
     if (outerInspectionInfo != null && !containAggregatedItem && !containCountDistinctItem) {
       containAggregatedItem = outerInspectionInfo.getLeft();
       containCountDistinctItem = outerInspectionInfo.getMiddle();
-      inspectionInfo = outerInspectionInfo; 
+      inspectionInfo = outerInspectionInfo;
     }
-    
+
     // if both count-distinct and other aggregates appear
     if (containAggregatedItem && containCountDistinctItem) {
       throw new RuntimeException("This line is not supposed to be reached.");
@@ -121,45 +119,48 @@ public class ScrambleTableReplacer {
         }
       }
     }
-    
+
     return replaceCount;
   }
 
   /**
-   * Replaces an original table if there exists a corresponding scramble.
-   * Use a hash scramble.
-   * 
+   * Replaces an original table if there exists a corresponding scramble. Use a hash scramble.
+   *
    * @param table
    * @return
-   * @throws VerdictDBValueException 
+   * @throws VerdictDBValueException
    */
   private AbstractRelation replaceTableForCountDistinct(
-      AbstractRelation table, 
-      Triple<Boolean, Boolean, BaseColumn> inspectionInfo) throws VerdictDBValueException {
-    
+      AbstractRelation table, Triple<Boolean, Boolean, BaseColumn> inspectionInfo)
+      throws VerdictDBValueException {
+
     BaseColumn countDistinctColumn = inspectionInfo.getRight();
-    
+
     if (table instanceof BaseTable) {
       BaseTable bt = (BaseTable) table;
-      
+
       for (ScrambleMeta meta : metaSet) {
-        // Substitute names with those of the first scrambled table found.
+        // Detects scrambled tables.
         // The scramble meta are expected to be retrieved from the recently created ones.
-        if (meta.getOriginalSchemaName().equals(bt.getSchemaName())
-            && meta.getOriginalTableName().equals(bt.getTableName())
+        if (meta.getSchemaName().equals(bt.getSchemaName())
+            && meta.getTableName().equals(bt.getTableName())
             && meta.getMethodWithDefault("uniform").equalsIgnoreCase("hash")
             && countDistinctColumn.getColumnName().equals(meta.getHashColumn())) {
           ++replaceCount;
-          bt.setSchemaName(meta.getSchemaName());
-          bt.setTableName(meta.getTableName());
 
           log.info(
-              String.format(
-                  "Automatic table replacement: %s.%s -> %s.%s",
-                  meta.getOriginalSchemaName(),
-                  meta.getOriginalTableName(),
-                  meta.getSchemaName(),
-                  meta.getTableName()));
+              String.format("Scramble detected: %s.%s", meta.getSchemaName(), meta.getTableName()));
+
+          //          bt.setSchemaName(meta.getSchemaName());
+          //          bt.setTableName(meta.getTableName());
+
+          //          log.info(
+          //              String.format(
+          //                  "Automatic table replacement: %s.%s -> %s.%s",
+          //                  meta.getOriginalSchemaName(),
+          //                  meta.getOriginalTableName(),
+          //                  meta.getSchemaName(),
+          //                  meta.getTableName()));
 
           break;
         } else if (meta.getSchemaName().equals(bt.getSchemaName())
@@ -177,33 +178,35 @@ public class ScrambleTableReplacer {
       SelectQuery subquery = (SelectQuery) table;
       this.replaceQuery(subquery, false, inspectionInfo);
     }
-    
+
     return table;
   }
-  
+
   private AbstractRelation replaceTableForSimpleAggregates(
-      AbstractRelation table, 
-      Triple<Boolean, Boolean, BaseColumn> inspectionInfo) throws VerdictDBValueException {
+      AbstractRelation table, Triple<Boolean, Boolean, BaseColumn> inspectionInfo)
+      throws VerdictDBValueException {
     if (table instanceof BaseTable) {
       BaseTable bt = (BaseTable) table;
-      
+
       for (ScrambleMeta meta : metaSet) {
-        // substitute names with those of the first scrambled table found.
-        if (meta.getOriginalSchemaName().equals(bt.getSchemaName())
-            && meta.getOriginalTableName().equals(bt.getTableName())
+        // Detects scrambled tables.
+        if (meta.getSchemaName().equals(bt.getSchemaName())
+            && meta.getTableName().equals(bt.getTableName())
             && meta.isMethodCompatibleWithSimpleAggregates()) {
           ++replaceCount;
-          bt.setSchemaName(meta.getSchemaName());
-          bt.setTableName(meta.getTableName());
-
           log.info(
-              String.format(
-                  "Automatic table replacement: %s.%s -> %s.%s",
-                  meta.getOriginalSchemaName(),
-                  meta.getOriginalTableName(),
-                  meta.getSchemaName(),
-                  meta.getTableName()));
+              String.format("Scramble detected: %s.%s", meta.getSchemaName(), meta.getTableName()));
 
+          //          bt.setSchemaName(meta.getSchemaName());
+          //          bt.setTableName(meta.getTableName());
+          //
+          //          log.info(
+          //              String.format(
+          //                  "Automatic table replacement: %s.%s -> %s.%s",
+          //                  meta.getOriginalSchemaName(),
+          //                  meta.getOriginalTableName(),
+          //                  meta.getSchemaName(),
+          //                  meta.getTableName()));
           break;
         } else if (meta.getSchemaName().equals(bt.getSchemaName())
             && meta.getTableName().equals(bt.getTableName())) {

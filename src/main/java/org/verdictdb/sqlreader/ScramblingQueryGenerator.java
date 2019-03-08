@@ -38,9 +38,15 @@ public class ScramblingQueryGenerator {
 
     CreateScrambleQuery query =
         new CreateScrambleQuery(
-            newSchema, newTable, 
-            originalSchema, originalTable, 
-            method, size, blocksize, hashColumnName);
+            newSchema,
+            newTable,
+            originalSchema,
+            originalTable,
+            method,
+            size,
+            blocksize,
+            hashColumnName,
+            null);
 
     return query;
   }

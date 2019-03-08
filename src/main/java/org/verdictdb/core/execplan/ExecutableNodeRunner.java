@@ -52,8 +52,6 @@ public class ExecutableNodeRunner implements Runnable {
 
   int dependentCount;
 
-  int executionCount = 0;
-
 //  private boolean isAborted = false;
 
   /**
@@ -401,17 +399,16 @@ public class ExecutableNodeRunner implements Runnable {
       //      logger.trace(token.toString());
     }
 
-    if (node instanceof SelectAggExecutionNode && areAllStatusTokens(Arrays.asList(token))) {
-      status = NodeRunningStatus.completed;
-    }
+    //if (node instanceof SelectAggExecutionNode && areAllStatusTokens(Arrays.asList(token))) {
+    //  status = NodeRunningStatus.completed;
+    //}
 
     for (ExecutableNode dest : node.getSubscribers()) {
       ExecutionInfoToken copiedToken = token.deepcopy();
-      if (areAllStatusTokens(Arrays.asList(copiedToken))
+      // set runner with success token complete before notifying subscriber
+      if (copiedToken.isSuccessToken()
           && node.getRegisteredRunner().getStatus()!=NodeRunningStatus.completed) {
         node.getRegisteredRunner().status = NodeRunningStatus.completed;
-      } else if (areAllStatusTokens(Arrays.asList(copiedToken))) {
-        log.trace("Broadcast success token");
       }
       dest.getNotified(node, copiedToken);
 
@@ -494,9 +491,6 @@ public class ExecutableNodeRunner implements Runnable {
       }
     }
 
-    synchronized ((Object)executionCount) {
-      executionCount++;
-    }
     return token;
   }
 
@@ -533,7 +527,6 @@ public class ExecutableNodeRunner implements Runnable {
     }
 
     if (successSourceCount == dependentCount) {
-      log.trace(String.format("Success: %d, execution count: %d", successSourceCount, executionCount));
       return true;
     } else {
       return false;
