@@ -891,11 +891,14 @@ public class VerdictStreamResultSet extends VerdictResultSet {
         return false;
       } else {
         log.debug("Trying to take a queryResult out of blockingDeque");
-        //queryResult = queryResults.poll(2, TimeUnit.MINUTES);
-        //if (queryResult == null) {
-        //  throw new RuntimeException("The queryResult was unavailable for a long time for an unknown reasons.");
-        //}
-        queryResult = queryResults.take();
+        queryResult = queryResults.poll(2, TimeUnit.MINUTES);
+        if (queryResult == null && hasReadAllQueryResults) {
+          return false;
+          //throw new RuntimeException("The queryResult was unavailable for a long time for an unknown reasons.");
+        } else if (queryResult == null){
+          queryResult = queryResults.take();
+        }
+        //queryResult = queryResults.take();
         lastQueryResultIndex++;
         return next();
       }
