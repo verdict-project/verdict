@@ -16,6 +16,8 @@ import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.core.execplan.ExecutablePlanRunner;
 import org.verdictdb.exception.VerdictDBException;
 
+import static org.junit.Assert.fail;
+
 public class PostgresFastConvergeScramblingPlanTest {
 
   static Connection psqlConn;
@@ -83,7 +85,14 @@ public class PostgresFastConvergeScramblingPlanTest {
 //    System.out.println(plan.getReportingNode());
 
     DbmsConnection conn = JdbcConnection.create(psqlConn);
-    ExecutablePlanRunner.runTillEnd(conn, plan);
+    try {
+      ExecutablePlanRunner.runTillEnd(conn, plan);
+      fail();
+    } catch (RuntimeException e) {
+      if (!(e.getCause() instanceof VerdictDBException)) {
+        fail();
+      }
+    }
   }
 
   @Test
@@ -112,7 +121,14 @@ public class PostgresFastConvergeScramblingPlanTest {
 //    System.out.println(plan.getReportingNode());
 
     DbmsConnection conn = JdbcConnection.create(psqlConn);
-    ExecutablePlanRunner.runTillEnd(conn, plan);
+    try {
+      ExecutablePlanRunner.runTillEnd(conn, plan);
+      fail();
+    } catch (RuntimeException e) {
+      if (!(e.getCause() instanceof VerdictDBException)) {
+        fail();
+      }
+    }
   }
 
   @Test
