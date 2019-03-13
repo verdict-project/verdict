@@ -45,12 +45,12 @@ public class ExecutionResultReader implements Iterable<DbmsQueryResult>, Iterato
   }
 
   @Override
-  public boolean hasNext() {
+  public synchronized boolean hasNext() {
     return reader.hasNext();
   }
 
   @Override
-  public DbmsQueryResult next() {
+  public synchronized DbmsQueryResult next() {
     ExecutionInfoToken token = reader.next();
     log.trace("The following was read: " + token);
     if (token == null) {
