@@ -5,7 +5,7 @@
 general:
   branches:
     ignore:
-    - gh-pages
+      - gh-pages
 
 version: 2
 jobs:
@@ -14,80 +14,80 @@ jobs:
       image: circleci/classic:201703-01
     working_directory: ~/repo
     steps:
-    - run: java -version
-    - run: javac -version
-    - run: sudo apt-get update && sudo apt-get install -y openjdk-7-jdk
-    - run: sudo update-java-alternatives --set java-1.7.0-openjdk-amd64
-    - run: java -version
-    - run: javac -version
+      - run: java -version
+      - run: javac -version
+      - run: sudo apt-get update && sudo apt-get install -y openjdk-7-jdk
+      - run: sudo update-java-alternatives --set java-1.7.0-openjdk-amd64
+      - run: java -version
+      - run: javac -version
 
   docker-env-check:
     machine:
       image: circleci/classic:201703-01
     working_directory: ~/repo
     steps:
-    - run: docker run --rm -d --name verdictdb-impala -p 127.0.0.1:21050:21050 codingtony/impala
-    - run: pwd
-    - checkout
-    - run: echo "$(cd "$(dirname "src/test/resources")"; pwd)/$(basename "src/test/resources")"
-    - run: bash wait_until_ready.sh
+      - run: docker run --rm -d --name verdictdb-impala -p 127.0.0.1:21050:21050 codingtony/impala
+      - run: pwd
+      - checkout
+      - run: echo "$(cd "$(dirname "src/test/resources")"; pwd)/$(basename "src/test/resources")"
+      - run: bash wait_until_ready.sh
 
   build-jdk7:
     docker:
-    # specify the version you desire here
-    - image: maven:3.5.4-jdk-7-slim
-    # Specify service dependencies here if necessary
-    # CircleCI maintains a library of pre-built images
-    # documented at https://circleci.com/docs/2.0/circleci-images/
-    - image: mysql:5.5
-      command: mysqld --innodb_buffer_pool_size=2G
-      environment:
-        MYSQL_DATABASE: test
-        MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
-    - image: postgres:10
-      environment:
-        POSTGRES_DB: test
-        POSTGRES_USER: postgres
-        POSTGRES_PASSWORD: ""
+      # specify the version you desire here
+      - image: maven:3.5.4-jdk-7-slim
+      # Specify service dependencies here if necessary
+      # CircleCI maintains a library of pre-built images
+      # documented at https://circleci.com/docs/2.0/circleci-images/
+      - image: mysql:5.5
+        command: mysqld --innodb_buffer_pool_size=2G
+        environment:
+          MYSQL_DATABASE: test
+          MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      - image: postgres:10
+        environment:
+          POSTGRES_DB: test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ""
     working_directory: ~/repo
     environment:
       # Customize the JVM maximum heap limit
       MAVEN_OPTS: -Xmx3200m
     steps:
-    - run: apt-get update; apt-get install -y git
-    - checkout
-    # Set up maven dependencies
-    - restore_cache:
-        keys:
-        - verdict-dependencies-{{ checksum "pom.xml" }}
-        # fallback to using the latest cache if no exact match is found
-        - verdict-dependencies-
-    - run: mvn install:install-file -Dfile=src/test/resources/jars/ImpalaJDBC41-2.6.3.jar -DgroupId=com.cloudera -DartifactId=impala-jdbc41 -Dversion=2.6.3 -Dpackaging=jar
-    # - run: mvn dependency:go-offline
-    # Setup necessary test data
-    - run: git clone git@github.com:verdictdb/verdictdb-private-resources.git
-    # Now build and test
-    - run:
-        name: Run unit tests
-        command: mvn -P jdk7 -B test 2> /dev/null
-        no_output_timeout: 30m
-    # Collect test metadata
-    - run:
-        name: Save test results
-        command: |
-          mkdir -p ~/junit/
-          find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} ~/junit/ \;
-        when: always
-    - store_test_results:
-        path: ~/junit
-    - store_artifacts:
-        path: ~/junit
-    - store_artifacts:
-        path: /tmp/verdictdb-debug.log
-    - save_cache:
-        paths:
-        - ~/.m2
-        key: verdict-dependencies-{{ checksum "pom.xml" }}
+      - run: apt-get update; apt-get install -y git
+      - checkout
+      # Set up maven dependencies
+      - restore_cache:
+          keys:
+            - verdict-dependencies-{{ checksum "pom.xml" }}
+            # fallback to using the latest cache if no exact match is found
+            - verdict-dependencies-
+      - run: mvn install:install-file -Dfile=src/test/resources/jars/ImpalaJDBC41-2.6.3.jar -DgroupId=com.cloudera -DartifactId=impala-jdbc41 -Dversion=2.6.3 -Dpackaging=jar
+      # - run: mvn dependency:go-offline
+      # Setup necessary test data
+      #    - run: git clone git@github.com:verdictdb/verdictdb-private-resources.git
+      # Now build and test
+      - run:
+          name: Run unit tests
+          command: mvn -P jdk7 -B test 2> /dev/null
+          no_output_timeout: 30m
+      # Collect test metadata
+      - run:
+          name: Save test results
+          command: |
+            mkdir -p ~/junit/
+            find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} ~/junit/ \;
+          when: always
+      - store_test_results:
+          path: ~/junit
+      - store_artifacts:
+          path: ~/junit
+      - store_artifacts:
+          path: /tmp/verdictdb-debug.log
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: verdict-dependencies-{{ checksum "pom.xml" }}
 
     #update-codecov:
     #docker:
@@ -104,256 +104,256 @@ jobs:
 
   build-jdk8-update-codecov:
     docker:
-    # specify the version you desire here
-    - image: maven:3.5.4-jdk-8-slim
+      # specify the version you desire here
+      - image: maven:3.5.4-jdk-8-slim
 
-    # Specify service dependencies here if necessary
-    # CircleCI maintains a library of pre-built images
-    # documented at https://circleci.com/docs/2.0/circleci-images/
-    - image: mysql:5.5
-      command: mysqld --innodb_buffer_pool_size=2G --general_log=1 --general_log_file=/tmp/mysql_general.log --slow_query_log=1 --slow_query_log_file=/tmp/mysql_slow_query.log
-      environment:
-        MYSQL_DATABASE: test
-        MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
-    - image: postgres:10
-      environment:
-        POSTGRES_DB: test
-        POSTGRES_USER: postgres
-        POSTGRES_PASSWORD: ""
+      # Specify service dependencies here if necessary
+      # CircleCI maintains a library of pre-built images
+      # documented at https://circleci.com/docs/2.0/circleci-images/
+      - image: mysql:5.5
+        command: mysqld --innodb_buffer_pool_size=2G --general_log=1 --general_log_file=/tmp/mysql_general.log --slow_query_log=1 --slow_query_log_file=/tmp/mysql_slow_query.log
+        environment:
+          MYSQL_DATABASE: test
+          MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      - image: postgres:10
+        environment:
+          POSTGRES_DB: test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ""
     working_directory: ~/repo
     environment:
       # Customize the JVM maximum heap limit
       MAVEN_OPTS: -Xmx3200m
     steps:
-    - run: apt-get update; apt-get install -y git
-    - setup_remote_docker
-    - checkout
+      - run: apt-get update; apt-get install -y git
+      - setup_remote_docker
+      - checkout
 
-    # Set up maven dependencies
-    - restore_cache:
-        keys:
-        - verdict-dependencies-{{ checksum "pom.xml" }}
-        # fallback to using the latest cache if no exact match is found
-        # - v1-dependencies-
-    #- run: mvn install:install-file -Dfile=src/test/resources/jars/ImpalaJDBC41-2.6.3.jar -DgroupId=com.cloudera -DartifactId=impala-jdbc41 -Dversion=2.6.3 -Dpackaging=jar
-    # - run: mvn dependency:go-offline
+      # Set up maven dependencies
+      - restore_cache:
+          keys:
+            - verdict-dependencies-{{ checksum "pom.xml" }}
+          # fallback to using the latest cache if no exact match is found
+          # - v1-dependencies-
+      #- run: mvn install:install-file -Dfile=src/test/resources/jars/ImpalaJDBC41-2.6.3.jar -DgroupId=com.cloudera -DartifactId=impala-jdbc41 -Dversion=2.6.3 -Dpackaging=jar
+      # - run: mvn dependency:go-offline
 
-    # Setup necessary test data
-    - run: git clone git@github.com:verdictdb/verdictdb-private-resources.git
-    # Now build and test
-    - run:
-        name: Run unit tests
-        command: mvn -P jdk8 -B cobertura:cobertura 2> /dev/null
-        no_output_timeout: 30m
-    # Upload codecov
-    #- run: mvn -DskipTests cobertura:cobertura
-    - run: bash <(curl -s https://codecov.io/bash) -t 9cf48c61-07ed-4a14-9eed-f7129664ee79
-    - store_artifacts:
-        path: /tmp/verdictdb-debug.log
-    - save_cache:
-        paths:
-        - ~/.m2
-        key: verdict-dependencies-{{ checksum "pom.xml" }}
-        #- run: mvn cobertura:cobertura
-        #- run: bash <(curl -s https://codecov.io/bash) -t 9cf48c61-07ed-4a14-9eed-f7129664ee79
+      # Setup necessary test data
+      #    - run: git clone git@github.com:verdictdb/verdictdb-private-resources.git
+      # Now build and test
+      - run:
+          name: Run unit tests
+          command: mvn -P jdk8 -B cobertura:cobertura 2> /dev/null
+          no_output_timeout: 30m
+      # Upload codecov
+      #- run: mvn -DskipTests cobertura:cobertura
+      - run: bash <(curl -s https://codecov.io/bash) -t 9cf48c61-07ed-4a14-9eed-f7129664ee79
+      - store_artifacts:
+          path: /tmp/verdictdb-debug.log
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: verdict-dependencies-{{ checksum "pom.xml" }}
+          #- run: mvn cobertura:cobertura
+          #- run: bash <(curl -s https://codecov.io/bash) -t 9cf48c61-07ed-4a14-9eed-f7129664ee79
 
   build-jdk8:
     docker:
-    # specify the version you desire here
-    - image: maven:3.5.4-jdk-8-slim
-    # Specify service dependencies here if necessary
-    # CircleCI maintains a library of pre-built images
-    # documented at https://circleci.com/docs/2.0/circleci-images/
-    - image: mysql:5.5
-      command: mysqld --innodb_buffer_pool_size=2G --general_log=1 --general_log_file=/tmp/mysql_general.log --slow_query_log=1 --slow_query_log_file=/tmp/mysql_slow_query.log
-      environment:
-        MYSQL_DATABASE: test
-        MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
-    - image: postgres:10
-      environment:
-        POSTGRES_DB: test
-        POSTGRES_USER: postgres
-        POSTGRES_PASSWORD: ""
+      # specify the version you desire here
+      - image: maven:3.5.4-jdk-8-slim
+      # Specify service dependencies here if necessary
+      # CircleCI maintains a library of pre-built images
+      # documented at https://circleci.com/docs/2.0/circleci-images/
+      - image: mysql:5.5
+        command: mysqld --innodb_buffer_pool_size=2G --general_log=1 --general_log_file=/tmp/mysql_general.log --slow_query_log=1 --slow_query_log_file=/tmp/mysql_slow_query.log
+        environment:
+          MYSQL_DATABASE: test
+          MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      - image: postgres:10
+        environment:
+          POSTGRES_DB: test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ""
     working_directory: ~/repo
     environment:
       # Customize the JVM maximum heap limit
       MAVEN_OPTS: -Xmx3200m
     steps:
-    - run: apt-get update; apt-get install -y git
-    - setup_remote_docker
-    - checkout
+      - run: apt-get update; apt-get install -y git
+      - setup_remote_docker
+      - checkout
 
-    # Set up maven dependencies
-    - restore_cache:
-        keys:
-        - verdict-dependencies-{{ checksum "pom.xml" }}
-        - verdict-dependencies-
-        # fallback to using the latest cache if no exact match is found
-        # - v1-dependencies-
-    - run: mvn install:install-file -Dfile=src/test/resources/jars/ImpalaJDBC41-2.6.3.jar -DgroupId=com.cloudera -DartifactId=impala-jdbc41 -Dversion=2.6.3 -Dpackaging=jar
-    # - run: mvn dependency:go-offline
+      # Set up maven dependencies
+      - restore_cache:
+          keys:
+            - verdict-dependencies-{{ checksum "pom.xml" }}
+            - verdict-dependencies-
+          # fallback to using the latest cache if no exact match is found
+          # - v1-dependencies-
+      - run: mvn install:install-file -Dfile=src/test/resources/jars/ImpalaJDBC41-2.6.3.jar -DgroupId=com.cloudera -DartifactId=impala-jdbc41 -Dversion=2.6.3 -Dpackaging=jar
+      # - run: mvn dependency:go-offline
 
-    # Setup necessary test data
-    - run: git clone git@github.com:verdictdb/verdictdb-private-resources.git
-    # Now build and test
-    - run:
-        name: Run unit tests
-        command: mvn -P jdk8 -B test 2> /dev/null
-        no_output_timeout: 30m
+      # Setup necessary test data
+      #    - run: git clone git@github.com:verdictdb/verdictdb-private-resources.git
+      # Now build and test
+      - run:
+          name: Run unit tests
+          command: mvn -P jdk8 -B test 2> /dev/null
+          no_output_timeout: 30m
 
-    # Check the JDBC service file correctness
-    - run: bash .circleci/check_jdbc_driver_name.sh
+      # Check the JDBC service file correctness
+      - run: bash .circleci/check_jdbc_driver_name.sh
 
-    #- run: mvn -DskipTests -P packaging package
-    # Collect test metadata
-    - run:
-        name: Save test results
-        command: |
-          mkdir -p ~/junit/
-          find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} ~/junit/ \;
-        when: always
-    - store_test_results:
-        path: ~/junit
-    - store_artifacts:
-        path: ~/junit
-    - store_artifacts:
-        path: /tmp/verdictdb-debug.log
-    - save_cache:
-        paths:
-        - ~/.m2
-        key: verdict-dependencies-{{ checksum "pom.xml" }}
-        #- run: mvn cobertura:cobertura
-        #- run: bash <(curl -s https://codecov.io/bash) -t 9cf48c61-07ed-4a14-9eed-f7129664ee79
+      #- run: mvn -DskipTests -P packaging package
+      # Collect test metadata
+      - run:
+          name: Save test results
+          command: |
+            mkdir -p ~/junit/
+            find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} ~/junit/ \;
+          when: always
+      - store_test_results:
+          path: ~/junit
+      - store_artifacts:
+          path: ~/junit
+      - store_artifacts:
+          path: /tmp/verdictdb-debug.log
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: verdict-dependencies-{{ checksum "pom.xml" }}
+          #- run: mvn cobertura:cobertura
+          #- run: bash <(curl -s https://codecov.io/bash) -t 9cf48c61-07ed-4a14-9eed-f7129664ee79
 
   build-spark:
     docker:
-    # specify the version you desire here
-    - image: maven:3.5.4-jdk-8-slim
-    # Specify service dependencies here if necessary
-    # CircleCI maintains a library of pre-built images
-    # documented at https://circleci.com/docs/2.0/circleci-images/
-    - image: mysql:5.5
-      environment:
-        MYSQL_DATABASE: test
-        MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
-    - image: postgres:10
-      environment:
-        POSTGRES_DB: test
-        POSTGRES_USER: postgres
-        POSTGRES_PASSWORD: ""
+      # specify the version you desire here
+      - image: maven:3.5.4-jdk-8-slim
+      # Specify service dependencies here if necessary
+      # CircleCI maintains a library of pre-built images
+      # documented at https://circleci.com/docs/2.0/circleci-images/
+      - image: mysql:5.5
+        environment:
+          MYSQL_DATABASE: test
+          MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      - image: postgres:10
+        environment:
+          POSTGRES_DB: test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ""
     working_directory: ~/repo
     environment:
       # Customize the JVM maximum heap limit
       MAVEN_OPTS: -Xmx3200m
     steps:
-    - run: apt-get update; apt-get install -y git
-    - checkout
-    # Set up maven dependencies
-    - restore_cache:
-        keys:
-        - verdict-dependencies-{{ checksum "pom.xml" }}
-        # fallback to using the latest cache if no exact match is found
-        # - v1-dependencies-
-        #- run: mvn install:install-file -Dfile=src/test/resources/jars/ImpalaJDBC41-2.6.3.jar -DgroupId=com.cloudera -DartifactId=impala-jdbc41 -Dversion=2.6.3 -Dpackaging=jar
-    # - run: mvn dependency:go-offline
-    # Setup necessary test data
-    - run: git clone git@github.com:verdictdb/verdictdb-private-resources.git
-    # Now build and test
-    - run:
-        name: Run unit tests
-        command: mvn test -P jdk8 -Dtest=SparkTpchSelectQueryCoordinatorTest 2> /dev/null
-        no_output_timeout: 30m
-    # - run: mvn test -Dtest=RedshiftTpchSelectQueryCoordinatorTest 2> /dev/null
-    # - run: mvn test -Dtest=ImpalaTpchSelectQueryCoordinatorTest 2> /dev/null
-    # Collect test metadata
-    - run:
-        name: Save test results
-        command: |
-          mkdir -p ~/junit/
-          find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} ~/junit/ \;
-        when: always
-    - store_test_results:
-        path: ~/junit
-    - store_artifacts:
-        path: ~/junit
-    - store_artifacts:
-        path: /tmp/verdictdb-debug.log
-    - save_cache:
-        paths:
-        - ~/.m2
-        key: verdict-dependencies-{{ checksum "pom.xml" }}
+      - run: apt-get update; apt-get install -y git
+      - checkout
+      # Set up maven dependencies
+      - restore_cache:
+          keys:
+            - verdict-dependencies-{{ checksum "pom.xml" }}
+          # fallback to using the latest cache if no exact match is found
+          # - v1-dependencies-
+          #- run: mvn install:install-file -Dfile=src/test/resources/jars/ImpalaJDBC41-2.6.3.jar -DgroupId=com.cloudera -DartifactId=impala-jdbc41 -Dversion=2.6.3 -Dpackaging=jar
+      # - run: mvn dependency:go-offline
+      # Setup necessary test data
+      #    - run: git clone git@github.com:verdictdb/verdictdb-private-resources.git
+      # Now build and test
+      - run:
+          name: Run unit tests
+          command: mvn test -P jdk8 -Dtest=SparkTpchSelectQueryCoordinatorTest 2> /dev/null
+          no_output_timeout: 30m
+      # - run: mvn test -Dtest=RedshiftTpchSelectQueryCoordinatorTest 2> /dev/null
+      # - run: mvn test -Dtest=ImpalaTpchSelectQueryCoordinatorTest 2> /dev/null
+      # Collect test metadata
+      - run:
+          name: Save test results
+          command: |
+            mkdir -p ~/junit/
+            find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} ~/junit/ \;
+          when: always
+      - store_test_results:
+          path: ~/junit
+      - store_artifacts:
+          path: ~/junit
+      - store_artifacts:
+          path: /tmp/verdictdb-debug.log
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: verdict-dependencies-{{ checksum "pom.xml" }}
 
   build-impala-redshift:
     docker:
-    # specify the version you desire here
-    - image: maven:3.5.4-jdk-8-slim
-    # Specify service dependencies here if necessary
-    # CircleCI maintains a library of pre-built images
-    # documented at https://circleci.com/docs/2.0/circleci-images/
-    - image: mysql:5.5
-      environment:
-        MYSQL_DATABASE: test
-        MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
-    - image: postgres:10
-      environment:
-        POSTGRES_DB: test
-        POSTGRES_USER: postgres
-        POSTGRES_PASSWORD: ""
+      # specify the version you desire here
+      - image: maven:3.5.4-jdk-8-slim
+      # Specify service dependencies here if necessary
+      # CircleCI maintains a library of pre-built images
+      # documented at https://circleci.com/docs/2.0/circleci-images/
+      - image: mysql:5.5
+        environment:
+          MYSQL_DATABASE: test
+          MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      - image: postgres:10
+        environment:
+          POSTGRES_DB: test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ""
     working_directory: ~/repo
     environment:
       # Customize the JVM maximum heap limit
       MAVEN_OPTS: -Xmx3200m
     steps:
-    - run: apt-get update; apt-get install -y git
-    - checkout
-    # Set up maven dependencies
-    - restore_cache:
-        keys:
-        - verdict-dependencies-{{ checksum "pom.xml" }}
-        # fallback to using the latest cache if no exact match is found
-        # - v1-dependencies-
-    #- run: mvn install:install-file -Dfile=src/test/resources/jars/ImpalaJDBC41-2.6.3.jar -DgroupId=com.cloudera -DartifactId=impala-jdbc41 -Dversion=2.6.3 -Dpackaging=jar
-    # - run: mvn dependency:go-offline
-    # Setup necessary test data
-    - run: git clone git@github.com:verdictdb/verdictdb-private-resources.git
-    # Now build and test
-    - run:
-        name: Run Redshift unit tests
-        command: mvn test -P jdk8 -Dtest=RedshiftTpchSelectQueryCoordinatorTest 2> /dev/null
-        no_output_timeout: 30m
-    - run:
-        name: Run Impala unit tests
-        command: mvn test -P jdk8 -Dtest=ImpalaTpchSelectQueryCoordinatorTest 2> /dev/null
-        no_output_timeout: 30m
-    - run:
-        name: Save test results
-        command: |
-          mkdir -p ~/junit/
-          find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} ~/junit/ \;
-        when: always
-    - store_test_results:
-        path: ~/junit
-    - store_artifacts:
-        path: ~/junit
-    - store_artifacts:
-        path: /tmp/verdictdb-debug.log
-    - save_cache:
-        paths:
-        - ~/.m2
-        key: verdict-dependencies-{{ checksum "pom.xml" }}
+      - run: apt-get update; apt-get install -y git
+      - checkout
+      # Set up maven dependencies
+      - restore_cache:
+          keys:
+            - verdict-dependencies-{{ checksum "pom.xml" }}
+          # fallback to using the latest cache if no exact match is found
+          # - v1-dependencies-
+      #- run: mvn install:install-file -Dfile=src/test/resources/jars/ImpalaJDBC41-2.6.3.jar -DgroupId=com.cloudera -DartifactId=impala-jdbc41 -Dversion=2.6.3 -Dpackaging=jar
+      # - run: mvn dependency:go-offline
+      # Setup necessary test data
+      #    - run: git clone git@github.com:verdictdb/verdictdb-private-resources.git
+      # Now build and test
+      - run:
+          name: Run Redshift unit tests
+          command: mvn test -P jdk8 -Dtest=RedshiftTpchSelectQueryCoordinatorTest 2> /dev/null
+          no_output_timeout: 30m
+      - run:
+          name: Run Impala unit tests
+          command: mvn test -P jdk8 -Dtest=ImpalaTpchSelectQueryCoordinatorTest 2> /dev/null
+          no_output_timeout: 30m
+      - run:
+          name: Save test results
+          command: |
+            mkdir -p ~/junit/
+            find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} ~/junit/ \;
+          when: always
+      - store_test_results:
+          path: ~/junit
+      - store_artifacts:
+          path: ~/junit
+      - store_artifacts:
+          path: /tmp/verdictdb-debug.log
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: verdict-dependencies-{{ checksum "pom.xml" }}
 
   build-pyverdict:
     docker:
-    - image: continuumio/miniconda3
-    - image: mysql:5.5
-      environment:
-        MYSQL_DATABASE: test
-        MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
-    - image: postgres:10
-      environment:
-        POSTGRES_DB: test
-        POSTGRES_USER: postgres
-        POSTGRES_PASSWORD: ""
+      - image: continuumio/miniconda3
+      - image: mysql:5.5
+        environment:
+          MYSQL_DATABASE: test
+          MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      - image: postgres:10
+        environment:
+          POSTGRES_DB: test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ""
     working_directory: ~/repo
     environment:
       # Customize the JVM maximum heap limit
@@ -364,7 +364,7 @@ jobs:
       # Set up maven dependencies
       - restore_cache:
           keys:
-          - verdict-dependencies-{{ checksum "pom.xml" }}
+            - verdict-dependencies-{{ checksum "pom.xml" }}
       - run: cd pyverdict; pip install pytest PyMySQL presto-python-client psycopg2; python setup.py install;
       # pytest has an internal error if test_verdictcontext runs after 
       # all other tests.  To avoid this, run before instead.
@@ -376,9 +376,9 @@ jobs:
       # Thus, to properly test the impala connector, we downgrade to python 3.6
       # for the impala tests via another venv, then run all other non-impala 
       # tests using python 3.7.
-      - run: conda create --name py36 python=3.6; 
-      - run: source activate py36; pip install impyla pytest; 
-      - run: source activate py36; cd pyverdict; python setup.py install; pytest tests/test_impala*; 
+      - run: conda create --name py36 python=3.6;
+      - run: source activate py36; pip install impyla pytest;
+      - run: source activate py36; cd pyverdict; python setup.py install; pytest tests/test_impala*;
       - save_cache:
           paths:
             - ~/.m2
@@ -386,32 +386,32 @@ jobs:
 
   deploy-doc:
     docker:
-    - image: continuumio/miniconda3
+      - image: continuumio/miniconda3
     steps:
-    - run: apt-get update; apt-get install -y git
-    - checkout
-    - run: pip install mkdocs mkdocs-material mkdocs-markdownextradata-plugin
-    - run: cd docs; mkdocs build; cd ..; rm .gitignore;
-    - run: git config user.email "pyongjoo@umich.edu"; git config user.name "Yongjoo Park"
-    - run: git add docs/site/*; git commit -m 'init doc';
-    - run: git subtree split --prefix docs/site -b gh-pages
-    - run: git remote add doc-origin git@github.com:verdictdb/verdictdb-doc.git
-    - run: git push -f doc-origin gh-pages:gh-pages
+      - run: apt-get update; apt-get install -y git
+      - checkout
+      - run: pip install mkdocs mkdocs-material mkdocs-markdownextradata-plugin
+      - run: cd docs; mkdocs build; cd ..; rm .gitignore;
+      - run: git config user.email "pyongjoo@umich.edu"; git config user.name "Yongjoo Park"
+      - run: git add docs/site/*; git commit -m 'init doc';
+      - run: git subtree split --prefix docs/site -b gh-pages
+      - run: git remote add doc-origin git@github.com:verdictdb/verdictdb-doc.git
+      - run: git push -f doc-origin gh-pages:gh-pages
 
 workflows:
   version: 2
   build_and_test:
     jobs:
-    - build-jdk7
-    - build-jdk8
-    - build-jdk8-update-codecov
-    - build-spark
-    - build-impala-redshift
-    - build-pyverdict
-    - deploy-doc:
-        filters:
-          branches:
-            only: master
+      - build-jdk7
+      - build-jdk8
+      - build-jdk8-update-codecov
+      - build-spark
+      - build-impala-redshift
+      - build-pyverdict
+      - deploy-doc:
+          filters:
+            branches:
+              only: master
     #- update-codecov
     # - maven-version-check
     # - docker-env-check

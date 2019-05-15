@@ -21,6 +21,7 @@ import com.google.common.io.Files;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -45,6 +46,7 @@ import java.util.Map;
 import static org.junit.Assert.fail;
 
 /** Created by Dong Young Yoon on 7/18/18. */
+@Ignore("This test uses private resources")
 @RunWith(Parameterized.class)
 public class TpchScrambleQueryForAllDatabasesTest {
 
