@@ -56,7 +56,7 @@ jobs:
     steps:
       # added because of the issue: https://discuss.circleci.com/t/apt-get-update-return-404/29237/4
       - run: |
-          sudo rm /etc/apt/sources.list
+          rm /etc/apt/sources.list
           echo "deb http://archive.debian.org/debian/ jessie-backports main" | sudo tee -a /etc/apt/sources.list
           echo "deb-src http://archive.debian.org/debian/ jessie-backports main" | sudo tee -a /etc/apt/sources.list
           echo "Acquire::Check-Valid-Until false;" | sudo tee -a /etc/apt/apt.conf.d/10-nocheckvalid
