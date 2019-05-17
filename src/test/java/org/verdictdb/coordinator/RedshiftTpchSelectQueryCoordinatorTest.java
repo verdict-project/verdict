@@ -36,7 +36,7 @@ import static org.junit.Assert.assertEquals;
  *
  * <p>Some test cases are slightly changed because size of test data are small.
  */
-@Ignore("This test uses private resources")
+@Ignore("This test uses private resources + redshift")
 public class RedshiftTpchSelectQueryCoordinatorTest {
 
   static Connection redshiftConn;

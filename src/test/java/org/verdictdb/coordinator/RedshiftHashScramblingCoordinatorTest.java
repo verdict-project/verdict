@@ -1,18 +1,10 @@
 package org.verdictdb.coordinator;
 
-import static org.junit.Assert.assertEquals;
-
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.Arrays;
-import java.util.List;
-
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.verdictdb.commons.DatabaseConnectionHelpers;
 import org.verdictdb.connection.DbmsConnection;
@@ -21,6 +13,16 @@ import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.exception.VerdictDBException;
 
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.Arrays;
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
+
+@Ignore("Disabling redshift test due to unavailable test instance")
 public class RedshiftHashScramblingCoordinatorTest {
 
   static Connection redshiftConn;
@@ -80,7 +82,8 @@ public class RedshiftHashScramblingCoordinatorTest {
     testScramblingCoordinator("orders", "o_orderkey");
   }
 
-  public void testScramblingCoordinator(String tablename, String columnname) throws VerdictDBException {
+  public void testScramblingCoordinator(String tablename, String columnname)
+      throws VerdictDBException {
     JdbcConnection conn = JdbcConnection.create(redshiftConn);
     conn.setOutputDebugMessage(true);
 
@@ -95,7 +98,8 @@ public class RedshiftHashScramblingCoordinatorTest {
     String originalTable = tablename;
     String scrambledTable = tablename + "_scrambled";
     conn.execute(String.format("drop table if exists %s.%s", REDSHIFT_SCHEMA, scrambledTable));
-    scrambler.scramble(originalSchema, originalTable, originalSchema, scrambledTable, "hash", columnname);
+    scrambler.scramble(
+        originalSchema, originalTable, originalSchema, scrambledTable, "hash", columnname);
 
     // tests
     List<Pair<String, String>> originalColumns = conn.getColumns(REDSHIFT_SCHEMA, originalTable);

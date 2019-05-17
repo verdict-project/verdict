@@ -75,7 +75,9 @@ public class TpchScrambleQueryForAllDatabasesTest {
 
   // TODO: Add support for all four databases
   //  private static final String[] targetDatabases = {"mysql", "impala", "redshift", "postgresql"};
-  private static final String[] targetDatabases = {"mysql", "impala", "redshift"};
+  // Disabled redshift test due to unavailable test instance
+  private static final String[] targetDatabases = {"mysql", "impala"};
+  //  private static final String[] targetDatabases = {"mysql", "impala", "redshift"};
   //  private static final String[] targetDatabases = {"mysql"};
 
   public TpchScrambleQueryForAllDatabasesTest(String database, String query) {
@@ -151,7 +153,8 @@ public class TpchScrambleQueryForAllDatabasesTest {
     options.setVerdictTempSchemaName(VERDICT_TEMP_SCHEMA);
     setupMysql();
     setupImpala();
-    setupRedshift();
+    // Disabled redshift test due to unavailable test instance
+    //    setupRedshift();
 
     // TODO: Add below databases too
     //    setupPostgresql();

@@ -1,6 +1,14 @@
 package org.verdictdb.jdbc41;
 
-import static org.junit.Assert.assertEquals;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.junit.AfterClass;
+import org.junit.Assume;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.verdictdb.commons.VerdictOption;
+import org.verdictdb.exception.VerdictDBException;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -14,15 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.AfterClass;
-import org.junit.Assume;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.verdictdb.commons.VerdictOption;
-import org.verdictdb.exception.VerdictDBException;
+import static org.junit.Assert.assertEquals;
 
 /** Created by Dong Young Yoon on 7/18/18. */
 @RunWith(Parameterized.class)
@@ -122,7 +122,8 @@ public class JdbcCommonQueryForAllDatabasesTest {
     options.setVerdictTempSchemaName(VERDICT_TEMP_SCHEMA);
     setupMysql();
     setupImpala();
-    setupRedshift();
+    // Disabled redshift test due to unavailable test instance
+    //    setupRedshift();
     setupPostgresql();
   }
 
@@ -144,7 +145,9 @@ public class JdbcCommonQueryForAllDatabasesTest {
 
   @Parameterized.Parameters(name = "{0}")
   public static Collection<String> databases() {
-    return Arrays.asList("mysql", "impala", "redshift", "postgresql");
+    // Disabled redshift test due to unavailable test instance
+    return Arrays.asList("mysql", "impala", "postgresql");
+    //    return Arrays.asList("mysql", "impala", "redshift", "postgresql");
   }
 
   private static void loadData(Connection conn) throws SQLException {

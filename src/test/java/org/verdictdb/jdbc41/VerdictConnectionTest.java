@@ -44,7 +44,9 @@ public class VerdictConnectionTest {
 
   private Pair<Connection, Connection> connectionPair;
 
-  private static final String[] targetDatabases = {"mysql", "impala", "redshift", "postgresql"};
+  // Disabled redshift test due to unavailable test instance
+  private static final String[] targetDatabases = {"mysql", "impala", "postgresql"};
+  //  private static final String[] targetDatabases = {"mysql", "impala", "redshift", "postgresql"};
 
   public VerdictConnectionTest(String database) {
     this.database = database;
@@ -159,9 +161,9 @@ public class VerdictConnectionTest {
   private void setupImpala() throws SQLException {
     String connectionString = String.format("jdbc:impala://%s", IMPALA_HOST);
     String impalaMetaSchema = "verdictdbmeta_impala";
-    String vcConnectionString = 
-        String.format("jdbc:verdict:impala://%s;verdictdbmetaschema=%s", 
-            IMPALA_HOST, impalaMetaSchema);
+    String vcConnectionString =
+        String.format(
+            "jdbc:verdict:impala://%s;verdictdbmetaschema=%s", IMPALA_HOST, impalaMetaSchema);
     Connection conn = DriverManager.getConnection(connectionString, IMPALA_USER, IMPALA_PASSWORD);
     Connection vc = DriverManager.getConnection(vcConnectionString, IMPALA_USER, IMPALA_PASSWORD);
     connectionPair = ImmutablePair.of(conn, vc);
