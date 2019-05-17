@@ -19,6 +19,7 @@ package org.verdictdb.core.scramblingquerying;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.verdictdb.commons.DatabaseConnectionHelpers;
 import org.verdictdb.commons.VerdictOption;
@@ -35,6 +36,7 @@ import java.util.Map;
 import static org.junit.Assert.assertEquals;
 
 /** Created by Dong Young Yoon on 8/16/18. */
+@Ignore("Disabling redshift test due to unavailable test instance")
 public class RedshiftUniformScramblingQueryTest {
 
   private static Map<String, Connection> connMap = new HashMap<>();

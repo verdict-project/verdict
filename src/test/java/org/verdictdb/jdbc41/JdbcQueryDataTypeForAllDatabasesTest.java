@@ -1,8 +1,15 @@
 package org.verdictdb.jdbc41;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.postgresql.jdbc.PgSQLXML;
+import org.verdictdb.commons.DatabaseConnectionHelpers;
+import org.verdictdb.commons.VerdictOption;
+import org.verdictdb.exception.VerdictDBException;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -14,16 +21,9 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.postgresql.jdbc.PgSQLXML;
-import org.verdictdb.commons.DatabaseConnectionHelpers;
-import org.verdictdb.commons.VerdictOption;
-import org.verdictdb.exception.VerdictDBException;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /** Created by Dong Young Yoon on 7/18/18. */
 @RunWith(Parameterized.class)
@@ -39,8 +39,9 @@ public class JdbcQueryDataTypeForAllDatabasesTest {
 
   private String database;
 
-  private static final String[] targetDatabases = 
-      {"mysql", "impala", "redshift", "postgresql"};
+  // Disabled redshift test due to unavailable test instance
+  private static final String[] targetDatabases = {"mysql", "impala", "postgresql"};
+  //  private static final String[] targetDatabases = {"mysql", "impala", "redshift", "postgresql"};
 
   public JdbcQueryDataTypeForAllDatabasesTest(String database) {
     this.database = database;
@@ -93,7 +94,7 @@ public class JdbcQueryDataTypeForAllDatabasesTest {
   private static final String POSTGRES_USER = "postgres";
 
   private static final String POSTGRES_PASSWORD = "";
-  
+
   private static final String VERDICT_META_SCHEMA =
       "verdictdbmetaschema_" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
 
@@ -129,7 +130,8 @@ public class JdbcQueryDataTypeForAllDatabasesTest {
     options.setVerdictTempSchemaName(VERDICT_TEMP_SCHEMA);
     setupMysql();
     setupPostgresql();
-    setupRedshift();
+    // Disabled redshift test due to unavailable test instance
+    //    setupRedshift();
     setupImpala();
   }
 
@@ -137,7 +139,8 @@ public class JdbcQueryDataTypeForAllDatabasesTest {
   public static void tearDown() throws SQLException {
     tearDownMysql();
     tearDownPostgresql();
-    tearDownRedshift();
+    // Disabled redshift test due to unavailable test instance
+    //    tearDownRedshift();
     tearDownImpala();
   }
 
