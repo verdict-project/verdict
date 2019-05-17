@@ -104,45 +104,46 @@ def test_postgres_init_method():
 
     verdict.close()
 
-def test_redshift_factory_method():
-    host, port = os.environ['VERDICTDB_TEST_REDSHIFT_ENDPOINT'].split(':')
-    port = int(port)
-
-    user = os.environ['VERDICTDB_TEST_REDSHIFT_USER']
-    password = os.environ['VERDICTDB_TEST_REDSHIFT_PASSWORD']
-    dbname = 'dev'
-
-    verdict = VerdictContext.new_redshift_context(
-        host,
-        port,
-        dbname,
-        user,
-        password,
-    )
-
-    print(verdict.sql('show schemas'))
-
-    verdict.close()
-
-def test_redshift_init_method():
-    host, port = os.environ['VERDICTDB_TEST_REDSHIFT_ENDPOINT'].split(':')
-    port = int(port)
-
-    user = os.environ['VERDICTDB_TEST_REDSHIFT_USER']
-    password = os.environ['VERDICTDB_TEST_REDSHIFT_PASSWORD']
-    dbname = 'dev'
-
-    verdict = pyverdict.redshift_context(
-        host,
-        port,
-        dbname,
-        user,
-        password,
-    )
-
-    print(verdict.sql('show schemas'))
-
-    verdict.close()
+# Disabled redshift unit tests due to unavailable test instance
+#  def test_redshift_factory_method():
+    #  host, port = os.environ['VERDICTDB_TEST_REDSHIFT_ENDPOINT'].split(':')
+    #  port = int(port)
+#
+    #  user = os.environ['VERDICTDB_TEST_REDSHIFT_USER']
+    #  password = os.environ['VERDICTDB_TEST_REDSHIFT_PASSWORD']
+    #  dbname = 'dev'
+#
+    #  verdict = VerdictContext.new_redshift_context(
+        #  host,
+        #  port,
+        #  dbname,
+        #  user,
+        #  password,
+    #  )
+#
+    #  print(verdict.sql('show schemas'))
+#
+    #  verdict.close()
+#
+#  def test_redshift_init_method():
+    #  host, port = os.environ['VERDICTDB_TEST_REDSHIFT_ENDPOINT'].split(':')
+    #  port = int(port)
+#
+    #  user = os.environ['VERDICTDB_TEST_REDSHIFT_USER']
+    #  password = os.environ['VERDICTDB_TEST_REDSHIFT_PASSWORD']
+    #  dbname = 'dev'
+#
+    #  verdict = pyverdict.redshift_context(
+        #  host,
+        #  port,
+        #  dbname,
+        #  user,
+        #  password,
+    #  )
+#
+    #  print(verdict.sql('show schemas'))
+#
+    #  verdict.close()
 
 def test_impala_factory_method():
     host, port = os.environ['VERDICTDB_TEST_IMPALA_HOST'].split(':')
