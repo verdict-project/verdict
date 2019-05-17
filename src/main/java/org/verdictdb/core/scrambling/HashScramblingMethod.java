@@ -50,10 +50,11 @@ public class HashScramblingMethod extends ScramblingMethodBase {
   public List<ExecutableNodeBase> getStatisticsNode(
       String oldSchemaName,
       String oldTableName,
+      UnnamedColumn predicate,
       String columnMetaTokenKey,
       String partitionMetaTokenKey,
       String primarykeyMetaTokenKey) {
-    TableSizeCountNode countNode = new TableSizeCountNode(oldSchemaName, oldTableName);
+    TableSizeCountNode countNode = new TableSizeCountNode(oldSchemaName, oldTableName, predicate);
     return Arrays.<ExecutableNodeBase>asList(countNode);
   }
 

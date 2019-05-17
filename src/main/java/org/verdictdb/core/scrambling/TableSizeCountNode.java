@@ -12,6 +12,7 @@ import org.verdictdb.core.sqlobject.ColumnOp;
 import org.verdictdb.core.sqlobject.SelectItem;
 import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.core.sqlobject.SqlConvertible;
+import org.verdictdb.core.sqlobject.UnnamedColumn;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBValueException;
 
@@ -22,6 +23,8 @@ class TableSizeCountNode extends QueryNodeBase {
   private String schemaName;
 
   private String tableName;
+  
+  private UnnamedColumn predicate = null;
 
   public static final String TOTAL_COUNT_ALIAS_NAME = "verdictdbtotalcount";
 
@@ -29,6 +32,13 @@ class TableSizeCountNode extends QueryNodeBase {
     super(-1, null);
     this.schemaName = schemaName;
     this.tableName = tableName;
+  }
+  
+  public TableSizeCountNode(String schemaName, String tableName, UnnamedColumn predicate) {
+    super(-1, null);
+    this.schemaName = schemaName;
+    this.tableName = tableName;
+    this.predicate = predicate;
   }
 
   @Override
@@ -44,8 +54,16 @@ class TableSizeCountNode extends QueryNodeBase {
     List<SelectItem> selectList = new ArrayList<>();
     selectList.add(new AliasedColumn(ColumnOp.count(), TOTAL_COUNT_ALIAS_NAME));
 
-    selectQuery =
-        SelectQuery.create(selectList, new BaseTable(schemaName, tableName, tableSourceAlias));
+    if (predicate == null) {
+      selectQuery =
+          SelectQuery.create(selectList, new BaseTable(schemaName, tableName, tableSourceAlias));
+    } else {
+      selectQuery =
+          SelectQuery.create(
+              selectList, 
+              new BaseTable(schemaName, tableName, tableSourceAlias), 
+              predicate);
+    }
     return selectQuery;
   }
 

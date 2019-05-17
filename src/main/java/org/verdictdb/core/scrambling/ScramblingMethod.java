@@ -27,10 +27,20 @@ public interface ScramblingMethod {
 
   // Stage 1 is automatically run by ScramblingPlan
 
-  // Stage 2 methods
+  /** Stage 2 methods
+   * 
+   * @param oldSchemaName  The name of the db schema where the original table is defined.
+   * @param oldTableName   The name of the original table.
+   * @param predicate   This predicate may choose a subset of the original table.
+   * @param columnMetaTokenKey
+   * @param partitionMetaTokenKey
+   * @param primarykeyMetaTokenKey
+   * @return
+   */
   List<ExecutableNodeBase> getStatisticsNode(
       String oldSchemaName,
       String oldTableName,
+      UnnamedColumn predicate, 
       String columnMetaTokenKey,
       String partitionMetaTokenKey,
       String primarykeyMetaTokenKey);
