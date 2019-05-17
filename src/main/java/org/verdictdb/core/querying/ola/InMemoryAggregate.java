@@ -147,7 +147,7 @@ public class InMemoryAggregate {
     DbmsQueryResult dbmsQueryResult = null;
     
     try {
-      log.debug("The following query is issued: " + sql);
+      log.trace("The following query is issued: " + sql);
       ResultSet rs = stmt.executeQuery(sql);
       dbmsQueryResult = new JdbcQueryResult(rs);
       rs.close();

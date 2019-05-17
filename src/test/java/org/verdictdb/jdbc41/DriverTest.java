@@ -5,6 +5,7 @@ import com.google.common.io.Files;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.verdictdb.commons.DatabaseConnectionHelpers;
 import org.verdictdb.commons.VerdictOption;
@@ -21,6 +22,7 @@ import java.util.Properties;
 
 import static org.junit.Assert.assertEquals;
 
+@Ignore("Disabling redshift test due to unavailable test instance")
 public class DriverTest {
 
   private static final String REDSHIFT_HOST;

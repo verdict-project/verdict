@@ -69,13 +69,21 @@ public class ExecutablePlanRunner {
   public ExecutionTokenReader getTokenReader() {
     // set up to get the results
     ExecutionTokenReader reader;
-    if (plan.getReportingNode() != null) {
-      ExecutableNodeBase node = new ExecutableNodeBase(-1);
-      node.subscribeTo((ExecutableNodeBase) plan.getReportingNode());
-      reader = new ExecutionTokenReader(node.getSourceQueues().get(0));
-    } else {
-      reader = new ExecutionTokenReader();
+    
+    // returns an explicit error in case there is no reporting node
+    if (plan.getReportingNode() == null) {
+      throw new RuntimeException("VerdictDB's query planning failed for an unknown reason.");
     }
+    
+    ExecutableNodeBase node = new ExecutableNodeBase(-1);
+    node.subscribeTo((ExecutableNodeBase) plan.getReportingNode());
+    reader = new ExecutionTokenReader(node.getSourceQueues().get(0));
+    
+//    if (plan.getReportingNode() != null) {
+//      
+//    } else {
+//      reader = new ExecutionTokenReader();
+//    }
     
     // Run nodes: approach 1
     // The nodes whose dependencies have not been finished will terminate immediately.

@@ -31,6 +31,7 @@ import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.connection.SparkConnection;
 import org.verdictdb.core.querying.ExecutableNodeBase;
+import org.verdictdb.core.querying.SelectAggExecutionNode;
 import org.verdictdb.core.querying.ola.AsyncAggExecutionNode;
 import org.verdictdb.core.querying.ola.SelectAsyncAggExecutionNode;
 import org.verdictdb.core.querying.simplifier.ConsolidatedExecutionNode;
@@ -201,7 +202,7 @@ public class ExecutableNodeRunner implements Runnable {
           && ((CachedDbmsConnection)conn).getOriginalConnection().getSyntax() instanceof MysqlSyntax) {
       // For MySQL, issue query one by one.
       if (node instanceof SelectAsyncAggExecutionNode || node instanceof AsyncAggExecutionNode) {
-        return 2;
+        return 1;
       } else {
         return 1;
       }
@@ -223,11 +224,17 @@ public class ExecutableNodeRunner implements Runnable {
 
       // check the number of currently running nodes
       int runningChildCount = 0;
+      int completedChildCount = 0;
       for (ExecutableNodeRunner r : childRunners) {
         if (r.getStatus() == NodeRunningStatus.running) {
           runningChildCount++;
+        } else if (r.getStatus() == NodeRunningStatus.completed) {
+          completedChildCount++;
         }
       }
+      log.trace(String.format(
+          "Running child: %d, Completed Child: %d, Success token received: %d",
+          runningChildCount, completedChildCount, successSourceCount));
 
       // maintain the number of running nodes to a certain number
       List<ExecutableNodeBase> childNodes = ((ExecutableNodeBase) node).getSources();
@@ -272,12 +279,12 @@ public class ExecutableNodeRunner implements Runnable {
 
     // no dependency exists
     if (node.getSourceQueues().size() == 0) {
-      log.debug(String.format("No dependency exists. Simply run %s", node.toString()));
+      log.trace(String.format("No dependency exists. Simply run %s", node.toString()));
       try {
         executeAndBroadcast(Arrays.<ExecutionInfoToken>asList());
         broadcastAndTriggerRun(ExecutionInfoToken.successToken());
         markComplete();
-        //        clearRunningTask();
+        //clearRunningTask();
         return;
       } catch (Exception e) {
         if (noNeedToRun()) {
@@ -300,6 +307,7 @@ public class ExecutableNodeRunner implements Runnable {
       // this function will be called again whenever a child node completes.
       List<ExecutionInfoToken> tokens = retrieve();
       if (tokens == null) {
+        log.trace("Not enough source nodes are finished, loop terminates");
         //        markInitiated();
         clearRunningTask();
         return;
@@ -318,7 +326,7 @@ public class ExecutableNodeRunner implements Runnable {
       if (areAllSuccess(tokens)) {
         log.trace(String.format("All dependent nodes are finished for %s", node.toString()));
         broadcastAndTriggerRun(ExecutionInfoToken.successToken());
-        //        clearRunningTask();
+        //clearRunningTask();
         markComplete();
         return;
       }
@@ -332,7 +340,7 @@ public class ExecutableNodeRunner implements Runnable {
 
       // actual processing
       try {
-        log.debug(
+        log.trace(
             String.format("Main processing starts for %s with token: %s", node.toString(), tokens));
         executeAndBroadcast(tokens);
       } catch (Exception e) {
@@ -350,7 +358,7 @@ public class ExecutableNodeRunner implements Runnable {
     }
   }
 
-  List<ExecutionInfoToken> retrieve() {
+  synchronized List<ExecutionInfoToken> retrieve() {
     Map<Integer, ExecutionTokenQueue> sourceChannelAndQueues = node.getSourceQueues();
 
     for (ExecutionTokenQueue queue : sourceChannelAndQueues.values()) {
@@ -373,7 +381,7 @@ public class ExecutableNodeRunner implements Runnable {
   }
 
   void broadcastAndTriggerRun(ExecutionInfoToken token) {
-    if (noNeedToRun()) {
+    if (noNeedToRun() && !areAllStatusTokens(Arrays.asList(token))) {
       log.trace(
           String.format(
               "This node (%s) has been aborted. Do not broadcast: %s", this.toString(), token));
@@ -391,8 +399,17 @@ public class ExecutableNodeRunner implements Runnable {
       //      logger.trace(token.toString());
     }
 
+    //if (node instanceof SelectAggExecutionNode && areAllStatusTokens(Arrays.asList(token))) {
+    //  status = NodeRunningStatus.completed;
+    //}
+
     for (ExecutableNode dest : node.getSubscribers()) {
       ExecutionInfoToken copiedToken = token.deepcopy();
+      // set runner with success token complete before notifying subscriber
+      if (copiedToken.isSuccessToken()
+          && node.getRegisteredRunner().getStatus()!=NodeRunningStatus.completed) {
+        node.getRegisteredRunner().status = NodeRunningStatus.completed;
+      }
       dest.getNotified(node, copiedToken);
 
       // signal the runner of the broadcasted node so that its associated runner performs
@@ -400,6 +417,7 @@ public class ExecutableNodeRunner implements Runnable {
       ExecutableNodeRunner runner = dest.getRegisteredRunner();
       if (runner != null) {
         //        runner.runOnThread();
+        log.trace("Broadcast: status " + status);
         runner.runThisAndDependents(); // this is needed due to async node.
       }
     }
@@ -498,12 +516,14 @@ public class ExecutableNodeRunner implements Runnable {
 
   boolean areAllSuccess(List<ExecutionInfoToken> tokens) {
     for (ExecutionInfoToken t : tokens) {
-      if (t.isSuccessToken()) {
-        successSourceCount++;
-        log.trace(String.format("Success count of %s: %d", node.toString(), successSourceCount));
-      } else {
-        return false;
-      }
+          if (t.isSuccessToken()) {
+            synchronized ((Object) successSourceCount) {
+              successSourceCount++;
+            }
+            log.trace(String.format("Success count of %s: %d", node.toString(), successSourceCount));
+          } else {
+            return false;
+          }
     }
 
     if (successSourceCount == dependentCount) {

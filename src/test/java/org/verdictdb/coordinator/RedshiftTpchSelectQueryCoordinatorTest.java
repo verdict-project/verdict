@@ -7,6 +7,7 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.verdictdb.commons.DatabaseConnectionHelpers;
 import org.verdictdb.commons.VerdictOption;
@@ -35,6 +36,7 @@ import static org.junit.Assert.assertEquals;
  *
  * <p>Some test cases are slightly changed because size of test data are small.
  */
+@Ignore("This test uses private resources + redshift")
 public class RedshiftTpchSelectQueryCoordinatorTest {
 
   static Connection redshiftConn;

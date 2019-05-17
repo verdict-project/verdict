@@ -5,6 +5,7 @@ import com.google.common.io.Files;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -29,6 +30,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 /** Created by Dong Young Yoon on 7/18/18. */
+@Ignore("This test uses private resources + redshift")
 @RunWith(Parameterized.class)
 public class JdbcTpchQueryForAllDatabasesTest {
 
@@ -132,7 +134,8 @@ public class JdbcTpchQueryForAllDatabasesTest {
     options.setVerdictTempSchemaName(VERDICT_TEMP_SCHEMA);
     setupMysql();
     setupImpala();
-    setupRedshift();
+    // Disabled redshift test due to unavailable test instance
+    //    setupRedshift();
 
     // TODO: Add below databases too
     //    setupPostgresql();

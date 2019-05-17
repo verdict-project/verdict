@@ -24,9 +24,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.time.FastDateFormat;
 import org.verdictdb.VerdictSingleResult;
+import org.verdictdb.commons.VerdictDBLogger;
+import org.verdictdb.core.execplan.ExecutionInfoToken;
 
 /**
  * Created by: Shucheng Zhong on 9/12/18
@@ -57,6 +60,8 @@ public class VerdictStreamResultSet extends VerdictResultSet {
   private int lastQueryResultIndex = 0;
 
   private VerdictStreamResultSetMetaData metadata;
+
+  private VerdictDBLogger log = VerdictDBLogger.getLogger(this.getClass());
 
   public VerdictStreamResultSet() {
     super();
@@ -874,6 +879,7 @@ public class VerdictStreamResultSet extends VerdictResultSet {
     try {
       // on the first call
       if (queryResult == null && (!hasReadAllQueryResults || !queryResults.isEmpty())) {
+        log.debug("Trying to take a queryResult out of blockingDeque");
         queryResult = queryResults.take();
         lastQueryResultIndex++;
       }
@@ -884,7 +890,15 @@ public class VerdictStreamResultSet extends VerdictResultSet {
       } else if (queryResults.peek() == null && hasReadAllQueryResults) {
         return false;
       } else {
-        queryResult = queryResults.take();
+        log.debug("Trying to take a queryResult out of blockingDeque");
+        queryResult = queryResults.poll(2, TimeUnit.MINUTES);
+        if (queryResult == null && hasReadAllQueryResults) {
+          return false;
+          //throw new RuntimeException("The queryResult was unavailable for a long time for an unknown reasons.");
+        } else if (queryResult == null){
+          queryResult = queryResults.take();
+        }
+        //queryResult = queryResults.take();
         lastQueryResultIndex++;
         return next();
       }

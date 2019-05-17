@@ -1,6 +1,7 @@
 package org.verdictdb.core.scrambling;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -87,7 +88,14 @@ public class PostgresUniformScramblingPlanTest {
     //    System.out.println(plan.getReportingNode());
 
     DbmsConnection dbmsConn = JdbcConnection.create(conn);
-    ExecutablePlanRunner.runTillEnd(dbmsConn, plan);
+    try {
+      ExecutablePlanRunner.runTillEnd(dbmsConn, plan);
+      fail();
+    } catch (RuntimeException e) {
+      if (!(e.getCause() instanceof VerdictDBException)) {
+        fail();
+      }
+    }
   }
 
   @Test

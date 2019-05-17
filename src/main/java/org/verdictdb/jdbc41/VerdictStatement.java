@@ -74,19 +74,17 @@ public class VerdictStatement implements java.sql.Statement {
      */
     public void run() {
       while (!resultStream.isCompleted()) {
-        while (resultStream.hasNext()) {
-          VerdictSingleResult singleResult = resultStream.next();
-          if (!resultStream.hasNext()) {
-            // Must have synchronized keyword. Need to make sure the block is atomic because VerdictStreamResultSet.next() also use hasReadAllQueryResults flag.
-            // Otherwise, VerdictStreamResultSet may be unware the processing is completed after the last singleResult is appended.
-            synchronized ((Object) resultSet.hasReadAllQueryResults) {
-              resultSet.appendSingleResult(singleResult);
-              resultSet.setCompleted();
-            }
-            log.debug("Execution Completed\n");
-          } else {
+        VerdictSingleResult singleResult = resultStream.next();
+        if (!resultStream.hasNext()) {
+          // Must have synchronized keyword. Need to make sure the block is atomic because VerdictStreamResultSet.next() also use hasReadAllQueryResults flag.
+          // Otherwise, VerdictStreamResultSet may be unware the processing is completed after the last singleResult is appended.
+          synchronized ((Object) resultSet.hasReadAllQueryResults) {
             resultSet.appendSingleResult(singleResult);
+            resultSet.setCompleted();
           }
+          log.debug("Execution Completed\n");
+        } else {
+          resultSet.appendSingleResult(singleResult);
         }
       }
     }

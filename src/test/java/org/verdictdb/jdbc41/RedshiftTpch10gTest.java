@@ -1,5 +1,7 @@
 package org.verdictdb.jdbc41;
 
+import org.junit.Ignore;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -13,6 +15,7 @@ import java.sql.Statement;
  *
  * @author Yongjoo Park
  */
+@Ignore("Disabling redshift test due to unavailable test instance")
 public class RedshiftTpch10gTest {
 
   private static final String REDSHIFT_HOST;

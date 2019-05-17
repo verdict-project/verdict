@@ -51,7 +51,9 @@ public class MetaDataStatementsTest {
 
   private String database;
 
-  private static final String[] targetDatabases = {"mysql", "impala", "redshift", "postgresql"};
+  // Disabled redshift test due to unavailable test instance
+  private static final String[] targetDatabases = {"mysql", "impala", "postgresql"};
+  //  private static final String[] targetDatabases = {"mysql", "impala", "redshift", "postgresql"};
 
   public MetaDataStatementsTest(String database) {
     this.database = database;
@@ -127,7 +129,8 @@ public class MetaDataStatementsTest {
   public static void setup() throws SQLException, VerdictDBDbmsException, IOException {
     setupMysql();
     setupPostgresql();
-    setupRedshift();
+    // Disabled redshift test due to unavailable test instance
+    //    setupRedshift();
     setupImpala();
   }
 
@@ -135,7 +138,8 @@ public class MetaDataStatementsTest {
   public static void tearDown() throws SQLException {
     tearDownMysql();
     tearDownPostgresql();
-    tearDownRedshift();
+    // Disabled redshift test due to unavailable test instance
+    //    tearDownRedshift();
     tearDownImpala();
   }
 
@@ -279,13 +283,13 @@ public class MetaDataStatementsTest {
             new JdbcConnection(connMap.get(database), syntaxMap.get(database)));
 
     VerdictOption option = new VerdictOption();
-    final String verdictmeta = 
+    final String verdictmeta =
         "verdictmeta" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
     option.setVerdictMetaSchemaName(verdictmeta);
     VerdictContext verdict = new VerdictContext(dbmsconn, option);
-    
-    ExecutionContext exec = new ExecutionContext(
-        dbmsconn, verdict.getMetaStore(), verdict.getContextId(), 0, options);
+
+    ExecutionContext exec =
+        new ExecutionContext(dbmsconn, verdict.getMetaStore(), verdict.getContextId(), 0, options);
     VerdictSingleResult result = exec.sql("show schemas");
 
     Set<String> expected = new HashSet<>();
@@ -297,7 +301,7 @@ public class MetaDataStatementsTest {
       //      assertEquals(jdbcRs.getString(1), result.getValue(0));
     }
     assertEquals(expected, actual);
-    
+
     // teardown
     dbmsconn.execute(String.format("drop schema if exists %s", verdictmeta));
   }
@@ -335,13 +339,13 @@ public class MetaDataStatementsTest {
             new JdbcConnection(connMap.get(database), syntaxMap.get(database)));
 
     VerdictOption option = new VerdictOption();
-    final String verdictmeta = 
+    final String verdictmeta =
         "verdictmeta" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
     option.setVerdictMetaSchemaName(verdictmeta);
     VerdictContext verdict = new VerdictContext(dbmsconn, option);
-    
-    ExecutionContext exec = new ExecutionContext(
-        dbmsconn, verdict.getMetaStore(), verdict.getContextId(), 0, options);
+
+    ExecutionContext exec =
+        new ExecutionContext(dbmsconn, verdict.getMetaStore(), verdict.getContextId(), 0, options);
     VerdictSingleResult result = exec.sql(vcsql);
 
     // test
@@ -354,7 +358,7 @@ public class MetaDataStatementsTest {
       //      assertEquals(jdbcRs.getString(1), result.getValue(0));
     }
     assertEquals(expected, actual);
-    
+
     // teardown
     dbmsconn.execute(String.format("drop schema if exists %s", verdictmeta));
   }
@@ -396,13 +400,13 @@ public class MetaDataStatementsTest {
             new JdbcConnection(connMap.get(database), syntaxMap.get(database)));
 
     VerdictOption option = new VerdictOption();
-    final String verdictmeta = 
+    final String verdictmeta =
         "verdictmeta" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
     option.setVerdictMetaSchemaName(verdictmeta);
     VerdictContext verdict = new VerdictContext(dbmsconn, option);
-    
-    ExecutionContext exec = new ExecutionContext(
-        dbmsconn, verdict.getMetaStore(), verdict.getContextId(), 0, options);
+
+    ExecutionContext exec =
+        new ExecutionContext(dbmsconn, verdict.getMetaStore(), verdict.getContextId(), 0, options);
     VerdictSingleResult result = exec.sql(vcsql);
     while (jdbcRs.next()) {
       result.next();
@@ -413,7 +417,7 @@ public class MetaDataStatementsTest {
         assertEquals(jdbcRs.getString(2), result.getValue(1));
       }
     }
-    
+
     // teardown
     dbmsconn.execute(String.format("drop schema if exists %s", verdictmeta));
   }

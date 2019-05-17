@@ -167,7 +167,7 @@ public class ScramblingNode extends CreateScrambledTableNode {
     return super.createQuery(tokens);
   }
 
-  SelectQuery composeQuery(Map<String, Object> metaData) {
+  SelectQuery composeQuery(Map<String, Object> metaData) throws VerdictDBException {
     // read option values
     List<UnnamedColumn> tierPredicates = method.getTierExpressions(metaData);
     int tierCount = tierPredicates.size() + 1;
@@ -234,6 +234,10 @@ public class ScramblingNode extends CreateScrambledTableNode {
         blockForTierExpr = ColumnOp.casewhen(blockForTierOperands);
       }
       */
+      // If total block size==0, it is an empty table, then throw an exception
+      if (method.getBlockCount()==0) {
+        throw new VerdictDBException("Empty table cannot be scrambled");
+      }
       if (i < tierCount - 1) {
         // "when" part in the case-when-else expression
         // for the last tier, we don't need this "when" part

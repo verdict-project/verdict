@@ -19,6 +19,7 @@ package org.verdictdb.core.execplan;
 import java.io.Serializable;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
@@ -37,9 +38,14 @@ public class ExecutionTokenQueue implements Serializable {
     return internalQueue.poll();
   }
 
-  public ExecutionInfoToken take() {
+  public synchronized ExecutionInfoToken take() {
     try {
       return internalQueue.takeFirst();
+      //ExecutionInfoToken t = internalQueue.poll(5, TimeUnit.MINUTES);
+      //if (t == null) {
+      //  throw new RuntimeException("The internal token was unavailable for a long time for an unknown reasons.");
+      //}
+      //return t;
     } catch (InterruptedException e) {
       e.printStackTrace();
     }

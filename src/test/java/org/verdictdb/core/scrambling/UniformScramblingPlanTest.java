@@ -16,6 +16,8 @@ import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.core.execplan.ExecutablePlanRunner;
 import org.verdictdb.exception.VerdictDBException;
 
+import static org.junit.Assert.fail;
+
 public class UniformScramblingPlanTest {
 
   private static Connection mysqlConn;
@@ -84,7 +86,14 @@ public class UniformScramblingPlanTest {
 //    System.out.println(plan.getReportingNode());
 
     DbmsConnection conn = JdbcConnection.create(mysqlConn);
-    ExecutablePlanRunner.runTillEnd(conn, plan);
+    try {
+      ExecutablePlanRunner.runTillEnd(conn, plan);
+      fail();
+    } catch (RuntimeException e) {
+      if (!(e.getCause() instanceof VerdictDBException)) {
+        fail();
+      }
+    }
   }
 
   @Test

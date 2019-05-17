@@ -152,7 +152,7 @@ public class SparkConnection extends DbmsConnection {
   
   public DbmsQueryResult executeSingle(String sql) throws VerdictDBDbmsException {
     sql = sql.replace(";", "");   // remove semicolons
-    log.debug("Issues the following query to Spark: " + sql);
+    log.trace("Issues the following query to Spark: " + sql);
 
     try {
       SparkQueryResult srs = null;

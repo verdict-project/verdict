@@ -74,7 +74,7 @@ public class PrestoJdbcConnection extends JdbcConnection {
 
   @Override
   public DbmsQueryResult executeSingle(String sql) throws VerdictDBDbmsException {
-    log.debug("Issues the following query to DBMS: " + sql);
+    log.trace("Issues the following query to DBMS: " + sql);
 
     PrestoQueryStatusPrinter progressMonitor = null;
     try {
