@@ -87,8 +87,7 @@ public class ScramblingPlan extends SimpleTreePlan {
       Map<String, String> options) {
 
     // create a node for step 1 - column meta data retrieval
-    // these nodes will set "scramblingPlan:columnMetaData" and "scramblingPlan:partitionMetaData"
-    // keys.
+    // these nodes will set the values for two keys: COLUMN_METADATA_KEY and PARTITION_METADATA_KEY
     ExecutableNodeBase columnMetaDataNode =
         ColumnMetadataRetrievalNode.create(oldSchemaName, oldTableName, COLUMN_METADATA_KEY);
     ExecutableNodeBase partitionMetaDataNode =
@@ -98,11 +97,11 @@ public class ScramblingPlan extends SimpleTreePlan {
             oldSchemaName, oldTableName, PRIMARYKEY_METADATA_KEY);
 
     // create a node for step 2 - statistics retrieval
-    // since uniform scrambling does not return any nodes, the step 3 will be run immediately.
     List<ExecutableNodeBase> statsNodes =
         method.getStatisticsNode(
             oldSchemaName,
             oldTableName,
+            predicate,
             COLUMN_METADATA_KEY,
             PARTITION_METADATA_KEY,
             PRIMARYKEY_METADATA_KEY);

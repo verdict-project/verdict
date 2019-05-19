@@ -150,6 +150,7 @@ public class FastConvergeScramblingMethod extends ScramblingMethodBase {
   public List<ExecutableNodeBase> getStatisticsNode(
       String oldSchemaName,
       String oldTableName,
+      UnnamedColumn predicate,
       String columnMetaTokenKey,
       String partitionMetaTokenKey,
       String primarykeyMetaTokenKey) {
