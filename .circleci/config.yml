@@ -239,8 +239,8 @@ jobs:
       # Now build and test
       - run:
           name: Run unit tests
-          command: mvn -P jdk8 -B test -Dtest=PrestoTpchSelectQueryCoordinatorTest 2> /dev/null
-          #          command: mvn -P jdk8 -B test 2> /dev/null
+          command: mvn -P jdk8 -B test 2> /dev/null
+          #          command: mvn -P jdk8 -B test -Dtest=PrestoTpchSelectQueryCoordinatorTest 2> /dev/null
           no_output_timeout: 30m
 
       # Check the JDBC service file correctness
