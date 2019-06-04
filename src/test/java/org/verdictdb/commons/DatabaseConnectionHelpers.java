@@ -628,6 +628,56 @@ public class DatabaseConnectionHelpers {
         .execute(String.format("insert into %s.%s values %s", schema, table, concat.toString()));
   }
 
+  private static void loadPrestoDataInMemory(String schema, String table, Connection conn)
+      throws IOException, SQLException {
+    String concat = "";
+    File file =
+        new File(String.format("src/test/resources/tpch_test_data/%s/%s.tbl", table, table));
+    ResultSet rs =
+        conn.createStatement().executeQuery(String.format("DESCRIBE memory.%s.%s", schema, table));
+    List<Boolean> quotedNeeded = new ArrayList<>();
+    List<Boolean> isDate = new ArrayList<>();
+    while (rs.next()) {
+      String columnType = rs.getString(2).toLowerCase();
+      if (columnType.equals("integer")
+          || columnType.equals("numeric")
+          || columnType.contains("double")
+          || columnType.contains("decimal")
+          || columnType.contains("bigint")) {
+        quotedNeeded.add(false);
+      } else quotedNeeded.add(true);
+      if (columnType.contains("date")) {
+        isDate.add(true);
+      } else isDate.add(false);
+    }
+
+    String content = Files.toString(file, Charsets.UTF_8);
+    for (String row : content.split("\n")) {
+      String[] values = row.split("\\|");
+      row = "";
+      for (int i = 0; i < values.length - 1; i++) {
+        if (quotedNeeded.get(i)) {
+          row = row + (isDate.get(i) ? "date " : "") + getQuoted(values[i]) + ",";
+        } else {
+          row = row + values[i] + ",";
+        }
+      }
+      for (int i = 0; i < quotedNeeded.size() - values.length + 1; ++i) {
+        if (i < quotedNeeded.size() - values.length) {
+          row = row + "'',";
+        } else {
+          row = row + "''";
+        }
+      }
+      if (concat.equals("")) {
+        concat = concat + "(" + row + ")";
+      } else concat = concat + "," + "(" + row + ")";
+    }
+    conn.createStatement()
+        .execute(
+            String.format("insert into \"memory\".\"%s\".\"%s\" values %s", schema, table, concat));
+  }
+
   private static void loadPrestoData(String schema, String table, Connection conn)
       throws IOException, SQLException {
     String concat = "";
@@ -675,6 +725,135 @@ public class DatabaseConnectionHelpers {
     }
     conn.createStatement()
         .execute(String.format("insert into \"%s\".\"%s\" values %s", schema, table, concat));
+  }
+
+  public static Connection setupPrestoInMemory(
+      String connectionString, String user, String password, String schema)
+      throws SQLException, IOException {
+
+    Connection conn = DriverManager.getConnection(connectionString, user, password);
+
+    Statement stmt = conn.createStatement();
+    stmt.execute(String.format("CREATE SCHEMA IF NOT EXISTS memory.\"%s\"", schema));
+    ResultSet rs =
+        conn.createStatement().executeQuery(String.format("SHOW TABLES IN memory.\"%s\"", schema));
+    while (rs.next()) {
+      conn.createStatement()
+          .execute(String.format("DROP TABLE IF EXISTS memory.\"%s\".%s", schema, rs.getString(1)));
+    }
+
+    // Create tables
+    stmt.execute(
+        String.format(
+            "CREATE TABLE  IF NOT EXISTS \"memory\".\"%s\".\"nation\" ("
+                + "  \"n_nationkey\"  INT, "
+                + "  \"n_name\"       CHAR(25), "
+                + "  \"n_regionkey\"  INT, "
+                + "  \"n_comment\"    VARCHAR(152), "
+                + "  \"n_dummy\"      VARCHAR(10)) ",
+            schema));
+    stmt.execute(
+        String.format(
+            "CREATE TABLE  IF NOT EXISTS \"memory\".\"%s\".\"region\"  ("
+                + "  \"r_regionkey\"  INT, "
+                + "  \"r_name\"       CHAR(25), "
+                + "  \"r_comment\"    VARCHAR(152), "
+                + "  \"r_dummy\"      VARCHAR(10)) ",
+            schema));
+    stmt.execute(
+        String.format(
+            "CREATE TABLE  IF NOT EXISTS \"memory\".\"%s\".\"part\"  ( \"p_partkey\"     INT, "
+                + "  \"p_name\"        VARCHAR(55), "
+                + "  \"p_mfgr\"        CHAR(25), "
+                + "  \"p_brand\"       CHAR(10), "
+                + "  \"p_type\"        VARCHAR(25), "
+                + "  \"p_size\"        INT, "
+                + "  \"p_container\"   CHAR(10), "
+                + "  \"p_retailprice\" DECIMAL(15,2) , "
+                + "  \"p_comment\"     VARCHAR(23) , "
+                + "  \"p_dummy\"       VARCHAR(10)) ",
+            schema));
+    stmt.execute(
+        String.format(
+            "CREATE TABLE  IF NOT EXISTS \"memory\".\"%s\".\"supplier\" ( "
+                + "  \"s_suppkey\"     INT , "
+                + "  \"s_name\"        CHAR(25) , "
+                + "  \"s_address\"     VARCHAR(40) , "
+                + "  \"s_nationkey\"   INT , "
+                + "  \"s_phone\"       CHAR(15) , "
+                + "  \"s_acctbal\"     DECIMAL(15,2) , "
+                + "  \"s_comment\"     VARCHAR(101), "
+                + "  \"s_dummy\" varchar(10)) ",
+            schema));
+    stmt.execute(
+        String.format(
+            "CREATE TABLE  IF NOT EXISTS \"memory\".\"%s\".\"partsupp\" ( "
+                + "  \"ps_partkey\"     INT , "
+                + "  \"ps_suppkey\"     INT , "
+                + "  \"ps_availqty\"    INT , "
+                + "  \"ps_supplycost\"  DECIMAL(15,2)  , "
+                + "  \"ps_comment\"     VARCHAR(199), "
+                + "  \"ps_dummy\"       VARCHAR(10)) ",
+            schema));
+    stmt.execute(
+        String.format(
+            "CREATE TABLE  IF NOT EXISTS \"memory\".\"%s\".\"customer\" ("
+                + "  \"c_custkey\"     INT , "
+                + "  \"c_name\"        VARCHAR(25) , "
+                + "  \"c_address\"     VARCHAR(40) , "
+                + "  \"c_nationkey\"   INT , "
+                + "  \"c_phone\"       CHAR(15) , "
+                + "  \"c_acctbal\"     DECIMAL(15,2)   , "
+                + "  \"c_mktsegment\"  CHAR(10) , "
+                + "  \"c_comment\"     VARCHAR(117), "
+                + "  \"c_dummy\"       VARCHAR(10)) ",
+            schema));
+    stmt.execute(
+        String.format(
+            "CREATE TABLE IF NOT EXISTS  \"memory\".\"%s\".\"orders\"  ( "
+                + "  \"o_orderkey\"       INT , "
+                + "  \"o_custkey\"        INT , "
+                + "  \"o_orderstatus\"    CHAR(1) , "
+                + "  \"o_totalprice\"     DECIMAL(15,2) , "
+                + "  \"o_orderdate\"      DATE , "
+                + "  \"o_orderpriority\"  CHAR(15) , "
+                + "  \"o_clerk\"          CHAR(15) , "
+                + "  \"o_shippriority\"   INT , "
+                + "  \"o_comment\"        VARCHAR(79), "
+                + "  \"o_dummy\" varchar(10))",
+            schema));
+    stmt.execute(
+        String.format(
+            "CREATE TABLE IF NOT EXISTS \"memory\".\"%s\".\"lineitem\" ("
+                + "  \"l_orderkey\"    INT , "
+                + "  \"l_partkey\"     INT , "
+                + "  \"l_suppkey\"     INT , "
+                + "  \"l_linenumber\"  INT , "
+                + "  \"l_quantity\"    DECIMAL(15,2) , "
+                + "  \"l_extendedprice\"  DECIMAL(15,2) , "
+                + "  \"l_discount\"    DECIMAL(15,2) , "
+                + "  \"l_tax\"         DECIMAL(15,2) , "
+                + "  \"l_returnflag\"  CHAR(1) , "
+                + "  \"l_linestatus\"  CHAR(1) , "
+                + "  \"l_shipdate\"    DATE , "
+                + "  \"l_commitdate\"  DATE , "
+                + "  \"l_receiptdate\" DATE , "
+                + "  \"l_shipinstruct\" CHAR(25) , "
+                + "  \"l_shipmode\"     CHAR(10) , "
+                + "  \"l_comment\"      VARCHAR(44), "
+                + "  \"l_dummy\" varchar(10))",
+            schema));
+
+    // load data use insert
+    loadPrestoDataInMemory(schema, "nation", conn);
+    loadPrestoDataInMemory(schema, "region", conn);
+    loadPrestoDataInMemory(schema, "part", conn);
+    loadPrestoDataInMemory(schema, "supplier", conn);
+    loadPrestoDataInMemory(schema, "customer", conn);
+    loadPrestoDataInMemory(schema, "partsupp", conn);
+    loadPrestoDataInMemory(schema, "orders", conn);
+    loadPrestoDataInMemory(schema, "lineitem", conn);
+    return conn;
   }
 
   public static Connection setupPresto(
@@ -1456,6 +1635,73 @@ public class DatabaseConnectionHelpers {
     dbmsConn.execute(
         String.format(
             "INSERT INTO \"%s\".\"%s\" VALUES (%s)",
+            schema, table, Joiner.on(",").join(insertNullDataList)));
+
+    return conn;
+  }
+
+  public static Connection setupPrestoForDataTypeTestInMemory(
+      String connectionString, String user, String password, String schema, String table)
+      throws SQLException, VerdictDBDbmsException {
+    Connection conn = DriverManager.getConnection(connectionString, user, password);
+    DbmsConnection dbmsConn = new JdbcConnection(conn, new PrestoHiveSyntax());
+
+    dbmsConn.execute(String.format("CREATE SCHEMA IF NOT EXISTS memory.\"%s\"", schema));
+    dbmsConn.execute(String.format("DROP TABLE IF EXISTS memory.\"%s\".\"%s\"", schema, table));
+
+    dbmsConn.execute(
+        String.format(
+            "CREATE TABLE memory.\"%s\".\"%s\" ("
+                + "tinyintCol          TINYINT,"
+                + "boolCol             BOOLEAN,"
+                + "smallintCol         SMALLINT,"
+                + "integerCol          INTEGER,"
+                + "bigintCol           BIGINT,"
+                + "decimalCol          DECIMAL(4,2),"
+                + "realCol             REAL,"
+                + "doubleCol           DOUBLE,"
+                + "dateCol             DATE,"
+                + "timestampCol        TIMESTAMP,"
+                + "charCol             CHAR(4),"
+                + "varcharCol          VARCHAR(4))",
+            schema, table));
+
+    List<String> insertDataList = new ArrayList<>();
+    insertDataList.add("cast(1 as tinyint)"); // tinyint
+    insertDataList.add("true"); // boolean
+    insertDataList.add("cast(2 as smallint)"); // smallint
+    insertDataList.add("cast(3 as integer)"); // integer
+    insertDataList.add("cast(4 as bigint)"); // bigint
+    insertDataList.add("cast(5.0 as decimal(4,2))"); // decimal
+    insertDataList.add("cast(1.0 as real)"); // real
+    insertDataList.add("cast(1.0 as double)"); // double
+    insertDataList.add("cast('2018-12-31' as date)"); // date
+    insertDataList.add("cast('2018-12-31 00:00:01' as timestamp)"); // timestamp
+    insertDataList.add("cast('ab' as char(4))"); // char
+    insertDataList.add("cast('abcd' as varchar(4))"); // varchar
+
+    dbmsConn.execute(
+        String.format(
+            "INSERT INTO memory.\"%s\".\"%s\" VALUES (%s)",
+            schema, table, Joiner.on(",").join(insertDataList)));
+
+    List<String> insertNullDataList = new ArrayList<>();
+    insertNullDataList.add("NULL"); // tinyint
+    insertNullDataList.add("NULL"); // boolean
+    insertNullDataList.add("NULL"); // smallint
+    insertNullDataList.add("NULL"); // integer
+    insertNullDataList.add("NULL"); // bigint
+    insertNullDataList.add("NULL"); // decimal
+    insertNullDataList.add("NULL"); // real
+    insertNullDataList.add("NULL"); // double
+    insertNullDataList.add("NULL"); // date
+    insertNullDataList.add("NULL"); // timestamp
+    insertNullDataList.add("NULL"); // char
+    insertNullDataList.add("NULL"); // varchar
+
+    dbmsConn.execute(
+        String.format(
+            "INSERT INTO memory.\"%s\".\"%s\" VALUES (%s)",
             schema, table, Joiner.on(",").join(insertNullDataList)));
 
     return conn;

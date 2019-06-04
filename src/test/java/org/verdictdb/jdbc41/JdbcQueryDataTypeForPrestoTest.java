@@ -1,20 +1,5 @@
 package org.verdictdb.jdbc41;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -28,17 +13,31 @@ import org.verdictdb.commons.DatabaseConnectionHelpers;
 import org.verdictdb.commons.VerdictOption;
 import org.verdictdb.exception.VerdictDBException;
 
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 /**
- * Similar to JdbcQueryDataTypeForAllDatabasesTest, but uses a different class to exclude this
- * test from JDK7.
- * 
- * @author Yongjoo Park
+ * Similar to JdbcQueryDataTypeForAllDatabasesTest, but uses a different class to exclude this test
+ * from JDK7.
  *
+ * @author Yongjoo Park
  */
 @Category(PrestoTests.class)
 @RunWith(Parameterized.class)
 public class JdbcQueryDataTypeForPrestoTest {
-  
+
   private static Map<String, Connection> connMap = new HashMap<>();
 
   private static Map<String, VerdictConnection> vcMap = new HashMap<>();
@@ -46,18 +45,18 @@ public class JdbcQueryDataTypeForPrestoTest {
   private static Map<String, String> schemaMap = new HashMap<>();
 
   private static final String[] targetDatabases = {"presto"};
-  
+
   private String database;
-  
+
   // presto
   private static final String PRESTO_USER;
-  
+
   private static final String PRESTO_HOST;
-  
+
   private static final String PRESTO_CATALOG;
-  
+
   private static final String PRESTO_PASSWORD = "";
-  
+
   private static final String VERDICT_META_SCHEMA =
       "verdictdbmetaschema_" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
 
@@ -65,30 +64,33 @@ public class JdbcQueryDataTypeForPrestoTest {
       "verdictdbtempschema_" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
 
   private static VerdictOption options = new VerdictOption();
-  
+
   static {
-    PRESTO_HOST = System.getenv("VERDICTDB_TEST_PRESTO_HOST");
-    PRESTO_CATALOG = System.getenv("VERDICTDB_TEST_PRESTO_CATALOG");
-    PRESTO_USER = System.getenv("VERDICTDB_TEST_PRESTO_USER");
+    PRESTO_HOST = "localhost:8080";
+    PRESTO_CATALOG = "memory";
+    PRESTO_USER = "root";
+    //    PRESTO_HOST = System.getenv("VERDICTDB_TEST_PRESTO_HOST");
+    //    PRESTO_CATALOG = System.getenv("VERDICTDB_TEST_PRESTO_CATALOG");
+    //    PRESTO_USER = System.getenv("VERDICTDB_TEST_PRESTO_USER");
   }
-  
+
   private static final String SCHEMA_NAME =
       "data_type_test" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
 
   private static final String TABLE_NAME =
       "data_type_test" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
-  
+
   public JdbcQueryDataTypeForPrestoTest(String database) {
     this.database = database;
   }
-  
+
   @BeforeClass
   public static void setup() throws SQLException, VerdictDBException {
     options.setVerdictMetaSchemaName(VERDICT_META_SCHEMA);
     options.setVerdictTempSchemaName(VERDICT_TEMP_SCHEMA);
     setupPresto();
   }
-  
+
   @AfterClass
   public static void tearDown() throws SQLException {
     tearDownPresto();
@@ -103,80 +105,84 @@ public class JdbcQueryDataTypeForPrestoTest {
     }
     return params;
   }
-  
+
   private static void setupPresto() throws SQLException, VerdictDBException {
-    String connectionString =
-        String.format("jdbc:presto://%s/%s", PRESTO_HOST, PRESTO_CATALOG);
+    //    String connectionString =
+    //        String.format("jdbc:presto://%s/%s", PRESTO_HOST, PRESTO_CATALOG);
+    String connectionString = String.format("jdbc:presto://%s/memory", PRESTO_HOST);
     Connection conn =
-        DatabaseConnectionHelpers.setupPrestoForDataTypeTest(
+        DatabaseConnectionHelpers.setupPrestoForDataTypeTestInMemory(
             connectionString, PRESTO_USER, PRESTO_PASSWORD, SCHEMA_NAME, TABLE_NAME);
     VerdictConnection vc =
         new VerdictConnection(connectionString, PRESTO_USER, PRESTO_PASSWORD, options);
     conn.createStatement()
         .execute(
-            String.format("CREATE SCHEMA IF NOT EXISTS %s", options.getVerdictTempSchemaName()));
+            String.format(
+                "CREATE SCHEMA IF NOT EXISTS memory.%s", options.getVerdictTempSchemaName()));
     conn.createStatement()
         .execute(
-            String.format("CREATE SCHEMA IF NOT EXISTS %s", options.getVerdictMetaSchemaName()));
+            String.format(
+                "CREATE SCHEMA IF NOT EXISTS memory.%s", options.getVerdictMetaSchemaName()));
     connMap.put("presto", conn);
     vcMap.put("presto", vc);
     schemaMap.put("presto", "");
   }
-  
+
   private static void tearDownPresto() throws SQLException {
     Connection conn = connMap.get("presto");
     Statement stmt = conn.createStatement();
-    
+
     dropPrestoTablesInSchema(conn, SCHEMA_NAME);
-    stmt.execute(String.format("DROP SCHEMA IF EXISTS \"%s\"", SCHEMA_NAME));
-    
+    stmt.execute(String.format("DROP SCHEMA IF EXISTS memory.\"%s\"", SCHEMA_NAME));
+
     dropPrestoTablesInSchema(conn, options.getVerdictMetaSchemaName());
     stmt.execute(
-        String.format("DROP SCHEMA IF EXISTS \"%s\"", options.getVerdictMetaSchemaName()));
-    
+        String.format("DROP SCHEMA IF EXISTS memory.\"%s\"", options.getVerdictMetaSchemaName()));
+
     dropPrestoTablesInSchema(conn, options.getVerdictTempSchemaName());
     stmt.execute(
-        String.format("DROP SCHEMA IF EXISTS \"%s\"", options.getVerdictTempSchemaName()));
+        String.format("DROP SCHEMA IF EXISTS memory.\"%s\"", options.getVerdictTempSchemaName()));
     conn.close();
   }
-  
-  private static void dropPrestoTablesInSchema(Connection conn, String schema_name) 
+
+  private static void dropPrestoTablesInSchema(Connection conn, String schema_name)
       throws SQLException {
     Statement stmt = conn.createStatement();
     List<String> tables = getPrestoTablesInSchema(conn, schema_name);
     for (String table_name : tables) {
-      stmt.execute(String.format("drop table \"%s\".\"%s\"", schema_name, table_name));
+      stmt.execute(String.format("drop table memory.\"%s\".\"%s\"", schema_name, table_name));
     }
     stmt.close();
   }
-  
-  private static List<String> getPrestoTablesInSchema(Connection conn, String schema_name) 
+
+  private static List<String> getPrestoTablesInSchema(Connection conn, String schema_name)
       throws SQLException {
     List<String> tables = new ArrayList<>();
     Statement stmt = conn.createStatement();
     try {
-      ResultSet result = stmt.executeQuery(String.format("show tables in \"%s\"", schema_name));
-      while(result.next()) {
+      ResultSet result =
+          stmt.executeQuery(String.format("show tables in memory.\"%s\"", schema_name));
+      while (result.next()) {
         tables.add(result.getString(1));
       }
       result.close();
     } catch (SQLException e) {
-      
+
     } finally {
       stmt.close();
     }
-    
+
     return tables;
   }
-  
+
   @Test
   public void testDataType() throws SQLException, VerdictDBException {
     String sql = "";
     switch (database) {
       case "presto":
-        sql = 
+        sql =
             String.format(
-                "SELECT * FROM \"%s\".\"%s\" ORDER BY tinyintCol", SCHEMA_NAME, TABLE_NAME);
+                "SELECT * FROM memory.\"%s\".\"%s\" ORDER BY tinyintCol", SCHEMA_NAME, TABLE_NAME);
         break;
       default:
         fail(String.format("Database '%s' not supported.", database));
@@ -209,5 +215,4 @@ public class JdbcQueryDataTypeForPrestoTest {
       }
     }
   }
-
 }

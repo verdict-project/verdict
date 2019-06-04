@@ -59,10 +59,14 @@ public class PrestoUniformScramblingQueryTest {
   private static final String PRESTO_PASSWORD;
 
   static {
-    PRESTO_HOST = System.getenv("VERDICTDB_TEST_PRESTO_HOST");
-    PRESTO_CATALOG = System.getenv("VERDICTDB_TEST_PRESTO_CATALOG");
-    PRESTO_USER = System.getenv("VERDICTDB_TEST_PRESTO_USER");
-    PRESTO_PASSWORD = System.getenv("VERDICTDB_TEST_PRESTO_PASSWORD");
+    PRESTO_HOST = "localhost:8080";
+    PRESTO_CATALOG = "memory";
+    PRESTO_USER = "root";
+    PRESTO_PASSWORD = "";
+    //    PRESTO_HOST = System.getenv("VERDICTDB_TEST_PRESTO_HOST");
+    //    PRESTO_CATALOG = System.getenv("VERDICTDB_TEST_PRESTO_CATALOG");
+    //    PRESTO_USER = System.getenv("VERDICTDB_TEST_PRESTO_USER");
+    //    PRESTO_PASSWORD = System.getenv("VERDICTDB_TEST_PRESTO_PASSWORD");
   }
 
   private static final String SCHEMA_NAME =
@@ -81,37 +85,42 @@ public class PrestoUniformScramblingQueryTest {
   @AfterClass
   public static void tearDown() throws SQLException {
     ResultSet rs =
-        conn.createStatement().executeQuery(String.format("SHOW TABLES IN %s", SCHEMA_NAME));
-    while (rs.next()) {
-      conn.createStatement()
-          .execute(String.format("DROP TABLE IF EXISTS %s.%s", SCHEMA_NAME, rs.getString(1)));
-    }
-    rs.close();
-    conn.createStatement().execute(String.format("DROP SCHEMA IF EXISTS %s", SCHEMA_NAME));
-    conn.createStatement()
-        .execute(String.format("CREATE SCHEMA IF NOT EXISTS %s", VERDICT_META_SCHEMA));
-    rs =
-        conn.createStatement()
-            .executeQuery(String.format("SHOW TABLES IN %s", VERDICT_META_SCHEMA));
+        conn.createStatement().executeQuery(String.format("SHOW TABLES IN memory.%s", SCHEMA_NAME));
     while (rs.next()) {
       conn.createStatement()
           .execute(
-              String.format("DROP TABLE IF EXISTS %s.%s", VERDICT_META_SCHEMA, rs.getString(1)));
+              String.format("DROP TABLE IF EXISTS memory.%s.%s", SCHEMA_NAME, rs.getString(1)));
     }
     rs.close();
-    conn.createStatement().execute(String.format("DROP SCHEMA IF EXISTS %s", VERDICT_META_SCHEMA));
+    conn.createStatement().execute(String.format("DROP SCHEMA IF EXISTS memory.%s", SCHEMA_NAME));
     conn.createStatement()
-        .execute(String.format("CREATE SCHEMA IF NOT EXISTS %s", VERDICT_TEMP_SCHEMA));
+        .execute(String.format("CREATE SCHEMA IF NOT EXISTS memory.%s", VERDICT_META_SCHEMA));
     rs =
         conn.createStatement()
-            .executeQuery(String.format("SHOW TABLES IN %s", VERDICT_TEMP_SCHEMA));
+            .executeQuery(String.format("SHOW TABLES IN memory.%s", VERDICT_META_SCHEMA));
     while (rs.next()) {
       conn.createStatement()
           .execute(
-              String.format("DROP TABLE IF EXISTS %s.%s", VERDICT_TEMP_SCHEMA, rs.getString(1)));
+              String.format(
+                  "DROP TABLE IF EXISTS memory.%s.%s", VERDICT_META_SCHEMA, rs.getString(1)));
     }
     rs.close();
-    conn.createStatement().execute(String.format("DROP SCHEMA IF EXISTS %s", VERDICT_TEMP_SCHEMA));
+    conn.createStatement()
+        .execute(String.format("DROP SCHEMA IF EXISTS memory.%s", VERDICT_META_SCHEMA));
+    conn.createStatement()
+        .execute(String.format("CREATE SCHEMA IF NOT EXISTS memory.%s", VERDICT_TEMP_SCHEMA));
+    rs =
+        conn.createStatement()
+            .executeQuery(String.format("SHOW TABLES IN memory.%s", VERDICT_TEMP_SCHEMA));
+    while (rs.next()) {
+      conn.createStatement()
+          .execute(
+              String.format(
+                  "DROP TABLE IF EXISTS memory.%s.%s", VERDICT_TEMP_SCHEMA, rs.getString(1)));
+    }
+    rs.close();
+    conn.createStatement()
+        .execute(String.format("DROP SCHEMA IF EXISTS memory.%s", VERDICT_TEMP_SCHEMA));
   }
 
   private static Connection setupPresto() throws SQLException, VerdictDBDbmsException, IOException {
@@ -119,23 +128,30 @@ public class PrestoUniformScramblingQueryTest {
         String.format("jdbc:presto://%s/%s/default", PRESTO_HOST, PRESTO_CATALOG);
     String verdictConnectionString =
         String.format(
-            "jdbc:verdict:presto://%s/%s/default;verdictdbtempschema=%s&verdictdbmetaschema=%s",
-            PRESTO_HOST, PRESTO_CATALOG, VERDICT_TEMP_SCHEMA, VERDICT_META_SCHEMA);
+            "jdbc:verdict:presto://%s/memory/default;verdictdbtempschema=%s&verdictdbmetaschema=%s",
+            PRESTO_HOST, VERDICT_TEMP_SCHEMA, VERDICT_META_SCHEMA);
+    //    String verdictConnectionString =
+    //        String.format(
+    //
+    // "jdbc:verdict:presto://%s/%s/default;verdictdbtempschema=%s&verdictdbmetaschema=%s",
+    //            PRESTO_HOST, PRESTO_CATALOG, VERDICT_TEMP_SCHEMA, VERDICT_META_SCHEMA);
     conn =
-        DatabaseConnectionHelpers.setupPresto(
+        DatabaseConnectionHelpers.setupPrestoInMemory(
             connectionString, PRESTO_USER, PRESTO_PASSWORD, SCHEMA_NAME);
     vc = DriverManager.getConnection(verdictConnectionString, PRESTO_USER, PRESTO_PASSWORD);
     conn.createStatement()
         .execute(
-            String.format("CREATE SCHEMA IF NOT EXISTS %s", options.getVerdictTempSchemaName()));
+            String.format(
+                "CREATE SCHEMA IF NOT EXISTS memory.%s", options.getVerdictTempSchemaName()));
     vc.createStatement()
         .execute(
             String.format(
-                "CREATE SCRAMBLE %s.orders_scramble FROM %s.orders", SCHEMA_NAME, SCHEMA_NAME));
+                "CREATE SCRAMBLE memory.%s.orders_scramble FROM memory.%s.orders",
+                SCHEMA_NAME, SCHEMA_NAME));
     return conn;
   }
 
-  @Test
+  //  @Test
   public void checkExistingPartitionTest() throws SQLException {
     String sql = String.format("DESCRIBE %s.orders_scramble", SCHEMA_NAME);
     ResultSet rs = conn.createStatement().executeQuery(sql);
@@ -194,7 +210,7 @@ public class PrestoUniformScramblingQueryTest {
     String sql =
         String.format(
             "SELECT AVG(\"orders\".\"o_totalprice\") as \"avg_price\"\n"
-                + "FROM \"%s\".\"orders\" \"orders\"\n",
+                + "FROM memory.\"%s\".\"orders\" \"orders\"\n",
             SCHEMA_NAME, SCHEMA_NAME);
     ResultSet rs1 = vc.createStatement().executeQuery(sql);
     ResultSet rs2 = conn.createStatement().executeQuery(sql);
@@ -213,7 +229,7 @@ public class PrestoUniformScramblingQueryTest {
     String sql =
         String.format(
             "SELECT AVG(\"orders\".\"o_totalprice\") as \"avg_price\"\n"
-                + "FROM \"%s\".\"orders\" \"orders\"\n"
+                + "FROM memory.\"%s\".\"orders\" \"orders\"\n"
                 + "GROUP BY o_orderstatus\n"
                 + "HAVING avg(\"orders\".\"o_orderkey\") > 10\n"
                 + "ORDER BY avg(o_orderkey) + min(o_orderkey) + max(o_orderkey)\n",
@@ -235,7 +251,7 @@ public class PrestoUniformScramblingQueryTest {
     String sql =
         String.format(
             "SELECT o_orderpriority, COUNT(\"orders\".\"o_orderkey\") as \"cnt\"\n"
-                + "FROM \"%s\".\"orders\" \"orders\"\n"
+                + "FROM memory.\"%s\".\"orders\" \"orders\"\n"
                 + "GROUP BY o_orderpriority\n"
                 + "HAVING max(\"orders\".\"o_totalprice\") >=\n"
                 + "1000\n"
@@ -265,7 +281,7 @@ public class PrestoUniformScramblingQueryTest {
     String sql =
         String.format(
             "SELECT o_orderpriority, COUNT(\"orders\".\"o_orderkey\") as \"cnt\"\n"
-                + "FROM \"%s\".\"orders\" \"orders\"\n"
+                + "FROM memory.\"%s\".\"orders\" \"orders\"\n"
                 + "GROUP BY o_orderpriority\n"
                 + "HAVING max(\"orders\".\"o_totalprice\") >=\n"
                 + "(SELECT avg(\"orders\".\"o_totalprice\") FROM \"%s\".\"orders\" \"orders\")\n"

@@ -7,10 +7,10 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.verdictdb.category.PrestoTests;
-import org.verdictdb.commons.DatabaseConnectionHelpers;
 import org.verdictdb.commons.VerdictOption;
 import org.verdictdb.connection.CachedDbmsConnection;
 import org.verdictdb.connection.DbmsConnection;
@@ -20,11 +20,12 @@ import org.verdictdb.core.resulthandler.ExecutionResultReader;
 import org.verdictdb.core.scrambling.ScrambleMeta;
 import org.verdictdb.core.scrambling.ScrambleMetaSet;
 import org.verdictdb.exception.VerdictDBException;
-import org.verdictdb.sqlsyntax.PrestoHiveSyntax;
+import org.verdictdb.sqlsyntax.PrestoMemorySyntax;
 
 import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -56,26 +57,51 @@ public class PrestoTpchSelectQueryCoordinatorTest {
   private static final String PRESTO_PASSWORD;
 
   static {
-    PRESTO_HOST = System.getenv("VERDICTDB_TEST_PRESTO_HOST");
-    PRESTO_CATALOG = System.getenv("VERDICTDB_TEST_PRESTO_CATALOG");
-    PRESTO_USER = System.getenv("VERDICTDB_TEST_PRESTO_USER");
-    PRESTO_PASSWORD = System.getenv("VERDICTDB_TEST_PRESTO_PASSWORD");
+    PRESTO_HOST = "localhost:8080";
+    PRESTO_CATALOG = "memory";
+    PRESTO_USER = "root";
+    PRESTO_PASSWORD = "";
+    //    PRESTO_HOST = System.getenv("VERDICTDB_TEST_PRESTO_HOST");
+    //    PRESTO_CATALOG = System.getenv("VERDICTDB_TEST_PRESTO_CATALOG");
+    //    PRESTO_USER = System.getenv("VERDICTDB_TEST_PRESTO_USER");
+    //    PRESTO_PASSWORD = System.getenv("VERDICTDB_TEST_PRESTO_PASSWORD");
   }
 
   private static final String PRESTO_SCHEMA =
       "coordinator_test_" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
 
+  private static final String TPCH_SCHEMA = "tpch.tiny";
+
   @BeforeClass
   public static void setupPrestoDatabase() throws SQLException, VerdictDBException, IOException {
-    String prestoConnectionString =
-        String.format("jdbc:presto://%s/%s/default", PRESTO_HOST, PRESTO_CATALOG);
-    conn =
-        DatabaseConnectionHelpers.setupPresto(
-            prestoConnectionString, PRESTO_USER, PRESTO_PASSWORD, PRESTO_SCHEMA);
+    //    String prestoConnectionString =
+    //        String.format("jdbc:presto://%s/%s/default", PRESTO_HOST, PRESTO_CATALOG);
+    String prestoConnectionString = String.format("jdbc:presto://%s/memory", PRESTO_HOST);
+    conn = DriverManager.getConnection(prestoConnectionString, "root", "");
+    //    conn = DriverManager.getConnection(prestoConnectionString, PRESTO_USER, PRESTO_PASSWORD);
+    //    conn =
+    //        DatabaseConnectionHelpers.setupPresto(
+    //            prestoConnectionString, PRESTO_USER, PRESTO_PASSWORD, PRESTO_SCHEMA);
+
     conn.setCatalog(PRESTO_CATALOG);
     stmt = conn.createStatement();
-    stmt.execute(String.format("use %s", PRESTO_SCHEMA));
+    stmt.execute(String.format("use %s", "memory." + PRESTO_SCHEMA));
     DbmsConnection dbmsConn = JdbcConnection.create(conn);
+
+    // Clean leftover schemas
+    ResultSet rs = conn.createStatement().executeQuery("SHOW SCHEMAS IN memory");
+    while (rs.next()) {
+      String schema = rs.getString(1);
+      if (!schema.equalsIgnoreCase(PRESTO_SCHEMA) && schema.startsWith("coordinator_test_")) {
+        ResultSet rs2 =
+            conn.createStatement().executeQuery(String.format("SHOW TABLES IN memory.%s", schema));
+        while (rs2.next()) {
+          String table = rs2.getString(1);
+          conn.createStatement().execute(String.format("DROP TABLE memory.%s.%s", schema, table));
+        }
+        conn.createStatement().execute(String.format("DROP SCHEMA IF EXISTS memory.%s", schema));
+      }
+    }
 
     // Create Scramble table
     dbmsConn.execute(String.format("DROP TABLE IF EXISTS %s.lineitem_scrambled", PRESTO_SCHEMA));
@@ -86,18 +112,12 @@ public class PrestoTpchSelectQueryCoordinatorTest {
     ScramblingCoordinator scrambler =
         new ScramblingCoordinator(dbmsConn, PRESTO_SCHEMA, PRESTO_SCHEMA, (long) 100);
     ScrambleMeta meta1 =
-        scrambler.scramble(
-            PRESTO_SCHEMA, "lineitem", PRESTO_SCHEMA, "lineitem_scrambled", "uniform");
+        scrambler.scramble(TPCH_SCHEMA, "lineitem", PRESTO_SCHEMA, "lineitem_scrambled", "uniform");
     ScrambleMeta meta2 =
-        scrambler.scramble(PRESTO_SCHEMA, "orders", PRESTO_SCHEMA, "orders_scrambled", "uniform");
+        scrambler.scramble(TPCH_SCHEMA, "orders", PRESTO_SCHEMA, "orders_scrambled", "uniform");
     ScrambleMeta meta3 =
         scrambler.scramble(
-            PRESTO_SCHEMA,
-            "lineitem",
-            PRESTO_SCHEMA,
-            "lineitem_hash_scrambled",
-            "hash",
-            "l_orderkey");
+            TPCH_SCHEMA, "lineitem", PRESTO_SCHEMA, "lineitem_hash_scrambled", "hash", "orderkey");
     meta.addScrambleMeta(meta1);
     meta.addScrambleMeta(meta2);
     meta.addScrambleMeta(meta3);
@@ -106,15 +126,21 @@ public class PrestoTpchSelectQueryCoordinatorTest {
   Pair<ExecutionResultReader, ResultSet> getAnswerPair(int queryNum)
       throws VerdictDBException, SQLException, IOException {
     String filename = "query" + queryNum + ".sql";
-    File file = new File("src/test/resources/tpch_test_query/presto/" + filename);
-    String sql = Files.toString(file, Charsets.UTF_8);
-    JdbcConnection jdbcConn = new JdbcConnection(conn, new PrestoHiveSyntax());
+    File file = new File("src/test/resources/tpch_test_query/presto_new/" + filename);
+    String origSql = Files.toString(file, Charsets.UTF_8);
+    JdbcConnection jdbcConn = new JdbcConnection(conn, new PrestoMemorySyntax());
     jdbcConn.setOutputDebugMessage(true);
     DbmsConnection dbmsconn = new CachedDbmsConnection(jdbcConn);
     dbmsconn.setDefaultSchema(PRESTO_SCHEMA);
+    String sql = origSql.replaceAll("TPCH_SCHEMA", TPCH_SCHEMA);
+    sql = sql.replaceAll("SCRAMBLE_SCHEMA", TPCH_SCHEMA);
+
     ResultSet rs = stmt.executeQuery(sql);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn, options);
     coordinator.setScrambleMetaSet(meta);
+
+    sql = origSql.replaceAll("TPCH_SCHEMA", TPCH_SCHEMA);
+    sql = sql.replaceAll("SCRAMBLE_SCHEMA", "memory." + PRESTO_SCHEMA);
 
     if (queryNum >= 100) {
       sql = sql.replaceAll("lineitem", "lineitem_hash_scrambled");
@@ -157,7 +183,7 @@ public class PrestoTpchSelectQueryCoordinatorTest {
       DbmsQueryResult dbmsQueryResult = reader.next();
       cnt++;
 
-      if (cnt == 10) {
+      if (cnt == blockSize) {
         while (rs.next()) {
           dbmsQueryResult.next();
           assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
@@ -166,7 +192,7 @@ public class PrestoTpchSelectQueryCoordinatorTest {
         }
       }
     }
-    assertEquals(10, cnt);
+    assertEquals(blockSize, cnt);
   }
 
   @Test
@@ -179,14 +205,14 @@ public class PrestoTpchSelectQueryCoordinatorTest {
       DbmsQueryResult dbmsQueryResult = reader.next();
       cnt++;
 
-      if (cnt == 10) {
+      if (cnt == blockSize) {
         while (rs.next()) {
           dbmsQueryResult.next();
           assertEquals(convertObjectToLong(rs.getLong(1)), dbmsQueryResult.getLong(0));
         }
       }
     }
-    assertEquals(10, cnt);
+    assertEquals(blockSize, cnt);
   }
 
   @Test
@@ -199,14 +225,14 @@ public class PrestoTpchSelectQueryCoordinatorTest {
       DbmsQueryResult dbmsQueryResult = reader.next();
       cnt++;
 
-      if (cnt == 10) {
+      if (cnt == blockSize) {
         while (rs.next()) {
           dbmsQueryResult.next();
           assertEquals(convertObjectToLong(rs.getLong(1)), dbmsQueryResult.getLong(0));
         }
       }
     }
-    assertEquals(10, cnt);
+    assertEquals(blockSize, cnt);
   }
 
   @Test
@@ -221,7 +247,7 @@ public class PrestoTpchSelectQueryCoordinatorTest {
 
       // Note: due to the property of approx_distinct
       // the sum is not exactly equal to the original approx_distinct
-      if (cnt == 10) {
+      if (cnt == blockSize) {
         while (rs.next()) {
           dbmsQueryResult.next();
           long lowerBound = (long) (dbmsQueryResult.getLong(0) * 0.8);
@@ -231,7 +257,7 @@ public class PrestoTpchSelectQueryCoordinatorTest {
         }
       }
     }
-    assertEquals(10, cnt);
+    assertEquals(blockSize, cnt);
   }
 
   @Test
@@ -243,7 +269,7 @@ public class PrestoTpchSelectQueryCoordinatorTest {
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
       cnt++;
-      if (cnt == 10) {
+      if (cnt == blockSize) {
         while (rs.next()) {
           dbmsQueryResult.next();
           assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
@@ -259,7 +285,7 @@ public class PrestoTpchSelectQueryCoordinatorTest {
         }
       }
     }
-    assertEquals(10, cnt);
+    assertEquals(blockSize, cnt);
   }
 
   @Test
@@ -267,21 +293,21 @@ public class PrestoTpchSelectQueryCoordinatorTest {
     Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(3);
     ExecutionResultReader reader = answerPair.getLeft();
     ResultSet rs = answerPair.getRight();
+    DbmsQueryResult dbmsQueryResult = null;
+
     int cnt = 0;
     while (reader.hasNext()) {
-      DbmsQueryResult dbmsQueryResult = reader.next();
+      dbmsQueryResult = reader.next();
       cnt++;
-      if (cnt == 12) {
-        while (rs.next()) {
-          dbmsQueryResult.next();
-          assertEquals(convertObjectToDouble(rs.getObject(1)), dbmsQueryResult.getDouble(0), 1);
-          assertEquals(convertObjectToDouble(rs.getObject(2)), dbmsQueryResult.getDouble(1), 1);
-          assertEquals(rs.getString(3), dbmsQueryResult.getString(2));
-          assertEquals(rs.getString(4), dbmsQueryResult.getString(3));
-        }
-      }
     }
-    assertEquals(12, cnt);
+    assertEquals(199, cnt);
+    while (rs.next()) {
+      dbmsQueryResult.next();
+      assertEquals(convertObjectToDouble(rs.getObject(1)), dbmsQueryResult.getDouble(0), 1);
+      assertEquals(convertObjectToDouble(rs.getObject(2)), dbmsQueryResult.getDouble(1), 1);
+      assertEquals(rs.getString(3), dbmsQueryResult.getString(2));
+      assertEquals(rs.getString(4), dbmsQueryResult.getString(3));
+    }
   }
 
   @Test
@@ -289,19 +315,18 @@ public class PrestoTpchSelectQueryCoordinatorTest {
     Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(4);
     ExecutionResultReader reader = answerPair.getLeft();
     ResultSet rs = answerPair.getRight();
+    DbmsQueryResult dbmsQueryResult = null;
     int cnt = 0;
     while (reader.hasNext()) {
-      DbmsQueryResult dbmsQueryResult = reader.next();
+      dbmsQueryResult = reader.next();
       cnt++;
-      if (cnt == 12) {
-        while (rs.next()) {
-          dbmsQueryResult.next();
-          assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
-          assertEquals(convertObjectToDouble(rs.getObject(2)), dbmsQueryResult.getDouble(1), 1);
-        }
-      }
     }
-    assertEquals(12, cnt);
+    assertEquals(199, cnt);
+    while (rs.next()) {
+      dbmsQueryResult.next();
+      assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
+      assertEquals(convertObjectToDouble(rs.getObject(2)), dbmsQueryResult.getDouble(1), 1);
+    }
   }
 
   @Test
@@ -309,19 +334,18 @@ public class PrestoTpchSelectQueryCoordinatorTest {
     Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(5);
     ExecutionResultReader reader = answerPair.getLeft();
     ResultSet rs = answerPair.getRight();
+    DbmsQueryResult dbmsQueryResult = null;
     int cnt = 0;
     while (reader.hasNext()) {
-      DbmsQueryResult dbmsQueryResult = reader.next();
+      dbmsQueryResult = reader.next();
       cnt++;
-      if (cnt == 12) {
-        while (rs.next()) {
-          dbmsQueryResult.next();
-          assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
-          assertEquals(convertObjectToDouble(rs.getObject(2)), dbmsQueryResult.getDouble(1), 1);
-        }
-      }
     }
-    assertEquals(12, cnt);
+    assertEquals(199, cnt);
+    while (rs.next()) {
+      dbmsQueryResult.next();
+      assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
+      assertEquals(convertObjectToDouble(rs.getObject(2)), dbmsQueryResult.getDouble(1), 1);
+    }
   }
 
   @Test
@@ -329,18 +353,17 @@ public class PrestoTpchSelectQueryCoordinatorTest {
     Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(6);
     ExecutionResultReader reader = answerPair.getLeft();
     ResultSet rs = answerPair.getRight();
+    DbmsQueryResult dbmsQueryResult = null;
     int cnt = 0;
     while (reader.hasNext()) {
-      DbmsQueryResult dbmsQueryResult = reader.next();
+      dbmsQueryResult = reader.next();
       cnt++;
-      if (cnt == 10) {
-        while (rs.next()) {
-          dbmsQueryResult.next();
-          assertEquals(convertObjectToDouble(rs.getObject(1)), dbmsQueryResult.getDouble(0), 1);
-        }
-      }
     }
-    assertEquals(10, cnt);
+    assertEquals(100, cnt);
+    while (rs.next()) {
+      dbmsQueryResult.next();
+      assertEquals(convertObjectToDouble(rs.getObject(1)), dbmsQueryResult.getDouble(0), 1);
+    }
   }
 
   @Test
@@ -348,21 +371,20 @@ public class PrestoTpchSelectQueryCoordinatorTest {
     Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(7);
     ExecutionResultReader reader = answerPair.getLeft();
     ResultSet rs = answerPair.getRight();
+    DbmsQueryResult dbmsQueryResult = null;
     int cnt = 0;
     while (reader.hasNext()) {
-      DbmsQueryResult dbmsQueryResult = reader.next();
+      dbmsQueryResult = reader.next();
       cnt++;
-      if (cnt == 12) {
-        while (rs.next()) {
-          dbmsQueryResult.next();
-          assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
-          assertEquals(rs.getString(2), dbmsQueryResult.getString(1));
-          assertEquals(rs.getString(3), dbmsQueryResult.getString(2));
-          assertEquals(convertObjectToDouble(rs.getObject(4)), dbmsQueryResult.getDouble(3), 1);
-        }
-      }
     }
-    assertEquals(12, cnt);
+    assertEquals(199, cnt);
+    while (rs.next()) {
+      dbmsQueryResult.next();
+      assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
+      assertEquals(rs.getString(2), dbmsQueryResult.getString(1));
+      assertEquals(rs.getString(3), dbmsQueryResult.getString(2));
+      assertEquals(convertObjectToDouble(rs.getObject(4)), dbmsQueryResult.getDouble(3), 1);
+    }
   }
 
   @Test
@@ -370,20 +392,19 @@ public class PrestoTpchSelectQueryCoordinatorTest {
     Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(8);
     ExecutionResultReader reader = answerPair.getLeft();
     ResultSet rs = answerPair.getRight();
+    DbmsQueryResult dbmsQueryResult = null;
     int cnt = 0;
     while (reader.hasNext()) {
-      DbmsQueryResult dbmsQueryResult = reader.next();
+      dbmsQueryResult = reader.next();
       cnt++;
-      if (cnt == 12) {
-        while (rs.next()) {
-          dbmsQueryResult.next();
-          assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
-          assertEquals(convertObjectToDouble(rs.getObject(2)), dbmsQueryResult.getDouble(1), 1);
-          assertEquals(convertObjectToDouble(rs.getObject(3)), dbmsQueryResult.getDouble(2), 1);
-        }
-      }
     }
-    assertEquals(12, cnt);
+    assertEquals(199, cnt);
+    while (rs.next()) {
+      dbmsQueryResult.next();
+      assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
+      assertEquals(convertObjectToDouble(rs.getObject(2)), dbmsQueryResult.getDouble(1), 1);
+      assertEquals(convertObjectToDouble(rs.getObject(3)), dbmsQueryResult.getDouble(2), 1);
+    }
   }
 
   @Test
@@ -391,20 +412,19 @@ public class PrestoTpchSelectQueryCoordinatorTest {
     Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(9);
     ExecutionResultReader reader = answerPair.getLeft();
     ResultSet rs = answerPair.getRight();
+    DbmsQueryResult dbmsQueryResult = null;
     int cnt = 0;
     while (reader.hasNext()) {
-      DbmsQueryResult dbmsQueryResult = reader.next();
+      dbmsQueryResult = reader.next();
       cnt++;
-      if (cnt == 12) {
-        while (rs.next()) {
-          dbmsQueryResult.next();
-          assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
-          assertEquals(rs.getString(2), dbmsQueryResult.getString(1));
-          assertEquals(convertObjectToDouble(rs.getObject(3)), dbmsQueryResult.getDouble(2), 1);
-        }
-      }
     }
-    assertEquals(12, cnt);
+    assertEquals(199, cnt);
+    while (rs.next()) {
+      dbmsQueryResult.next();
+      assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
+      assertEquals(rs.getString(2), dbmsQueryResult.getString(1));
+      assertEquals(convertObjectToDouble(rs.getObject(3)), dbmsQueryResult.getDouble(2), 1);
+    }
   }
 
   @Test
@@ -412,20 +432,19 @@ public class PrestoTpchSelectQueryCoordinatorTest {
     Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(10);
     ExecutionResultReader reader = answerPair.getLeft();
     ResultSet rs = answerPair.getRight();
+    DbmsQueryResult dbmsQueryResult = null;
     int cnt = 0;
     while (reader.hasNext()) {
-      DbmsQueryResult dbmsQueryResult = reader.next();
+      dbmsQueryResult = reader.next();
       cnt++;
-      if (cnt == 12) {
-        while (rs.next()) {
-          dbmsQueryResult.next();
-          assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
-          assertEquals(rs.getString(2), dbmsQueryResult.getString(1));
-          assertEquals(convertObjectToDouble(rs.getObject(3)), dbmsQueryResult.getDouble(2), 1);
-        }
-      }
     }
-    assertEquals(12, cnt);
+    assertEquals(199, cnt);
+    while (rs.next()) {
+      dbmsQueryResult.next();
+      assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
+      assertEquals(rs.getString(2), dbmsQueryResult.getString(1));
+      assertEquals(convertObjectToDouble(rs.getObject(3)), dbmsQueryResult.getDouble(2), 1);
+    }
   }
 
   @Test
@@ -433,20 +452,19 @@ public class PrestoTpchSelectQueryCoordinatorTest {
     Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(12);
     ExecutionResultReader reader = answerPair.getLeft();
     ResultSet rs = answerPair.getRight();
+    DbmsQueryResult dbmsQueryResult = null;
     int cnt = 0;
     while (reader.hasNext()) {
-      DbmsQueryResult dbmsQueryResult = reader.next();
+      dbmsQueryResult = reader.next();
       cnt++;
-      if (cnt == 12) {
-        while (rs.next()) {
-          dbmsQueryResult.next();
-          assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
-          assertEquals(convertObjectToDouble(rs.getObject(2)), dbmsQueryResult.getDouble(1), 1);
-          assertEquals(convertObjectToDouble(rs.getObject(3)), dbmsQueryResult.getDouble(2), 1);
-        }
-      }
     }
-    assertEquals(12, cnt);
+    assertEquals(199, cnt);
+    while (rs.next()) {
+      dbmsQueryResult.next();
+      assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
+      assertEquals(convertObjectToDouble(rs.getObject(2)), dbmsQueryResult.getDouble(1), 1);
+      assertEquals(convertObjectToDouble(rs.getObject(3)), dbmsQueryResult.getDouble(2), 1);
+    }
   }
 
   @Test
@@ -454,19 +472,18 @@ public class PrestoTpchSelectQueryCoordinatorTest {
     Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(13);
     ExecutionResultReader reader = answerPair.getLeft();
     ResultSet rs = answerPair.getRight();
+    DbmsQueryResult dbmsQueryResult = null;
     int cnt = 0;
     while (reader.hasNext()) {
-      DbmsQueryResult dbmsQueryResult = reader.next();
+      dbmsQueryResult = reader.next();
       cnt++;
-      if (cnt == 3) {
-        while (rs.next()) {
-          dbmsQueryResult.next();
-          assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
-          assertEquals(convertObjectToDouble(rs.getObject(2)), dbmsQueryResult.getDouble(1), 1);
-        }
-      }
     }
-    assertEquals(3, cnt);
+    assertEquals(100, cnt);
+    while (rs.next()) {
+      dbmsQueryResult.next();
+      assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
+      assertEquals(convertObjectToDouble(rs.getObject(2)), dbmsQueryResult.getDouble(1), 1);
+    }
   }
 
   @Test
@@ -474,19 +491,18 @@ public class PrestoTpchSelectQueryCoordinatorTest {
     Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(14);
     ExecutionResultReader reader = answerPair.getLeft();
     ResultSet rs = answerPair.getRight();
+    DbmsQueryResult dbmsQueryResult = null;
     int cnt = 0;
     while (reader.hasNext()) {
-      DbmsQueryResult dbmsQueryResult = reader.next();
+      dbmsQueryResult = reader.next();
       cnt++;
-      if (cnt == 10) {
-        while (rs.next()) {
-          dbmsQueryResult.next();
-          assertEquals(convertObjectToDouble(rs.getObject(2)), dbmsQueryResult.getDouble(1), 1);
-          assertEquals(convertObjectToDouble(rs.getObject(1)), dbmsQueryResult.getDouble(0), 1);
-        }
-      }
     }
-    assertEquals(10, cnt);
+    assertEquals(100, cnt);
+    while (rs.next()) {
+      dbmsQueryResult.next();
+      assertEquals(convertObjectToDouble(rs.getObject(2)), dbmsQueryResult.getDouble(1), 1);
+      assertEquals(convertObjectToDouble(rs.getObject(1)), dbmsQueryResult.getDouble(0), 1);
+    }
   }
 
   @Test
@@ -494,19 +510,18 @@ public class PrestoTpchSelectQueryCoordinatorTest {
     Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(15);
     ExecutionResultReader reader = answerPair.getLeft();
     ResultSet rs = answerPair.getRight();
+    DbmsQueryResult dbmsQueryResult = null;
     int cnt = 0;
     while (reader.hasNext()) {
-      DbmsQueryResult dbmsQueryResult = reader.next();
+      dbmsQueryResult = reader.next();
       cnt++;
-      if (cnt == 10) {
-        while (rs.next()) {
-          dbmsQueryResult.next();
-          assertEquals(convertObjectToDouble(rs.getObject(2)), dbmsQueryResult.getDouble(1), 1);
-          assertEquals(convertObjectToDouble(rs.getObject(1)), dbmsQueryResult.getDouble(0), 1);
-        }
-      }
     }
-    assertEquals(10, cnt);
+    assertEquals(100, cnt);
+    while (rs.next()) {
+      dbmsQueryResult.next();
+      assertEquals(convertObjectToDouble(rs.getObject(2)), dbmsQueryResult.getDouble(1), 1);
+      assertEquals(convertObjectToDouble(rs.getObject(1)), dbmsQueryResult.getDouble(0), 1);
+    }
   }
 
   @Test
@@ -514,42 +529,43 @@ public class PrestoTpchSelectQueryCoordinatorTest {
     Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(17);
     ExecutionResultReader reader = answerPair.getLeft();
     ResultSet rs = answerPair.getRight();
+    DbmsQueryResult dbmsQueryResult = null;
     int cnt = 0;
     while (reader.hasNext()) {
-      DbmsQueryResult dbmsQueryResult = reader.next();
+      dbmsQueryResult = reader.next();
       cnt++;
-      if (cnt == 10) {
-        while (rs.next()) {
-          dbmsQueryResult.next();
-          assertEquals(convertObjectToDouble(rs.getObject(1)), dbmsQueryResult.getDouble(0), 1);
-        }
-      }
     }
-    assertEquals(10, cnt);
+    assertEquals(100, cnt);
+    while (rs.next()) {
+      dbmsQueryResult.next();
+      assertEquals(convertObjectToDouble(rs.getObject(1)), dbmsQueryResult.getDouble(0), 1);
+    }
   }
 
+  // has the problem of 'Max requests queued per destination 1024 exceeded for HttpDestination' for
+  // in memory unit testing
+  @Ignore
   @Test
   public void query18Test() throws VerdictDBException, SQLException, IOException {
     Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(18);
     ExecutionResultReader reader = answerPair.getLeft();
     ResultSet rs = answerPair.getRight();
+    DbmsQueryResult dbmsQueryResult = null;
     int cnt = 0;
     while (reader.hasNext()) {
-      DbmsQueryResult dbmsQueryResult = reader.next();
+      dbmsQueryResult = reader.next();
       cnt++;
-      if (cnt == 12) {
-        while (rs.next()) {
-          dbmsQueryResult.next();
-          assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
-          assertEquals(rs.getString(2), dbmsQueryResult.getString(1));
-          assertEquals(rs.getString(3), dbmsQueryResult.getString(2));
-          assertEquals(rs.getString(4), dbmsQueryResult.getString(3));
-          assertEquals(rs.getString(5), dbmsQueryResult.getString(4));
-          assertEquals(convertObjectToDouble(rs.getObject(6)), dbmsQueryResult.getDouble(5), 1);
-        }
-      }
     }
-    assertEquals(12, cnt);
+    assertEquals(199, cnt);
+    while (rs.next()) {
+      dbmsQueryResult.next();
+      assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
+      assertEquals(rs.getString(2), dbmsQueryResult.getString(1));
+      assertEquals(rs.getString(3), dbmsQueryResult.getString(2));
+      assertEquals(rs.getString(4), dbmsQueryResult.getString(3));
+      assertEquals(rs.getString(5), dbmsQueryResult.getString(4));
+      assertEquals(convertObjectToDouble(rs.getObject(6)), dbmsQueryResult.getDouble(5), 1);
+    }
   }
 
   @Test
@@ -557,18 +573,17 @@ public class PrestoTpchSelectQueryCoordinatorTest {
     Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(19);
     ExecutionResultReader reader = answerPair.getLeft();
     ResultSet rs = answerPair.getRight();
+    DbmsQueryResult dbmsQueryResult = null;
     int cnt = 0;
     while (reader.hasNext()) {
-      DbmsQueryResult dbmsQueryResult = reader.next();
+      dbmsQueryResult = reader.next();
       cnt++;
-      if (cnt == 10) {
-        while (rs.next()) {
-          dbmsQueryResult.next();
-          assertEquals(convertObjectToDouble(rs.getObject(1)), dbmsQueryResult.getDouble(0), 1);
-        }
-      }
     }
-    assertEquals(10, cnt);
+    assertEquals(100, cnt);
+    while (rs.next()) {
+      dbmsQueryResult.next();
+      assertEquals(convertObjectToDouble(rs.getObject(1)), dbmsQueryResult.getDouble(0), 1);
+    }
   }
 
   @Test
@@ -576,49 +591,51 @@ public class PrestoTpchSelectQueryCoordinatorTest {
     Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(20);
     ExecutionResultReader reader = answerPair.getLeft();
     ResultSet rs = answerPair.getRight();
+    DbmsQueryResult dbmsQueryResult = null;
     int cnt = 0;
     while (reader.hasNext()) {
-      DbmsQueryResult dbmsQueryResult = reader.next();
+      dbmsQueryResult = reader.next();
       cnt++;
-      if (cnt == 10) {
-        while (rs.next()) {
-          dbmsQueryResult.next();
-          assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
-          assertEquals(convertObjectToDouble(rs.getObject(2)), dbmsQueryResult.getDouble(1), 1);
-        }
-      }
     }
-    assertEquals(10, cnt);
+    assertEquals(100, cnt);
+    while (rs.next()) {
+      dbmsQueryResult.next();
+      assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
+      assertEquals(convertObjectToDouble(rs.getObject(2)), dbmsQueryResult.getDouble(1), 1);
+    }
   }
 
+  // has the problem of 'Max requests queued per destination 1024 exceeded for HttpDestination' for
+  // in memory unit testing
+  @Ignore
   @Test
   public void query21Test() throws VerdictDBException, SQLException, IOException {
     Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(21);
     ExecutionResultReader reader = answerPair.getLeft();
     ResultSet rs = answerPair.getRight();
+    DbmsQueryResult dbmsQueryResult = null;
     int cnt = 0;
     while (reader.hasNext()) {
-      DbmsQueryResult dbmsQueryResult = reader.next();
+      dbmsQueryResult = reader.next();
       cnt++;
-      if (cnt == 12) {
-        while (rs.next()) {
-          dbmsQueryResult.next();
-          assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
-          assertEquals(convertObjectToDouble(rs.getObject(2)), dbmsQueryResult.getDouble(1), 1);
-        }
-      }
     }
-    assertEquals(12, cnt);
+    assertEquals(199, cnt);
+    while (rs.next()) {
+      dbmsQueryResult.next();
+      assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
+      assertEquals(convertObjectToDouble(rs.getObject(2)), dbmsQueryResult.getDouble(1), 1);
+    }
   }
 
   @AfterClass
   public static void tearDown() throws SQLException {
-    ResultSet rs = stmt.executeQuery(String.format("SHOW TABLES IN %s", PRESTO_SCHEMA));
+    ResultSet rs = stmt.executeQuery(String.format("SHOW TABLES IN memory.%s", PRESTO_SCHEMA));
     while (rs.next()) {
-      stmt.execute(String.format("DROP TABLE IF EXISTS %s.%s", PRESTO_SCHEMA, rs.getString(1)));
+      stmt.execute(
+          String.format("DROP TABLE IF EXISTS memory.%s.%s", PRESTO_SCHEMA, rs.getString(1)));
     }
     rs.close();
-    stmt.execute(String.format("DROP SCHEMA IF EXISTS %s", PRESTO_SCHEMA));
+    stmt.execute(String.format("DROP SCHEMA IF EXISTS memory.%s", PRESTO_SCHEMA));
     stmt.close();
     conn.close();
   }
