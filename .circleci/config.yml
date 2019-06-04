@@ -188,9 +188,20 @@ jobs:
       # Customize the JVM maximum heap limit
       MAVEN_OPTS: -Xmx3200m
     steps:
-      - run: apt-get update; apt-get install -y git
       - setup_remote_docker
+      - run:
+          name: Install Docker client
+          command: |
+            set -x
+            VER="18.09.6"
+            curl -L -o /tmp/docker-$VER.tgz https://download.docker.com/linux/static/stable/x86_64/docker-$VER.tgz
+            tar -xz -C /tmp -f /tmp/docker-$VER.tgz
+            mv /tmp/docker/* /usr/bin
+      # launch presto docker
+      - run: docker run -d -p 127.0.0.1:8080:8080 --name verdictdb-presto starburstdata/presto
+      - run: apt-get update; apt-get install -y git
       - checkout
+
 
       # Set up maven dependencies
       - restore_cache:
