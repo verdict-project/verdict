@@ -16,12 +16,12 @@
 
 package org.verdictdb.sqlsyntax;
 
+import com.google.common.collect.Lists;
+
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import com.google.common.collect.Lists;
 
 public class RedshiftSyntax extends SqlSyntax {
 
@@ -79,6 +79,18 @@ public class RedshiftSyntax extends SqlSyntax {
   }
 
   @Override
+  public String getColumnsCommand(String catalog, String schema, String table) {
+    StringBuilder sql = new StringBuilder();
+    sql.append(String.format("SET search_path to '%s'; ", schema));
+    sql.append(
+        String.format(
+            "select \"column\", \"type\" "
+                + "from PG_TABLE_DEF where tablename = '%s' and schemaname = '%s';",
+            table, schema));
+    return sql.toString();
+  }
+
+  @Override
   public int getColumnTypeColumnIndex() {
     return 1;
   }
@@ -119,7 +131,7 @@ public class RedshiftSyntax extends SqlSyntax {
   public String getPartitionByInCreateTable(
       List<String> partitionColumns, List<Integer> partitionCounts) {
     StringBuilder sql = new StringBuilder();
-    
+
     sql.append("COMPOUND SORTKEY");
     sql.append(" (");
     boolean isFirstColumn = true;
@@ -132,7 +144,7 @@ public class RedshiftSyntax extends SqlSyntax {
       }
     }
     sql.append(")");
-    
+
     return sql.toString();
   }
 
@@ -210,27 +222,22 @@ public class RedshiftSyntax extends SqlSyntax {
 
   /**
    * The following query returns 9.72448747058973 (see 9.72448747058973 / 100 is 0.0972)
-   * 
-   * select stddev(c)
-   * from (
-   *     select v, count(*) as c
-   *     from (
-   *         select cast(strtol(substring(md5(cast(value as varchar)), 1, 8), 16) % 100 as integer) as v
-   *         from mytable
-   *     ) t1
-   *     group by v
-   * ) t2;
-   * 
-   * where mytable contains the integers from 0 to 10000.
-   * 
-   * Note that the stddev of rand() is sqrt(0.01 * 0.99) = 0.09949874371.
+   *
+   * <p>select stddev(c) from ( select v, count(*) as c from ( select
+   * cast(strtol(substring(md5(cast(value as varchar)), 1, 8), 16) % 100 as integer) as v from
+   * mytable ) t1 group by v ) t2;
+   *
+   * <p>where mytable contains the integers from 0 to 10000.
+   *
+   * <p>Note that the stddev of rand() is sqrt(0.01 * 0.99) = 0.09949874371.
    */
   @Override
   public String hashFunction(String column) {
-    String f = String.format(
-        "(strtol(substring(md5(cast(%s as varchar)), 0, 8), 16) %% %d) / "
-        + "cast(%d as double precision)",
-        column, hashPrecision, hashPrecision);
+    String f =
+        String.format(
+            "(strtol(substring(md5(cast(%s as varchar)), 0, 8), 16) %% %d) / "
+                + "cast(%d as double precision)",
+            column, hashPrecision, hashPrecision);
     return f;
   }
 }

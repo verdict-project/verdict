@@ -16,13 +16,13 @@
 
 package org.verdictdb.connection;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.exception.VerdictDBDbmsException;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 public class CachedMetaDataProvider implements MetaDataProvider {
 
@@ -63,6 +63,18 @@ public class CachedMetaDataProvider implements MetaDataProvider {
 
   @Override
   public List<Pair<String, String>> getColumns(String schema, String table)
+      throws VerdictDBDbmsException {
+    Pair<String, String> key = new ImmutablePair<>(schema, table);
+    if (columnsCache.containsKey(key) && !columnsCache.get(key).isEmpty()) {
+      return columnsCache.get(key);
+    }
+    columnsCache.put(key, metaProvider.getColumns(schema, table));
+    return columnsCache.get(key);
+  }
+
+  // ignores catalog
+  @Override
+  public List<Pair<String, String>> getColumns(String catalog, String schema, String table)
       throws VerdictDBDbmsException {
     Pair<String, String> key = new ImmutablePair<>(schema, table);
     if (columnsCache.containsKey(key) && !columnsCache.get(key).isEmpty()) {

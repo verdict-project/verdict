@@ -16,9 +16,6 @@
 
 package org.verdictdb.sqlreader;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.verdictdb.core.sqlobject.AbstractRelation;
 import org.verdictdb.core.sqlobject.AliasedColumn;
 import org.verdictdb.core.sqlobject.AsteriskColumn;
@@ -34,6 +31,9 @@ import org.verdictdb.core.sqlobject.SelectQuery;
 import org.verdictdb.core.sqlobject.UnnamedColumn;
 import org.verdictdb.parser.VerdictSQLParser;
 import org.verdictdb.parser.VerdictSQLParserBaseVisitor;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class RelationGen extends VerdictSQLParserBaseVisitor<AbstractRelation> {
 
@@ -132,16 +132,21 @@ public class RelationGen extends VerdictSQLParserBaseVisitor<AbstractRelation> {
                     elem = g.visit(ctx.expression());
                     if (elem instanceof BaseColumn) {
                       if (ctx.column_alias() != null) {
-                        elem = new AliasedColumn((BaseColumn) elem, stripQuote(ctx.column_alias().getText()));
+                        elem =
+                            new AliasedColumn(
+                                (BaseColumn) elem, stripQuote(ctx.column_alias().getText()));
                       }
                     } else if (elem instanceof ColumnOp) {
                       if (ctx.column_alias() != null) {
-                        elem = new AliasedColumn((ColumnOp) elem, stripQuote(ctx.column_alias().getText()));
+                        elem =
+                            new AliasedColumn(
+                                (ColumnOp) elem, stripQuote(ctx.column_alias().getText()));
                       }
                     } else if (elem instanceof ConstantColumn) {
                       if (ctx.column_alias() != null) {
                         elem =
-                            new AliasedColumn((ConstantColumn) elem, stripQuote(ctx.column_alias().getText()));
+                            new AliasedColumn(
+                                (ConstantColumn) elem, stripQuote(ctx.column_alias().getText()));
                       }
                     }
                   }
@@ -243,7 +248,7 @@ public class RelationGen extends VerdictSQLParserBaseVisitor<AbstractRelation> {
       if (ctx.search_condition() == null) {
         throw new RuntimeException("The join condition for a inner join does not exist.");
       }
-      
+
       AbstractRelation r = this.visit(ctx.table_source());
       CondGen g = new CondGen();
       UnnamedColumn cond = g.visit(ctx.search_condition());
@@ -292,28 +297,45 @@ public class RelationGen extends VerdictSQLParserBaseVisitor<AbstractRelation> {
   public AbstractRelation visitHinted_table_name_item(
       VerdictSQLParser.Hinted_table_name_itemContext ctx) {
     AbstractRelation r = null;
+    VerdictSQLParser.IdContext catalog = ctx.table_name_with_hint().table_name().catalog;
+    VerdictSQLParser.IdContext schema = ctx.table_name_with_hint().table_name().schema;
+    VerdictSQLParser.IdContext table = ctx.table_name_with_hint().table_name().table;
     if (ctx.as_table_alias() != null) {
-      if (ctx.table_name_with_hint().table_name().schema != null) {
-        r =
-            new BaseTable(
-                stripQuote(ctx.table_name_with_hint().table_name().schema.getText()),
-                stripQuote(ctx.table_name_with_hint().table_name().table.getText()),
-                stripQuote(ctx.as_table_alias().table_alias().getText()));
-      } else {
-        r =
-            BaseTable.getBaseTableWithoutSchema(
-                stripQuote(ctx.table_name_with_hint().table_name().table.getText()),
-                stripQuote(ctx.as_table_alias().table_alias().getText()));
-      }
+      r =
+          new BaseTable(
+              catalog != null ? stripQuote(catalog.getText()) : null,
+              schema != null ? stripQuote(schema.getText()) : null,
+              stripQuote(table.getText()),
+              stripQuote(ctx.as_table_alias().table_alias().getText()));
+      //      if (ctx.table_name_with_hint().table_name().schema != null) {
+      //        r =
+      //            new BaseTable(
+      //                stripQuote(ctx.table_name_with_hint().table_name().catalog.getText()),
+      //                stripQuote(ctx.table_name_with_hint().table_name().schema.getText()),
+      //                stripQuote(ctx.table_name_with_hint().table_name().table.getText()),
+      //                stripQuote(ctx.as_table_alias().table_alias().getText()));
+      //      } else {
+      //        r =
+      //            BaseTable.getBaseTableWithoutSchema(
+      //                stripQuote(ctx.table_name_with_hint().table_name().table.getText()),
+      //                stripQuote(ctx.as_table_alias().table_alias().getText()));
+      //      }
     } else {
-      if (ctx.table_name_with_hint().table_name().schema != null) {
-        r =
-            new BaseTable(
-                stripQuote(ctx.table_name_with_hint().table_name().schema.getText()),
-                stripQuote(ctx.table_name_with_hint().table_name().table.getText()));
-      } else {
-        r = new BaseTable(stripQuote(ctx.table_name_with_hint().table_name().table.getText()));
-      }
+      r =
+          new BaseTable(
+              catalog != null ? stripQuote(catalog.getText()) : null,
+              schema != null ? stripQuote(schema.getText()) : null,
+              stripQuote(table.getText()),
+              null);
+      //      if (ctx.table_name_with_hint().table_name().schema != null) {
+      //        r =
+      //            new BaseTable(
+      //                stripQuote(ctx.table_name_with_hint().table_name().schema.getText()),
+      //                stripQuote(ctx.table_name_with_hint().table_name().table.getText()));
+      //      } else {
+      //        r = new
+      // BaseTable(stripQuote(ctx.table_name_with_hint().table_name().table.getText()));
+      //      }
     }
     return r;
   }

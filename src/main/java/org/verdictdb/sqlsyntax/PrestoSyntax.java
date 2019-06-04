@@ -16,10 +16,10 @@
 
 package org.verdictdb.sqlsyntax;
 
+import com.google.common.collect.Lists;
+
 import java.util.Collection;
 import java.util.List;
-
-import com.google.common.collect.Lists;
 
 public class PrestoSyntax extends SqlSyntax {
 
@@ -45,6 +45,15 @@ public class PrestoSyntax extends SqlSyntax {
   @Override
   public String getColumnsCommand(String schema, String table) {
     return "DESCRIBE " + quoteName(schema) + "." + quoteName(table);
+  }
+
+  @Override
+  public String getColumnsCommand(String catalog, String schema, String table) {
+    if (!catalog.isEmpty()) {
+      return "DESCRIBE " + quoteName(catalog) + "." + quoteName(schema) + "." + quoteName(table);
+    } else {
+      return "DESCRIBE " + quoteName(schema) + "." + quoteName(table);
+    }
   }
 
   @Override
@@ -144,34 +153,29 @@ public class PrestoSyntax extends SqlSyntax {
 
   /**
    * The following query returns 9.724487470589725 (9.72 / 100 = 0.0972):
-   * 
-   * select stddev(c)
-   * from (
-   *     select v, count(*) as c
-   *     from (
-   *         select from_base(substr(to_hex(md5(to_utf8(cast(value as varchar)))), 1, 8), 16) % 100 as v
-   *         from mytable
-   *     ) t1
-   *     group by v
-   * ) t2
-   * 
-   * where mytable contains the integers from 0 to 10000.
-   * 
-   * Note that the stddev of rand() is sqrt(0.01 * 0.99) = 0.09949874371.
-   * 
-   * I alss tested xxhash64(); however, its std was larger (i.e., 10.243500033157268).
-   * 
-   * Now I test xxhash64() for faster speed.
+   *
+   * <p>select stddev(c) from ( select v, count(*) as c from ( select
+   * from_base(substr(to_hex(md5(to_utf8(cast(value as varchar)))), 1, 8), 16) % 100 as v from
+   * mytable ) t1 group by v ) t2
+   *
+   * <p>where mytable contains the integers from 0 to 10000.
+   *
+   * <p>Note that the stddev of rand() is sqrt(0.01 * 0.99) = 0.09949874371.
+   *
+   * <p>I alss tested xxhash64(); however, its std was larger (i.e., 10.243500033157268).
+   *
+   * <p>Now I test xxhash64() for faster speed.
    */
   @Override
   public String hashFunction(String column) {
-//    String f = String.format(
-//        "(from_base(substr(to_hex(md5(to_utf8(cast(%s as varchar)))), 1, 8), 16) %% %d) / %d",
-//        column, hashPrecision, hashPrecision);
-    String f = String.format(
-        "(from_base(substr(to_hex(xxhash64(to_utf8(cast(%s as varchar)))), 1, 8), 16) %% %d) "
-        + "/ cast(%d as double)",
-        column, hashPrecision, hashPrecision);
+    //    String f = String.format(
+    //        "(from_base(substr(to_hex(md5(to_utf8(cast(%s as varchar)))), 1, 8), 16) %% %d) / %d",
+    //        column, hashPrecision, hashPrecision);
+    String f =
+        String.format(
+            "(from_base(substr(to_hex(xxhash64(to_utf8(cast(%s as varchar)))), 1, 8), 16) %% %d) "
+                + "/ cast(%d as double)",
+            column, hashPrecision, hashPrecision);
     return f;
   }
 }
