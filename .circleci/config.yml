@@ -403,6 +403,7 @@ jobs:
           POSTGRES_DB: test
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: ""
+      - image: starburstdata/presto:latest
     working_directory: ~/repo
     environment:
       # Customize the JVM maximum heap limit
