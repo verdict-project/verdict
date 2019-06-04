@@ -39,8 +39,8 @@ public class JdbcQueryDataTypeForAllDatabasesTest {
 
   private String database;
 
-  // Disabled redshift test due to unavailable test instance
-  private static final String[] targetDatabases = {"mysql", "impala", "postgresql"};
+  // Disabled impala, redshift test due to unavailable test instance
+  private static final String[] targetDatabases = {"mysql", "postgresql"};
   //  private static final String[] targetDatabases = {"mysql", "impala", "redshift", "postgresql"};
 
   public JdbcQueryDataTypeForAllDatabasesTest(String database) {
@@ -139,9 +139,9 @@ public class JdbcQueryDataTypeForAllDatabasesTest {
   public static void tearDown() throws SQLException {
     tearDownMysql();
     tearDownPostgresql();
-    // Disabled redshift test due to unavailable test instance
+    // Disabled impala, redshift test due to unavailable test instance
     //    tearDownRedshift();
-    tearDownImpala();
+    //    tearDownImpala();
   }
 
   @Parameterized.Parameters(name = "{0}")

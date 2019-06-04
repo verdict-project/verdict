@@ -709,7 +709,7 @@ public class ExecutionContext {
         columns = conn.getColumns(defaultSchema, t.getTableName());
         tableInfo = new StaticMetaData.TableInfo(defaultSchema, t.getTableName());
       } else {
-        columns = conn.getColumns(t.getSchemaName(), t.getTableName());
+        columns = conn.getColumns(t.getCatalogName(), t.getSchemaName(), t.getTableName());
         tableInfo = new StaticMetaData.TableInfo(t.getSchemaName(), t.getTableName());
       }
       List<Pair<String, Integer>> colInfo = new ArrayList<>();

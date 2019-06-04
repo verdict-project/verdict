@@ -37,6 +37,8 @@ import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.sqlsyntax.HiveSyntax;
 import org.verdictdb.sqlsyntax.ImpalaSyntax;
 import org.verdictdb.sqlsyntax.PostgresqlSyntax;
+import org.verdictdb.sqlsyntax.PrestoHiveSyntax;
+import org.verdictdb.sqlsyntax.PrestoMemorySyntax;
 import org.verdictdb.sqlsyntax.PrestoSyntax;
 import org.verdictdb.sqlsyntax.RedshiftSyntax;
 import org.verdictdb.sqlsyntax.SparkSyntax;
@@ -94,6 +96,18 @@ public class JdbcConnection extends DbmsConnection {
     }
 
     SqlSyntax syntax = SqlSyntaxList.getSyntaxFromConnectionString(connectionString);
+
+    // This is temporary fix to have 'memory' catalog connection for unit tests
+    try {
+      if (syntax instanceof PrestoHiveSyntax
+          && conn.getCatalog() != null
+          && conn.getCatalog().equalsIgnoreCase("memory")) {
+        syntax = new PrestoMemorySyntax();
+      }
+    } catch (SQLException e) {
+      e.printStackTrace();
+    }
+
     JdbcConnection jdbcConn = null;
     if (syntax instanceof PrestoSyntax) {
       // To handle that Presto's JDBC driver is not compatible with JDK7,
@@ -272,6 +286,48 @@ public class JdbcConnection extends DbmsConnection {
       throws VerdictDBDbmsException {
     List<Pair<String, String>> columns = new ArrayList<>();
     String sql = syntax.getColumnsCommand(schema, table);
+
+    try {
+      DbmsQueryResult queryResult = executeQuery(sql);
+      while (queryResult.next()) {
+        String type;
+        if (syntax instanceof PostgresqlSyntax) {
+          type = queryResult.getString(syntax.getColumnTypeColumnIndex());
+          if (queryResult.getInt(((PostgresqlSyntax) syntax).getCharacterMaximumLengthColumnIndex())
+              != 0) {
+            type =
+                type
+                    + "("
+                    + queryResult.getInt(
+                        ((PostgresqlSyntax) syntax).getCharacterMaximumLengthColumnIndex())
+                    + ")";
+          }
+        } else {
+          type = queryResult.getString(syntax.getColumnTypeColumnIndex());
+        }
+        type = type.toLowerCase();
+
+        columns.add(
+            new ImmutablePair<>(queryResult.getString(syntax.getColumnNameColumnIndex()), type));
+      }
+
+    } catch (Exception e) {
+      if (syntax instanceof RedshiftSyntax
+          && e.getMessage().matches("(?s).*schema .* does not exist;.*")) {
+        return columns;
+      } else {
+        throw e;
+      }
+    }
+
+    return columns;
+  }
+
+  @Override
+  public List<Pair<String, String>> getColumns(String catalog, String schema, String table)
+      throws VerdictDBDbmsException {
+    List<Pair<String, String>> columns = new ArrayList<>();
+    String sql = syntax.getColumnsCommand(catalog, schema, table);
 
     try {
       DbmsQueryResult queryResult = executeQuery(sql);

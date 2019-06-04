@@ -16,11 +16,6 @@
 
 package org.verdictdb.connection;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -28,6 +23,11 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.verdictdb.commons.DataTypeConverter;
 import org.verdictdb.exception.VerdictDBDbmsException;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class StaticMetaData implements MetaDataProvider {
 
@@ -123,6 +123,17 @@ public class StaticMetaData implements MetaDataProvider {
 
   @Override
   public List<Pair<String, String>> getColumns(String schema, String table) {
+    List<Pair<String, String>> nameAndType = new ArrayList<>();
+    List<Pair<String, Integer>> nameAndIntType = columns.get(new ImmutablePair<>(schema, table));
+    for (Pair<String, Integer> a : nameAndIntType) {
+      nameAndType.add(Pair.of(a.getLeft(), DataTypeConverter.typeName(a.getRight())));
+    }
+    return nameAndType;
+  }
+
+  // ignores catalog
+  @Override
+  public List<Pair<String, String>> getColumns(String catalog, String schema, String table) {
     List<Pair<String, String>> nameAndType = new ArrayList<>();
     List<Pair<String, Integer>> nameAndIntType = columns.get(new ImmutablePair<>(schema, table));
     for (Pair<String, Integer> a : nameAndIntType) {

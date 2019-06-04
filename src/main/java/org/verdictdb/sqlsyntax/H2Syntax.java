@@ -16,10 +16,10 @@
 
 package org.verdictdb.sqlsyntax;
 
+import com.google.common.collect.Lists;
+
 import java.util.Collection;
 import java.util.List;
-
-import com.google.common.collect.Lists;
 
 public class H2Syntax extends SqlSyntax {
 
@@ -80,6 +80,11 @@ public class H2Syntax extends SqlSyntax {
 
   @Override
   public String getColumnsCommand(String schema, String table) {
+    return "show columns from " + quoteName(table) + " from " + quoteName(schema);
+  }
+
+  @Override
+  public String getColumnsCommand(String catalog, String schema, String table) {
     return "show columns from " + quoteName(table) + " from " + quoteName(schema);
   }
 

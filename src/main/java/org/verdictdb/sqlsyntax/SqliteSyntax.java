@@ -49,6 +49,12 @@ public class SqliteSyntax extends SqlSyntax {
   }
 
   @Override
+  public String getColumnsCommand(String catalog, String schema, String table) {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  @Override
   public int getColumnTypeColumnIndex() {
     // TODO Auto-generated method stub
     return 0;

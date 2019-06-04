@@ -13,11 +13,10 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 '''
-from datetime import datetime, date, timezone
-import os
-import pyverdict
 import prestodb
+import pyverdict
 import uuid
+from datetime import datetime, timezone
 
 test_schema = 'pyverdict_presto_datatype_test_schema' + str(uuid.uuid4())[:3]
 test_table = 'test_table'
@@ -50,6 +49,7 @@ def test_data_types():
             compare_value(expected_row[j], actual_row[j], types[j])
     tear_down(presto_conn, verdict_conn)
 
+
 def compare_value(expected, actual, coltype):
     if coltype == 'decimal' and expected is not None:
         assert float(expected) == actual
@@ -65,6 +65,7 @@ def compare_value(expected, actual, coltype):
     else:
         assert expected == actual
 
+
 def setup_sandbox():
     '''
     We test the data types defined here: https://prestodb.io/docs/current/language/types.html
@@ -74,11 +75,14 @@ def setup_sandbox():
     1. "time with time zone" is not supported: "Unsupported Hive type: time with time zone"
     2. "timestamp with time zone" is not supported: Unsupported Hive type: timestamp with time zone
     '''
-    hostport = os.environ['VERDICTDB_TEST_PRESTO_HOST']
+    hostport = 'localhost:8080'
+    catalog = 'memory'
+    user = 'root'
+    # hostport = os.environ['VERDICTDB_TEST_PRESTO_HOST']
+    # catalog = os.environ['VERDICTDB_TEST_PRESTO_CATALOG']
+    # user = os.environ['VERDICTDB_TEST_PRESTO_USER']
     host, port = hostport.split(':')
     port = int(port)
-    catalog = os.environ['VERDICTDB_TEST_PRESTO_CATALOG']
-    user = os.environ['VERDICTDB_TEST_PRESTO_USER']
     password = ''
 
     # create table and populate data
@@ -105,7 +109,7 @@ def setup_sandbox():
             charCol             CHAR(4),
             varcharCol          VARCHAR(4)
         )""".format(test_schema, test_table)
-        )
+                )
     cur.fetchall()
 
     cur.execute("""
@@ -122,7 +126,7 @@ def setup_sandbox():
             cast('ab' as char(4)),
             cast('abcd' as varchar(4))
         )""".format(test_schema, test_table)
-        )
+                )
     cur.fetchall()
 
     cur.execute("""
@@ -131,7 +135,7 @@ def setup_sandbox():
             NULL, NULL, NULL, NULL, NULL,
             NULL, NULL
         )""".format(test_schema, test_table)
-        )
+                )
     cur.fetchall()
 
     # create verdict connection
@@ -139,6 +143,7 @@ def setup_sandbox():
     # mysql_jar = os.path.join(thispath, 'lib', 'mysql-connector-java-5.1.46.jar')
     verdict_conn = verdict_connect(host, port, catalog, user)
     return (presto_conn, verdict_conn)
+
 
 def tear_down(presto_conn, verdict_conn):
     cur = presto_conn.cursor()
@@ -148,12 +153,13 @@ def tear_down(presto_conn, verdict_conn):
     cur.fetchall()
     verdict_conn.close()
 
+
 def verdict_connect(host, port, catalog, usr):
     connection_string = \
         'jdbc:presto://{:s}:{:d}/{:s}?user={:s}'.format(host, port, catalog, usr)
     return pyverdict.VerdictContext(connection_string)
 
+
 def presto_connect(host, port, usr, catalog):
     return prestodb.dbapi.connect(
         host=host, port=port, user=usr, catalog=catalog)
-

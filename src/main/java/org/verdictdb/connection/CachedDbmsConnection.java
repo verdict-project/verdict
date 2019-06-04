@@ -16,14 +16,16 @@
 
 package org.verdictdb.connection;
 
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.ImmutableTriple;
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
+import org.verdictdb.exception.VerdictDBDbmsException;
+import org.verdictdb.sqlsyntax.SqlSyntax;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
-import org.verdictdb.exception.VerdictDBDbmsException;
-import org.verdictdb.sqlsyntax.SqlSyntax;
 
 /**
  * Offers the same functionality as DbmsConnection; however, returns cached metadata whenever
@@ -83,9 +85,13 @@ public class CachedDbmsConnection extends DbmsConnection implements MetaDataProv
   private HashMap<Pair<String, String>, List<String>> partitionCache = new HashMap<>();
 
   // Get column name and type
-  private HashMap<Pair<String, String>, List<Pair<String, String>>> columnsCache = new HashMap<>();
-  
-  
+  // Key of this map (i.e., table reference) is in the format of <catalog, schema, table>
+  // For many databases where catalog == schema,
+  // only the latter two elements are used and the value of 'catalog' is empty.
+  // When catalog != schema (e.g., presto), we set all three values for the key.
+  private HashMap<Triple<String, String, String>, List<Pair<String, String>>> columnsCache =
+      new HashMap<>();
+
   public void clearCache() {
     schemaCache.clear();
     tablesCache.clear();
@@ -114,9 +120,8 @@ public class CachedDbmsConnection extends DbmsConnection implements MetaDataProv
     }
     return getTablesWithoutCaching(schema);
   }
-  
-  public List<String> getTablesWithoutCaching(String schema) 
-      throws VerdictDBDbmsException {
+
+  public List<String> getTablesWithoutCaching(String schema) throws VerdictDBDbmsException {
     synchronized (this) {
       List<String> tables = new ArrayList<>();
       tablesCache.put(schema, originalConn.getTables(schema));
@@ -128,13 +133,29 @@ public class CachedDbmsConnection extends DbmsConnection implements MetaDataProv
   @Override
   public List<Pair<String, String>> getColumns(String schema, String table)
       throws VerdictDBDbmsException {
-    Pair<String, String> key = new ImmutablePair<>(schema, table);
+    Triple<String, String, String> key = new ImmutableTriple<>("", schema, table);
     if (columnsCache.containsKey(key) && !columnsCache.get(key).isEmpty()) {
       return columnsCache.get(key);
     }
     synchronized (this) {
       List<Pair<String, String>> columns = new ArrayList<>();
       columnsCache.put(key, originalConn.getColumns(schema, table));
+      columns.addAll(columnsCache.get(key));
+      return columns;
+    }
+  }
+
+  // ignores catalog for now
+  @Override
+  public List<Pair<String, String>> getColumns(String catalog, String schema, String table)
+      throws VerdictDBDbmsException {
+    Triple<String, String, String> key = new ImmutableTriple<>(catalog, schema, table);
+    if (columnsCache.containsKey(key) && !columnsCache.get(key).isEmpty()) {
+      return columnsCache.get(key);
+    }
+    synchronized (this) {
+      List<Pair<String, String>> columns = new ArrayList<>();
+      columnsCache.put(key, originalConn.getColumns(catalog, schema, table));
       columns.addAll(columnsCache.get(key));
       return columns;
     }

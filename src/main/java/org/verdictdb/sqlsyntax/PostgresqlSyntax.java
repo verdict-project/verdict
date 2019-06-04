@@ -16,10 +16,10 @@
 
 package org.verdictdb.sqlsyntax;
 
+import com.google.common.collect.Lists;
+
 import java.util.Collection;
 import java.util.List;
-
-import com.google.common.collect.Lists;
 
 public class PostgresqlSyntax extends SqlSyntax {
 
@@ -102,6 +102,16 @@ public class PostgresqlSyntax extends SqlSyntax {
   }
 
   @Override
+  public String getColumnsCommand(String catalog, String schema, String table) {
+    return "select column_name, data_type, character_maximum_length "
+        + "from INFORMATION_SCHEMA.COLUMNS where table_name = '"
+        + table
+        + "' and table_schema = '"
+        + schema
+        + "'";
+  }
+
+  @Override
   public String getPartitionCommand(String schema, String table) {
     return "select partattrs from pg_partitioned_table join pg_class on pg_class.relname='"
         + table
@@ -141,30 +151,25 @@ public class PostgresqlSyntax extends SqlSyntax {
 
   /**
    * The following query returns 9.7244874705897259 (9.72 / 100 = 0.0972):
-   * 
-   * select stddev(c)
-   * from (
-   *     select v, count(*) as c
-   *     from (
-   *         select ('x' || lpad(substr(md5(cast(value as varchar)), 1, 8), 16, '0'))::bit(64)::bigint % 100 as v
-   *         from mytable
-   *     ) t1
-   *     group by v
-   * ) t2;
-   * 
-   * where mytable contains the integers from 0 to 10000.
-   * 
-   * Note that the stddev of rand() is sqrt(0.01 * 0.99) = 0.09949874371.
-   * 
-   * PostreSQL's hex to int conversion is described at 
+   *
+   * <p>select stddev(c) from ( select v, count(*) as c from ( select ('x' ||
+   * lpad(substr(md5(cast(value as varchar)), 1, 8), 16, '0'))::bit(64)::bigint % 100 as v from
+   * mytable ) t1 group by v ) t2;
+   *
+   * <p>where mytable contains the integers from 0 to 10000.
+   *
+   * <p>Note that the stddev of rand() is sqrt(0.01 * 0.99) = 0.09949874371.
+   *
+   * <p>PostreSQL's hex to int conversion is described at
    * https://stackoverflow.com/questions/8316164/convert-hex-in-text-representation-to-decimal-number
    */
   @Override
   public String hashFunction(String column) {
-    String f = String.format(
-        "(('x' || lpad(substr(md5(cast(%s as varchar)), 1, 8), 16, '0'))::bit(64)::bigint %% %d) "
-        + "/ cast(%d as double precision)",
-        column, hashPrecision, hashPrecision);
+    String f =
+        String.format(
+            "(('x' || lpad(substr(md5(cast(%s as varchar)), 1, 8), 16, '0'))::bit(64)::bigint %% %d) "
+                + "/ cast(%d as double precision)",
+            column, hashPrecision, hashPrecision);
     return f;
   }
 }

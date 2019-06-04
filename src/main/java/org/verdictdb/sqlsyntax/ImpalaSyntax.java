@@ -16,13 +16,13 @@
 
 package org.verdictdb.sqlsyntax;
 
+import com.google.common.collect.Lists;
+
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
-
-import com.google.common.collect.Lists;
 
 public class ImpalaSyntax extends SqlSyntax {
 
@@ -60,6 +60,15 @@ public class ImpalaSyntax extends SqlSyntax {
   @Override
   public String getColumnsCommand(String schema, String table) {
     return "DESCRIBE " + quoteName(schema) + "." + quoteName(table);
+  }
+
+  @Override
+  public String getColumnsCommand(String catalog, String schema, String table) {
+    if (!catalog.isEmpty()) {
+      return "DESCRIBE " + quoteName(catalog) + "." + quoteName(schema) + "." + quoteName(table);
+    } else {
+      return "DESCRIBE " + quoteName(schema) + "." + quoteName(table);
+    }
   }
 
   @Override
@@ -149,29 +158,19 @@ public class ImpalaSyntax extends SqlSyntax {
     return String.format("ndv(%s)", column);
   }
 
-
   /**
    * The following query returns 4.594682917363407 (4.59 / 100 = 0.0459):
-   * 
-   * select stddev(c)
-   * from (
-   *     select v, count(*) as c
-   *     from (
-   *         select pmod(fnv_hash(value), 100) as v
-   *         from mytable2
-   *     ) t1
-   *     group by v
-   * ) t2;
-   * 
-   * where mytable2 contains the integers from 0 to 10000.
-   * 
-   * Note that the stddev of rand() is sqrt(0.01 * 0.99) = 0.09949874371.
+   *
+   * <p>select stddev(c) from ( select v, count(*) as c from ( select pmod(fnv_hash(value), 100) as
+   * v from mytable2 ) t1 group by v ) t2;
+   *
+   * <p>where mytable2 contains the integers from 0 to 10000.
+   *
+   * <p>Note that the stddev of rand() is sqrt(0.01 * 0.99) = 0.09949874371.
    */
   @Override
   public String hashFunction(String column) {
-    String f = String.format(
-        "pmod(fnv_hash(%s), %d) / %d",
-        column, hashPrecision, hashPrecision);
+    String f = String.format("pmod(fnv_hash(%s), %d) / %d", column, hashPrecision, hashPrecision);
     return f;
   }
 }

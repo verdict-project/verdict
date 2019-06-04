@@ -39,6 +39,15 @@ public class SparkSyntax extends SqlSyntax {
   }
 
   @Override
+  public String getColumnsCommand(String catalog, String schema, String table) {
+    if (!catalog.isEmpty()) {
+      return "DESCRIBE " + quoteName(catalog) + "." + quoteName(schema) + "." + quoteName(table);
+    } else {
+      return "DESCRIBE " + quoteName(schema) + "." + quoteName(table);
+    }
+  }
+
+  @Override
   public int getColumnTypeColumnIndex() {
     return 1;
   }
@@ -135,29 +144,22 @@ public class SparkSyntax extends SqlSyntax {
 
   /**
    * The following query returns 9.707328274155676 (see 9.707328274155676 / 100 = 0.097)
-   * 
-   * spark.sql("""
-   * select stddev(c)
-   * from (
-   *   select v, count(*) as c
-   *   from (
-   *     select cast(conv(substr(md5(cast(value as string)), 1, 8), 16, 10) % 100 as integer) as v
-   *     from mytable
-   *   ) t1
-   *   group by v
-   * ) t2
-   * """).show()
-   * 
-   * where mytable contains the integers from 0 to 10000.
-   * spark> ((0 to 10000) toList).toDF.registerTempTable("mytable")
-   * 
-   * Note that the stddev of rand() is sqrt(0.01 * 0.99) = 0.09949874371.
+   *
+   * <p>spark.sql(""" select stddev(c) from ( select v, count(*) as c from ( select
+   * cast(conv(substr(md5(cast(value as string)), 1, 8), 16, 10) % 100 as integer) as v from mytable
+   * ) t1 group by v ) t2 """).show()
+   *
+   * <p>where mytable contains the integers from 0 to 10000. spark> ((0 to 10000)
+   * toList).toDF.registerTempTable("mytable")
+   *
+   * <p>Note that the stddev of rand() is sqrt(0.01 * 0.99) = 0.09949874371.
    */
   @Override
   public String hashFunction(String column) {
-    String func = String.format(
-        "(conv(substr(md5(cast(%s as string)), 1, 8), 16, 10) %% %d) / %d",
-        column, hashPrecision, hashPrecision);
+    String func =
+        String.format(
+            "(conv(substr(md5(cast(%s as string)), 1, 8), 16, 10) %% %d) / %d",
+            column, hashPrecision, hashPrecision);
     return func;
   }
 }
