@@ -183,32 +183,33 @@ jobs:
           POSTGRES_DB: test
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: ""
+      - image: starburstdata/presto:latest
     working_directory: ~/repo
     environment:
       # Customize the JVM maximum heap limit
       MAVEN_OPTS: -Xmx3200m
     steps:
       - run: apt-get update; apt-get install -y git wget
+      #      - run:
+      #          name: Install Docker client
+      #          command: |
+      #            set -x
+      #            VER="18.09.6"
+      #            curl -L -o /tmp/docker-$VER.tgz https://download.docker.com/linux/static/stable/x86_64/docker-$VER.tgz
+      #            tar -xz -C /tmp -f /tmp/docker-$VER.tgz
+      #            mv /tmp/docker/* /usr/bin
       - run:
-          name: Install Docker client
-          command: |
-            set -x
-            VER="18.09.6"
-            curl -L -o /tmp/docker-$VER.tgz https://download.docker.com/linux/static/stable/x86_64/docker-$VER.tgz
-            tar -xz -C /tmp -f /tmp/docker-$VER.tgz
-            mv /tmp/docker/* /usr/bin
-      - run:
-          name: install dockerize
+          name: Install Dockerize
           command: wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz && tar -C /usr/local/bin -xzvf dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz && rm dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz
           environment:
             DOCKERIZE_VERSION: v0.6.1
       - setup_remote_docker
-      - run:
-          name: Launch presto docker image
-          command: docker run -d -p 8080:8080 --name verdictdb-presto starburstdata/presto
+      #      - run:
+      #          name: Launch presto docker image
+      #          command: docker run -d -p 8080:8080 --name verdictdb-presto starburstdata/presto
       - run: docker ps
       - run:
-          name: Wait for presto db
+          name: Wait for Presto Database
           command: dockerize -wait tcp://127.0.0.1:8080 -timeout 1m
       - checkout
 
@@ -228,8 +229,7 @@ jobs:
       # Now build and test
       - run:
           name: Run unit tests
-          command: mvn -P jdk8 -B test -Dtest=PrestoHashScramblingCoordinatorTest 2> /dev/null
-          #          command: mvn -P jdk8 -B test 2> /dev/null
+          command: mvn -P jdk8 -B test 2> /dev/null
           no_output_timeout: 30m
 
       # Check the JDBC service file correctness
