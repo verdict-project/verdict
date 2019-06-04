@@ -190,24 +190,34 @@ jobs:
       MAVEN_OPTS: -Xmx3200m
     steps:
       - run: apt-get update; apt-get install -y git wget
+      - run:
+          name: Install Docker client
+          command: |
+            set -x
+            VER="18.09.6"
+            curl -L -o /tmp/docker-$VER.tgz https://download.docker.com/linux/static/stable/x86_64/docker-$VER.tgz
+            tar -xz -C /tmp -f /tmp/docker-$VER.tgz
+            mv /tmp/docker/* /usr/bin
+      - setup_remote_docker
       #      - run:
-      #          name: Install Docker client
-      #          command: |
-      #            set -x
-      #            VER="18.09.6"
-      #            curl -L -o /tmp/docker-$VER.tgz https://download.docker.com/linux/static/stable/x86_64/docker-$VER.tgz
-      #            tar -xz -C /tmp -f /tmp/docker-$VER.tgz
-      #            mv /tmp/docker/* /usr/bin
+      #          name: Launch presto docker image
+      #          command: docker run -d -p 8080:8080 --name verdictdb-presto starburstdata/presto
+      - run:
+          name: List current Docker containers
+          command: docker ps
+      - run:
+          name: Increase value for max-requests-queued-per-destination
+          command: docker ps --filter="ancestor=starburstdata/presto:latest" --format "{{.Names}}" | xargs -I{} docker exec {} /bin/sh -c "echo scheduler.http-client.max-requests-queued-per-destination=32000 >> /etc/presto/config.properties"
+      - run:
+          name: Restart Presto with updated configuration value
+          command: docker ps --filter="ancestor=starburstdata/presto:latest" --format "{{.Names}}" | xargs -I{} docker exec -d {} /usr/lib/presto/bin/launcher restart
+      #      - run: docker exec -it verdictdb-presto /bin/sh -c "echo 'scheduler.http-client.max-requests-queued-per-destination=32000' >> /etc/presto/config.properties"
+      #      - run: docker exec -it verdictdb-presto cat /etc/presto/config.properties
       - run:
           name: Install Dockerize
           command: wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz && tar -C /usr/local/bin -xzvf dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz && rm dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz
           environment:
             DOCKERIZE_VERSION: v0.6.1
-      - setup_remote_docker
-      #      - run:
-      #          name: Launch presto docker image
-      #          command: docker run -d -p 8080:8080 --name verdictdb-presto starburstdata/presto
-      #      - run: docker ps
       - run:
           name: Wait for Presto Database
           command: dockerize -wait tcp://127.0.0.1:8080 -timeout 1m
@@ -229,7 +239,8 @@ jobs:
       # Now build and test
       - run:
           name: Run unit tests
-          command: mvn -P jdk8 -B test 2> /dev/null
+          command: mvn -P jdk8 -B test -Dtest=PrestoTpchSelectQueryCoordinatorTest 2> /dev/null
+          #          command: mvn -P jdk8 -B test 2> /dev/null
           no_output_timeout: 30m
 
       # Check the JDBC service file correctness
@@ -397,7 +408,7 @@ jobs:
           keys:
             - verdict-dependencies-{{ checksum "pom.xml" }}
       - run: cd pyverdict; pip install pytest PyMySQL presto-python-client psycopg2; python setup.py install;
-      # pytest has an internal error if test_verdictcontext runs after 
+      # pytest has an internal error if test_verdictcontext runs after
       # all other tests.  To avoid this, run before instead.
       - run: cd pyverdict; pytest tests/test_verdictcontext.py;
       # ignore redshift tests for now due to unavailable redshift test instance as of 5/16/2019
@@ -406,7 +417,7 @@ jobs:
       # verdict impala queries to that of the python impala API.  However,
       # the python impala API, impyla, currently does not support python 3.7.
       # Thus, to properly test the impala connector, we downgrade to python 3.6
-      # for the impala tests via another venv, then run all other non-impala 
+      # for the impala tests via another venv, then run all other non-impala
       # tests using python 3.7.
       - run: conda create --name py36 python=3.6;
       - run: source activate py36; pip install impyla pytest;
