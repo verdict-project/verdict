@@ -49,7 +49,7 @@ public class PrestoSyntax extends SqlSyntax {
 
   @Override
   public String getColumnsCommand(String catalog, String schema, String table) {
-    if (!catalog.isEmpty()) {
+    if (catalog != null && !catalog.isEmpty()) {
       return "DESCRIBE " + quoteName(catalog) + "." + quoteName(schema) + "." + quoteName(table);
     } else {
       return "DESCRIBE " + quoteName(schema) + "." + quoteName(table);
