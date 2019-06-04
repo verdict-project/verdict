@@ -13,11 +13,10 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 '''
-from datetime import datetime, date, timezone
-import os
-import pyverdict
 import prestodb
+import pyverdict
 import uuid
+from datetime import datetime, timezone
 
 test_schema = 'pyverdict_presto_simple_query_test_schema' + str(uuid.uuid4())[:3]
 test_table = 'test_table'
@@ -30,11 +29,14 @@ verdict_conn = None
 def setup_module(module):
     global presto_conn, verdict_conn
 
-    hostport = os.environ['VERDICTDB_TEST_PRESTO_HOST']
+    hostport = 'localhost:8080'
+    catalog = 'memory'
+    user = 'root'
+    # hostport = os.environ['VERDICTDB_TEST_PRESTO_HOST']
+    # catalog = os.environ['VERDICTDB_TEST_PRESTO_CATALOG']
+    # user = os.environ['VERDICTDB_TEST_PRESTO_USER']
     host, port = hostport.split(':')
     port = int(port)
-    catalog = os.environ['VERDICTDB_TEST_PRESTO_CATALOG']
-    user = os.environ['VERDICTDB_TEST_PRESTO_USER']
     password = ''
 
     # setup regular presto_conn
@@ -73,7 +75,7 @@ def setup_module(module):
         'jdbc:presto://{:s}:{:d}/{:s}?user={:s}'.format(host, port, catalog, user)
     verdict_conn = pyverdict.VerdictContext(connection_string)
     verdict_conn.sql('CREATE SCRAMBLE {}.{} FROM {}.{} BLOCKSIZE 200'
-        .format(test_schema, test_scramble, test_schema, test_table))
+                     .format(test_schema, test_scramble, test_schema, test_table))
 
 
 def teardown_module(module):
@@ -177,4 +179,3 @@ class TestClass:
         assert actual is not None
         assert expected * 1.2 >= actual
         assert expected * 0.8 <= actual
-
