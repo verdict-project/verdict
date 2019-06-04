@@ -121,8 +121,8 @@ public class JdbcCommonQueryForAllDatabasesTest {
     options.setVerdictMetaSchemaName(VERDICT_META_SCHEMA);
     options.setVerdictTempSchemaName(VERDICT_TEMP_SCHEMA);
     setupMysql();
-    setupImpala();
-    // Disabled redshift test due to unavailable test instance
+    // Disabled impala, redshift test due to unavailable test instance
+    //    setupImpala();
     //    setupRedshift();
     setupPostgresql();
   }
@@ -145,8 +145,8 @@ public class JdbcCommonQueryForAllDatabasesTest {
 
   @Parameterized.Parameters(name = "{0}")
   public static Collection<String> databases() {
-    // Disabled redshift test due to unavailable test instance
-    return Arrays.asList("mysql", "impala", "postgresql");
+    // Disabled impala, redshift test due to unavailable test instance
+    return Arrays.asList("mysql", "postgresql");
     //    return Arrays.asList("mysql", "impala", "redshift", "postgresql");
   }
 

@@ -85,6 +85,10 @@ public class CachedDbmsConnection extends DbmsConnection implements MetaDataProv
   private HashMap<Pair<String, String>, List<String>> partitionCache = new HashMap<>();
 
   // Get column name and type
+  // Key of this map (i.e., table reference) is in the format of <catalog, schema, table>
+  // For many databases where catalog == schema,
+  // only the latter two elements are used and the value of 'catalog' is empty.
+  // When catalog != schema (e.g., presto), we set all three values for the key.
   private HashMap<Triple<String, String, String>, List<Pair<String, String>>> columnsCache =
       new HashMap<>();
 
