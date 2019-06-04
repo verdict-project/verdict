@@ -99,7 +99,9 @@ public class JdbcConnection extends DbmsConnection {
 
     // This is temporary fix to have 'memory' catalog connection for unit tests
     try {
-      if (syntax instanceof PrestoHiveSyntax && conn.getCatalog().equalsIgnoreCase("memory")) {
+      if (syntax instanceof PrestoHiveSyntax
+          && conn.getCatalog() != null
+          && conn.getCatalog().equalsIgnoreCase("memory")) {
         syntax = new PrestoMemorySyntax();
       }
     } catch (SQLException e) {

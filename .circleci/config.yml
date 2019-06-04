@@ -187,7 +187,7 @@ jobs:
     working_directory: ~/repo
     environment:
       # Customize the JVM maximum heap limit
-      MAVEN_OPTS: -Xmx2G
+      MAVEN_OPTS: -Xmx1G
     steps:
       - run: apt-get update; apt-get install -y git wget
       - run:
