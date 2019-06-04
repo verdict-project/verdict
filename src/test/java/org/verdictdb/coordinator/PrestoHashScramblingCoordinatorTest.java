@@ -84,13 +84,16 @@ public class PrestoHashScramblingCoordinatorTest {
 
   @AfterClass
   public static void tearDown() throws SQLException {
-    ResultSet rs = prestoStmt.executeQuery(String.format("SHOW TABLES IN %s", PRESTO_SCHEMA));
+    ResultSet rs =
+        prestoConn
+            .createStatement()
+            .executeQuery(String.format("SHOW TABLES IN memory.%s", PRESTO_SCHEMA));
     while (rs.next()) {
       prestoStmt.execute(
-          String.format("DROP TABLE IF EXISTS %s.%s", PRESTO_SCHEMA, rs.getString(1)));
+          String.format("DROP TABLE IF EXISTS memory.%s.%s", PRESTO_SCHEMA, rs.getString(1)));
     }
     rs.close();
-    prestoStmt.execute(String.format("DROP SCHEMA IF EXISTS %s", PRESTO_SCHEMA));
+    prestoStmt.execute(String.format("DROP SCHEMA IF EXISTS memory.%s", PRESTO_SCHEMA));
     prestoStmt.close();
     prestoConn.close();
   }

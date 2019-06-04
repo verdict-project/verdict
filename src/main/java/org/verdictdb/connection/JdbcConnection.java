@@ -98,8 +98,12 @@ public class JdbcConnection extends DbmsConnection {
     SqlSyntax syntax = SqlSyntaxList.getSyntaxFromConnectionString(connectionString);
 
     // This is temporary fix to have 'memory' catalog connection for unit tests
-    if (syntax instanceof PrestoHiveSyntax && connectionString.contains("memory")) {
-      syntax = new PrestoMemorySyntax();
+    try {
+      if (syntax instanceof PrestoHiveSyntax && conn.getCatalog().equalsIgnoreCase("memory")) {
+        syntax = new PrestoMemorySyntax();
+      }
+    } catch (SQLException e) {
+      e.printStackTrace();
     }
 
     JdbcConnection jdbcConn = null;

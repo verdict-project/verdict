@@ -7,10 +7,10 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.verdictdb.category.PrestoTests;
+import org.verdictdb.commons.DatabaseConnectionHelpers;
 import org.verdictdb.commons.VerdictOption;
 import org.verdictdb.connection.CachedDbmsConnection;
 import org.verdictdb.connection.DbmsConnection;
@@ -25,7 +25,6 @@ import org.verdictdb.sqlsyntax.PrestoMemorySyntax;
 import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -70,18 +69,18 @@ public class PrestoTpchSelectQueryCoordinatorTest {
   private static final String PRESTO_SCHEMA =
       "coordinator_test_" + RandomStringUtils.randomAlphanumeric(8).toLowerCase();
 
-  private static final String TPCH_SCHEMA = "tpch.tiny";
+  //  private static final String TPCH_SCHEMA = "tpch.tiny";
 
   @BeforeClass
   public static void setupPrestoDatabase() throws SQLException, VerdictDBException, IOException {
     //    String prestoConnectionString =
     //        String.format("jdbc:presto://%s/%s/default", PRESTO_HOST, PRESTO_CATALOG);
     String prestoConnectionString = String.format("jdbc:presto://%s/memory", PRESTO_HOST);
-    conn = DriverManager.getConnection(prestoConnectionString, "root", "");
+    //    conn = DriverManager.getConnection(prestoConnectionString, "root", "");
     //    conn = DriverManager.getConnection(prestoConnectionString, PRESTO_USER, PRESTO_PASSWORD);
-    //    conn =
-    //        DatabaseConnectionHelpers.setupPresto(
-    //            prestoConnectionString, PRESTO_USER, PRESTO_PASSWORD, PRESTO_SCHEMA);
+    conn =
+        DatabaseConnectionHelpers.setupPrestoInMemory(
+            prestoConnectionString, PRESTO_USER, PRESTO_PASSWORD, PRESTO_SCHEMA);
 
     conn.setCatalog(PRESTO_CATALOG);
     stmt = conn.createStatement();
@@ -112,12 +111,18 @@ public class PrestoTpchSelectQueryCoordinatorTest {
     ScramblingCoordinator scrambler =
         new ScramblingCoordinator(dbmsConn, PRESTO_SCHEMA, PRESTO_SCHEMA, (long) 100);
     ScrambleMeta meta1 =
-        scrambler.scramble(TPCH_SCHEMA, "lineitem", PRESTO_SCHEMA, "lineitem_scrambled", "uniform");
+        scrambler.scramble(
+            PRESTO_SCHEMA, "lineitem", PRESTO_SCHEMA, "lineitem_scrambled", "uniform");
     ScrambleMeta meta2 =
-        scrambler.scramble(TPCH_SCHEMA, "orders", PRESTO_SCHEMA, "orders_scrambled", "uniform");
+        scrambler.scramble(PRESTO_SCHEMA, "orders", PRESTO_SCHEMA, "orders_scrambled", "uniform");
     ScrambleMeta meta3 =
         scrambler.scramble(
-            TPCH_SCHEMA, "lineitem", PRESTO_SCHEMA, "lineitem_hash_scrambled", "hash", "orderkey");
+            PRESTO_SCHEMA,
+            "lineitem",
+            PRESTO_SCHEMA,
+            "lineitem_hash_scrambled",
+            "hash",
+            "l_orderkey");
     meta.addScrambleMeta(meta1);
     meta.addScrambleMeta(meta2);
     meta.addScrambleMeta(meta3);
@@ -126,20 +131,20 @@ public class PrestoTpchSelectQueryCoordinatorTest {
   Pair<ExecutionResultReader, ResultSet> getAnswerPair(int queryNum)
       throws VerdictDBException, SQLException, IOException {
     String filename = "query" + queryNum + ".sql";
-    File file = new File("src/test/resources/tpch_test_query/presto_new/" + filename);
+    File file = new File("src/test/resources/tpch_test_query/presto/" + filename);
     String origSql = Files.toString(file, Charsets.UTF_8);
     JdbcConnection jdbcConn = new JdbcConnection(conn, new PrestoMemorySyntax());
     jdbcConn.setOutputDebugMessage(true);
     DbmsConnection dbmsconn = new CachedDbmsConnection(jdbcConn);
     dbmsconn.setDefaultSchema(PRESTO_SCHEMA);
-    String sql = origSql.replaceAll("TPCH_SCHEMA", TPCH_SCHEMA);
-    sql = sql.replaceAll("SCRAMBLE_SCHEMA", TPCH_SCHEMA);
+    String sql = origSql.replaceAll("TPCH_SCHEMA", PRESTO_SCHEMA);
+    sql = sql.replaceAll("SCRAMBLE_SCHEMA", PRESTO_SCHEMA);
 
     ResultSet rs = stmt.executeQuery(sql);
     SelectQueryCoordinator coordinator = new SelectQueryCoordinator(dbmsconn, options);
     coordinator.setScrambleMetaSet(meta);
 
-    sql = origSql.replaceAll("TPCH_SCHEMA", TPCH_SCHEMA);
+    sql = origSql.replaceAll("TPCH_SCHEMA", "memory." + PRESTO_SCHEMA);
     sql = sql.replaceAll("SCRAMBLE_SCHEMA", "memory." + PRESTO_SCHEMA);
 
     if (queryNum >= 100) {
@@ -183,7 +188,7 @@ public class PrestoTpchSelectQueryCoordinatorTest {
       DbmsQueryResult dbmsQueryResult = reader.next();
       cnt++;
 
-      if (cnt == blockSize) {
+      if (cnt == 10) {
         while (rs.next()) {
           dbmsQueryResult.next();
           assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
@@ -192,7 +197,7 @@ public class PrestoTpchSelectQueryCoordinatorTest {
         }
       }
     }
-    assertEquals(blockSize, cnt);
+    assertEquals(10, cnt);
   }
 
   @Test
@@ -205,14 +210,14 @@ public class PrestoTpchSelectQueryCoordinatorTest {
       DbmsQueryResult dbmsQueryResult = reader.next();
       cnt++;
 
-      if (cnt == blockSize) {
+      if (cnt == 10) {
         while (rs.next()) {
           dbmsQueryResult.next();
           assertEquals(convertObjectToLong(rs.getLong(1)), dbmsQueryResult.getLong(0));
         }
       }
     }
-    assertEquals(blockSize, cnt);
+    assertEquals(10, cnt);
   }
 
   @Test
@@ -225,14 +230,14 @@ public class PrestoTpchSelectQueryCoordinatorTest {
       DbmsQueryResult dbmsQueryResult = reader.next();
       cnt++;
 
-      if (cnt == blockSize) {
+      if (cnt == 10) {
         while (rs.next()) {
           dbmsQueryResult.next();
           assertEquals(convertObjectToLong(rs.getLong(1)), dbmsQueryResult.getLong(0));
         }
       }
     }
-    assertEquals(blockSize, cnt);
+    assertEquals(10, cnt);
   }
 
   @Test
@@ -247,7 +252,7 @@ public class PrestoTpchSelectQueryCoordinatorTest {
 
       // Note: due to the property of approx_distinct
       // the sum is not exactly equal to the original approx_distinct
-      if (cnt == blockSize) {
+      if (cnt == 10) {
         while (rs.next()) {
           dbmsQueryResult.next();
           long lowerBound = (long) (dbmsQueryResult.getLong(0) * 0.8);
@@ -257,7 +262,7 @@ public class PrestoTpchSelectQueryCoordinatorTest {
         }
       }
     }
-    assertEquals(blockSize, cnt);
+    assertEquals(10, cnt);
   }
 
   @Test
@@ -269,7 +274,7 @@ public class PrestoTpchSelectQueryCoordinatorTest {
     while (reader.hasNext()) {
       DbmsQueryResult dbmsQueryResult = reader.next();
       cnt++;
-      if (cnt == blockSize) {
+      if (cnt == 10) {
         while (rs.next()) {
           dbmsQueryResult.next();
           assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
@@ -285,7 +290,7 @@ public class PrestoTpchSelectQueryCoordinatorTest {
         }
       }
     }
-    assertEquals(blockSize, cnt);
+    assertEquals(10, cnt);
   }
 
   @Test
@@ -300,7 +305,7 @@ public class PrestoTpchSelectQueryCoordinatorTest {
       dbmsQueryResult = reader.next();
       cnt++;
     }
-    assertEquals(199, cnt);
+    assertEquals(12, cnt);
     while (rs.next()) {
       dbmsQueryResult.next();
       assertEquals(convertObjectToDouble(rs.getObject(1)), dbmsQueryResult.getDouble(0), 1);
@@ -321,7 +326,7 @@ public class PrestoTpchSelectQueryCoordinatorTest {
       dbmsQueryResult = reader.next();
       cnt++;
     }
-    assertEquals(199, cnt);
+    assertEquals(12, cnt);
     while (rs.next()) {
       dbmsQueryResult.next();
       assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
@@ -340,7 +345,7 @@ public class PrestoTpchSelectQueryCoordinatorTest {
       dbmsQueryResult = reader.next();
       cnt++;
     }
-    assertEquals(199, cnt);
+    assertEquals(12, cnt);
     while (rs.next()) {
       dbmsQueryResult.next();
       assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
@@ -359,7 +364,7 @@ public class PrestoTpchSelectQueryCoordinatorTest {
       dbmsQueryResult = reader.next();
       cnt++;
     }
-    assertEquals(100, cnt);
+    assertEquals(10, cnt);
     while (rs.next()) {
       dbmsQueryResult.next();
       assertEquals(convertObjectToDouble(rs.getObject(1)), dbmsQueryResult.getDouble(0), 1);
@@ -377,7 +382,7 @@ public class PrestoTpchSelectQueryCoordinatorTest {
       dbmsQueryResult = reader.next();
       cnt++;
     }
-    assertEquals(199, cnt);
+    assertEquals(12, cnt);
     while (rs.next()) {
       dbmsQueryResult.next();
       assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
@@ -398,7 +403,7 @@ public class PrestoTpchSelectQueryCoordinatorTest {
       dbmsQueryResult = reader.next();
       cnt++;
     }
-    assertEquals(199, cnt);
+    assertEquals(12, cnt);
     while (rs.next()) {
       dbmsQueryResult.next();
       assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
@@ -418,7 +423,7 @@ public class PrestoTpchSelectQueryCoordinatorTest {
       dbmsQueryResult = reader.next();
       cnt++;
     }
-    assertEquals(199, cnt);
+    assertEquals(12, cnt);
     while (rs.next()) {
       dbmsQueryResult.next();
       assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
@@ -438,7 +443,7 @@ public class PrestoTpchSelectQueryCoordinatorTest {
       dbmsQueryResult = reader.next();
       cnt++;
     }
-    assertEquals(199, cnt);
+    assertEquals(12, cnt);
     while (rs.next()) {
       dbmsQueryResult.next();
       assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
@@ -458,7 +463,7 @@ public class PrestoTpchSelectQueryCoordinatorTest {
       dbmsQueryResult = reader.next();
       cnt++;
     }
-    assertEquals(199, cnt);
+    assertEquals(12, cnt);
     while (rs.next()) {
       dbmsQueryResult.next();
       assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
@@ -478,7 +483,7 @@ public class PrestoTpchSelectQueryCoordinatorTest {
       dbmsQueryResult = reader.next();
       cnt++;
     }
-    assertEquals(100, cnt);
+    assertEquals(3, cnt);
     while (rs.next()) {
       dbmsQueryResult.next();
       assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
@@ -497,7 +502,7 @@ public class PrestoTpchSelectQueryCoordinatorTest {
       dbmsQueryResult = reader.next();
       cnt++;
     }
-    assertEquals(100, cnt);
+    assertEquals(10, cnt);
     while (rs.next()) {
       dbmsQueryResult.next();
       assertEquals(convertObjectToDouble(rs.getObject(2)), dbmsQueryResult.getDouble(1), 1);
@@ -516,7 +521,7 @@ public class PrestoTpchSelectQueryCoordinatorTest {
       dbmsQueryResult = reader.next();
       cnt++;
     }
-    assertEquals(100, cnt);
+    assertEquals(10, cnt);
     while (rs.next()) {
       dbmsQueryResult.next();
       assertEquals(convertObjectToDouble(rs.getObject(2)), dbmsQueryResult.getDouble(1), 1);
@@ -535,16 +540,13 @@ public class PrestoTpchSelectQueryCoordinatorTest {
       dbmsQueryResult = reader.next();
       cnt++;
     }
-    assertEquals(100, cnt);
+    assertEquals(10, cnt);
     while (rs.next()) {
       dbmsQueryResult.next();
       assertEquals(convertObjectToDouble(rs.getObject(1)), dbmsQueryResult.getDouble(0), 1);
     }
   }
 
-  // has the problem of 'Max requests queued per destination 1024 exceeded for HttpDestination' for
-  // in memory unit testing
-  @Ignore
   @Test
   public void query18Test() throws VerdictDBException, SQLException, IOException {
     Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(18);
@@ -556,7 +558,7 @@ public class PrestoTpchSelectQueryCoordinatorTest {
       dbmsQueryResult = reader.next();
       cnt++;
     }
-    assertEquals(199, cnt);
+    assertEquals(12, cnt);
     while (rs.next()) {
       dbmsQueryResult.next();
       assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
@@ -579,7 +581,7 @@ public class PrestoTpchSelectQueryCoordinatorTest {
       dbmsQueryResult = reader.next();
       cnt++;
     }
-    assertEquals(100, cnt);
+    assertEquals(10, cnt);
     while (rs.next()) {
       dbmsQueryResult.next();
       assertEquals(convertObjectToDouble(rs.getObject(1)), dbmsQueryResult.getDouble(0), 1);
@@ -597,7 +599,7 @@ public class PrestoTpchSelectQueryCoordinatorTest {
       dbmsQueryResult = reader.next();
       cnt++;
     }
-    assertEquals(100, cnt);
+    assertEquals(10, cnt);
     while (rs.next()) {
       dbmsQueryResult.next();
       assertEquals(rs.getString(1), dbmsQueryResult.getString(0));
@@ -605,9 +607,6 @@ public class PrestoTpchSelectQueryCoordinatorTest {
     }
   }
 
-  // has the problem of 'Max requests queued per destination 1024 exceeded for HttpDestination' for
-  // in memory unit testing
-  @Ignore
   @Test
   public void query21Test() throws VerdictDBException, SQLException, IOException {
     Pair<ExecutionResultReader, ResultSet> answerPair = getAnswerPair(21);
@@ -619,7 +618,7 @@ public class PrestoTpchSelectQueryCoordinatorTest {
       dbmsQueryResult = reader.next();
       cnt++;
     }
-    assertEquals(199, cnt);
+    assertEquals(12, cnt);
     while (rs.next()) {
       dbmsQueryResult.next();
       assertEquals(rs.getString(1), dbmsQueryResult.getString(0));

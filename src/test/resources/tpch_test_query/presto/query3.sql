@@ -9,8 +9,8 @@ from
 where
     c_custkey = o_custkey
     and l_orderkey = o_orderkey
-    and date(o_orderdate) < date '1998-12-01'
-    and date(l_shipdate) > date '1996-12-01'
+    and o_orderdate < date '1998-12-01'
+    and l_shipdate > date '1996-12-01'
 group by
     l_orderkey,
     o_orderdate,

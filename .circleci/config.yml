@@ -207,7 +207,7 @@ jobs:
           command: docker ps
       - run:
           name: Increase value for max-requests-queued-per-destination
-          command: docker ps --filter="ancestor=starburstdata/presto:latest" --format "{{.Names}}" | xargs -I{} docker exec {} /bin/sh -c "echo scheduler.http-client.max-requests-queued-per-destination=32000 >> /etc/presto/config.properties"
+          command: docker ps --filter="ancestor=starburstdata/presto:latest" --format "{{.Names}}" | xargs -I{} docker exec {} /bin/sh -c "echo scheduler.http-client.max-requests-queued-per-destination=4096 >> /etc/presto/config.properties"
       - run:
           name: Restart Presto with updated configuration value
           command: docker ps --filter="ancestor=starburstdata/presto:latest" --format "{{.Names}}" | xargs -I{} docker exec -d {} /usr/lib/presto/bin/launcher restart
