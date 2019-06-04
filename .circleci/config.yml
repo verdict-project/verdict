@@ -207,7 +207,7 @@ jobs:
       #      - run:
       #          name: Launch presto docker image
       #          command: docker run -d -p 8080:8080 --name verdictdb-presto starburstdata/presto
-      - run: docker ps
+      #      - run: docker ps
       - run:
           name: Wait for Presto Database
           command: dockerize -wait tcp://127.0.0.1:8080 -timeout 1m
