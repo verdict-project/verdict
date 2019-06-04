@@ -16,25 +16,9 @@
 
 package org.verdictdb.sqlwriter;
 
-import java.util.List;
-import java.util.Set;
-
-import org.verdictdb.core.sqlobject.AbstractRelation;
-import org.verdictdb.core.sqlobject.AliasReference;
-import org.verdictdb.core.sqlobject.AliasedColumn;
-import org.verdictdb.core.sqlobject.AsteriskColumn;
-import org.verdictdb.core.sqlobject.BaseColumn;
-import org.verdictdb.core.sqlobject.BaseTable;
-import org.verdictdb.core.sqlobject.ColumnOp;
-import org.verdictdb.core.sqlobject.ConstantColumn;
-import org.verdictdb.core.sqlobject.GroupingAttribute;
-import org.verdictdb.core.sqlobject.JoinTable;
-import org.verdictdb.core.sqlobject.OrderbyAttribute;
-import org.verdictdb.core.sqlobject.SelectItem;
-import org.verdictdb.core.sqlobject.SelectQuery;
-import org.verdictdb.core.sqlobject.SetOperationRelation;
-import org.verdictdb.core.sqlobject.SubqueryColumn;
-import org.verdictdb.core.sqlobject.UnnamedColumn;
+import com.google.common.base.Optional;
+import com.google.common.collect.Sets;
+import org.verdictdb.core.sqlobject.*;
 import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBTypeException;
 import org.verdictdb.exception.VerdictDBValueException;
@@ -43,8 +27,8 @@ import org.verdictdb.sqlsyntax.PostgresqlSyntax;
 import org.verdictdb.sqlsyntax.PrestoHiveSyntax;
 import org.verdictdb.sqlsyntax.SqlSyntax;
 
-import com.google.common.base.Optional;
-import com.google.common.collect.Sets;
+import java.util.List;
+import java.util.Set;
 
 public class SelectQueryToSql {
 
@@ -121,9 +105,7 @@ public class SelectQueryToSql {
       return ((ConstantColumn) column).getValue().toString();
     } else if (column instanceof AsteriskColumn) {
       return "*";
-    } 
-    
-    else if (column instanceof ColumnOp) {
+    } else if (column instanceof ColumnOp) {
       ColumnOp columnOp = (ColumnOp) column;
       if (columnOp.getOpType().equals("avg")) {
         return "avg(" + unnamedColumnToSqlPart(columnOp.getOperand()) + ")";
@@ -503,7 +485,16 @@ public class SelectQueryToSql {
       if (base.getSchemaName().isEmpty()) {
         sql.append(quoteName(base.getTableName()));
       } else {
-        sql.append(quoteName(base.getSchemaName()) + "." + quoteName(base.getTableName()));
+        if (base.getCatalogName() == null || base.getCatalogName().isEmpty()) {
+          sql.append(quoteName(base.getSchemaName()) + "." + quoteName(base.getTableName()));
+        } else {
+          sql.append(
+              quoteName(base.getCatalogName())
+                  + "."
+                  + quoteName(base.getSchemaName())
+                  + "."
+                  + quoteName(base.getTableName()));
+        }
       }
       if (base.getAliasName().isPresent()) {
         sql.append(" as " + base.getAliasName().get());

@@ -40,8 +40,8 @@ import static org.junit.Assert.assertTrue;
 @RunWith(Parameterized.class)
 public class CreateScrambleTableFromSqlTest {
 
-  // Disabled redshift test due to unavailable test instance
-  private static final String[] targetDatabases = {"mysql", "impala", "postgresql"};
+  // Disabled impala, redshift test due to unavailable test instance
+  private static final String[] targetDatabases = {"mysql", "postgresql"};
   //  private static final String[] targetDatabases = {"mysql", "impala", "redshift", "postgresql"};
   //  private static final String[] targetDatabases = {"mysql"};
 
@@ -72,8 +72,8 @@ public class CreateScrambleTableFromSqlTest {
     options.setVerdictTempSchemaName(TEMP_SCHEMA_NAME);
     options.setVerdictMetaSchemaName(TEMP_SCHEMA_NAME);
     setupMysql();
-    setupImpala();
-    // Disabled redshift test due to unavailable test instance
+    // Disabled impala + redshift test due to unavailable test instance
+    //    setupImpala();
     //    setupRedshift();
     setupPostgresql();
   }

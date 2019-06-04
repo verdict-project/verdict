@@ -31,6 +31,8 @@ public abstract class SqlSyntax {
 
   public abstract String getColumnsCommand(String schema, String table);
 
+  public abstract String getColumnsCommand(String catalog, String schema, String table);
+
   // The column index that stored meta information in the original database
   public abstract int getColumnTypeColumnIndex();
 
@@ -53,33 +55,33 @@ public abstract class SqlSyntax {
   public abstract int getTableNameColumnIndex();
 
   public abstract String randFunction();
-  
+
   /**
-   * This indicates the size of each block. Using a smaller block increases the speed at the cost
-   * of some processing overhead.
+   * This indicates the size of each block. Using a smaller block increases the speed at the cost of
+   * some processing overhead.
+   *
    * @return
    */
   public long getRecommendedblockSize() {
     return (int) 1e6;
   }
-  
-  
+
   /**
    * Returns a hash value between 0 (inclusive) and 1 (exclusive).
-   * 
-   * This hash function is supposed to provide good randomization quality. That is,
-   * when an arbitrary set of elements are hashed, the distribution should be even.
-   * 
-   * It is important to note that the argument is already quoted column names or values.
-   * 
+   *
+   * <p>This hash function is supposed to provide good randomization quality. That is, when an
+   * arbitrary set of elements are hashed, the distribution should be even.
+   *
+   * <p>It is important to note that the argument is already quoted column names or values.
+   *
    * @param column The column name
    * @param upper_bound The upper bound
    * @return Hashed integer
    */
   public abstract String hashFunction(String column);
-  
+
   // this indicates 0.00001 precision
-  final protected int hashPrecision = 100000;
+  protected final int hashPrecision = 100000;
 
   public abstract boolean isAsRequiredBeforeSelectInCreateTable();
 

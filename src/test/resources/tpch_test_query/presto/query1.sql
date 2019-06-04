@@ -11,7 +11,7 @@ select
     count(*) as count_order
 from  lineitem
 where
-    date(l_shipdate) <= date '1998-12-01'
+    l_shipdate <= date '1998-12-01'
 group by
     l_returnflag,
     l_linestatus

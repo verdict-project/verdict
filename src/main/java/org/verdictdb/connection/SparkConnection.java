@@ -16,9 +16,6 @@
 
 package org.verdictdb.connection;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.spark.sql.Dataset;
@@ -30,6 +27,9 @@ import org.verdictdb.exception.VerdictDBDbmsException;
 import org.verdictdb.sqlsyntax.SparkSyntax;
 import org.verdictdb.sqlsyntax.SqlSyntax;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class SparkConnection extends DbmsConnection {
 
   SparkSession sc;
@@ -37,14 +37,14 @@ public class SparkConnection extends DbmsConnection {
   SqlSyntax syntax;
 
   String currentSchema;
-  
+
   private VerdictDBLogger log = VerdictDBLogger.getLogger(this.getClass());;
 
   public SparkConnection(Object sc) {
     this.sc = (SparkSession) sc;
     this.syntax = new SparkSyntax();
   }
-  
+
   public SparkConnection(SparkSession sc) {
     this.sc = sc;
     this.syntax = new SparkSyntax();
@@ -85,6 +85,29 @@ public class SparkConnection extends DbmsConnection {
 
   @Override
   public List<Pair<String, String>> getColumns(String schema, String table)
+      throws VerdictDBDbmsException {
+    List<Pair<String, String>> columns = new ArrayList<>();
+    DbmsQueryResult queryResult = execute(syntax.getColumnsCommand(schema, table));
+    while (queryResult.next()) {
+      String name = queryResult.getString(syntax.getColumnNameColumnIndex());
+      String type = queryResult.getString(syntax.getColumnTypeColumnIndex());
+      type = type.toLowerCase();
+
+      // when there exists partitions in a table, this extra information will be returned.
+      // we should ignore this.
+      if (name.equalsIgnoreCase("# Partition Information")) {
+        break;
+      }
+
+      columns.add(new ImmutablePair<>(name, type));
+    }
+
+    return columns;
+  }
+
+  // ignores catalog
+  @Override
+  public List<Pair<String, String>> getColumns(String catalog, String schema, String table)
       throws VerdictDBDbmsException {
     List<Pair<String, String>> columns = new ArrayList<>();
     DbmsQueryResult queryResult = execute(syntax.getColumnsCommand(schema, table));
@@ -149,9 +172,9 @@ public class SparkConnection extends DbmsConnection {
     }
     return finalResult;
   }
-  
+
   public DbmsQueryResult executeSingle(String sql) throws VerdictDBDbmsException {
-    sql = sql.replace(";", "");   // remove semicolons
+    sql = sql.replace(";", ""); // remove semicolons
     log.trace("Issues the following query to Spark: " + sql);
 
     try {
@@ -171,11 +194,9 @@ public class SparkConnection extends DbmsConnection {
   public SqlSyntax getSyntax() {
     return syntax;
   }
-  
+
   @Override
-  public void abort() {
-    
-  }
+  public void abort() {}
 
   @Override
   public void close() {

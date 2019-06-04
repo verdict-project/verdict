@@ -16,12 +16,12 @@
 
 package org.verdictdb.sqlsyntax;
 
+import com.google.common.collect.Lists;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-
-import com.google.common.collect.Lists;
 
 public class MysqlSyntax extends SqlSyntax {
 
@@ -51,6 +51,11 @@ public class MysqlSyntax extends SqlSyntax {
 
   @Override
   public String getColumnsCommand(String schema, String table) {
+    return "show columns in " + quoteName(table) + " in " + quoteName(schema);
+  }
+
+  @Override
+  public String getColumnsCommand(String catalog, String schema, String table) {
     return "show columns in " + quoteName(table) + " in " + quoteName(schema);
   }
 
@@ -206,28 +211,20 @@ public class MysqlSyntax extends SqlSyntax {
 
   /**
    * The following query returns 9.6757 (9.6757 / 100 = 0.0968):
-   * 
-   * select stddev(c)
-   * from (
-   *     select v, count(*) as c
-   *     from (
-   *         select conv(substr(md5(value), 1, 8), 16, 10) % 100 as v
-   *         from mytable
-   *     ) t1
-   *     group by v
-   * ) t2;
-   * 
-   * where mytable contains the integers from 0 to 10000.
-   * 
-   * Note that the stddev of rand() is sqrt(0.01 * 0.99) = 0.09949874371.
+   *
+   * <p>select stddev(c) from ( select v, count(*) as c from ( select conv(substr(md5(value), 1, 8),
+   * 16, 10) % 100 as v from mytable ) t1 group by v ) t2;
+   *
+   * <p>where mytable contains the integers from 0 to 10000.
+   *
+   * <p>Note that the stddev of rand() is sqrt(0.01 * 0.99) = 0.09949874371.
    */
   @Override
   public String hashFunction(String column) {
-    String f = String.format(
-        "(conv(substr(md5(%s), 1, 8), 16, 10) %% %d) / %d",
-        column, hashPrecision, hashPrecision);
+    String f =
+        String.format(
+            "(conv(substr(md5(%s), 1, 8), 16, 10) %% %d) / %d",
+            column, hashPrecision, hashPrecision);
     return f;
   }
-
-
 }

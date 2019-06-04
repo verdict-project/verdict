@@ -27,9 +27,19 @@ public class BaseTable extends AbstractRelation {
 
   private static final long serialVersionUID = 8758804572670242146L;
 
+  String catalogName;
+
   String schemaName;
 
   String tableName;
+
+  public BaseTable(
+      String catalogName, String schemaName, String tableName, String tableSourceAlias) {
+    if (catalogName != null) this.catalogName = catalogName;
+    if (schemaName != null) this.schemaName = schemaName;
+    this.tableName = tableName;
+    if (tableSourceAlias != null) super.setAliasName(tableSourceAlias);
+  }
 
   public BaseTable(String schemaName, String tableName, String tableSourceAlias) {
     this.schemaName = schemaName;
@@ -54,6 +64,10 @@ public class BaseTable extends AbstractRelation {
 
   public String getSchemaName() {
     return schemaName;
+  }
+
+  public String getCatalogName() {
+    return catalogName;
   }
 
   public void setSchemaName(String schemaName) {

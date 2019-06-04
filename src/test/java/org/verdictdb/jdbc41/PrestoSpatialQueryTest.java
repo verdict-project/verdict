@@ -16,14 +16,6 @@
 
 package org.verdictdb.jdbc41;
 
-import static org.junit.Assert.assertEquals;
-
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -32,6 +24,14 @@ import org.junit.experimental.categories.Category;
 import org.verdictdb.category.PrestoTests;
 import org.verdictdb.commons.VerdictOption;
 import org.verdictdb.exception.VerdictDBDbmsException;
+
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+import static org.junit.Assert.assertEquals;
 
 /** Created by Dong Young Yoon on 8/16/18. */
 @Category(PrestoTests.class)
@@ -55,10 +55,14 @@ public class PrestoSpatialQueryTest {
   private static final String PRESTO_PASSWORD;
 
   static {
-    PRESTO_HOST = System.getenv("VERDICTDB_TEST_PRESTO_HOST");
-    PRESTO_CATALOG = System.getenv("VERDICTDB_TEST_PRESTO_CATALOG");
-    PRESTO_USER = System.getenv("VERDICTDB_TEST_PRESTO_USER");
-    PRESTO_PASSWORD = System.getenv("VERDICTDB_TEST_PRESTO_PASSWORD");
+    PRESTO_HOST = "localhost:8080";
+    PRESTO_CATALOG = "memory";
+    PRESTO_USER = "root";
+    PRESTO_PASSWORD = "";
+    //    PRESTO_HOST = System.getenv("VERDICTDB_TEST_PRESTO_HOST");
+    //    PRESTO_CATALOG = System.getenv("VERDICTDB_TEST_PRESTO_CATALOG");
+    //    PRESTO_USER = System.getenv("VERDICTDB_TEST_PRESTO_USER");
+    //    PRESTO_PASSWORD = System.getenv("VERDICTDB_TEST_PRESTO_PASSWORD");
   }
 
   private static final String SCHEMA_NAME =
@@ -79,70 +83,82 @@ public class PrestoSpatialQueryTest {
   @AfterClass
   public static void tearDown() throws SQLException {
     ResultSet rs =
-        conn.createStatement().executeQuery(String.format("SHOW TABLES IN %s", SCHEMA_NAME));
-    while (rs.next()) {
-      conn.createStatement()
-          .execute(String.format("DROP TABLE IF EXISTS %s.%s", SCHEMA_NAME, rs.getString(1)));
-    }
-    rs.close();
-    conn.createStatement().execute(String.format("DROP SCHEMA IF EXISTS %s", SCHEMA_NAME));
-    conn.createStatement()
-        .execute(String.format("CREATE SCHEMA IF NOT EXISTS %s", VERDICT_META_SCHEMA));
-    rs =
-        conn.createStatement()
-            .executeQuery(String.format("SHOW TABLES IN %s", VERDICT_META_SCHEMA));
+        conn.createStatement().executeQuery(String.format("SHOW TABLES IN memory.%s", SCHEMA_NAME));
     while (rs.next()) {
       conn.createStatement()
           .execute(
-              String.format("DROP TABLE IF EXISTS %s.%s", VERDICT_META_SCHEMA, rs.getString(1)));
+              String.format("DROP TABLE IF EXISTS memory.%s.%s", SCHEMA_NAME, rs.getString(1)));
     }
     rs.close();
-    conn.createStatement().execute(String.format("DROP SCHEMA IF EXISTS %s", VERDICT_META_SCHEMA));
+    conn.createStatement().execute(String.format("DROP SCHEMA IF EXISTS memory.%s", SCHEMA_NAME));
     conn.createStatement()
-        .execute(String.format("CREATE SCHEMA IF NOT EXISTS %s", VERDICT_TEMP_SCHEMA));
+        .execute(String.format("CREATE SCHEMA IF NOT EXISTS memory.%s", VERDICT_META_SCHEMA));
     rs =
         conn.createStatement()
-            .executeQuery(String.format("SHOW TABLES IN %s", VERDICT_TEMP_SCHEMA));
+            .executeQuery(String.format("SHOW TABLES IN memory.%s", VERDICT_META_SCHEMA));
     while (rs.next()) {
       conn.createStatement()
           .execute(
-              String.format("DROP TABLE IF EXISTS %s.%s", VERDICT_TEMP_SCHEMA, rs.getString(1)));
+              String.format(
+                  "DROP TABLE IF EXISTS memory.%s.%s", VERDICT_META_SCHEMA, rs.getString(1)));
     }
     rs.close();
-    conn.createStatement().execute(String.format("DROP SCHEMA IF EXISTS %s", VERDICT_TEMP_SCHEMA));
+    conn.createStatement()
+        .execute(String.format("DROP SCHEMA IF EXISTS memory.%s", VERDICT_META_SCHEMA));
+    conn.createStatement()
+        .execute(String.format("CREATE SCHEMA IF NOT EXISTS memory.%s", VERDICT_TEMP_SCHEMA));
+    rs =
+        conn.createStatement()
+            .executeQuery(String.format("SHOW TABLES IN memory.%s", VERDICT_TEMP_SCHEMA));
+    while (rs.next()) {
+      conn.createStatement()
+          .execute(
+              String.format(
+                  "DROP TABLE IF EXISTS memory.%s.%s", VERDICT_TEMP_SCHEMA, rs.getString(1)));
+    }
+    rs.close();
+    conn.createStatement()
+        .execute(String.format("DROP SCHEMA IF EXISTS memory.%s", VERDICT_TEMP_SCHEMA));
   }
 
   private static Connection setupPresto() throws SQLException, VerdictDBDbmsException, IOException {
     String connectionString =
         String.format("jdbc:presto://%s/%s/default", PRESTO_HOST, PRESTO_CATALOG);
+    //    String verdictConnectionString =
+    //        String.format(
+    //
+    // "jdbc:verdict:presto://%s/%s/default;loglevel=debug;verdictdbmetaschema=%s;verdictdbtempschema=%s",
+    //            PRESTO_HOST, PRESTO_CATALOG, SCHEMA_NAME, SCHEMA_NAME, SCHEMA_NAME);
     String verdictConnectionString =
         String.format(
-            "jdbc:verdict:presto://%s/%s/default;loglevel=debug;verdictdbmetaschema=%s;verdictdbtempschema=%s",
-            PRESTO_HOST, PRESTO_CATALOG, SCHEMA_NAME, SCHEMA_NAME, SCHEMA_NAME);
+            "jdbc:verdict:presto://%s/memory/default;verdictdbtempschema=%s&verdictdbmetaschema=%s",
+            PRESTO_HOST, VERDICT_TEMP_SCHEMA, VERDICT_META_SCHEMA);
     conn = DriverManager.getConnection(connectionString, PRESTO_USER, PRESTO_PASSWORD);
     vc = DriverManager.getConnection(verdictConnectionString, PRESTO_USER, PRESTO_PASSWORD);
     conn.createStatement()
         .execute(
-            String.format("CREATE SCHEMA IF NOT EXISTS %s", options.getVerdictTempSchemaName()));
+            String.format(
+                "CREATE SCHEMA IF NOT EXISTS memory.%s", options.getVerdictTempSchemaName()));
 
-    conn.createStatement().execute(String.format("CREATE SCHEMA IF NOT EXISTS %s", SCHEMA_NAME));
+    conn.createStatement()
+        .execute(String.format("CREATE SCHEMA IF NOT EXISTS memory.%s", SCHEMA_NAME));
 
     conn.createStatement()
         .execute(
             String.format(
-                "CREATE TABLE IF NOT EXISTS %s.%s (x int, y int)", SCHEMA_NAME, TABLE_NAME));
+                "CREATE TABLE IF NOT EXISTS memory.%s.%s (x int, y int)", SCHEMA_NAME, TABLE_NAME));
 
     conn.createStatement()
-        .execute(String.format("INSERT INTO %s.%s VALUES (1,1)", SCHEMA_NAME, TABLE_NAME));
+        .execute(String.format("INSERT INTO memory.%s.%s VALUES (1,1)", SCHEMA_NAME, TABLE_NAME));
     conn.createStatement()
-        .execute(String.format("INSERT INTO %s.%s VALUES (2,2)", SCHEMA_NAME, TABLE_NAME));
+        .execute(String.format("INSERT INTO memory.%s.%s VALUES (2,2)", SCHEMA_NAME, TABLE_NAME));
     conn.createStatement()
-        .execute(String.format("INSERT INTO %s.%s VALUES (3,3)", SCHEMA_NAME, TABLE_NAME));
+        .execute(String.format("INSERT INTO memory.%s.%s VALUES (3,3)", SCHEMA_NAME, TABLE_NAME));
 
     vc.createStatement()
         .execute(
             String.format(
-                "CREATE SCRAMBLE %s.spatial_scramble FROM %s.%s",
+                "CREATE SCRAMBLE memory.%s.spatial_scramble FROM memory.%s.%s",
                 SCHEMA_NAME, SCHEMA_NAME, TABLE_NAME));
     return conn;
   }
@@ -166,7 +182,7 @@ public class PrestoSpatialQueryTest {
   public void runSimpleSelectSTContainsTest() throws SQLException {
     String sql =
         String.format(
-            "SELECT * FROM %s.%s WHERE "
+            "SELECT * FROM memory.%s.%s WHERE "
                 + "ST_CONTAINS(ST_POLYGON('polygon ((0 0, 2 0, 2 2, 0 2, 0 0))'), ST_POINT(x,y)) "
                 + "ORDER BY x",
             SCHEMA_NAME, TABLE_NAME);
@@ -186,7 +202,7 @@ public class PrestoSpatialQueryTest {
   public void runSimpleSelectSTIntersectsTest() throws SQLException {
     String sql =
         String.format(
-            "SELECT * FROM %s.%s WHERE "
+            "SELECT * FROM memory.%s.%s WHERE "
                 + "ST_INTERSECTS(ST_POLYGON('polygon ((0 0, 2 0, 2 2, 0 2, 0 0))'), ST_POINT(x,y)) "
                 + "ORDER BY x",
             SCHEMA_NAME, TABLE_NAME);

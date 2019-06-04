@@ -16,14 +16,6 @@
 
 package org.verdictdb.core.execplan;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-
 import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.connection.CachedDbmsConnection;
 import org.verdictdb.connection.DbmsConnection;
@@ -31,7 +23,6 @@ import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.connection.SparkConnection;
 import org.verdictdb.core.querying.ExecutableNodeBase;
-import org.verdictdb.core.querying.SelectAggExecutionNode;
 import org.verdictdb.core.querying.ola.AsyncAggExecutionNode;
 import org.verdictdb.core.querying.ola.SelectAsyncAggExecutionNode;
 import org.verdictdb.core.querying.simplifier.ConsolidatedExecutionNode;
@@ -41,6 +32,14 @@ import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.exception.VerdictDBValueException;
 import org.verdictdb.sqlsyntax.MysqlSyntax;
 import org.verdictdb.sqlwriter.QueryToSql;
+
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 public class ExecutableNodeRunner implements Runnable {
 
@@ -52,7 +51,7 @@ public class ExecutableNodeRunner implements Runnable {
 
   int dependentCount;
 
-//  private boolean isAborted = false;
+  //  private boolean isAborted = false;
 
   /**
    * initiated: node is created but has not started running running: currently running aborted: node
@@ -60,7 +59,12 @@ public class ExecutableNodeRunner implements Runnable {
    * running successfully finished
    */
   enum NodeRunningStatus {
-    initiated, running, aborted, cancelled, completed, failed;
+    initiated,
+    running,
+    aborted,
+    cancelled,
+    completed,
+    failed;
   }
 
   private NodeRunningStatus status = NodeRunningStatus.initiated;
@@ -112,9 +116,7 @@ public class ExecutableNodeRunner implements Runnable {
     return status;
   }
 
-  /**
-   * Set aborted to the status of this node.
-   */
+  /** Set aborted to the status of this node. */
   public void setAborted() {
     //    isAborted = true;   // this will effectively end the loop within run().
     status = NodeRunningStatus.aborted;
@@ -134,9 +136,7 @@ public class ExecutableNodeRunner implements Runnable {
         || status == NodeRunningStatus.failed;
   }
 
-  /**
-   * Aborts this node.
-   */
+  /** Aborts this node. */
   public void abort() {
     log.trace(String.format("Aborts running this node %s", node.toString()));
     setAborted();
@@ -151,7 +151,7 @@ public class ExecutableNodeRunner implements Runnable {
 
   public boolean runThisAndDependents() {
     // first run all children on separate threads
-    // this function may be called again when run() is triggered upon a completion of one of 
+    // this function may be called again when run() is triggered upon a completion of one of
     // child nodes. Therefore, runChildren() is responsible for ensuring the same node does not
     // run again.
     runDependents();
@@ -198,17 +198,20 @@ public class ExecutableNodeRunner implements Runnable {
   private int getMaxNumberOfRunningNode() {
     if ((conn instanceof JdbcConnection && conn.getSyntax() instanceof MysqlSyntax)
         || (conn instanceof CachedDbmsConnection
-          && ((CachedDbmsConnection)conn).getOriginalConnection() instanceof JdbcConnection)
-          && ((CachedDbmsConnection)conn).getOriginalConnection().getSyntax() instanceof MysqlSyntax) {
+                && ((CachedDbmsConnection) conn).getOriginalConnection() instanceof JdbcConnection)
+            && ((CachedDbmsConnection) conn).getOriginalConnection().getSyntax()
+                instanceof MysqlSyntax) {
       // For MySQL, issue query one by one.
       if (node instanceof SelectAsyncAggExecutionNode || node instanceof AsyncAggExecutionNode) {
         return 1;
       } else {
         return 1;
       }
-    } else if (((conn instanceof SparkConnection) || (conn instanceof CachedDbmsConnection
-            && ((CachedDbmsConnection) conn).getOriginalConnection() instanceof SparkConnection))
-            && !(node instanceof SelectAsyncAggExecutionNode)) {
+    } else if (((conn instanceof SparkConnection)
+            || (conn instanceof CachedDbmsConnection
+                && ((CachedDbmsConnection) conn).getOriginalConnection()
+                    instanceof SparkConnection))
+        && !(node instanceof SelectAsyncAggExecutionNode)) {
       // Since abort() does not work for Spark (or I don't know how to do so), we issue query
       // one by one.
       return 1;
@@ -232,17 +235,20 @@ public class ExecutableNodeRunner implements Runnable {
           completedChildCount++;
         }
       }
-      log.trace(String.format(
-          "Running child: %d, Completed Child: %d, Success token received: %d",
-          runningChildCount, completedChildCount, successSourceCount));
+      log.trace(
+          String.format(
+              "Running child: %d, Completed Child: %d, Success token received: %d",
+              runningChildCount, completedChildCount, successSourceCount));
 
       // maintain the number of running nodes to a certain number
       List<ExecutableNodeBase> childNodes = ((ExecutableNodeBase) node).getSources();
-      int moreToRun = Math.min(
-          maxNumberOfRunningNode - runningChildCount,
-          ((ExecutableNodeBase) node).getSourceCount() - currentlyRunningOrCompleteNodeCount);
+      int moreToRun =
+          Math.min(
+              maxNumberOfRunningNode - runningChildCount,
+              ((ExecutableNodeBase) node).getSourceCount() - currentlyRunningOrCompleteNodeCount);
       for (int i = currentlyRunningOrCompleteNodeCount;
-          i < currentlyRunningOrCompleteNodeCount + moreToRun; i++) {
+          i < currentlyRunningOrCompleteNodeCount + moreToRun;
+          i++) {
         ExecutableNodeBase child = childNodes.get(i);
 
         ExecutableNodeRunner runner = child.getRegisteredRunner();
@@ -263,9 +269,7 @@ public class ExecutableNodeRunner implements Runnable {
     }
   }
 
-  /**
-   * A single run of this method consumes all combinations of the tokens in the queue.
-   */
+  /** A single run of this method consumes all combinations of the tokens in the queue. */
   @Override
   public synchronized void run() {
     //    String nodeType = node.getClass().getSimpleName();
@@ -284,7 +288,7 @@ public class ExecutableNodeRunner implements Runnable {
         executeAndBroadcast(Arrays.<ExecutionInfoToken>asList());
         broadcastAndTriggerRun(ExecutionInfoToken.successToken());
         markComplete();
-        //clearRunningTask();
+        // clearRunningTask();
         return;
       } catch (Exception e) {
         if (noNeedToRun()) {
@@ -326,7 +330,7 @@ public class ExecutableNodeRunner implements Runnable {
       if (areAllSuccess(tokens)) {
         log.trace(String.format("All dependent nodes are finished for %s", node.toString()));
         broadcastAndTriggerRun(ExecutionInfoToken.successToken());
-        //clearRunningTask();
+        // clearRunningTask();
         markComplete();
         return;
       }
@@ -399,15 +403,15 @@ public class ExecutableNodeRunner implements Runnable {
       //      logger.trace(token.toString());
     }
 
-    //if (node instanceof SelectAggExecutionNode && areAllStatusTokens(Arrays.asList(token))) {
+    // if (node instanceof SelectAggExecutionNode && areAllStatusTokens(Arrays.asList(token))) {
     //  status = NodeRunningStatus.completed;
-    //}
+    // }
 
     for (ExecutableNode dest : node.getSubscribers()) {
       ExecutionInfoToken copiedToken = token.deepcopy();
       // set runner with success token complete before notifying subscriber
       if (copiedToken.isSuccessToken()
-          && node.getRegisteredRunner().getStatus()!=NodeRunningStatus.completed) {
+          && node.getRegisteredRunner().getStatus() != NodeRunningStatus.completed) {
         node.getRegisteredRunner().status = NodeRunningStatus.completed;
       }
       dest.getNotified(node, copiedToken);
@@ -431,15 +435,14 @@ public class ExecutableNodeRunner implements Runnable {
   }
 
   /**
-   * Execute the associated node. This method is synchronized on object level, assuming that
-   * every node has its own associated ExecutableNodeRunner, which is actually the case.
-   * 
+   * Execute the associated node. This method is synchronized on object level, assuming that every
+   * node has its own associated ExecutableNodeRunner, which is actually the case.
+   *
    * @param tokens Contains information from the downstream nodes.
    * @return Information for the upstream nodes.
    * @throws VerdictDBException
    */
-  public ExecutionInfoToken execute(List<ExecutionInfoToken> tokens) 
-      throws VerdictDBException {
+  public ExecutionInfoToken execute(List<ExecutionInfoToken> tokens) throws VerdictDBException {
     if (tokens.size() > 0 && tokens.get(0).isStatusToken()) {
       return null;
     }
@@ -516,14 +519,14 @@ public class ExecutableNodeRunner implements Runnable {
 
   boolean areAllSuccess(List<ExecutionInfoToken> tokens) {
     for (ExecutionInfoToken t : tokens) {
-          if (t.isSuccessToken()) {
-            synchronized ((Object) successSourceCount) {
-              successSourceCount++;
-            }
-            log.trace(String.format("Success count of %s: %d", node.toString(), successSourceCount));
-          } else {
-            return false;
-          }
+      if (t.isSuccessToken()) {
+        synchronized ((Object) successSourceCount) {
+          successSourceCount++;
+        }
+        log.trace(String.format("Success count of %s: %d", node.toString(), successSourceCount));
+      } else {
+        return false;
+      }
     }
 
     if (successSourceCount == dependentCount) {

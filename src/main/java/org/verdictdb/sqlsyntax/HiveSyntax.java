@@ -16,10 +16,10 @@
 
 package org.verdictdb.sqlsyntax;
 
+import com.google.common.collect.Lists;
+
 import java.util.Collection;
 import java.util.List;
-
-import com.google.common.collect.Lists;
 
 public class HiveSyntax extends SqlSyntax {
 
@@ -45,6 +45,15 @@ public class HiveSyntax extends SqlSyntax {
   @Override
   public String getColumnsCommand(String schema, String table) {
     return "DESCRIBE " + quoteName(schema) + "." + quoteName(table);
+  }
+
+  @Override
+  public String getColumnsCommand(String catalog, String schema, String table) {
+    if (!catalog.isEmpty()) {
+      return "DESCRIBE " + quoteName(catalog) + "." + quoteName(schema) + "." + quoteName(table);
+    } else {
+      return "DESCRIBE " + quoteName(schema) + "." + quoteName(table);
+    }
   }
 
   @Override
@@ -144,26 +153,20 @@ public class HiveSyntax extends SqlSyntax {
 
   /**
    * The following query returns 9.67574286553751 (9.67 / 100 = 0.0967).
-   * 
-   * select stddev(c)
-   * from (
-   *     select v, count(*) as c
-   *     from (
-   *         select cast(conv(substr(md5(value), 1, 8), 16, 10) % 100 as int) as v
-   *         from mytable
-   *     ) t1
-   *     group by v
-   * ) t2;
-   * 
-   * where mytable contains the integers from 0 to 10000.
-   * 
-   * Note that the stddev of rand() is sqrt(0.01 * 0.99) = 0.09949874371.
+   *
+   * <p>select stddev(c) from ( select v, count(*) as c from ( select cast(conv(substr(md5(value),
+   * 1, 8), 16, 10) % 100 as int) as v from mytable ) t1 group by v ) t2;
+   *
+   * <p>where mytable contains the integers from 0 to 10000.
+   *
+   * <p>Note that the stddev of rand() is sqrt(0.01 * 0.99) = 0.09949874371.
    */
   @Override
   public String hashFunction(String column) {
-    String f = String.format(
-        "(conv(substr(md5(%s), 1, 8), 16, 10) %% %d) / %d",
-        column, hashPrecision, hashPrecision);
+    String f =
+        String.format(
+            "(conv(substr(md5(%s), 1, 8), 16, 10) %% %d) / %d",
+            column, hashPrecision, hashPrecision);
     return f;
   }
 }

@@ -812,7 +812,7 @@ full_table_name
     ;
 
 table_name
-    : (schema=id '.')? table=id
+    : ((catalog=id '.' schema=id '.') | (schema=id '.'))? table=id
     ;
 
 //table_name
