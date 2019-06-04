@@ -31,7 +31,6 @@ import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.connection.SparkConnection;
 import org.verdictdb.core.querying.ExecutableNodeBase;
-import org.verdictdb.core.querying.SelectAggExecutionNode;
 import org.verdictdb.core.querying.ola.AsyncAggExecutionNode;
 import org.verdictdb.core.querying.ola.SelectAsyncAggExecutionNode;
 import org.verdictdb.core.querying.simplifier.ConsolidatedExecutionNode;

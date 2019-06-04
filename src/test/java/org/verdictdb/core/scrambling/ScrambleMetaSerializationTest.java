@@ -1,14 +1,14 @@
 package org.verdictdb.core.scrambling;
 
-import org.junit.Test;
-import org.verdictdb.exception.VerdictDBValueException;
+import static org.junit.Assert.assertEquals;
 
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.Test;
+import org.verdictdb.exception.VerdictDBValueException;
 
 public class ScrambleMetaSerializationTest {
 

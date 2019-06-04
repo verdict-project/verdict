@@ -1,34 +1,19 @@
 package org.verdictdb;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
-import org.apache.commons.lang3.RandomStringUtils;
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
+import static org.junit.Assert.fail;
+
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
+
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.verdictdb.commons.DatabaseConnectionHelpers;
 import org.verdictdb.connection.JdbcConnection;
-import org.verdictdb.connection.StaticMetaData;
 import org.verdictdb.coordinator.ScramblingCoordinator;
-import org.verdictdb.core.scrambling.ScrambleMeta;
-import org.verdictdb.core.scrambling.ScrambleMetaSet;
-import org.verdictdb.core.scrambling.UniformScrambler;
 import org.verdictdb.exception.VerdictDBException;
-import org.verdictdb.jdbc41.VerdictConnection;
-import org.verdictdb.jdbc41.VerdictStatement;
 import org.verdictdb.sqlsyntax.H2Syntax;
-
-import java.io.File;
-import java.io.IOException;
-import java.sql.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import static java.sql.Types.BIGINT;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 
 public class CreateScrambleOnEmptyTableTest {
 

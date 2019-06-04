@@ -29,7 +29,6 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.lang3.time.FastDateFormat;
 import org.verdictdb.VerdictSingleResult;
 import org.verdictdb.commons.VerdictDBLogger;
-import org.verdictdb.core.execplan.ExecutionInfoToken;
 
 /**
  * Created by: Shucheng Zhong on 9/12/18

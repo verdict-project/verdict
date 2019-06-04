@@ -1,5 +1,7 @@
 package org.verdictdb.core.scrambling;
 
+import static org.junit.Assert.fail;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -14,8 +16,6 @@ import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.connection.JdbcConnection;
 import org.verdictdb.core.execplan.ExecutablePlanRunner;
 import org.verdictdb.exception.VerdictDBException;
-
-import static org.junit.Assert.fail;
 
 public class FastConvergeScramblingPlanTest {
 

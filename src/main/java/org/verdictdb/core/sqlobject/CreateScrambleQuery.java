@@ -16,13 +16,13 @@
 
 package org.verdictdb.core.sqlobject;
 
+import java.util.List;
+
 import org.verdictdb.core.scrambling.ScramblingMethod;
 import org.verdictdb.exception.VerdictDBValueException;
 import org.verdictdb.sqlsyntax.MysqlSyntax;
 import org.verdictdb.sqlsyntax.PostgresqlSyntax;
 import org.verdictdb.sqlsyntax.SqlSyntax;
-
-import java.util.List;
 
 public class CreateScrambleQuery extends CreateTableQuery {
 

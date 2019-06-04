@@ -1,14 +1,8 @@
 package org.verdictdb.jdbc41;
 
-import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.verdictdb.connection.DbmsConnection;
-import org.verdictdb.connection.JdbcConnection;
-import org.verdictdb.coordinator.VerdictSingleResultFromDbmsQueryResult;
-import org.verdictdb.exception.VerdictDBDbmsException;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.fail;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -18,9 +12,15 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.fail;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.verdictdb.connection.DbmsConnection;
+import org.verdictdb.connection.JdbcConnection;
+import org.verdictdb.coordinator.VerdictSingleResultFromDbmsQueryResult;
+import org.verdictdb.exception.VerdictDBDbmsException;
 
 // <<<<<<< HEAD:src/test/java/org/verdictdb/jdbc41/JdbcResultSetMetaDataTestForRedshift.java
 // import static org.junit.Assert.assertEquals;

@@ -207,7 +207,7 @@ class VerdictContext:
         if password is not None:
             passwordStr = '&password=%s' % password
 
-        connection_string = 'jdbc:postgresql://%s:%s/%s?user=%s%s' % (
+        connection_string = 'jdbc:postgresql://%s:%s/%s?user=%s%s&OpenSourceSubProtocolOverride=true' % (
             host,
             port,
             dbname,
