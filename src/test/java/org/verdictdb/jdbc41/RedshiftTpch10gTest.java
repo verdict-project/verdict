@@ -1,12 +1,12 @@
 package org.verdictdb.jdbc41;
 
-import org.junit.Ignore;
-
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+
+import org.junit.Ignore;
 
 /**
  * This test assumes that the standard TPCH tables are stored in the "tpch10g" schema, and a

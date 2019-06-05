@@ -16,11 +16,11 @@
 
 package org.verdictdb.core.scrambling;
 
-import org.verdictdb.core.querying.ExecutableNodeBase;
-import org.verdictdb.core.sqlobject.UnnamedColumn;
-
 import java.util.List;
 import java.util.Map;
+
+import org.verdictdb.core.querying.ExecutableNodeBase;
+import org.verdictdb.core.sqlobject.UnnamedColumn;
 
 /**
  * Execution plan for scrambling.

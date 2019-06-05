@@ -16,6 +16,11 @@
 
 package org.verdictdb.core.scrambling;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
 import org.verdictdb.commons.VerdictDBLogger;
 import org.verdictdb.connection.DbmsQueryResult;
 import org.verdictdb.core.querying.ExecutableNodeBase;
@@ -24,11 +29,6 @@ import org.verdictdb.core.sqlobject.BaseTable;
 import org.verdictdb.core.sqlobject.ColumnOp;
 import org.verdictdb.core.sqlobject.ConstantColumn;
 import org.verdictdb.core.sqlobject.UnnamedColumn;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
 
 public class UniformScramblingMethod extends ScramblingMethodBase {
 

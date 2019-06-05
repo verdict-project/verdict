@@ -16,7 +16,9 @@
 
 package org.verdictdb.sqlwriter;
 
-import com.google.common.base.Joiner;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.verdictdb.commons.VerdictTimestamp;
 import org.verdictdb.core.sqlobject.InsertIntoSelectQuery;
 import org.verdictdb.core.sqlobject.InsertValuesQuery;
@@ -25,8 +27,7 @@ import org.verdictdb.exception.VerdictDBException;
 import org.verdictdb.sqlsyntax.PrestoSyntax;
 import org.verdictdb.sqlsyntax.SqlSyntax;
 
-import java.util.ArrayList;
-import java.util.List;
+import com.google.common.base.Joiner;
 
 public class InsertQueryToSql {
 

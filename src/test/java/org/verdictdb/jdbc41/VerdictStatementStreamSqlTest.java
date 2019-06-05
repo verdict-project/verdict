@@ -5,16 +5,7 @@
  */
 package org.verdictdb.jdbc41;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
-import org.apache.commons.lang3.RandomStringUtils;
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.verdictdb.commons.DatabaseConnectionHelpers;
-import org.verdictdb.exception.VerdictDBException;
+import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.io.IOException;
@@ -24,7 +15,17 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-import static org.junit.Assert.assertEquals;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.verdictdb.commons.DatabaseConnectionHelpers;
+import org.verdictdb.exception.VerdictDBException;
+
+import com.google.common.base.Charsets;
+import com.google.common.io.Files;
 
 public class VerdictStatementStreamSqlTest {
 

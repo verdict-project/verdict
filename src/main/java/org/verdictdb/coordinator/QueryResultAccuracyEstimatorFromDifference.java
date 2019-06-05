@@ -8,7 +8,12 @@ import java.util.Set;
 
 import org.verdictdb.VerdictSingleResult;
 import org.verdictdb.commons.TypeCasting;
-import org.verdictdb.core.sqlobject.*;
+import org.verdictdb.core.sqlobject.AliasedColumn;
+import org.verdictdb.core.sqlobject.AsteriskColumn;
+import org.verdictdb.core.sqlobject.ColumnOp;
+import org.verdictdb.core.sqlobject.SelectItem;
+import org.verdictdb.core.sqlobject.SelectQuery;
+import org.verdictdb.core.sqlobject.UnnamedColumn;
 
 /**
  * Estimates the difference based on the difference between two consequent result sets.
