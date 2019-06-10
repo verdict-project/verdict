@@ -16,7 +16,7 @@
 
 package org.verdictdb.jdbc41;
 
-import com.facebook.presto.jdbc.PrestoArray;
+import io.prestosql.jdbc.PrestoArray;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
