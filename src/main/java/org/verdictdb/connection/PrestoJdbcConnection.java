@@ -16,6 +16,12 @@
 
 package org.verdictdb.connection;
 
+import io.prestosql.jdbc.PrestoStatement;
+import io.prestosql.jdbc.QueryStats;
+import me.tongfei.progressbar.ProgressBar;
+import org.verdictdb.exception.VerdictDBDbmsException;
+import org.verdictdb.sqlsyntax.SqlSyntax;
+
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -23,25 +29,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-import org.verdictdb.exception.VerdictDBDbmsException;
-import org.verdictdb.sqlsyntax.SqlSyntax;
-
-import com.facebook.presto.jdbc.PrestoStatement;
-import com.facebook.presto.jdbc.QueryStats;
-
-import me.tongfei.progressbar.ProgressBar;
-
 /**
  * In addition to JdbcConnection, shows the query progress.
- * @author Yongjoo Park
  *
+ * @author Yongjoo Park
  */
 public class PrestoJdbcConnection extends JdbcConnection {
 
   public PrestoJdbcConnection(Connection conn, SqlSyntax syntax) {
     super(conn, syntax);
   }
-  
+
   public void ensureCatalogSet() throws VerdictDBDbmsException {
     String catalog = null;
     try {
@@ -53,14 +51,14 @@ public class PrestoJdbcConnection extends JdbcConnection {
       throw new VerdictDBDbmsException("Session catalog is not set.");
     }
   }
-  
+
   @Override
-  public List<String> getPartitionColumns(String schema, String table) 
+  public List<String> getPartitionColumns(String schema, String table)
       throws VerdictDBDbmsException {
-    
+
     List<String> partition = new ArrayList<>();
     DbmsQueryResult queryResult = executeQuery(syntax.getPartitionCommand(schema, table));
-    
+
     while (queryResult.next()) {
       String name = queryResult.getString(0);
       String extra = queryResult.getString(2);
@@ -68,7 +66,7 @@ public class PrestoJdbcConnection extends JdbcConnection {
         partition.add(name);
       }
     }
-    
+
     return partition;
   }
 
@@ -83,7 +81,7 @@ public class PrestoJdbcConnection extends JdbcConnection {
       stmt.setProgressMonitor(progressMonitor);
       setRunningStatement(stmt);
       JdbcQueryResult jrs = null;
-      
+
       boolean doesResultExist = stmt.execute(sql);
       if (doesResultExist) {
         ResultSet rs = stmt.getResultSet();
@@ -95,10 +93,10 @@ public class PrestoJdbcConnection extends JdbcConnection {
       progressMonitor.terminate();
       progressMonitor = null;
       setRunningStatement(null);
-      
+
       stmt.close();
       return jrs;
-      
+
     } catch (SQLException e) {
       if (isAborting) {
         return null;
@@ -113,28 +111,25 @@ public class PrestoJdbcConnection extends JdbcConnection {
       }
     }
   }
-  
 }
-
 
 /**
  * This is based on Presto-reported completed "splits".
- * 
- * Alternative, one can also retrieve the query progress from Presto's system table:
- * system.runtime.tasks
- * 
- * @author Yongjoo Park
  *
+ * <p>Alternative, one can also retrieve the query progress from Presto's system table:
+ * system.runtime.tasks
+ *
+ * @author Yongjoo Park
  */
 class PrestoQueryStatusPrinter implements Consumer<QueryStats> {
-  
+
   private ProgressBar pb = null;
-  
+
   public void terminate() {
     if (pb != null) {
       pb.close();
       pb = null;
-//      System.err.println("\n");   // supply an extra line break to ensure
+      //      System.err.println("\n");   // supply an extra line break to ensure
     }
   }
 
@@ -143,7 +138,7 @@ class PrestoQueryStatusPrinter implements Consumer<QueryStats> {
     String queryId = t.getQueryId();
     int total = t.getTotalSplits();
     int completed = t.getCompletedSplits();
-    
+
     if (pb == null) {
       pb = new ProgressBar(queryId, total);
     }

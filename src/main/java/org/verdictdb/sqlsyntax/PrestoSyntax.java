@@ -25,7 +25,7 @@ public class PrestoSyntax extends SqlSyntax {
 
   @Override
   public Collection<String> getCandidateJDBCDriverClassNames() {
-    List<String> candidates = Lists.newArrayList("com.facebook.presto.jdbc.PrestoDriver");
+    List<String> candidates = Lists.newArrayList("io.prestosql.jdbc.PrestoDriver");
     return candidates;
   }
 

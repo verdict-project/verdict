@@ -300,6 +300,14 @@
             <activation>
                 <jdk>1.7</jdk>
             </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>io.prestosql</groupId>
+                    <artifactId>presto-jdbc</artifactId>
+                    <version>314</version>
+                    <!--                    <scope>test</scope>-->
+                </dependency>
+            </dependencies>
             <build>
                 <plugins>
                     <plugin>
@@ -318,10 +326,10 @@
             </activation>
             <dependencies>
                 <dependency>
-                    <groupId>com.facebook.presto</groupId>
+                    <groupId>io.prestosql</groupId>
                     <artifactId>presto-jdbc</artifactId>
-                    <version>0.212</version>
-                    <!-- <scope>test</scope> -->
+                    <version>314</version>
+                    <!--                    <scope>test</scope>-->
                 </dependency>
             </dependencies>
             <build>
