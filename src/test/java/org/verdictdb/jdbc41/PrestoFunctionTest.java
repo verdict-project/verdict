@@ -94,6 +94,18 @@ public class PrestoFunctionTest {
   }
 
   @Test
+  public void runRegexLike1Test() throws SQLException {
+    String sql;
+    ResultSet rs;
+
+    sql =
+        String.format("SELECT * from tpch.tiny.customer WHERE regexp_like('1a 2b 14m', '\\\\d+b')");
+    rs = vc.createStatement().executeQuery(sql);
+
+    rs.close();
+  }
+
+  @Test
   public void runRegexFunctionsTest() throws SQLException {
     String sql;
     ResultSet rs;
