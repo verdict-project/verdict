@@ -729,7 +729,7 @@ unary_predicate_function
 
 binary_predicate_function
     : NOT? function_name = (ST_CONTAINS | ST_CROSSES | ST_DISJOINT | ST_EQUALS | ST_INTERSECTS
-    | ST_OVERLAPS | ST_RELATE | ST_TOUCHES | ST_WITHIN)
+    | ST_OVERLAPS | ST_RELATE | ST_TOUCHES | ST_WITHIN | REGEXP_LIKE)
       '(' expression ',' expression ')'
     ;
 
