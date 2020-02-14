@@ -1,7 +1,7 @@
 <!-- [![Build Status](https://circleci.com/gh/mozafari/verdictdb/tree/master.svg?style=shield&circle-token=16a7386340ff7022b21ce007434f8caa2fa97aec)](https://circleci.com/gh/mozafari/verdictdb/tree/master) -->
 <!-- [![CircleCI branch](https://img.shields.io/circleci/project/github/mozafari/verdictdb/master.svg)](https://circleci.com/gh/mozafari/verdictdb/tree/master) -->
 
-Update: This repository is not actively maintained. 
+**Update:** This repository is no longer actively maintained. 
 You can still contact the authors ([Yongjoo Park](https://yongjoopark.com/), 
 [Barzan Mozafari](https://web.eecs.umich.edu/~mozafari/)) for questions.
 
