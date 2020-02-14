@@ -47,3 +47,4 @@ metastore_db/
 
 # Python
 .pytest_cache/
+*.egg-info/
